@@ -1,10 +1,16 @@
-import "tailwindcss/tailwind.css";
+import img1 from "../assets/imgs/366.jpg";
+import Navbar from "../components/Navbar";
 
 function App() {
   return (
     <div>
-      <div></div>
-      <div className="flex flex-col items-center justify-end min-h-[80vh] px-8 ">
+      <div className="flex flex-col items-center justify-center h-auto font-pretendard">
+        <Navbar isLogin={false} />
+      </div>
+      <div>
+        <img src={img1} className="w-full h-[35rem] object-cover" />
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end px-8 pb-20">
         <div className="w-full max-w-7xl bg-white rounded-xl shadow-2xl p-6 mb-6">
           <div className="grid grid-cols-5 gap-4 items-end">
             <div className="flex flex-col">
