@@ -1,5 +1,5 @@
 import img1 from "../assets/imgs/366.jpg";
-import Navbar from "../components/Navbar";
+import Navbar from '../components/navbar.jsx';
 
 function App() {
   return (
