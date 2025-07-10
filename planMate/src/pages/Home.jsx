@@ -3,7 +3,7 @@ import Navbar from "../components/Navbar";
 
 function App() {
   return (
-    <div>
+    <div className="min-w-[1200px] min-h-screen overflow-x-auto">
       <div className="flex flex-col items-center justify-center h-auto font-pretendard">
         <Navbar isLogin={false} />
       </div>
@@ -11,40 +11,42 @@ function App() {
         <img src={img1} className="w-full h-[35rem] object-cover" />
       </div>
       <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end px-8 pb-20">
-        <div className="w-full max-w-7xl bg-white rounded-xl shadow-2xl p-6 mb-6">
-          <div className="grid grid-cols-5 gap-4 items-end">
-            <div className="flex flex-col">
-              <label className="text-gray-600 text-sm mb-1 font-pretendard">
+        <div className="w-full max-w-7xl min-w-[1000px] bg-white rounded-xl shadow-2xl p-6 mb-6">
+          <div className="grid grid-cols-5 gap-4 items-end min-w-[900px]">
+            <div className="flex flex-col min-w-[160px]">
+              <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap">
                 출발지
               </label>
               <input
                 type="text"
-                className="border-b-2 border-gray-300 pb-2 focus:border-blue-500 font-pretendard focus:outline-none"
+                className="border-b-2 border-gray-300 pb-2 focus:border-blue-500 font-pretendard focus:outline-none w-full"
                 placeholder="출발지 입력"
               />
             </div>
-            <div className="flex flex-col">
-              <label className="text-gray-600 text-sm mb-1">여행지</label>
+            <div className="flex flex-col min-w-[160px]">
+              <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap">
+                여행지
+              </label>
               <input
                 type="text"
-                className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none"
+                className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full"
                 placeholder="여행지 입력"
               />
             </div>
-            <div className="flex flex-col">
-              <label className="text-gray-600 text-sm mb-1 font-pretendard">
+            <div className="flex flex-col min-w-[160px]">
+              <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap">
                 기간
               </label>
               <input
                 type="date"
-                className="border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none"
+                className="border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full"
               />
             </div>
-            <div className="flex flex-col">
-              <label className="text-gray-600 text-sm mb-1 font-pretendard">
+            <div className="flex flex-col min-w-[160px]">
+              <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap">
                 인원수
               </label>
-              <select className=" font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none">
+              <select className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full">
                 <option>1명</option>
                 <option>2명</option>
                 <option>3명</option>
@@ -52,10 +54,10 @@ function App() {
               </select>
             </div>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-[160px]">
               <button
                 className="cursor-pointer transition-all bg-[#1344FF] text-white px-8 py-3 rounded-lg
-            border-[#1344FF] active:translate-y-[2px] hover:bg-blue-600 shadow-lg max-w-[12rem] font-pretendard "
+            border-[#1344FF] active:translate-y-[2px] hover:bg-blue-600 shadow-lg w-full font-pretendard whitespace-nowrap"
               >
                 일정생성
               </button>
