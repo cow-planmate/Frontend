@@ -5,6 +5,10 @@ export default {
     extend: {
       fontFamily: {
         pretendard: ['Pretendard', 'sans-serif'],
+      },
+      colors: {
+        main: "#1344FF",
+        sub: "#E8EDFF"
       }
     },
   },

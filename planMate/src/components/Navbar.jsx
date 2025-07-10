@@ -9,9 +9,13 @@ export default function Navbar({isLogin}) {
           <Link to="/"><img src={logo} /></Link>
         </div>
         {isLogin 
-        ?<div>
-          ㅇㅇ님
-        </div>
+        ?
+        <Link to="/mypage">
+          <div className='flex items-center h-[42px]'>
+            <div className="w-8 h-8 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full mr-3"></div>
+            닉네임 님
+          </div>
+        </Link>
         :<div>
           <button className='px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100'>로그인/회원가입</button>
         </div>
