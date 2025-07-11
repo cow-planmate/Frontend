@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import img1 from "../assets/imgs/366.jpg";
 import Navbar from "../components/Navbar";
 import DateRangeModal from "../components/HomeCal";
+import PersonCountModal from "../components/HomePerson"; // 새로 만든 컴포넌트 import
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUser,
@@ -11,6 +12,8 @@ import {
 
 function App() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isPersonCountOpen, setIsPersonCountOpen] = useState(false); // 인원수 모달 상태
+  const [personCount, setPersonCount] = useState({ adults: 0, children: 0 }); // 인원수 상태
   const [dateRange, setDateRange] = useState([
     {
       startDate: new Date(),
@@ -35,6 +38,25 @@ function App() {
 
   const handleCalendarClose = () => {
     setIsCalendarOpen(false);
+  };
+
+  // 인원수 모달 관련 함수들
+  const handlePersonCountOpen = () => {
+    setIsPersonCountOpen(true);
+  };
+
+  const handlePersonCountClose = () => {
+    setIsPersonCountOpen(false);
+  };
+
+  const handlePersonCountChange = (count) => {
+    setPersonCount(count);
+  };
+
+  const formatPersonCount = () => {
+    const total = personCount.adults + personCount.children;
+    if (total === 0) return "인원수 선택";
+    return `성인 ${personCount.adults}명, 어린이 ${personCount.children}명`;
   };
 
   return (
@@ -108,13 +130,18 @@ function App() {
               <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
                 인원수
               </label>
-              <select className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8">
-                <option>1명</option>
-                <option>2명</option>
-                <option>3명</option>
-                <option>4명+</option>
-              </select>
-              <button className="absolute right-0 bottom-2">
+              <input
+                type="text"
+                className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8 cursor-pointer"
+                placeholder="인원수 선택"
+                value={formatPersonCount()}
+                onClick={handlePersonCountOpen}
+                readOnly
+              />
+              <button
+                className="absolute right-0 bottom-2"
+                onClick={handlePersonCountOpen}
+              >
                 <FontAwesomeIcon icon={faUser} className="text-gray-400" />
               </button>
             </div>
@@ -137,6 +164,14 @@ function App() {
         onClose={handleCalendarClose}
         dateRange={dateRange}
         onDateChange={handleDateChange}
+      />
+
+      {/* 인원수 모달 */}
+      <PersonCountModal
+        isOpen={isPersonCountOpen}
+        onClose={handlePersonCountClose}
+        personCount={personCount}
+        onPersonCountChange={handlePersonCountChange}
       />
     </div>
   );
