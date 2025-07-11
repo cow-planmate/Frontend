@@ -3,9 +3,9 @@ import Navbar from '../components/navbar.jsx';
 
 function App() {
   return (
-    <div>
+    <div className='font-pretendard'>
       <Navbar 
-        isLogin = {false}
+        isLogin = {true}
       />
       <div className='mx-auto w-[1400px] pt-8'>
         안녕하세요

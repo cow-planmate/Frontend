@@ -2,6 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisVertical, faTrash, faPen } from "@fortawesome/free-solid-svg-icons";
 import { useState, useRef, useEffect } from 'react';
 import TitleIcon from '../assets/imgs/title.svg?react';
+import { useNavigate } from 'react-router-dom';
 
 export default function PlanList() {
   const test = [
@@ -12,6 +13,7 @@ export default function PlanList() {
 
   const [openId, setOpenId] = useState(null);
   const modalRef = useRef(null);
+  const navigate = useNavigate();
 
   const toggleModal = (id) => {
     setOpenId(prev => (prev === id ? null : id));
@@ -42,8 +44,12 @@ export default function PlanList() {
         {test.map((lst) => {
           const isOpen = openId === lst.id;
           return (
-            <div className="relative cursor-pointer flex justify-between items-center py-3 px-3 hover:bg-sub">
-              <div key={lst.id} className="font-semibold text-xl">{lst.title}</div>
+            <div 
+              key={lst.id}
+              onClick={() => navigate(`/detail/${lst.id}`)} 
+              className="relative cursor-pointer flex justify-between items-center py-3 px-3 hover:bg-sub"
+            >
+              <div className="font-semibold text-xl">{lst.title}</div>
               <button 
                 onClick={(e) => {
                   e.stopPropagation(); // 다른 클릭 이벤트 방지
