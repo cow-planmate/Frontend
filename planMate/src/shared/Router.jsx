@@ -4,15 +4,16 @@ import Home from "../pages/Home";
 import Complete from "../pages/Complete";
 import Create from "../pages/Create";
 import Mypage from "../pages/Mypage";
+import Signuptest from "../pages/Signuptest";
 
 // 2. Router 라는 함수를 만들고 아래와 같이 작성합니다.
-//BrowserRouter를 Router로 감싸는 이유는, 
+//BrowserRouter를 Router로 감싸는 이유는,
 //SPA의 장점인 브라우저가 깜빡이지 않고 다른 페이지로 이동할 수 있게 만들어줍니다!
 const Router = () => {
   return (
     <BrowserRouter>
       <Routes>
-       {/* 
+        {/* 
                         Routes안에 이렇게 작성합니다. 
                         Route에는 react-router-dom에서 지원하는 props들이 있습니다.
 
@@ -23,6 +24,7 @@ const Router = () => {
         <Route path="complete" element={<Complete />} />
         <Route path="create" element={<Create />} />
         <Route path="mypage" element={<Mypage />} />
+        <Route path="Signuptest" element={<Signuptest />} />
       </Routes>
     </BrowserRouter>
   );
