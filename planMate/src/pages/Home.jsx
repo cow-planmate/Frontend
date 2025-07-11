@@ -67,7 +67,7 @@ function App() {
       </div>
 
       <div className="flex flex-col items-center ">
-        <img src={img1} className=" w-[110rem] h-[38rem] object-cover" />
+        <img src={img1} className=" w-[140rem] h-[38rem] object-cover" />
       </div>
 
       {/* 텍스트를 중앙 정렬로 변경 */}
