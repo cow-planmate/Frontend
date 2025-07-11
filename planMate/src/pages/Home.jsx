@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import img1 from "../assets/imgs/366.jpg";
+import img1 from "../assets/imgs/img1.jpg";
 import Navbar from "../components/Navbar";
 import DateRangeModal from "../components/HomeCal";
 import PersonCountModal from "../components/HomePerson"; // 새로 만든 컴포넌트 import
@@ -9,6 +9,7 @@ import {
   faLocationDot,
   faCalendar,
 } from "@fortawesome/free-solid-svg-icons";
+import { Link } from "react-router-dom";
 
 function App() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -66,7 +67,11 @@ function App() {
       </div>
 
       <div>
-        <img src={img1} className="w-full h-[35rem] object-cover" />
+        <img src={img1} className="relative w-full h-[38rem] object-cover" />
+        <div className="absolute bottom-[5rem] left-[14rem] font-pretendard text-white text-5xl font-bold">
+          <div className="mb-4">나다운, 우리다운</div>
+          <div>여행의 시작</div>
+        </div>
       </div>
 
       <div className="absolute -bottom-20 left-0 right-0 px-8 pb-0">
@@ -147,12 +152,14 @@ function App() {
             </div>
 
             <div className="block min-w-[160px]">
-              <button
-                className="cursor-pointer transition-all bg-[#1344FF] text-white px-8 py-3 rounded-lg
+              <Link to="/Create">
+                <button
+                  className="cursor-pointer transition-all bg-[#1344FF] text-white px-8 py-3 rounded-lg
             border-[#1344FF] active:translate-y-[2px] hover:bg-blue-600 shadow-lg w-full font-pretendard whitespace-nowrap"
-              >
-                일정생성
-              </button>
+                >
+                  일정생성
+                </button>
+              </Link>
             </div>
           </div>
         </div>
