@@ -66,11 +66,17 @@ function App() {
         <Navbar isLogin={false} />
       </div>
 
-      <div>
-        <img src={img1} className="relative w-full h-[38rem] object-cover" />
-        <div className="absolute bottom-[5rem] left-[14rem] font-pretendard text-white text-5xl font-bold">
-          <div className="mb-4">나다운, 우리다운</div>
-          <div>여행의 시작</div>
+      <div className="flex flex-col items-center ">
+        <img src={img1} className=" w-[110rem] h-[38rem] object-cover" />
+      </div>
+
+      {/* 텍스트를 중앙 정렬로 변경 */}
+      <div className="absolute bottom-[5rem] left-0 right-0 px-8">
+        <div className="w-full max-w-7xl min-w-[1000px] mx-auto">
+          <div className="font-pretendard text-white text-5xl font-bold text-left">
+            <div className="mb-4">나다운, 우리다운</div>
+            <div>여행의 시작</div>
+          </div>
         </div>
       </div>
 
