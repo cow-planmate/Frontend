@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import img1 from "../assets/imgs/img1.jpg";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/navbar";
 import DateRangeModal from "../components/HomeCal";
 import PersonCountModal from "../components/HomePerson";
 import TransportModal from "../components/TransportModal"; // 새로 만든 컴포넌트 import
@@ -205,7 +205,7 @@ function App() {
             </div>
 
             <div className="block min-w-[160px]">
-              <Link to="/Create">
+              <Link to="/create">
                 <button
                   className="cursor-pointer transition-all bg-[#1344FF] text-white px-8 py-3 rounded-lg
             border-[#1344FF] active:translate-y-[2px] hover:bg-blue-600 shadow-lg w-full font-pretendard whitespace-nowrap"
