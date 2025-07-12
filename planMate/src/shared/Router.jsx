@@ -5,7 +5,7 @@ import Complete from "../pages/Complete";
 import Create from "../pages/Create";
 import Mypage from "../pages/Mypage";
 import Signuptest from "../pages/Signuptest";
-import Test from "../pages/Test";
+import Createtest from "../pages/Createtest";
 
 // 2. Router 라는 함수를 만들고 아래와 같이 작성합니다.
 //BrowserRouter를 Router로 감싸는 이유는,
@@ -26,7 +26,7 @@ const Router = () => {
         <Route path="create" element={<Create />} />
         <Route path="mypage" element={<Mypage />} />
         <Route path="Signuptest" element={<Signuptest />} />
-        <Route path="test" element={<Test />} />
+        <Route path="Createtest" element={<Createtest />} />
       </Routes>
     </BrowserRouter>
   );
