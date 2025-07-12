@@ -78,16 +78,39 @@ function App() {
             <div>
               <label
                 htmlFor="username"
-                className="block mb-2 text-sm font-medium text-gray-900"
+                className=" block mb-2 text-sm font-medium text-gray-900"
               >
                 닉네임
               </label>
-              <input
-                placeholder="홍길동"
-                className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-full p-2.5"
-                id="username"
-                type="text"
-              />
+              <div className="grid grid-cols-2">
+                <input
+                  placeholder="홍길동"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-[15rem] p-2.5 "
+                  id="username"
+                  type="text"
+                />
+                <div className="flex flex-col items-end">
+                  <button className="w-[7rem] bg-main hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center focus:ring-blue-800 text-white">
+                    중복검사
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label
+                htmlFor="username"
+                className="block mb-2 text-sm font-medium text-gray-900"
+              >
+                나이
+              </label>
+              <div className="grid grid-cols-2">
+                <input
+                  placeholder="20"
+                  className="  bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-[15rem] p-2.5 "
+                  id="username"
+                  type="text"
+                />
+              </div>
             </div>
 
             <button
