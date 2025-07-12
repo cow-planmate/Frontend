@@ -106,7 +106,7 @@ function App() {
 
       <div className="absolute -bottom-20 left-0 right-0 px-8 pb-0">
         <div className="w-full max-w-[90rem] min-w-[1000px] bg-white rounded-xl shadow-2xl p-6 mb-6 mx-auto">
-          <div className="grid grid-cols-6 gap-[20px] items-end min-w-[900px]">
+          <div className="grid grid-cols-6 gap-[18px] items-end min-w-[900px]">
             <div className="block min-w-[130px] relative">
               <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
                 출발지
