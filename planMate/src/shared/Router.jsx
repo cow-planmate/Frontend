@@ -25,8 +25,8 @@ const Router = () => {
         <Route path="complete" element={<Complete />} />
         <Route path="create" element={<Create />} />
         <Route path="mypage" element={<Mypage />} />
-        <Route path="Signuptest" element={<Signuptest />} />
-        <Route path="Createtest" element={<Createtest />} />
+        <Route path="signuptest" element={<Signuptest />} />
+        <Route path="createtest" element={<Createtest />} />
       </Routes>
     </BrowserRouter>
   );
