@@ -105,9 +105,9 @@ function App() {
       </div>
 
       <div className="absolute -bottom-20 left-0 right-0 px-8 pb-0">
-        <div className="w-full max-w-7xl min-w-[1000px] bg-white rounded-xl shadow-2xl p-6 mb-6 mx-auto">
-          <div className="grid grid-cols-6 gap-4 items-end min-w-[900px]">
-            <div className="block min-w-[160px] relative">
+        <div className="w-full max-w-[90rem] min-w-[1000px] bg-white rounded-xl shadow-2xl p-6 mb-6 mx-auto">
+          <div className="grid grid-cols-6 gap-[20px] items-end min-w-[900px]">
+            <div className="block min-w-[130px] relative">
               <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
                 출발지
               </label>
@@ -124,7 +124,7 @@ function App() {
               </button>
             </div>
 
-            <div className="block min-w-[160px] relative">
+            <div className="block min-w-[130px] relative">
               <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
                 여행지
               </label>
@@ -141,7 +141,7 @@ function App() {
               </button>
             </div>
 
-            <div className="block min-w-[160px] relative">
+            <div className="block min-w-[130px] relative">
               <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
                 기간
               </label>
@@ -161,7 +161,7 @@ function App() {
               </button>
             </div>
 
-            <div className="block min-w-[160px] relative">
+            <div className="block min-w-[130px] relative">
               <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
                 인원수
               </label>
@@ -181,7 +181,7 @@ function App() {
               </button>
             </div>
 
-            <div className="block min-w-[160px] relative">
+            <div className="block min-w-[130px] relative">
               <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
                 이동수단
               </label>
@@ -204,10 +204,10 @@ function App() {
               </button>
             </div>
 
-            <div className="block min-w-[160px]">
+            <div className="block min-w-[100px]">
               <Link to="/Create">
                 <button
-                  className="cursor-pointer transition-all bg-[#1344FF] text-white px-8 py-3 rounded-lg
+                  className="cursor-pointer transition-all bg-[#1344FF] text-white px-4 py-3 rounded-lg
             border-[#1344FF] active:translate-y-[2px] hover:bg-blue-600 shadow-lg w-full font-pretendard whitespace-nowrap"
                 >
                   일정생성
