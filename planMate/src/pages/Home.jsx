@@ -2,19 +2,24 @@ import React, { useState } from "react";
 import img1 from "../assets/imgs/img1.jpg";
 import Navbar from "../components/Navbar";
 import DateRangeModal from "../components/HomeCal";
-import PersonCountModal from "../components/HomePerson"; // 새로 만든 컴포넌트 import
+import PersonCountModal from "../components/HomePerson";
+import TransportModal from "../components/TransportModal"; // 새로 만든 컴포넌트 import
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUser,
   faLocationDot,
   faCalendar,
+  faCar,
+  faBus,
 } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
 
 function App() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [isPersonCountOpen, setIsPersonCountOpen] = useState(false); // 인원수 모달 상태
-  const [personCount, setPersonCount] = useState({ adults: 0, children: 0 }); // 인원수 상태
+  const [isPersonCountOpen, setIsPersonCountOpen] = useState(false);
+  const [isTransportOpen, setIsTransportOpen] = useState(false); // 이동수단 모달 상태
+  const [personCount, setPersonCount] = useState({ adults: 0, children: 0 });
+  const [selectedTransport, setSelectedTransport] = useState("bus"); // 기본값: 대중교통
   const [dateRange, setDateRange] = useState([
     {
       startDate: new Date(),
@@ -41,7 +46,6 @@ function App() {
     setIsCalendarOpen(false);
   };
 
-  // 인원수 모달 관련 함수들
   const handlePersonCountOpen = () => {
     setIsPersonCountOpen(true);
   };
@@ -60,6 +64,27 @@ function App() {
     return `성인 ${personCount.adults}명, 어린이 ${personCount.children}명`;
   };
 
+  // 이동수단 모달 관련 함수들
+  const handleTransportOpen = () => {
+    setIsTransportOpen(true);
+  };
+
+  const handleTransportClose = () => {
+    setIsTransportOpen(false);
+  };
+
+  const handleTransportChange = (transport) => {
+    setSelectedTransport(transport);
+  };
+
+  const getTransportIcon = () => {
+    return selectedTransport === "car" ? faCar : faBus;
+  };
+
+  const getTransportText = () => {
+    return selectedTransport === "car" ? "자동차" : "대중교통";
+  };
+
   return (
     <div className="absolute pr-0 pl-0 right-0 left-0">
       <div className="text-center h-auto font-pretendard">
@@ -70,7 +95,6 @@ function App() {
         <img src={img1} className=" w-[140rem] h-[38rem] object-cover" />
       </div>
 
-      {/* 텍스트를 중앙 정렬로 변경 */}
       <div className="absolute bottom-[5rem] left-0 right-0 px-8">
         <div className="w-full max-w-7xl min-w-[1000px] mx-auto">
           <div className="font-pretendard text-white text-5xl font-bold text-left">
@@ -82,7 +106,7 @@ function App() {
 
       <div className="absolute -bottom-20 left-0 right-0 px-8 pb-0">
         <div className="w-full max-w-7xl min-w-[1000px] bg-white rounded-xl shadow-2xl p-6 mb-6 mx-auto">
-          <div className="grid grid-cols-5 gap-4 items-end min-w-[900px]">
+          <div className="grid grid-cols-6 gap-4 items-end min-w-[900px]">
             <div className="block min-w-[160px] relative">
               <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
                 출발지
@@ -157,6 +181,29 @@ function App() {
               </button>
             </div>
 
+            <div className="block min-w-[160px] relative">
+              <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
+                이동수단
+              </label>
+              <input
+                type="text"
+                className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8 cursor-pointer"
+                placeholder="이동수단 선택"
+                value={getTransportText()}
+                onClick={handleTransportOpen}
+                readOnly
+              />
+              <button
+                className="absolute right-0 bottom-2"
+                onClick={handleTransportOpen}
+              >
+                <FontAwesomeIcon
+                  icon={getTransportIcon()}
+                  className="text-gray-400"
+                />
+              </button>
+            </div>
+
             <div className="block min-w-[160px]">
               <Link to="/Create">
                 <button
@@ -171,7 +218,6 @@ function App() {
         </div>
       </div>
 
-      {/* 캘린더 모달 */}
       <DateRangeModal
         isOpen={isCalendarOpen}
         onClose={handleCalendarClose}
@@ -179,12 +225,18 @@ function App() {
         onDateChange={handleDateChange}
       />
 
-      {/* 인원수 모달 */}
       <PersonCountModal
         isOpen={isPersonCountOpen}
         onClose={handlePersonCountClose}
         personCount={personCount}
         onPersonCountChange={handlePersonCountChange}
+      />
+
+      <TransportModal
+        isOpen={isTransportOpen}
+        onClose={handleTransportClose}
+        selectedTransport={selectedTransport}
+        onTransportChange={handleTransportChange}
       />
     </div>
   );
