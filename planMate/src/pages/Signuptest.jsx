@@ -9,7 +9,7 @@ function App() {
     <div className="font-pretendard min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg">
         <div className="p-6 space-y-6">
-          <h1 className="text-2xl font-bold text-gray-900 text-start">
+          <h1 className="text-2xl font-bold text-gray-900 text-center">
             회원가입
           </h1>
 
@@ -27,7 +27,7 @@ function App() {
                 />
                 <button
                   type="button"
-                  className="px-4 py-2 bg-main text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
+                  className="w-24 py-2 bg-main text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
                 >
                   인증번호발송
                 </button>
@@ -39,12 +39,12 @@ function App() {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="smtp사용 시간? 미정"
+                  placeholder="2:26"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
                   type="button"
-                  className="px-4 py-2 bg-main text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-24 py-2 bg-main text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   입력
                 </button>
@@ -107,7 +107,7 @@ function App() {
                 />
                 <button
                   type="button"
-                  className="px-4 py-2 bg-main text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
+                  className="w-24 py-2 bg-main text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
                 >
                   중복확인
                 </button>
