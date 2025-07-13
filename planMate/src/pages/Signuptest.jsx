@@ -3,43 +3,66 @@ import React, { useState } from "react";
 function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [gender, setGender] = useState("male"); // 'male' or 'female'
 
   return (
-    <form className="font-pretendard">
-      <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto lg:py-0">
-        <div className="w-full bg-white rounded-lg shadow border md:mt-0 sm:max-w-md xl:p-0">
-          <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-            <p className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
-              회원가입
-            </p>
+    <div className="font-pretendard min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-lg">
+        <div className="p-6 space-y-6">
+          <h1 className="text-2xl font-bold text-gray-900 text-start">
+            회원가입
+          </h1>
+
+          <div className="space-y-4">
+            {/* 이메일 */}
             <div>
-              <label
-                htmlFor="username"
-                className="block mb-2 text-sm font-medium text-gray-900"
-              >
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 이메일
               </label>
-              <input
-                placeholder="honggildong@planmate.com"
-                className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-full p-2.5"
-                id="username"
-                type="text"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  placeholder="honggildong@planmate.com"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-main text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
+                >
+                  인증번호발송
+                </button>
+              </div>
             </div>
+
+            {/* 인증번호 입력 */}
             <div>
-              <label
-                htmlFor="password"
-                className="block mb-2 text-sm font-medium text-gray-900"
-              >
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="smtp사용 시간? 미정"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-main text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  입력
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">인증번호 재발송</p>
+            </div>
+
+            {/* 비밀번호 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 비밀번호
               </label>
               <input
-                placeholder="••••••••"
-                className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-full p-2.5"
-                id="password"
                 type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <label className="inline-flex items-center mt-2 text-gray-700 text-sm cursor-pointer select-none">
+              <label className="inline-flex items-center mt-2 text-sm text-gray-600 cursor-pointer">
                 <input
                   type="checkbox"
                   className="mr-2"
@@ -49,20 +72,18 @@ function App() {
                 비밀번호 보기
               </label>
             </div>
+
+            {/* 비밀번호 재입력 */}
             <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block mb-2 text-sm font-medium text-gray-900"
-              >
-                비밀번호 확인
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                비밀번호 재입력
               </label>
               <input
-                placeholder="••••••••"
-                className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-full p-2.5"
-                id="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
+                placeholder="••••••••"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <label className="inline-flex items-center mt-2 text-gray-700 text-sm cursor-pointer select-none">
+              <label className="inline-flex items-center mt-2 text-sm text-gray-600 cursor-pointer">
                 <input
                   type="checkbox"
                   className="mr-2"
@@ -72,57 +93,81 @@ function App() {
                 비밀번호 보기
               </label>
             </div>
-            <div className="flex items-start">
-              <div className="flex items-center h-5"></div>
-            </div>
+
+            {/* 닉네임 */}
             <div>
-              <label
-                htmlFor="username"
-                className=" block mb-2 text-sm font-medium text-gray-900"
-              >
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 닉네임
               </label>
-              <div className="grid grid-cols-2">
+              <div className="flex gap-2">
                 <input
-                  placeholder="홍길동"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-[15rem] p-2.5 "
-                  id="username"
                   type="text"
+                  placeholder="홍길동"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <div className="flex flex-col items-end">
-                  <button className="w-[7rem] bg-main hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center focus:ring-blue-800 text-white">
-                    중복검사
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-main text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
+                >
+                  중복확인
+                </button>
+              </div>
+            </div>
+
+            {/* 나이와 성별 */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  나이
+                </label>
+                <input
+                  type="number"
+                  placeholder="20"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  성별
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setGender("male")}
+                    className={`flex-1 py-2 px-3 text-sm font-medium rounded-lg border transition-colors ${
+                      gender === "male"
+                        ? "bg-main text-white border-main"
+                        : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                    }`}
+                  >
+                    남
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGender("female")}
+                    className={`flex-1 py-2 px-3 text-sm font-medium rounded-lg border transition-colors ${
+                      gender === "female"
+                        ? "bg-main text-white border-main"
+                        : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                    }`}
+                  >
+                    녀
                   </button>
                 </div>
               </div>
             </div>
-            <div>
-              <label
-                htmlFor="username"
-                className="block mb-2 text-sm font-medium text-gray-900"
-              >
-                나이
-              </label>
-              <div className="grid grid-cols-2">
-                <input
-                  placeholder="20"
-                  className="  bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-[15rem] p-2.5 "
-                  id="username"
-                  type="text"
-                />
-              </div>
-            </div>
 
+            {/* 회원가입 버튼 */}
             <button
-              className="w-full bg-main hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center focus:ring-blue-800 text-white"
-              type="submit"
+              type="button"
+              className="w-full py-3 bg-main text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 mt-6"
             >
-              완료
+              회원가입
             </button>
           </div>
         </div>
       </div>
-    </form>
+    </div>
   );
 }
 
