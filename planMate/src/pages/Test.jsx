@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Navbar from '../components/navbar';
+import PlanInfo from '../components/PlanInfo';
 
 const TravelPlannerApp = () => {
   const [selectedDay, setSelectedDay] = useState(1);
@@ -38,6 +40,69 @@ const TravelPlannerApp = () => {
     }
   }
 
+  // 시간 겹침 체크 함수
+  const checkTimeOverlap = (newItem, excludeId = null) => {
+    const daySchedule = schedule[selectedDay];
+    const newStartIndex = getTimeSlotIndex(newItem.timeSlot);
+    const newEndIndex = newStartIndex + newItem.duration - 1;
+
+    return daySchedule.some(item => {
+      if (excludeId && item.id === excludeId) return false;
+      
+      const existingStartIndex = getTimeSlotIndex(item.timeSlot);
+      const existingEndIndex = existingStartIndex + item.duration - 1;
+      
+      return !(newEndIndex < existingStartIndex || newStartIndex > existingEndIndex);
+    });
+  };
+
+  // 가장 가까운 빈 시간대 찾기
+  const findNearestAvailableTime = (preferredTimeSlot, duration) => {
+    const preferredIndex = getTimeSlotIndex(preferredTimeSlot);
+    
+    // 선호 시간부터 시작해서 아래로 검색
+    for (let i = preferredIndex; i <= timeSlots.length - duration; i++) {
+      const testItem = { timeSlot: timeSlots[i], duration };
+      if (!checkTimeOverlap(testItem)) {
+        return timeSlots[i];
+      }
+    }
+    
+    // 위로 검색
+    for (let i = preferredIndex - 1; i >= 0; i--) {
+      if (i + duration > timeSlots.length) continue;
+      const testItem = { timeSlot: timeSlots[i], duration };
+      if (!checkTimeOverlap(testItem)) {
+        return timeSlots[i];
+      }
+    }
+    
+    return null;
+  };
+
+  // 삭제 함수
+  const handleDeleteItem = (item) => {
+    const newSchedule = { ...schedule };
+    newSchedule[selectedDay] = newSchedule[selectedDay].filter(scheduleItem => scheduleItem.id !== item.id);
+    setSchedule(newSchedule);
+
+    // 추천 탭에 다시 추가
+    const newPlaces = { ...places };
+    const originalItem = { ...item };
+    delete originalItem.timeSlot;
+    delete originalItem.duration;
+    
+    if (originalItem.type === '유적지' || originalItem.type === '문화재') {
+      newPlaces['관광지'].push(originalItem);
+    } else if (originalItem.type === '호텔' || originalItem.type === '펜션' || originalItem.type === '한옥') {
+      newPlaces['숙소'].push(originalItem);
+    } else {
+      newPlaces['식당'].push(originalItem);
+    }
+    
+    setPlaces(newPlaces);
+  };
+
   const handleDragStart = (e, item, fromSchedule = false) => {
     setDraggedItem(item);
     setDraggedFromSchedule(fromSchedule);
@@ -57,60 +122,62 @@ const TravelPlannerApp = () => {
     
     if (draggedFromSchedule) {
       // 스케줄 내에서 이동
+      const originalItem = newSchedule[selectedDay].find(item => item.id === draggedItem.id);
+      if (!originalItem) return;
+      
+      const testItem = { ...originalItem, timeSlot };
+      
+      // 겹침 체크 (자기 자신은 제외)
+      if (checkTimeOverlap(testItem, draggedItem.id)) {
+        // 겹치면 가장 가까운 빈 시간대로 이동
+        const availableTime = findNearestAvailableTime(timeSlot, originalItem.duration);
+        if (availableTime) {
+          testItem.timeSlot = availableTime;
+        } else {
+          // 빈 시간대가 없으면 원래 위치 유지
+          setDraggedItem(null);
+          setDraggedFromSchedule(null);
+          return;
+        }
+      }
+      
       newSchedule[selectedDay] = newSchedule[selectedDay].filter(item => item.id !== draggedItem.id);
-      const newItem = {
-        ...draggedItem,
-        timeSlot
-      };
-      newSchedule[selectedDay].push(newItem);
+      newSchedule[selectedDay].push(testItem);
     } else {
       // 추천 탭에서 스케줄로 이동
       const newPlaces = { ...places };
       const category = Object.keys(newPlaces).find(key => 
         newPlaces[key].some(place => place.id === draggedItem.id)
       );
+      
       if (category) {
+        const newItem = {
+          ...draggedItem,
+          timeSlot,
+          duration: 4 // 기본 1시간 (15분 * 4)
+        };
+        
+        // 겹침 체크
+        if (checkTimeOverlap(newItem)) {
+          // 겹치면 가장 가까운 빈 시간대로 이동
+          const availableTime = findNearestAvailableTime(timeSlot, newItem.duration);
+          if (availableTime) {
+            newItem.timeSlot = availableTime;
+          } else {
+            // 빈 시간대가 없으면 추가하지 않음
+            setDraggedItem(null);
+            setDraggedFromSchedule(null);
+            return;
+          }
+        }
+        
         newPlaces[category] = newPlaces[category].filter(place => place.id !== draggedItem.id);
         setPlaces(newPlaces);
+        newSchedule[selectedDay].push(newItem);
       }
-      
-      const newItem = {
-        ...draggedItem,
-        timeSlot,
-        duration: 4 // 기본 1시간 (15분 * 4)
-      };
-      newSchedule[selectedDay].push(newItem);
     }
 
     setSchedule(newSchedule);
-    setDraggedItem(null);
-    setDraggedFromSchedule(null);
-  };
-
-  const handleDropOutside = (e) => {
-    e.preventDefault();
-    if (!draggedItem || !draggedFromSchedule) return;
-
-    // 스케줄에서 제거하고 추천 탭으로 복귀
-    const newSchedule = { ...schedule };
-    newSchedule[selectedDay] = newSchedule[selectedDay].filter(item => item.id !== draggedItem.id);
-    setSchedule(newSchedule);
-
-    // 추천 탭에 다시 추가
-    const newPlaces = { ...places };
-    const originalItem = { ...draggedItem };
-    delete originalItem.timeSlot;
-    delete originalItem.duration;
-    
-    if (originalItem.type === '유적지' || originalItem.type === '문화재') {
-      newPlaces['관광지'].push(originalItem);
-    } else if (originalItem.type === '호텔' || originalItem.type === '펜션' || originalItem.type === '한옥') {
-      newPlaces['숙소'].push(originalItem);
-    } else {
-      newPlaces['식당'].push(originalItem);
-    }
-    
-    setPlaces(newPlaces);
     setDraggedItem(null);
     setDraggedFromSchedule(null);
   };
@@ -125,24 +192,25 @@ const TravelPlannerApp = () => {
     
     const handleMouseMove = (moveEvent) => {
       const deltaY = moveEvent.clientY - startY;
-      const deltaSlots = Math.round(deltaY / 15);
+      const deltaSlots = Math.round(deltaY / 30);
       
       const newSchedule = { ...schedule };
       const itemIndex = newSchedule[selectedDay].findIndex(scheduleItem => scheduleItem.id === item.id);
       
       if (itemIndex !== -1) {
+        let testItem = { ...originalItem };
+        
         if (direction === 'top') {
           // 위쪽 리사이징: 시작 시간 변경, 길이 조절
           const newStartIndex = Math.max(0, Math.min(originalTimeIndex + deltaSlots, originalTimeIndex + originalItem.duration - 1));
           const newDuration = originalItem.duration - (newStartIndex - originalTimeIndex);
           
           if (newDuration >= 1 && newStartIndex < timeSlots.length) {
-            newSchedule[selectedDay][itemIndex] = {
+            testItem = {
               ...originalItem,
               timeSlot: timeSlots[newStartIndex],
               duration: newDuration
             };
-            setSchedule(newSchedule);
           }
         } else {
           // 아래쪽 리사이징: 길이만 변경
@@ -150,12 +218,17 @@ const TravelPlannerApp = () => {
           const endIndex = originalTimeIndex + newDuration - 1;
           
           if (endIndex < timeSlots.length) {
-            newSchedule[selectedDay][itemIndex] = {
+            testItem = {
               ...originalItem,
               duration: newDuration
             };
-            setSchedule(newSchedule);
           }
+        }
+        
+        // 겹침 체크 (자기 자신은 제외)
+        if (!checkTimeOverlap(testItem, item.id)) {
+          newSchedule[selectedDay][itemIndex] = testItem;
+          setSchedule(newSchedule);
         }
       }
     };
@@ -175,16 +248,16 @@ const TravelPlannerApp = () => {
 
   const renderScheduleItem = (item) => {
     const startIndex = getTimeSlotIndex(item.timeSlot);
-    const height = item.duration * 15; // 15분당 15px
+    const height = item.duration * 30; // 15분당 15px
     
     return (
       <div
         key={item.id}
-        className="absolute left-16 bg-blue-100 border border-blue-300 rounded-md z-10 group"
+        className="absolute left-16 bg-sub rounded-md z-10 group"
         style={{
-          top: `${startIndex * 15}px`,
+          top: `${startIndex * 30}px`,
           height: `${height}px`,
-          width: '200px'
+          width: '329px'
         }}
       >
         {/* 위쪽 리사이즈 핸들 */}
@@ -198,13 +271,13 @@ const TravelPlannerApp = () => {
         
         {/* 컨텐츠 */}
         <div 
-          className="p-2 h-full flex items-center justify-between cursor-move" 
+          className="p-3 h-full flex items-center justify-between cursor-move" 
           style={{ paddingTop: '12px', paddingBottom: '12px' }}
           draggable
           onDragStart={(e) => handleDragStart(e, item, true)}
         >
           <div className="flex-1 min-w-0">
-            <div className="font-medium text-sm truncate">{item.name}</div>
+            <div className="font-bold text-lg truncate">{item.name}</div>
             <div className="text-xs text-gray-500 truncate">{item.type}</div>
           </div>
           <button
@@ -232,70 +305,55 @@ const TravelPlannerApp = () => {
     );
   };
 
+  const info = {
+    "title": "제목없는 여행1",
+    "person": {
+      "adult": 2,
+      "children": 1,
+    },
+    "departure": "명지대학교 인문캠퍼스 방목학술정보관",
+    "travel": "부산",
+    "trans": "대중교통"
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-blue-600">planMate</h1>
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                
-                <input
-                  type="text"
-                  placeholder="닉네임 님"
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen font-pretendard">
+      <Navbar isLogin={true} />
 
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="mb-6">
-          <div className="flex items-center space-x-4 mb-4">
-            <span className="text-sm text-gray-600">제목없는 여행1</span>
-            <span className="text-sm text-gray-600">인원 수 2명</span>
-            <span className="text-sm text-gray-600">여행지 부산</span>
-            <span className="text-sm text-gray-600">출발지 명지대학교 인문캠퍼스</span>
-            <span className="text-sm text-gray-600">이동수단 대중교통</span>
-          </div>
-          <div className="flex space-x-4">
-            <button className="px-4 py-2 bg-gray-200 rounded-lg">지도로 보기</button>
-            <button className="px-4 py-2 bg-gray-200 rounded-lg">저장</button>
-            <button className="px-4 py-2 bg-gray-200 rounded-lg">완료</button>
-          </div>
-        </div>
+      <div className="w-[1400px] mx-auto py-6">
+        <PlanInfo info={info}/>
 
-        <div className="flex space-x-6">
+        <div className="flex space-x-6 flex-1">
           {/* 일차 선택 */}
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col space-y-4">
             {[1, 2, 3].map(day => (
               <button
                 key={day}
-                className={`px-4 py-6 rounded-lg text-center ${
+                className={`px-4 py-4 rounded-lg ${
                   selectedDay === day
-                    ? 'bg-blue-500 text-white'
+                    ? 'bg-main text-white'
                     : 'bg-white text-gray-700 border border-gray-300'
                 }`}
                 onClick={() => setSelectedDay(day)}
               >
-                <div className="text-lg font-medium">{day}일차</div>
+                <div className="text-xl font-semibold">{day}일차</div>
                 <div className="text-sm">07.0{3 + day}.</div>
               </button>
             ))}
           </div>
 
           {/* 시간표 */}
-          <div className="flex-1">
-            <div className="bg-white rounded-lg p-4 relative" style={{ height: '600px', overflowY: 'auto' }}>
+          <div className="w-[450px] h-full">
+            <div 
+              className="border border-gray-300 bg-white rounded-lg p-5 relative h-[calc(100vh-203px)]" 
+              style={{ overflowY: 'auto' }}
+            >
               <div className="relative">
                 {timeSlots.map((time, index) => (
                   <div
                     key={time}
                     className="flex items-center border-b border-gray-100 relative"
-                    style={{ height: '15px' }}
+                    style={{ height: '30px' }}
                     onDrop={(e) => handleDrop(e, time)}
                     onDragOver={handleDragOver}
                   >
@@ -311,50 +369,48 @@ const TravelPlannerApp = () => {
           </div>
 
           {/* 장소 추천 탭 */}
-          <div className="w-80">
-            <div className="bg-white rounded-lg p-4">
-              <div className="flex space-x-2 mb-4">
-                {['관광지', '숙소', '식당'].map(tab => (
-                  <button
-                    key={tab}
-                    className={`px-4 py-2 rounded-lg text-sm ${
-                      selectedTab === tab
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-200 text-gray-700'
-                    }`}
-                    onClick={() => setSelectedTab(tab)}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
+          <div className="flex-1">
+            <div className="flex space-x-1">
+              {['관광지', '숙소', '식당'].map(tab => (
+                <button
+                  key={tab}
+                  className={`px-4 py-2 rounded-t-lg ${
+                    selectedTab === tab
+                      ? 'bg-main text-white'
+                      : 'bg-gray-200 text-gray-700'
+                  }`}
+                  onClick={() => setSelectedTab(tab)}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
 
-              <div className="space-y-3" style={{ maxHeight: '500px', overflowY: 'auto' }}>
-                {places[selectedTab].map(place => (
-                  <div
-                    key={place.id}
-                    className="flex items-center p-3 border border-gray-200 rounded-lg cursor-move hover:bg-gray-50"
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, place)}
-                  >
-                    <div className="w-12 h-12 bg-gray-300 rounded-lg mr-3 flex items-center justify-center">
-                      <img src={place.image} alt={place.name} className="w-full h-full object-cover rounded-lg" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">{place.name}</div>
-                      <div className="flex items-center text-xs text-gray-500">
-                        <span className="mr-2">{place.type}</span>
-                        
-                        <span className="mr-2">{place.rating}</span>
-                      </div>
-                      <div className="text-xs text-gray-500">{place.location}</div>
-                    </div>
-                    <button className="p-1 hover:bg-gray-200 rounded">
-                      ㅇㅇ
-                    </button>
+            <div className="border border-gray-300 rounded-lg rounded-tl-none h-[calc(100vh-243px)] overflow-y-auto">
+              {places[selectedTab].map(place => (
+                <div
+                  key={place.id}
+                  className="flex items-center p-5 cursor-move border-b border-gray-300 hover:bg-gray-100"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, place)}
+                >
+                  <div className="w-12 h-12 bg-gray-300 rounded-lg mr-4 flex items-center justify-center">
+                    <img src={place.image} alt={place.name} className="w-full h-full object-cover rounded-lg" />
                   </div>
-                ))}
-              </div>
+                  <div className="flex-1 space-y-1">
+                    <div className="font-bold text-xl">{place.name}</div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-main">{place.type}</span>
+                      <p><span className="text-yellow-400">★</span> {place.rating}</p>
+                      <span className="text-gray-500">{place.location}</span>
+                    </div>
+                    
+                  </div>
+                  <button className="p-1 hover:bg-gray-200 rounded">
+                    자세히 보기
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>
