@@ -32,8 +32,10 @@ const TravelPlannerApp = () => {
     ]
   });
 
+  const startTime = 8;
+  const endTime = 22;
   const timeSlots = [];
-  for (let hour = 8; hour < 22; hour++) {
+  for (let hour = startTime; hour < endTime; hour++) {
     for (let minute = 0; minute < 60; minute += 15) {
       timeSlots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
     }
@@ -261,11 +263,11 @@ const TravelPlannerApp = () => {
       >
         {/* 위쪽 리사이즈 핸들 */}
         <div
-          className="absolute top-0 left-0 right-0 h-3 cursor-ns-resize bg-blue-400 opacity-0 group-hover:opacity-70 transition-opacity rounded-t-md flex items-center justify-center"
+          className="absolute top-0 left-0 right-0 h-3 cursor-ns-resize bg-[#718FFF] opacity-0 group-hover:opacity-70 transition-opacity rounded-t-md flex items-center justify-center"
           onMouseDown={(e) => handleResizeStart(e, item, 'top')}
           draggable={false}
         >
-          <div className="w-8 h-0.5 bg-blue-600 rounded"></div>
+          <div className="w-8 h-0.5 bg-main rounded"></div>
         </div>
         
         {/* 컨텐츠 */}
@@ -294,11 +296,11 @@ const TravelPlannerApp = () => {
         
         {/* 아래쪽 리사이즈 핸들 */}
         <div
-          className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize bg-blue-400 opacity-0 group-hover:opacity-70 transition-opacity rounded-b-md flex items-center justify-center"
+          className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize bg-[#718FFF] opacity-0 group-hover:opacity-70 transition-opacity rounded-b-md flex items-center justify-center"
           onMouseDown={(e) => handleResizeStart(e, item, 'bottom')}
           draggable={false}
         >
-          <div className="w-8 h-0.5 bg-blue-600 rounded"></div>
+          <div className="w-8 h-0.5 bg-main rounded"></div>
         </div>
       </div>
     );
@@ -344,19 +346,22 @@ const TravelPlannerApp = () => {
           {/* 시간표 */}
           <div className="w-[450px] h-full">
             <div 
-              className="border border-gray-300 bg-white rounded-lg p-5 relative h-[calc(100vh-203px)]" 
+              className="border border-gray-300 bg-white rounded-lg px-5 py-7 relative h-[calc(100vh-203px)]" 
               style={{ overflowY: 'auto' }}
             >
-              <div className="relative">
+              <div className="relative border-t border-gray-200">
                 {timeSlots.map((time, index) => (
                   <div
                     key={time}
-                    className="flex items-center border-b border-gray-100 relative"
+                    className="flex items-center relative border-b border-gray-200"
                     style={{ height: '30px' }}
                     onDrop={(e) => handleDrop(e, time)}
                     onDragOver={handleDragOver}
                   >
-                    <div className="w-12 text-xs text-gray-500 pr-2">{time}</div>
+                    <div className="w-10 text-xs text-gray-500 absolute top-[-25%] bg-white">{time}</div>
+                    {index + 1 === timeSlots.length ? 
+                      <div className="w-10 text-xs text-gray-500 absolute bottom-[-30%] bg-white">{endTime}:00</div>
+                    :<></>}
                     <div className="flex-1 h-full"></div>
                   </div>
                 ))}
@@ -403,7 +408,6 @@ const TravelPlannerApp = () => {
                       <p><span className="text-yellow-400">★</span> {place.rating}</p>
                       <span className="text-gray-500">{place.location}</span>
                     </div>
-                    
                   </div>
                   <button className="p-1 hover:bg-gray-200 rounded">
                     자세히 보기
