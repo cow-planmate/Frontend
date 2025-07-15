@@ -12,7 +12,6 @@ const TravelPlannerApp = () => {
   });
   const [draggedItem, setDraggedItem] = useState(null);
   const [draggedFromSchedule, setDraggedFromSchedule] = useState(null);
-  const [resizing, setResizing] = useState(null);
   const [places, setPlaces] = useState({
     관광지: [
       { id: 1, name: '동궁과 월지', type: '유적지', rating: 4.5, location: '경북 경주시 원화로 102', image: '/api/placeholder/60/60' },
