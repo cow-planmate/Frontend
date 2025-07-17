@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Navbar from '../components/navbar';
 import PlanInfo from '../components/PlanInfo';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faGear } from "@fortawesome/free-solid-svg-icons";
 
 const TravelPlannerApp = () => {
   const [selectedDay, setSelectedDay] = useState(1);
@@ -341,6 +343,7 @@ const TravelPlannerApp = () => {
                 <div className="text-sm">07.0{3 + day}.</div>
               </button>
             ))}
+            <button className="text-gray-500 text-xl hover:text-gray-700" title="설정"><FontAwesomeIcon icon={faGear}/></button>
           </div>
 
           {/* 시간표 */}
