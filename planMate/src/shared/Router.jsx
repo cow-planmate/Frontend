@@ -5,7 +5,6 @@ import Complete from "../pages/Complete";
 import Create from "../pages/Create";
 import Mypage from "../pages/Mypage";
 import Signuptest from "../pages/Signuptest";
-import Test from "../pages/Test";
 import Passwordfindtest from "../pages/Passwordfindtest";
 import Logintest from "../pages/Logintest";
 import Themetest from "../pages/Themetest";
@@ -29,7 +28,6 @@ const Router = () => {
         <Route path="create" element={<Create />} />
         <Route path="mypage" element={<Mypage />} />
         <Route path="signuptest" element={<Signuptest />} />
-        <Route path="test" element={<Test />} />
         <Route path="logintest" element={<Logintest />} />
         <Route path="themetest" element={<Themetest />} />
         <Route path="passwordfindtest" element={<Passwordfindtest />} />
