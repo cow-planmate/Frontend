@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import Navbar from '../components/navbar';
 import PlanInfo from '../components/PlanInfo';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -6,7 +6,7 @@ import { faGear } from "@fortawesome/free-solid-svg-icons";
 
 const TravelPlannerApp = () => {
   const [selectedDay, setSelectedDay] = useState(1);
-  const [selectedTab, setSelectedTab] = useState('관광지');
+  const [selectedTab, setSelectedTab] = useState('관광지'); // -
   const [schedule, setSchedule] = useState({
     1: [],
     2: [],
@@ -308,7 +308,7 @@ const TravelPlannerApp = () => {
     );
   };
 
-  const info = {
+  const [info, setInfo] = useState({
     "title": "제목없는 여행1",
     "person": {
       "adult": 2,
@@ -317,7 +317,7 @@ const TravelPlannerApp = () => {
     "departure": "명지대학교 인문캠퍼스 방목학술정보관",
     "travel": "부산",
     "trans": "대중교통"
-  }
+  });
 
   return (
     <div className="min-h-screen font-pretendard">
@@ -343,13 +343,12 @@ const TravelPlannerApp = () => {
                 <div className="text-sm">07.0{3 + day}.</div>
               </button>
             ))}
-            <button className="text-gray-500 text-xl hover:text-gray-700" title="설정"><FontAwesomeIcon icon={faGear}/></button>
           </div>
 
           {/* 시간표 */}
           <div className="w-[450px] h-full">
             <div 
-              className="border border-gray-300 bg-white rounded-lg px-5 py-7 relative h-[calc(100vh-203px)]" 
+              className="border border-gray-300 bg-white rounded-lg px-5 py-7 relative h-[calc(100vh-187px)]" 
               style={{ overflowY: 'auto' }}
             >
               <div className="relative border-t border-gray-200">
@@ -375,7 +374,7 @@ const TravelPlannerApp = () => {
             </div>
           </div>
 
-          {/* 장소 추천 탭 */}
+          {/* 장소 추천 탭 */} {/* 삭제 후 CreateSetting.jsx로 이동 예정 */}
           <div className="flex-1">
             <div className="flex space-x-1">
               {['관광지', '숙소', '식당'].map(tab => (
@@ -393,7 +392,7 @@ const TravelPlannerApp = () => {
               ))}
             </div>
 
-            <div className="border border-gray-300 rounded-lg rounded-tl-none h-[calc(100vh-243px)] overflow-y-auto">
+            <div className="border border-gray-300 rounded-lg rounded-tl-none h-[calc(100vh-227px)] overflow-y-auto">
               {places[selectedTab].map(place => (
                 <div
                   key={place.id}
