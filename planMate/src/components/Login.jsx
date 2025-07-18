@@ -1,20 +1,22 @@
 import React from "react";
 
-export default function Login({ isOpen, onClose }) {
+export default function Login({
+  isOpen,
+  onClose,
+  onPasswordFindOpen,
+  onSignupOpen,
+}) {
   if (!isOpen) return null;
 
   return (
-    // 모달 오버레이 - 배경을 어둡게 하고 클릭 시 닫기
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
       onClick={onClose}
     >
-      {/* 모달 콘텐츠 - 클릭 시 닫기 방지 */}
       <div
         className="w-full max-w-md bg-white rounded-lg shadow-lg p-8 relative"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 닫기 버튼을 우상단으로 이동 */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
@@ -55,8 +57,12 @@ export default function Login({ isOpen, onClose }) {
         </div>
 
         <div className="flex justify-between mt-8 text-sm text-gray-500">
-          <button className="hover:text-gray-700">비밀번호 찾기</button>
-          <button className="hover:text-gray-700">회원가입</button>
+          <button className="hover:text-gray-700" onClick={onPasswordFindOpen}>
+            비밀번호 찾기
+          </button>
+          <button className="hover:text-gray-700" onClick={onSignupOpen}>
+            회원가입
+          </button>
         </div>
       </div>
     </div>
