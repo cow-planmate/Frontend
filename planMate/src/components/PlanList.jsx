@@ -37,9 +37,9 @@ export default function PlanList() {
   }, []);
 
   return (
-    <div className='border border-gray-300 rounded-lg w-[1000px] p-7'>
-      <div className="font-bold text-2xl mb-5">나의 일정</div>
-      <div>
+    <div className='border border-gray-300 rounded-lg w-[1000px]'>
+      <div className="font-bold text-2xl p-7 pb-5">나의 일정</div>
+      <div className="px-4">
         <div className="text-gray-500 font-normal text-sm pl-3 pb-1">제목</div>
         {test.map((lst) => {
           const isOpen = openId === lst.id;

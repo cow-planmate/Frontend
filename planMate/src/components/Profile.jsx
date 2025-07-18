@@ -10,7 +10,7 @@ export default function Profile() {
   const order = ["이메일", "나이", "성별", "선호테마", "비밀번호"];
 
   return (
-    <div className='relative border border-gray-300 rounded-lg w-[380px] min-h-[730px] p-7 mr-5'>
+    <div className='relative border border-gray-300 rounded-lg w-[380px] min-h-[746px] p-7 mr-5'>
       <div className="flex flex-col items-center text-2xl pb-5 border-b border-gray-300">
         <div className="w-24 h-24 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full"></div>
         <p className="pt-3 font-bold">닉네임</p>

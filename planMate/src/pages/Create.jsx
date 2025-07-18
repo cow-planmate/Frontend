@@ -426,16 +426,15 @@ const TravelPlannerApp = () => {
     },
     "departure": "명지대학교 인문캠퍼스 방목학술정보관",
     "travel": "부산",
-    "trans": "대중교통"
+    "trans": "bus"
   });
 
   return (
     <div className="min-h-screen font-pretendard">
       <Navbar isLogin={true} />
 
+      <PlanInfo info={info} />
       <div className="w-[1400px] mx-auto py-6">
-        <PlanInfo info={info} />
-
         <div className="flex space-x-6 flex-1">
           {/* 일차 선택 */}
           <div className="flex flex-col space-y-4">
@@ -453,6 +452,7 @@ const TravelPlannerApp = () => {
                 <div className="text-sm">07.0{3 + day}.</div>
               </button>
             ))}
+            
           </div>
           {/* 시간표 */}
           <div className="w-[450px] h-full">
