@@ -1,3 +1,4 @@
+// components/DepartureModal.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -5,6 +6,7 @@ import {
   faSearch,
   faTimes,
 } from "@fortawesome/free-solid-svg-icons";
+import { useApiClient } from "../assets/hooks/useApiClient";
 
 const DepartureModal = ({
   isOpen,
@@ -12,12 +14,14 @@ const DepartureModal = ({
   onLocationSelect,
   title = "출발지 검색",
   placeholder = "출발지를 입력해주세요",
+  onAuthError,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const inputRef = useRef(null);
+
+  // API 클라이언트 훅 사용
+  const { post, isLoading, error, isAuthenticated } = useApiClient();
 
   // 모달이 열릴 때 input에 포커스
   useEffect(() => {
@@ -33,31 +37,30 @@ const DepartureModal = ({
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
+    // 인증 체크
+    if (!isAuthenticated()) {
+      if (onAuthError) {
+        onAuthError();
+      }
+      return;
+    }
 
     try {
-      const response = await fetch("/api/departure", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          departureQuery: query,
-        }),
+      const data = await post("/api/departure", {
+        departureQuery: query,
       });
 
-      if (!response.ok) {
-        throw new Error("검색 중 오류가 발생했습니다.");
+      setSearchResults(data.departures || []);
+    } catch (err) {
+      console.error("검색 API 에러:", err);
+
+      // 인증 에러인 경우 콜백 호출
+      if (err.message.includes("인증이 만료") && onAuthError) {
+        onAuthError();
       }
 
-      const data = await response.json();
-      setSearchResults(data.departures || []); // API 응답 구조에 맞게 조정
-    } catch (err) {
-      setError(err.message);
+      // 검색 결과 초기화
       setSearchResults([]);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -77,7 +80,6 @@ const DepartureModal = ({
 
   // 위치 선택 핸들러
   const handleLocationClick = (locationName) => {
-    // 문자열을 객체 형태로 변환하여 전달
     const locationObject = { name: locationName };
     onLocationSelect(locationObject);
     setSearchQuery("");
@@ -89,7 +91,6 @@ const DepartureModal = ({
   const handleClose = () => {
     setSearchQuery("");
     setSearchResults([]);
-    setError(null);
     onClose();
   };
 
@@ -109,6 +110,17 @@ const DepartureModal = ({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
+
+  // 모달이 열릴 때 인증 상태 체크
+  useEffect(() => {
+    if (isOpen && !isAuthenticated()) {
+      if (onAuthError) {
+        setTimeout(() => {
+          onAuthError();
+        }, 1000);
+      }
+    }
+  }, [isOpen, isAuthenticated, onAuthError]);
 
   if (!isOpen) return null;
 
@@ -144,7 +156,8 @@ const DepartureModal = ({
               value={searchQuery}
               onChange={handleSearchChange}
               placeholder={placeholder}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-pretendard"
+              disabled={!isAuthenticated()}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-pretendard disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
             <FontAwesomeIcon
               icon={faSearch}
@@ -164,14 +177,47 @@ const DepartureModal = ({
             </div>
           )}
 
+          {/* 에러 메시지 */}
           {error && (
             <div className="p-6 text-center">
-              <p className="text-red-500 font-pretendard">{error}</p>
+              <div
+                className={`p-4 rounded-lg ${
+                  error.includes("로그인") ||
+                  error.includes("인증") ||
+                  error.includes("권한")
+                    ? "bg-yellow-50 border border-yellow-200"
+                    : "bg-red-50 border border-red-200"
+                }`}
+              >
+                <p
+                  className={`font-pretendard ${
+                    error.includes("로그인") ||
+                    error.includes("인증") ||
+                    error.includes("권한")
+                      ? "text-yellow-700"
+                      : "text-red-600"
+                  }`}
+                >
+                  {error}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* 인증되지 않은 경우 메시지 */}
+          {!isAuthenticated() && !error && (
+            <div className="p-6 text-center">
+              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                <p className="text-yellow-700 font-pretendard">
+                  로그인이 필요한 서비스입니다.
+                </p>
+              </div>
             </div>
           )}
 
           {!isLoading &&
             !error &&
+            isAuthenticated() &&
             searchQuery &&
             searchResults.length === 0 && (
               <div className="p-6 text-center">
@@ -205,7 +251,7 @@ const DepartureModal = ({
             </div>
           )}
 
-          {!searchQuery && (
+          {!searchQuery && !error && isAuthenticated() && (
             <div className="p-6 text-center">
               <FontAwesomeIcon
                 icon={faLocationDot}
