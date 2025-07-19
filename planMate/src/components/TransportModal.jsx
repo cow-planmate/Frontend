@@ -34,11 +34,11 @@ const TransportModal = ({
             onClick={() => handleTransportSelect("bus")}
             className={`p-6 rounded-lg border-2 transition-all flex flex-col items-center gap-3 ${
               selectedTransport === "bus"
-                ? "border-blue-500 bg-blue-50"
+                ? "border-main bg-blue-50"
                 : "border-gray-300 hover:border-gray-400"
             }`}
           >
-            <FontAwesomeIcon icon={faBus} className="text-3xl text-blue-500" />
+            <FontAwesomeIcon icon={faBus} className="text-3xl text-main" />
             <span className="font-pretendard font-medium">대중교통</span>
           </button>
 
@@ -46,11 +46,11 @@ const TransportModal = ({
             onClick={() => handleTransportSelect("car")}
             className={`p-6 rounded-lg border-2 transition-all flex flex-col items-center gap-3 ${
               selectedTransport === "car"
-                ? "border-blue-500 bg-blue-50"
+                ? "border-main bg-blue-50"
                 : "border-gray-300 hover:border-gray-400"
             }`}
           >
-            <FontAwesomeIcon icon={faCar} className="text-3xl text-blue-500" />
+            <FontAwesomeIcon icon={faCar} className="text-3xl text-main" />
             <span className="font-pretendard font-medium">자동차</span>
           </button>
         </div>

@@ -3,7 +3,8 @@ import img1 from "../assets/imgs/img1.jpg";
 import Navbar from "../components/navbar";
 import DateRangeModal from "../components/HomeCal";
 import PersonCountModal from "../components/HomePerson";
-import TransportModal from "../components/TransportModal"; // 새로 만든 컴포넌트 import
+import TransportModal from "../components/TransportModal";
+import DepartureModal from "../components/Departure"; // 출발지와 여행지에 같은 컴포넌트 사용
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUser,
@@ -17,9 +18,13 @@ import { Link } from "react-router-dom";
 function App() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isPersonCountOpen, setIsPersonCountOpen] = useState(false);
-  const [isTransportOpen, setIsTransportOpen] = useState(false); // 이동수단 모달 상태
+  const [isTransportOpen, setIsTransportOpen] = useState(false);
+  const [isDepartureOpen, setIsDepartureOpen] = useState(false);
   const [personCount, setPersonCount] = useState({ adults: 0, children: 0 });
-  const [selectedTransport, setSelectedTransport] = useState("bus"); // 기본값: 대중교통
+  const [selectedTransport, setSelectedTransport] = useState("bus");
+  const [departureLocation, setDepartureLocation] = useState(null); // 출발지 상태를 객체로 변경
+  const [destinationLocation, setDestinationLocation] = useState(null); // 여행지 상태 추가
+  const [isDestinationOpen, setIsDestinationOpen] = useState(false); // 여행지 모달 상태 추가
   const [dateRange, setDateRange] = useState([
     {
       startDate: new Date(),
@@ -36,6 +41,32 @@ function App() {
     const start = dateRange[0].startDate.toLocaleDateString("ko-KR");
     const end = dateRange[0].endDate.toLocaleDateString("ko-KR");
     return `${start} ~ ${end}`;
+  };
+
+  // 출발지 관련 함수들
+  const handleDepartureOpen = () => {
+    setIsDepartureOpen(true);
+  };
+
+  const handleDepartureClose = () => {
+    setIsDepartureOpen(false);
+  };
+
+  const handleDepartureLocationSelect = (location) => {
+    setDepartureLocation(location);
+  };
+
+  const handleDestinationLocationSelect = (location) => {
+    setDestinationLocation(location);
+  };
+
+  // 여행지 관련 함수들
+  const handleDestinationOpen = () => {
+    setIsDestinationOpen(true);
+  };
+
+  const handleDestinationClose = () => {
+    setIsDestinationOpen(false);
   };
 
   const handleCalendarOpen = () => {
@@ -64,7 +95,6 @@ function App() {
     return `성인 ${personCount.adults}명, 어린이 ${personCount.children}명`;
   };
 
-  // 이동수단 모달 관련 함수들
   const handleTransportOpen = () => {
     setIsTransportOpen(true);
   };
@@ -113,10 +143,16 @@ function App() {
               </label>
               <input
                 type="text"
-                className="border-b-2 border-gray-300 pb-2 focus:border-blue-500 font-pretendard focus:outline-none w-full pr-8"
+                className="border-b-2 border-gray-300 pb-2 focus:border-blue-500 font-pretendard focus:outline-none w-full pr-8 cursor-pointer"
                 placeholder="출발지 입력"
+                value={departureLocation ? departureLocation.name : ""}
+                onClick={handleDepartureOpen}
+                readOnly
               />
-              <button className="absolute right-0 bottom-2">
+              <button
+                className="absolute right-0 bottom-2"
+                onClick={handleDepartureOpen}
+              >
                 <FontAwesomeIcon
                   icon={faLocationDot}
                   className="text-gray-400"
@@ -130,10 +166,16 @@ function App() {
               </label>
               <input
                 type="text"
-                className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8"
+                className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8 cursor-pointer"
                 placeholder="여행지 입력"
+                value={destinationLocation ? destinationLocation.name : ""}
+                onClick={handleDestinationOpen}
+                readOnly
               />
-              <button className="absolute right-0 bottom-2">
+              <button
+                className="absolute right-0 bottom-2"
+                onClick={handleDestinationOpen}
+              >
                 <FontAwesomeIcon
                   icon={faLocationDot}
                   className="text-gray-400"
@@ -237,6 +279,22 @@ function App() {
         onClose={handleTransportClose}
         selectedTransport={selectedTransport}
         onTransportChange={handleTransportChange}
+      />
+
+      <DepartureModal
+        isOpen={isDepartureOpen}
+        onClose={handleDepartureClose}
+        onLocationSelect={handleDepartureLocationSelect}
+        title="출발지 검색"
+        placeholder="출발지를 입력해주세요"
+      />
+
+      <DepartureModal
+        isOpen={isDestinationOpen}
+        onClose={handleDestinationClose}
+        onLocationSelect={handleDestinationLocationSelect}
+        title="여행지 검색"
+        placeholder="여행지를 입력해주세요"
       />
     </div>
   );
