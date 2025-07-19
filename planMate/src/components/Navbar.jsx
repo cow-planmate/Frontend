@@ -4,9 +4,10 @@ import Login from "../components/Login";
 import PasswordFind from "../components/PasswordFind";
 import Signup from "../components/Signup";
 import Theme from "../components/Theme";
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
+import { useApiClient } from "../assets/hooks/useApiClient";
 
-export default function Navbar({ isLogin }) {
+export default function Navbar() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isPasswordFindOpen, setIsPasswordFindOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
@@ -16,6 +17,47 @@ export default function Navbar({ isLogin }) {
     accommodation: [],
     restaurant: [],
   });
+  
+  // 사용자 프로필 상태 추가
+  const [userProfile, setUserProfile] = useState(null);
+  
+  const { 
+    get, 
+    isLoading, 
+    error, 
+    isAuthenticated, 
+    logout 
+  } = useApiClient();
+
+  // 로그인 상태 확인 및 프로필 정보 가져오기
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (isAuthenticated()) {
+        try {
+          const profileData = await get('/api/user/profile');
+          setUserProfile(profileData);
+        } catch (err) {
+          console.error('프로필 정보를 가져오는데 실패했습니다:', err);
+          // 토큰이 유효하지 않은 경우 로그아웃 처리
+          if (err.message.includes('인증이 만료')) {
+            handleLogout();
+          }
+        }
+      } else {
+        setUserProfile(null);
+      }
+    };
+
+    fetchUserProfile();
+  }, [isAuthenticated, get]);
+
+  // 로그아웃 처리 함수
+  const handleLogout = () => {
+    logout();
+    setUserProfile(null);
+    // 필요한 경우 홈페이지로 리다이렉트
+    // window.location.href = '/';
+  };
 
   const handleLoginOpen = () => {
     setIsLoginOpen(true);
@@ -26,8 +68,8 @@ export default function Navbar({ isLogin }) {
   };
 
   const handlePasswordFindOpen = () => {
-    setIsLoginOpen(false); // 로그인 모달 닫기
-    setIsPasswordFindOpen(true); // 비밀번호 찾기 모달 열기
+    setIsLoginOpen(false);
+    setIsPasswordFindOpen(true);
   };
 
   const handlePasswordFindClose = () => {
@@ -35,8 +77,8 @@ export default function Navbar({ isLogin }) {
   };
 
   const handleSignupOpen = () => {
-    setIsLoginOpen(false); // 로그인 모달 닫기
-    setIsSignupOpen(true); // 회원가입 모달 열기
+    setIsLoginOpen(false);
+    setIsSignupOpen(true);
   };
 
   const handleSignupClose = () => {
@@ -56,6 +98,18 @@ export default function Navbar({ isLogin }) {
     setIsThemeOpen(false);
   };
 
+  // 로그인 성공 후 프로필 정보 새로고침을 위한 함수
+  const refreshUserProfile = async () => {
+    if (isAuthenticated()) {
+      try {
+        const profileData = await get('/api/user/profile');
+        setUserProfile(profileData);
+      } catch (err) {
+        console.error('프로필 정보 새로고침 실패:', err);
+      }
+    }
+  };
+
   return (
     <div className="border-b border-gray-200">
       <div className="mx-auto w-[1400px] flex justify-between py-4 items-center">
@@ -64,13 +118,22 @@ export default function Navbar({ isLogin }) {
             <Logo />
           </Link>
         </div>
-        {isLogin ? (
-          <Link to="/mypage">
-            <div className="flex items-center h-[42px]">
-              <div className="w-8 h-8 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full mr-3"></div>
-              닉네임 님
-            </div>
-          </Link>
+        
+        {isAuthenticated() && userProfile ? (
+          <div className="flex items-center gap-3">
+            <Link to="/mypage">
+              <div className="flex items-center h-[42px]">
+                <div className="w-8 h-8 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full mr-3"></div>
+                <span>{userProfile.nickname || userProfile.name || '사용자'}님</span>
+              </div>
+            </Link>
+            <button
+              className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+              onClick={handleLogout}
+            >
+              로그아웃
+            </button>
+          </div>
         ) : (
           <div>
             <button
@@ -89,6 +152,7 @@ export default function Navbar({ isLogin }) {
         onClose={handleLoginClose}
         onPasswordFindOpen={handlePasswordFindOpen}
         onSignupOpen={handleSignupOpen}
+        onLoginSuccess={refreshUserProfile} // 로그인 성공 후 프로필 새로고침
       />
       <PasswordFind
         isOpen={isPasswordFindOpen}

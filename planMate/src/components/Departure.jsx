@@ -47,9 +47,9 @@ const DepartureModal = ({
 
     try {
       const data = await post("/api/departure", {
-        departureQuery: query,
+        "departureQuery": query,
       });
-
+      console.log(data);
       setSearchResults(data.departures || []);
     } catch (err) {
       console.error("검색 API 에러:", err);
@@ -68,6 +68,7 @@ const DepartureModal = ({
   useEffect(() => {
     const timer = setTimeout(() => {
       searchDeparture(searchQuery);
+      console.log(searchResults);
     }, 300);
 
     return () => clearTimeout(timer);
