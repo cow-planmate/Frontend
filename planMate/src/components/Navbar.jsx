@@ -4,8 +4,10 @@ import Login from "../components/Login";
 import PasswordFind from "../components/PasswordFind";
 import Signup from "../components/Signup";
 import Theme from "../components/Theme";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useApiClient } from "../assets/hooks/useApiClient";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faRightFromBracket, faHouseUser } from "@fortawesome/free-solid-svg-icons";
 
 export default function Navbar() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -17,6 +19,7 @@ export default function Navbar() {
     accommodation: [],
     restaurant: [],
   });
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   
   // 사용자 프로필 상태 추가
   const [userProfile, setUserProfile] = useState(null);
@@ -120,19 +123,36 @@ export default function Navbar() {
         </div>
         
         {isAuthenticated() && userProfile ? (
-          <div className="flex items-center gap-3">
-            <Link to="/mypage">
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsProfileOpen((prev) => (!prev));
+              }}
+            >
               <div className="flex items-center h-[42px]">
                 <div className="w-8 h-8 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full mr-3"></div>
                 <span>{userProfile.nickname || userProfile.name || '사용자'}님</span>
               </div>
-            </Link>
-            <button
-              className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
-              onClick={handleLogout}
-            >
-              로그아웃
             </button>
+            
+            {isProfileOpen && (
+              <div className="absolute right-0 top-full w-36 p-2 bg-white border rounded-lg shadow-md z-50">
+                <Link to="/mypage">
+                  <div className="w-full flex items-center p-3 hover:bg-gray-100 cursor-pointer">
+                    <FontAwesomeIcon className="mr-3 w-4" icon={faHouseUser} />
+                    마이페이지
+                  </div>
+                </Link>
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center p-3 hover:bg-gray-100 cursor-pointer"
+                >
+                  <FontAwesomeIcon className="mr-3 w-4" icon={faRightFromBracket} />
+                  로그아웃
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div>
