@@ -31,7 +31,8 @@ export const useApiClient = () => {
   const getAuthHeaders = useCallback(() => {
     const token = getToken();
     const headers = {
-      "Content-Type": "application/json",
+      "Content-Type": "application/json; charset=utf-8",
+      Accept: "application/json; charset=utf-8",
     };
 
     if (token) {
@@ -175,7 +176,7 @@ export const useApiClient = () => {
 
   const isAuthenticated = useCallback(() => {
     return !!getToken();
-  }, [getToken]);
+  }, []);
 
   return {
     // 상태
