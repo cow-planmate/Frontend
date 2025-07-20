@@ -47,7 +47,7 @@ const DepartureModal = ({
 
     try {
       const data = await post("/api/departure", {
-        "departureQuery": query,
+        departureQuery: query,
       });
       console.log(data);
       setSearchResults(data.departures || []);
@@ -79,8 +79,21 @@ const DepartureModal = ({
     setSearchQuery(e.target.value);
   };
 
-  // 위치 선택 핸들러
-  const handleLocationClick = (locationName) => {
+  // 위치 선택 핸들러 - 객체와 문자열 모두 처리
+  const handleLocationClick = (location) => {
+    let locationName;
+
+    // location이 객체인지 문자열인지 확인
+    if (typeof location === "object" && location !== null) {
+      locationName =
+        location.name ||
+        location.departureName ||
+        location.address ||
+        String(location);
+    } else {
+      locationName = String(location);
+    }
+
     const locationObject = { name: locationName };
     onLocationSelect(locationObject);
     setSearchQuery("");
@@ -230,25 +243,39 @@ const DepartureModal = ({
 
           {!isLoading && !error && searchResults.length > 0 && (
             <div className="py-2">
-              {searchResults.map((locationName, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleLocationClick(locationName)}
-                  className="w-full px-6 py-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                >
-                  <div className="flex items-center">
-                    <FontAwesomeIcon
-                      icon={faLocationDot}
-                      className="text-blue-500 mr-3 flex-shrink-0"
-                    />
-                    <div>
-                      <p className="font-medium text-gray-800 font-pretendard">
-                        {locationName}
-                      </p>
+              {searchResults.map((location, index) => {
+                // location이 객체인지 문자열인지 확인하고 적절히 처리
+                let displayName;
+                if (typeof location === "object" && location !== null) {
+                  displayName =
+                    location.name ||
+                    location.departureName ||
+                    location.address ||
+                    JSON.stringify(location);
+                } else {
+                  displayName = String(location);
+                }
+
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleLocationClick(location)}
+                    className="w-full px-6 py-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                  >
+                    <div className="flex items-center">
+                      <FontAwesomeIcon
+                        icon={faLocationDot}
+                        className="text-blue-500 mr-3 flex-shrink-0"
+                      />
+                      <div>
+                        <p className="font-medium text-gray-800 font-pretendard">
+                          {displayName}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           )}
 
