@@ -107,6 +107,21 @@ export default function Navbar() {
     }
   };
 
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="border-b border-gray-200">
       <div className="mx-auto w-[1400px] flex justify-between py-4 items-center">
@@ -117,7 +132,7 @@ export default function Navbar() {
         </div>
 
         {isAuthenticated() && userProfile ? (
-          <div className="relative">
+          <div className="relative" ref={wrapperRef}>
             <button
               onClick={(e) => {
                 e.stopPropagation();
