@@ -23,26 +23,20 @@ export default function Navbar() {
   
   // 사용자 프로필 상태 추가
   const [userProfile, setUserProfile] = useState(null);
-  
-  const { 
-    get, 
-    isLoading, 
-    error, 
-    isAuthenticated, 
-    logout 
-  } = useApiClient();
+
+  const { get, isLoading, error, isAuthenticated, logout } = useApiClient();
 
   // 로그인 상태 확인 및 프로필 정보 가져오기
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (isAuthenticated()) {
         try {
-          const profileData = await get('/api/user/profile');
+          const profileData = await get("/api/user/profile");
           setUserProfile(profileData);
         } catch (err) {
-          console.error('프로필 정보를 가져오는데 실패했습니다:', err);
+          console.error("프로필 정보를 가져오는데 실패했습니다:", err);
           // 토큰이 유효하지 않은 경우 로그아웃 처리
-          if (err.message.includes('인증이 만료')) {
+          if (err.message.includes("인증이 만료")) {
             handleLogout();
           }
         }
@@ -105,10 +99,10 @@ export default function Navbar() {
   const refreshUserProfile = async () => {
     if (isAuthenticated()) {
       try {
-        const profileData = await get('/api/user/profile');
+        const profileData = await get("/api/user/profile");
         setUserProfile(profileData);
       } catch (err) {
-        console.error('프로필 정보 새로고침 실패:', err);
+        console.error("프로필 정보 새로고침 실패:", err);
       }
     }
   };
@@ -121,7 +115,7 @@ export default function Navbar() {
             <Logo />
           </Link>
         </div>
-        
+
         {isAuthenticated() && userProfile ? (
           <div className="relative">
             <button
@@ -132,7 +126,9 @@ export default function Navbar() {
             >
               <div className="flex items-center h-[42px]">
                 <div className="w-8 h-8 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full mr-3"></div>
-                <span>{userProfile.nickname || userProfile.name || '사용자'}님</span>
+                <span>
+                  {userProfile.nickname || userProfile.name || "사용자"}님
+                </span>
               </div>
             </button>
             
