@@ -17,24 +17,39 @@ export default function Signup({
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showThemes, setShowThemes] = useState(false); // 툴팁 표시를 위한 상태
-  const [timeLeft, setTimeLeft] = useState(0); // 남은 시간 (초)
-  const [isTimerRunning, setIsTimerRunning] = useState(false); // 타이머 실행 중인지
-
+  const [showThemes, setShowThemes] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false); // 인증 완료 상태
+  const [showVerification, setShowVerification] = useState(false); // 인증번호 입력 영역 표시
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        email: "",
+        verificationCode: "",
+        password: "",
+        confirmPassword: "",
+        nickname: "",
+        age: "",
+        gender: "male",
+      });
+      setShowVerification(false);
+    }
+  }, [isOpen]);
   useEffect(() => {
     let timer;
 
     if (isTimerRunning && timeLeft > 0) {
       timer = setInterval(() => {
         setTimeLeft((prevTime) => prevTime - 1);
-      }, 1000); // 1초마다 감소
+      }, 1000);
     }
 
     if (timeLeft === 0 && isTimerRunning) {
-      setIsTimerRunning(false); // 타이머 멈춤
+      setIsTimerRunning(false);
     }
 
-    return () => clearInterval(timer); // 컴포넌트 정리 시 타이머 종료
+    return () => clearInterval(timer);
   }, [timeLeft, isTimerRunning]);
 
   if (!isOpen) return null;
@@ -66,6 +81,13 @@ export default function Signup({
   };
 
   const sendEmail = async () => {
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      alert("올바른 이메일 형식을 입력해주세요.");
+      return;
+    }
+
     try {
       const response = await fetch("/api/auth/register/email", {
         method: "POST",
@@ -86,11 +108,13 @@ export default function Signup({
       alert("인증번호가 이메일로 전송되었습니다!");
       setTimeLeft(300);
       setIsTimerRunning(true);
+      setShowVerification(true); // 인증번호 입력 영역 표시
     } catch (error) {
       console.error("에러 발생:", error);
       alert("이메일 전송에 실패했습니다.");
     }
   };
+
   const verifyEmail = async () => {
     try {
       const response = await fetch("/api/auth/register/email/verify", {
@@ -106,15 +130,38 @@ export default function Signup({
 
       if (data.emailVerified) {
         alert("인증 성공!");
+        setIsEmailVerified(true); // 인증 완료 상태로 변경
+        setIsTimerRunning(false); // 타이머 중지
       } else {
         alert("인증 실패. 코드를 다시 확인하세요.");
       }
     } catch (error) {
       console.error("에러 발생:", error);
-      alert("서버 오류. 나중에 다시 시도해주세요.");
+      alert("오류. 나중에 다시 시도해주세요.");
     }
   };
+  const verifyNickname = async () => {
+    try {
+      const response = await fetch("/api/auth/register/nickname/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nickname: formData.nickname,
+        }),
+      });
+      const data = await response.json();
+      console.log("서버 응답:", data);
 
+      if (data.nicknameAvailable) {
+        alert("사용 가능한 닉네임입니다");
+      } else {
+        alert("이미 존재하는 닉네임입니다");
+      }
+    } catch (error) {
+      console.error("에러 발생:", error);
+      alert("오류. 나중에 다시 시도해주세요.");
+    }
+  };
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div
@@ -148,53 +195,52 @@ export default function Signup({
                 placeholder="honggildong@planmate.com"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  isEmailVerified ? "bg-gray-100 cursor-not-allowed" : ""
+                }`}
+                disabled={isEmailVerified}
               />
               <button
                 type="button"
-                className="w-24 py-2 bg-main text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
+                className={`w-24 py-2 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap ${
+                  isEmailVerified
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-main hover:bg-blue-700"
+                }`}
                 onClick={sendEmail}
+                disabled={isEmailVerified}
               >
-                인증번호발송
+                {isEmailVerified ? "인증완료" : "인증번호발송"}
               </button>
             </div>
           </div>
 
-          {/* 인증번호 입력 */}
-          <div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="인증번호 입력"
-                value={formData.verificationCode}
-                onChange={(e) =>
-                  handleInputChange("verificationCode", e.target.value)
-                }
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-
-              <button
-                type="button"
-                className={`w-24 py-2 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  isTimerRunning
-                    ? "bg-main hover:bg-blue-700"
-                    : "bg-gray-300 cursor-not-allowed"
-                }`}
-                onClick={verifyEmail}
-              >
-                입력
-              </button>
-            </div>
-            {isTimerRunning ? (
-              <p className="text-sm text-start text-gray-500">
+          {/* 인증번호 입력 - showVerification이 true이고 인증이 완료되지 않았을 때만 표시 */}
+          {showVerification && !isEmailVerified && (
+            <div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="인증번호 입력"
+                  value={formData.verificationCode}
+                  onChange={(e) =>
+                    handleInputChange("verificationCode", e.target.value)
+                  }
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  className="w-24 py-2 bg-main hover:bg-blue-700 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={verifyEmail}
+                >
+                  입력
+                </button>
+              </div>
+              <p className="text-sm text-start text-gray-500 mt-1">
                 남은 시간: {formatTime(timeLeft)}
               </p>
-            ) : (
-              <p className="text-sm text-start text-red-500">
-                인증번호를 발송해주세요
-              </p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* 비밀번호 */}
           <div>
@@ -260,6 +306,7 @@ export default function Signup({
               <button
                 type="button"
                 className="w-24 py-2 bg-main text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
+                onClick={verifyNickname}
               >
                 중복확인
               </button>
