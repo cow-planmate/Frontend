@@ -457,7 +457,7 @@ const TravelPlannerApp = () => {
           {/* 시간표 */}
           <div className="w-[450px] h-full">
             <div 
-              className="border border-gray-300 bg-white rounded-lg px-5 py-7 relative h-[calc(100vh-187px)]" 
+              className="border border-gray-300 bg-white rounded-lg px-5 py-7 relative h-[calc(100vh-189px)]" 
               style={{ overflowY: 'auto' }}
             >
               <div className="relative border-t border-gray-200">
@@ -506,7 +506,7 @@ const TravelPlannerApp = () => {
               ))}
             </div>
 
-            <div className="border border-gray-300 rounded-lg rounded-tl-none h-[calc(100vh-227px)] overflow-y-auto">
+            <div className="border border-gray-300 rounded-lg rounded-tl-none h-[calc(100vh-229px)] overflow-y-auto">
               {places[selectedTab].map(place => (
                 <div
                   key={place.id}

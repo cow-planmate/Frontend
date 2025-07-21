@@ -103,6 +103,12 @@ export const useApiClient = () => {
     [apiRequest]
   );
 
+  const patch = useCallback(
+    (url, data) =>
+      apiRequest(url, { method: "PATCH", body: JSON.stringify(data) }),
+    [apiRequest]
+  );
+
   const put = useCallback(
     (url, data) =>
       apiRequest(url, { method: "PUT", body: JSON.stringify(data) }),
@@ -186,6 +192,7 @@ export const useApiClient = () => {
     // API 메서드
     get,
     post,
+    patch,
     put,
     delete: del,
     postFormData,

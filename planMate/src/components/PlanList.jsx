@@ -19,23 +19,6 @@ export default function PlanList() {
     setOpenId(prev => (prev === id ? null : id));
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target)
-      ) {
-        setOpenId(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
   return (
     <div className='border border-gray-300 rounded-lg w-[1000px]'>
       <div className="font-bold text-2xl p-7 pb-5">나의 일정</div>
