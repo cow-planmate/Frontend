@@ -98,7 +98,7 @@ export default function Signup({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: formData.email,
-          verificationCode: Number(formData.verificationCode),
+          verificationCode: formData.verificationCode,
         }),
       });
       const data = await response.json();
