@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function Signup({
   isOpen,
@@ -18,8 +18,32 @@ export default function Signup({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showThemes, setShowThemes] = useState(false); // 툴팁 표시를 위한 상태
+  const [timeLeft, setTimeLeft] = useState(0); // 남은 시간 (초)
+  const [isTimerRunning, setIsTimerRunning] = useState(false); // 타이머 실행 중인지
+
+  useEffect(() => {
+    let timer;
+
+    if (isTimerRunning && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prevTime) => prevTime - 1);
+      }, 1000); // 1초마다 감소
+    }
+
+    if (timeLeft === 0 && isTimerRunning) {
+      setIsTimerRunning(false); // 타이머 멈춤
+    }
+
+    return () => clearInterval(timer); // 컴포넌트 정리 시 타이머 종료
+  }, [timeLeft, isTimerRunning]);
 
   if (!isOpen) return null;
+
+  const formatTime = (seconds) => {
+    const min = Math.floor(seconds / 60);
+    const sec = seconds % 60;
+    return `${min}:${sec.toString().padStart(2, "0")}`;
+  };
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -41,13 +65,63 @@ export default function Signup({
     return `선호테마 선택완료 (${totalSelected}개)`;
   };
 
+  const sendEmail = async () => {
+    try {
+      const response = await fetch("/api/auth/register/email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("이메일 전송 실패");
+      }
+
+      const data = await response.json();
+      console.log("서버 응답:", data);
+      alert("인증번호가 이메일로 전송되었습니다!");
+      setTimeLeft(300);
+      setIsTimerRunning(true);
+    } catch (error) {
+      console.error("에러 발생:", error);
+      alert("이메일 전송에 실패했습니다.");
+    }
+  };
+  const verifyEmail = async () => {
+    try {
+      const response = await fetch("/api/auth/register/email/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          verificationCode: Number(formData.verificationCode),
+        }),
+      });
+      const data = await response.json();
+      console.log("서버 응답:", data);
+
+      if (data.emailVerified) {
+        alert("인증 성공!");
+      } else {
+        alert("인증 실패. 코드를 다시 확인하세요.");
+      }
+    } catch (error) {
+      console.error("에러 발생:", error);
+      alert("서버 오류. 나중에 다시 시도해주세요.");
+    }
+  };
+
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div
         className="w-full max-w-md bg-white rounded-lg shadow-lg p-6 relative max-h-[90vh] overflow-y-auto"
+        style={{
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -78,6 +152,7 @@ export default function Signup({
               <button
                 type="button"
                 className="w-24 py-2 bg-main text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
+                onClick={sendEmail}
               >
                 인증번호발송
               </button>
@@ -96,16 +171,28 @@ export default function Signup({
                 }
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+
               <button
                 type="button"
-                className="w-24 py-2 bg-main text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-24 py-2 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  isTimerRunning
+                    ? "bg-main hover:bg-blue-700"
+                    : "bg-gray-300 cursor-not-allowed"
+                }`}
+                onClick={verifyEmail}
               >
                 입력
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-1 text-left">
-              인증번호 재발송
-            </p>
+            {isTimerRunning ? (
+              <p className="text-sm text-start text-gray-500">
+                남은 시간: {formatTime(timeLeft)}
+              </p>
+            ) : (
+              <p className="text-sm text-start text-red-500">
+                인증번호를 발송해주세요
+              </p>
+            )}
           </div>
 
           {/* 비밀번호 */}
