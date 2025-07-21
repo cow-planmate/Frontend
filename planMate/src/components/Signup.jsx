@@ -22,20 +22,7 @@ export default function Signup({
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false); // 인증 완료 상태
   const [showVerification, setShowVerification] = useState(false); // 인증번호 입력 영역 표시
-  useEffect(() => {
-    if (isOpen) {
-      setFormData({
-        email: "",
-        verificationCode: "",
-        password: "",
-        confirmPassword: "",
-        nickname: "",
-        age: "",
-        gender: "male",
-      });
-      setShowVerification(false);
-    }
-  }, [isOpen]);
+
   useEffect(() => {
     let timer;
 
@@ -137,31 +124,10 @@ export default function Signup({
       }
     } catch (error) {
       console.error("에러 발생:", error);
-      alert("오류. 나중에 다시 시도해주세요.");
+      alert("서버 오류. 나중에 다시 시도해주세요.");
     }
   };
-  const verifyNickname = async () => {
-    try {
-      const response = await fetch("/api/auth/register/nickname/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nickname: formData.nickname,
-        }),
-      });
-      const data = await response.json();
-      console.log("서버 응답:", data);
 
-      if (data.nicknameAvailable) {
-        alert("사용 가능한 닉네임입니다");
-      } else {
-        alert("이미 존재하는 닉네임입니다");
-      }
-    } catch (error) {
-      console.error("에러 발생:", error);
-      alert("오류. 나중에 다시 시도해주세요.");
-    }
-  };
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div
@@ -306,7 +272,6 @@ export default function Signup({
               <button
                 type="button"
                 className="w-24 py-2 bg-main text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
-                onClick={verifyNickname}
               >
                 중복확인
               </button>
@@ -320,10 +285,23 @@ export default function Signup({
                 나이
               </label>
               <input
-                type="number"
+                type="text"
                 placeholder="20"
                 value={formData.age}
-                onChange={(e) => handleInputChange("age", e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  // 빈값 허용
+                  if (value === "") {
+                    handleInputChange("age", "");
+                    return;
+                  }
+
+                  // 숫자만 허용 + 0 이상
+                  if (/^\d+$/.test(value)) {
+                    handleInputChange("age", value);
+                  }
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
