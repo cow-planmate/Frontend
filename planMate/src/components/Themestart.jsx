@@ -1,83 +1,106 @@
-import useState from "react";
-export default function Themestart({ onThemeOpen, selectedThemeKeywords }) {
-  const [showThemes, setShowThemes] = useState(false);
-  const getThemeSelectionText = () => {
-    if (!selectedThemeKeywords) return "선호테마 선택하기";
-    const totalSelected =
-      selectedThemeKeywords.tourist.length +
-      selectedThemeKeywords.accommodation.length +
-      selectedThemeKeywords.restaurant.length;
+import { useState } from "react";
+import { useApiClient } from "../assets/hooks/useApiClient";
 
-    if (totalSelected === 0) {
-      return "선호테마 선택하기";
-    }
-    return `선호테마 선택완료 (${totalSelected}개)`;
+export default function Themestart({
+  isOpen = false,
+  onClose = () => {},
+  onThemeOpen = () => {},
+  selectedThemeKeywords = {},
+}) {
+  const [showThemes, setShowThemes] = useState(false);
+  const { post } = useApiClient();
+  const categoryMap = {
+    0: "관광지",
+    1: "식당",
+    2: "숙소",
   };
+
+  if (!isOpen) return null;
+  const savePreferredTheme = async () => {
+    try {
+      const selectedIds = Object.values(selectedThemeKeywords)
+        .flat()
+        .map((item) => item.preferredThemeId); // ID만 추출
+
+      await post("/api/user/preferredTheme", {
+        preferredThemeIds: selectedIds,
+      });
+
+      onClose();
+    } catch (err) {
+      console.error("선호 테마 저장 실패:", err);
+    }
+  };
+
+  const getThemeSelectionText = () => {
+    const totalSelected = Object.values(selectedThemeKeywords).reduce(
+      (sum, arr) => sum + arr.length,
+      0
+    );
+    return totalSelected === 0 ? "선호테마 선택하기" : "선호테마 수정하기";
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 font-pretendard">
       <div
-        className="w-full max-w-md bg-white rounded-lg shadow-lg p-8 relative"
+        className="w-full max-w-md bg-white rounded-lg shadow-lg p-6 relative"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center mb-2">
-          <label className="block text-sm font-medium text-gray-700 text-left">
-            선호테마
-          </label>
-          <div
-            className="relative"
-            onMouseEnter={() => setShowThemes(true)}
-            onMouseLeave={() => setShowThemes(false)}
-          >
-            <button
-              type="button"
-              className="text-xs border border-gray-300 px-2 py-0.5 rounded-md text-gray-600 hover:bg-gray-100"
+        <h1 className="text-2xl font-bold text-gray-900 text-center mb-6">
+          끌리는 여행 키워드를 골라주세요!
+        </h1>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-[16rem]">
+            <div
+              className="relative"
+              onMouseEnter={() => setShowThemes(true)}
+              onMouseLeave={() => setShowThemes(false)}
             >
-              보기
-            </button>
-            {showThemes &&
-              selectedThemeKeywords &&
-              (selectedThemeKeywords.tourist.length > 0 ||
-                selectedThemeKeywords.accommodation.length > 0 ||
-                selectedThemeKeywords.restaurant.length > 0) && (
-                <div className="absolute bottom-full right-0 mb-1 w-max max-w-xs bg-white p-3 border border-gray-200 rounded-lg shadow-xl z-10">
-                  <div className="text-xs text-gray-700 text-left space-y-1">
-                    {selectedThemeKeywords.tourist.length > 0 && (
-                      <p>
-                        <strong>관광지:</strong>{" "}
-                        {selectedThemeKeywords.tourist.join(", ")}
-                      </p>
-                    )}
-                    {selectedThemeKeywords.accommodation.length > 0 && (
-                      <p>
-                        <strong>숙소:</strong>{" "}
-                        {selectedThemeKeywords.accommodation.join(", ")}
-                      </p>
-                    )}
-                    {selectedThemeKeywords.restaurant.length > 0 && (
-                      <p>
-                        <strong>식당:</strong>{" "}
-                        {selectedThemeKeywords.restaurant.join(", ")}
-                      </p>
-                    )}
+              <button className="text-sm text-main cursor-pointer hover:underline">
+                선택된 테마
+              </button>
+              {showThemes &&
+                Object.values(selectedThemeKeywords).some(
+                  (arr) => arr.length > 0
+                ) && (
+                  <div className="absolute top-6 left-0 bg-white border rounded-lg shadow-lg p-3 whitespace-nowrap z-10">
+                    <div className="text-sm space-y-1">
+                      {Object.entries(selectedThemeKeywords).map(
+                        ([categoryId, keywords]) =>
+                          keywords.length > 0 ? (
+                            <div key={categoryId}>
+                              <strong>{categoryMap[categoryId]}:</strong>{" "}
+                              {keywords
+                                .map((k) => k.preferredThemeName)
+                                .join(", ")}
+                            </div>
+                          ) : null
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+            </div>
+
+            <button
+              className="bg-main text-white text-sm rounded-md py-1"
+              onClick={savePreferredTheme}
+            >
+              완료
+            </button>
           </div>
+
+          <button
+            onClick={onThemeOpen}
+            className={`w-full py-2 px-3 text-sm font-medium rounded-lg border transition-colors ${
+              Object.values(selectedThemeKeywords).some((arr) => arr.length > 0)
+                ? "bg-main text-white border-main"
+                : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+            }`}
+          >
+            {getThemeSelectionText()}
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={onThemeOpen}
-          className={`w-full py-2 px-3 text-sm font-medium rounded-lg border transition-colors ${
-            selectedThemeKeywords &&
-            (selectedThemeKeywords.tourist.length > 0 ||
-              selectedThemeKeywords.accommodation.length > 0 ||
-              selectedThemeKeywords.restaurant.length > 0)
-              ? "bg-main text-white border-main"
-              : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-          }`}
-        >
-          {getThemeSelectionText()}
-        </button>
       </div>
     </div>
   );
