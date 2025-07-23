@@ -1,148 +1,122 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useApiClient } from "../assets/hooks/useApiClient";
 
 export default function Theme({ isOpen, onClose, onComplete }) {
   const [selectedKeywords, setSelectedKeywords] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
-  const [allSelectedKeywords, setAllSelectedKeywords] = useState({
-    tourist: [],
-    accommodation: [],
-    restaurant: [],
-  });
+  const [allSelectedKeywords, setAllSelectedKeywords] = useState({});
+  const [keywordsByStep, setKeywordsByStep] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const { get } = useApiClient();
 
-  const steps = [
-    "좋아하는 관광지 키워드를 선택해주세요!",
-    "좋아하는 숙소 키워드를 선택해주세요!",
-    "좋아하는 식당 키워드를 선택해주세요!",
-  ];
-
-  const stepKeys = ["tourist", "accommodation", "restaurant"];
+  useEffect(() => {
+    if (isOpen) {
+      getPreferredTheme();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const keywordsByStep = [
-    // 관광지 키워드
-    [
-      "고즈넉",
-      "웅장함",
-      "활기찬",
-      "평화로운",
-      "신비로운",
-      "아름다운",
-      "전통적",
-      "모던한",
-      "자연적",
-      "도시적",
-      "역사적",
-      "문화적",
-      "낭만적",
-      "모험적",
-      "휴식적",
-      "교육적",
-      "가족적",
-      "친근한",
-    ],
-    // 숙소 키워드
-    [
-      "깔끔한",
-      "럭셔리",
-      "아늑한",
-      "편안한",
-      "조용한",
-      "뷰가좋은",
-      "접근성좋은",
-      "가성비좋은",
-      "서비스좋은",
-      "시설좋은",
-      "분위기좋은",
-      "안전한",
-      "넓은",
-      "모던한",
-      "전통적",
-      "독특한",
-      "로맨틱",
-      "패밀리",
-    ],
-    // 식당 키워드
-    [
-      "맛있는",
-      "저렴한",
-      "분위기좋은",
-      "서비스좋은",
-      "신선한",
-      "전통적",
-      "퓨전",
-      "건강한",
-      "매운",
-      "달콤한",
-      "고급스러운",
-      "캐주얼",
-      "로컬맛집",
-      "유명한",
-      "뷰맛집",
-      "데이트",
-      "가족식사",
-      "혼밥",
-    ],
-  ];
+  const getPreferredTheme = async () => {
+    try {
+      const res = await get("/api/user/preferredTheme");
+      console.log("API 응답:", res); // 디버깅용
+
+      const themeList = res.preferredThemes || [];
+
+      if (Array.isArray(themeList) && themeList.length > 0) {
+        const categoryMap = {};
+        const categorizedKeywords = [];
+        const categoryList = [];
+
+        themeList.forEach((item) => {
+          const catId = item.preferredThemeCategoryId;
+          const catName = item.preferredThemeCategoryName;
+
+          if (!categoryMap[catId]) {
+            categoryMap[catId] = [];
+            categoryList.push({
+              id: catId,
+              name: catName,
+            });
+          }
+          categoryMap[catId].push(item);
+        });
+
+        categoryList.sort((a, b) => a.id - b.id);
+
+        categoryList.forEach((cat) => {
+          categorizedKeywords.push(categoryMap[cat.id] || []);
+        });
+
+        setCategories(categoryList);
+        setKeywordsByStep(categorizedKeywords);
+
+        const initialSelected = {};
+        categoryList.forEach((cat) => {
+          initialSelected[cat.id] = [];
+        });
+        setAllSelectedKeywords(initialSelected);
+      } else {
+        console.error("API 응답 형식이 올바르지 않습니다:", res);
+      }
+    } catch (err) {
+      console.error("선호 테마 가져오기 실패:", err.message);
+    }
+  };
 
   const toggleKeyword = (index) => {
-    setSelectedKeywords((prev) => {
-      if (prev.includes(index)) {
-        return prev.filter((i) => i !== index);
-      } else if (prev.length < 5) {
-        return [...prev, index];
-      }
-      return prev;
-    });
+    setSelectedKeywords((prev) =>
+      prev.includes(index)
+        ? prev.filter((i) => i !== index)
+        : prev.length < 5
+        ? [...prev, index]
+        : prev
+    );
   };
 
   const nextStep = () => {
-    // 현재 스텝의 선택된 키워드들을 저장
-    const currentStepKey = stepKeys[currentStep];
-    const selectedKeywordNames = selectedKeywords.map(
-      (i) => keywordsByStep[currentStep][i]
-    );
+    if (categories.length === 0 || !keywordsByStep[currentStep]) return;
+
+    const currentCategoryId = categories[currentStep].id;
+    const currentStepKeywords = keywordsByStep[currentStep];
+    const selected = selectedKeywords
+      .map((i) => currentStepKeywords[i])
+      .filter((item) => !!item); // null/undefined 제거
 
     setAllSelectedKeywords((prev) => ({
       ...prev,
-      [currentStepKey]: selectedKeywordNames,
+      [currentCategoryId]: selected, // 객체 배열로 저장
     }));
-
-    console.log(`${steps[currentStep]} 선택된 키워드:`, selectedKeywordNames);
-
-    if (currentStep < steps.length - 1) {
+    if (currentStep < categories.length - 1) {
       setCurrentStep(currentStep + 1);
       setSelectedKeywords([]);
     } else {
-      // 마지막 단계 완료 - 모든 키워드 데이터를 부모로 전달
-      const finalKeywords = {
+      const final = {
         ...allSelectedKeywords,
-        [currentStepKey]: selectedKeywordNames,
+        [currentCategoryId]: selected,
       };
-      console.log("키워드 선택 완료!", finalKeywords);
-      onComplete(finalKeywords);
+      onComplete(final);
     }
   };
 
   const skipStep = () => {
-    // 현재 스텝을 빈 배열로 저장
-    const currentStepKey = stepKeys[currentStep];
+    if (categories.length === 0) return;
+
+    const currentCategoryId = categories[currentStep].id;
     setAllSelectedKeywords((prev) => ({
       ...prev,
-      [currentStepKey]: [],
+      [currentCategoryId]: [],
     }));
-
-    if (currentStep < steps.length - 1) {
+    if (currentStep < categories.length - 1) {
       setCurrentStep(currentStep + 1);
       setSelectedKeywords([]);
     } else {
-      // 마지막 단계에서 건너뛰기 - 모든 키워드 데이터를 부모로 전달
-      const finalKeywords = {
+      const final = {
         ...allSelectedKeywords,
-        [currentStepKey]: [],
+        [currentCategoryId]: [],
       };
-      console.log("키워드 선택 완료!", finalKeywords);
-      onComplete(finalKeywords);
+      onComplete(final);
     }
   };
 
@@ -150,7 +124,7 @@ export default function Theme({ isOpen, onClose, onComplete }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60] font-pretendard"
       onClick={onClose}
     >
       <div
@@ -158,25 +132,32 @@ export default function Theme({ isOpen, onClose, onComplete }) {
         onClick={(e) => e.stopPropagation()}
       >
         <h1 className="text-lg font-bold text-gray-900 text-center mb-4">
-          {steps[currentStep]}
+          {categories.length > 0 && categories[currentStep]
+            ? `좋아하는 ${categories[currentStep].name} 키워드를 선택해주세요!`
+            : "로딩 중..."}
         </h1>
 
         <div className="flex-1 overflow-y-auto mb-4">
           <div className="grid grid-cols-3 gap-3">
-            {currentKeywords.map((keyword, index) => (
-              <button
-                key={index}
-                onClick={() => toggleKeyword(index)}
-                className={`relative rounded-full aspect-square flex flex-col items-center justify-center transition-all ${
-                  selectedKeywords.includes(index) ? "ring-4 ring-blue-500" : ""
-                }`}
-              >
-                <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
-                  <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-                </div>
-                <span className="text-xs text-gray-700 mt-1">{keyword}</span>
-              </button>
-            ))}
+            {currentKeywords && Array.isArray(currentKeywords) ? (
+              currentKeywords.map((keyword, index) => (
+                <button
+                  key={keyword.preferredThemeId}
+                  onClick={() => toggleKeyword(index)}
+                  className={`rounded-lg px-2 py-2 text-sm text-gray-800 border border-gray-300 hover:bg-blue-100 transition-all ${
+                    selectedKeywords.includes(index)
+                      ? "bg-blue-200 border-blue-400"
+                      : ""
+                  }`}
+                >
+                  {keyword.preferredThemeName}
+                </button>
+              ))
+            ) : (
+              <div className="col-span-3 text-center text-gray-500">
+                키워드를 불러오는 중...
+              </div>
+            )}
           </div>
         </div>
 
@@ -208,7 +189,7 @@ export default function Theme({ isOpen, onClose, onComplete }) {
               onClick={nextStep}
               className="px-4 py-2 rounded-lg bg-main text-white hover:bg-blue-700"
             >
-              {currentStep === steps.length - 1 ? "완료" : "다음"}
+              {currentStep === categories.length - 1 ? "완료" : "다음"}
             </button>
           </div>
         </div>

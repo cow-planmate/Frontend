@@ -4,29 +4,34 @@ import Login from "../components/Login";
 import PasswordFind from "../components/PasswordFind";
 import Signup from "../components/Signup";
 import Theme from "../components/Theme";
+import Themestart from "../components/Themestart"; // 추가된 import
 import { useState, useEffect, useRef } from "react";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faRightFromBracket, faHouseUser } from "@fortawesome/free-solid-svg-icons";
+import {
+  faRightFromBracket,
+  faHouseUser,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function Navbar() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isPasswordFindOpen, setIsPasswordFindOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [isThemeOpen, setIsThemeOpen] = useState(false);
+  const [isThemestartOpen, setIsThemestartOpen] = useState(false); // 추가된 state
   const [selectedThemeKeywords, setSelectedThemeKeywords] = useState({
     tourist: [],
     accommodation: [],
     restaurant: [],
   });
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  
+
   // 사용자 프로필 상태 추가
   const [userProfile, setUserProfile] = useState(null);
 
   const { get, isLoading, error, isAuthenticated, logout } = useApiClient();
 
-  // 로그인 상태 확인 및 프로필 정보 가져오기
+  // 기존 코드 그대로...
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (isAuthenticated()) {
@@ -95,6 +100,15 @@ export default function Navbar() {
     setIsThemeOpen(false);
   };
 
+  // 추가된 함수들
+  const handleThemestartOpen = () => {
+    setIsThemestartOpen(true);
+  };
+
+  const handleThemestartClose = () => {
+    setIsThemestartOpen(false);
+  };
+
   // 로그인 성공 후 프로필 정보 새로고침을 위한 함수
   const refreshUserProfile = async () => {
     if (isAuthenticated()) {
@@ -116,9 +130,9 @@ export default function Navbar() {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -136,7 +150,7 @@ export default function Navbar() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setIsProfileOpen((prev) => (!prev));
+                setIsProfileOpen((prev) => !prev);
               }}
             >
               <div className="flex items-center h-[42px]">
@@ -146,7 +160,7 @@ export default function Navbar() {
                 </span>
               </div>
             </button>
-            
+
             {isProfileOpen && (
               <div className="absolute right-0 top-full w-36 p-2 bg-white border rounded-lg shadow-md z-50">
                 <Link to="/mypage">
@@ -155,11 +169,14 @@ export default function Navbar() {
                     마이페이지
                   </div>
                 </Link>
-                <button 
+                <button
                   onClick={handleLogout}
                   className="w-full flex items-center p-3 hover:bg-gray-100 cursor-pointer"
                 >
-                  <FontAwesomeIcon className="mr-3 w-4" icon={faRightFromBracket} />
+                  <FontAwesomeIcon
+                    className="mr-3 w-4"
+                    icon={faRightFromBracket}
+                  />
                   로그아웃
                 </button>
               </div>
@@ -192,13 +209,20 @@ export default function Navbar() {
       <Signup
         isOpen={isSignupOpen}
         onClose={handleSignupClose}
-        onThemeOpen={handleThemeOpen}
+        onThemeOpen={handleThemestartOpen} // 추가된 prop
         selectedThemeKeywords={selectedThemeKeywords}
+        onLoginSuccess={refreshUserProfile}
       />
       <Theme
         isOpen={isThemeOpen}
         onClose={handleThemeClose}
         onComplete={handleThemeComplete}
+      />
+      <Themestart
+        isOpen={isThemestartOpen}
+        onClose={handleThemestartClose}
+        onThemeOpen={handleThemeOpen}
+        selectedThemeKeywords={selectedThemeKeywords}
       />
     </div>
   );
