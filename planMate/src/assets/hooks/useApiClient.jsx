@@ -194,7 +194,7 @@ export const useApiClient = () => {
     post,
     patch,
     put,
-    delete: del,
+    del,
     postFormData,
     apiRequest, // 커스텀 요청용
 

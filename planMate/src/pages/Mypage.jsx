@@ -1,8 +1,23 @@
 import Navbar from "../components/navbar.jsx";
 import Profile from "../components/Profile.jsx";
 import PlanList from "../components/PlanList.jsx";
+import { useApiClient } from "../assets/hooks/useApiClient";
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from "react";
 
 function App() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      alert("로그인 시에만 접근 가능한 페이지입니다.");
+      navigate('/');
+      return;
+    }
+  }, [navigate]);
+  
   return (
     <div className="font-pretendard min-h-screen max-h-fit">
       <Navbar isLogin={true} />

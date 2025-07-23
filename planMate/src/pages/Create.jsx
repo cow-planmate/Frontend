@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../components/navbar";
 import PlanInfo from "../components/PlanInfo";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGear } from "@fortawesome/free-solid-svg-icons";
 
-const TravelPlannerApp = () => {
+const TravelPlannerApp = () => {    
   const [selectedDay, setSelectedDay] = useState(1);
   const [selectedTab, setSelectedTab] = useState('관광지'); // -
   const [schedule, setSchedule] = useState({
