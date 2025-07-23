@@ -202,6 +202,7 @@ export default function Signup({
           verificationCode: formData.verificationCode,
         }),
       });
+
       const data = await response.json();
       console.log("서버 응답:", data);
 
@@ -210,13 +211,14 @@ export default function Signup({
         setIsEmailVerified(true); // 인증 완료 상태로 변경
         setIsTimerRunning(false); // 타이머 중지
       } else {
-        alert("인증 실패. 코드를 다시 확인하세요.");
+        alert(data.message || "인증 실패. 코드를 다시 확인하세요.");
       }
     } catch (error) {
       console.error("에러 발생:", error);
       alert("서버 오류. 나중에 다시 시도해주세요.");
     }
   };
+
   const verifyNickname = async () => {
     try {
       const response = await fetch("/api/auth/register/nickname/verify", {
@@ -556,7 +558,7 @@ export default function Signup({
                 onChange={(e) => {
                   const value = e.target.value;
 
-                  if (value === "") {
+                  if (value === "" || value === "0") {
                     handleInputChange("age", "");
                     return;
                   }
