@@ -2,14 +2,17 @@ import { useState, useEffect, useRef } from "react";
 import TransportModal from "./TransportModal";
 import PersonCountModal from "./HomePerson";
 import { useApiClient } from "../assets/hooks/useApiClient";
+import { useNavigate } from 'react-router-dom';
 
-export default function PlanInfo({info, id}) {
+export default function PlanInfo({info, id, savePlan}) {
   const { patch, isAuthenticated } = useApiClient();
-
+  const navigate = useNavigate();
+  const flexCenter = "flex items-center";
+  
+  const [sendCreate, setSendCreate] = useState({});
   const transInfo = {"bus": "대중교통", "car": "자동차"};
   const transInfo2 = {0: "bus", 1: "car"}
-  const flexCenter = "flex items-center";
-
+  const transInfo3 = {"bus": 0, "car": 1}
   const [isTransportOpen, setIsTransportOpen] = useState(false); 
   const [selectedTransport, setSelectedTransport] = useState(transInfo2[info.transportation]);
   const [isPersonCountOpen, setIsPersonCountOpen] = useState(false);
@@ -65,6 +68,10 @@ export default function PlanInfo({info, id}) {
     setPersonCount(count);
   };
 
+  useEffect(() => {
+    setSendCreate({"transportation": transInfo3[selectedTransport], "adultCount": personCount["adults"], "childCount": personCount["children"]});
+  }, [selectedTransport, personCount])
+
   return (
     <div className={`mx-auto w-[1416px] pt-6 ${flexCenter} justify-between`}>
       <div className={`${flexCenter} space-x-6`}>
@@ -112,10 +119,10 @@ export default function PlanInfo({info, id}) {
         <button className="px-4 py-2 rounded-lg bg-gray-300 mr-6 hover:bg-gray-400">
           지도로 보기
         </button>
-        <button className="px-4 py-2 rounded-lg bg-gray-300 mr-3 hover:bg-gray-400">
+        <button onClick={() => savePlan(sendCreate)} className="px-4 py-2 rounded-lg bg-gray-300 mr-3 hover:bg-gray-400">
           저장
         </button>
-        <button className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400">
+        <button onClick={() => navigate(`/complete?id=${id}`)} className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400">
           완료
         </button>
       </div>

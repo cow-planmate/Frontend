@@ -5,10 +5,87 @@ import { useSearchParams } from 'react-router-dom';
 import { useApiClient } from "../assets/hooks/useApiClient";
 
 const TravelPlannerApp = () => {
-  const { get, post, isAuthenticated } = useApiClient();
+  const { get, post, patch, isAuthenticated } = useApiClient();
   const [searchParams] = useSearchParams();
   const id = searchParams.get('id');
   const [data, setData] = useState(null);
+  const [timetables, setTimetables] = useState([]);
+  const tripCategory = {0: "관광지", 1: "숙소", 2: "식당"}
+  const [transformedData, setTransformedData] = useState(null);
+  const [schedule, setSchedule] = useState({});
+
+  // 두 번째 API 응답을 첫 번째 형태로 변환하는 함수
+  const transformApiResponse = (apiResponse) => {
+    const { placeBlocks, timetables } = apiResponse;    
+    // timetableId를 키로 하는 객체 생성
+    const result = {};
+    
+    // 각 timetable에 대해 빈 배열 초기화
+    timetables.forEach(timetable => {
+      result[timetable.timetableId] = [];
+    });
+    
+    // placeBlocks를 순회하면서 데이터 변환
+    placeBlocks.forEach(place => {
+      // startTime과 endTime으로부터 duration 계산 (15분 단위)
+      const startTime = new Date(`2000-01-01T${place.startTime}`);
+      const endTime = new Date(`2000-01-01T${place.endTime}`);
+      const durationMinutes = (endTime - startTime) / (1000 * 60); // 분 단위
+      const duration = Math.round(durationMinutes / 15); // 15분 단위로 변환
+      
+      // timeSlot을 HH:MM 형태로 변환
+      const timeSlot = place.startTime.substring(0, 5);
+      
+      // Google Maps URL에서 placeId 추출
+      const urlMatch = place.placeLink.match(/place_id:([^&]+)/);
+      const placeId = urlMatch ? urlMatch[1] : '';
+      
+      // categoryId에 따른 iconUrl 설정
+      let iconUrl;
+      if (place.placeCategory === 0) {
+        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png";
+      } else if (place.placeCategory === 1) {
+        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/lodging-71.png";
+      } else {
+        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png";
+      }
+      
+      // 변환된 객체 생성
+      const transformedPlace = {
+        placeId: placeId,
+        url: place.placeLink,
+        name: place.placeName,
+        formatted_address: place.placeAddress,
+        rating: place.placeRating,
+        iconUrl: iconUrl,
+        categoryId: place.placeCategory,
+        xlocation: place.xlocation || 0, // 원본 데이터에서 0.0으로 되어있음
+        ylocation: place.ylocation || 0,
+        timeSlot: timeSlot,
+        duration: duration
+      };
+      
+      // 해당하는 timetableId를 찾아서 데이터 추가
+      // 여기서는 순서대로 배치하는 로직이 필요할 수 있습니다.
+      // 예시로 첫 3개는 78, 다음 3개는 79, 마지막 4개는 80에 배치
+      const placeIndex = placeBlocks.indexOf(place);
+      let targetTimetableId;
+      
+      if (placeIndex < 4) {
+        targetTimetableId = timetables[0]?.timetableId || 78;
+      } else if (placeIndex < 7) {
+        targetTimetableId = timetables[1]?.timetableId || 79;
+      } else {
+        targetTimetableId = timetables[2]?.timetableId || 80;
+      }
+      
+      if (result[targetTimetableId]) {
+        result[targetTimetableId].push(transformedPlace);
+      }
+    });
+    
+    return result;
+  };
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -16,6 +93,18 @@ const TravelPlannerApp = () => {
         try {
           const planData = await get(`/api/plan/${id}`);
           setData(planData);
+          // timetables 데이터 설정
+          if (planData.timetables) {
+            setTimetables(planData.timetables);
+            // 첫 번째 날을 기본 선택일로 설정
+            if (planData.timetables.length > 0) {
+              setSelectedDay(planData.timetables[0].timetableId);
+            }
+          }
+
+          const result = transformApiResponse(planData);
+          setTransformedData(result);
+
         } catch (err) {
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
         }
@@ -27,15 +116,28 @@ const TravelPlannerApp = () => {
     fetchUserProfile();
   }, [id]);
 
-  const [selectedDay, setSelectedDay] = useState(1);
-  const [selectedTab, setSelectedTab] = useState('관광지'); // -
-  const [schedule, setSchedule] = useState({
-    1: [],
-    2: [],
-    3: [],
-  });
+  
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [selectedTab, setSelectedTab] = useState('관광지');
   const [draggedItem, setDraggedItem] = useState(null);
   const [draggedFromSchedule, setDraggedFromSchedule] = useState(null);
+  
+  useEffect(() => {
+    console.log(schedule);
+  }, [schedule]);
+  // timetables 변경 시 schedule 초기화
+
+  useEffect(() => {
+    if (transformedData) {
+      setSchedule(transformedData);
+    } else if (timetables.length > 0) {
+      const initialSchedule = {};
+      timetables.forEach(timetable => {
+        initialSchedule[timetable.timetableId] = [];
+      });
+      setSchedule(initialSchedule);
+    }
+  }, [timetables]);
 
   // place 받아오기
   const [places, setPlaces] = useState({
@@ -66,23 +168,56 @@ const TravelPlannerApp = () => {
     fetchUserProfile();
   }, [id]);
 
-  {places ? console.log(places) : null}
-  const startTime = 8;
-  const endTime = 22;
-  const timeSlots = [];
-  for (let hour = startTime; hour < endTime; hour++) {
-    for (let minute = 0; minute < 60; minute += 15) {
-      timeSlots.push(
-        `${hour.toString().padStart(2, "0")}:${minute
-          .toString()
-          .padStart(2, "0")}`
-      );
+  // 현재 선택된 날의 시간 슬롯 계산
+  const getCurrentTimeSlots = () => {
+    if (!selectedDay || !timetables.length) return [];
+    
+    const currentTimetable = timetables.find(t => t.timetableId === selectedDay);
+    if (!currentTimetable) return [];
+
+    const startHour = parseInt(currentTimetable.startTime.split(':')[0]);
+    const endHour = parseInt(currentTimetable.endTime.split(':')[0]);
+    
+    const timeSlots = [];
+    for (let hour = startHour; hour < endHour; hour++) {
+      for (let minute = 0; minute < 60; minute += 15) {
+        timeSlots.push(
+          `${hour.toString().padStart(2, "0")}:${minute
+            .toString()
+            .padStart(2, "0")}`
+        );
+      }
     }
-  }
+    return timeSlots;
+  };
+
+  const timeSlots = getCurrentTimeSlots();
+
+  // 현재 선택된 날의 종료 시간 가져오기
+  const getCurrentEndTime = () => {
+    if (!selectedDay || !timetables.length) return "20:00";
+    
+    const currentTimetable = timetables.find(t => t.timetableId === selectedDay);
+    return currentTimetable ? currentTimetable.endTime.substring(0, 5) : "20:00";
+  };
+
+  // 날짜 포맷팅 함수
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${month}.${day}.`;
+  };
+
+  // 일차 번호 계산 함수
+  const getDayNumber = (timetableId) => {
+    const index = timetables.findIndex(t => t.timetableId === timetableId);
+    return index + 1;
+  };
 
   // 시간 겹침 체크 함수
   const checkTimeOverlap = (newItem, excludeId = null) => {
-    const daySchedule = schedule[selectedDay];
+    const daySchedule = schedule[selectedDay] || [];
     const newStartIndex = getTimeSlotIndex(newItem.timeSlot);
     const newEndIndex = newStartIndex + newItem.duration - 1;
 
@@ -140,18 +275,17 @@ const TravelPlannerApp = () => {
     let category = originalItem.originalCategory;
     
     if (!category) {
-      // iconUrl을 기반으로 카테고리 결정
-      const getCategory = (iconUrl) => {
-        if (iconUrl.includes('park') || iconUrl.includes('tourist') || iconUrl.includes('museum') || iconUrl.includes('church')) {
+      // iconUrl을 기반으로 카테고리 결정 (아님)
+      const getCategory = (categoryId) => {
+        if (categoryId == 0) {
           return '관광지';
-        } else if (iconUrl.includes('lodging')) {
+        } else if (categoryId == 1) {
           return '숙소';
-        } else if (iconUrl.includes('restaurant') || iconUrl.includes('food')) {
+        } else {
           return '식당';
         }
-        return '관광지'; // 기본값
       };
-      category = getCategory(originalItem.iconUrl);
+      category = getCategory(originalItem.categoryId);
     }
 
     delete originalItem.originalCategory; // 원래 카테고리 정보 제거
@@ -326,7 +460,7 @@ const TravelPlannerApp = () => {
 
   const renderScheduleItem = (item) => {
     const startIndex = getTimeSlotIndex(item.timeSlot);
-    const height = item.duration * 30; // 15분당 15px
+    const height = item.duration * 30; // 15분당 30px
 
     return (
       <div
@@ -356,6 +490,7 @@ const TravelPlannerApp = () => {
         >
           <div className="flex-1 min-w-0">
             <div className="font-bold text-lg truncate">{item.name}</div>
+            <div className="text-gray-500 truncate text-sm">{tripCategory[item.categoryId]}</div>
           </div>
           <button
             className="ml-2 text-red-500 hover:text-red-700 text-lg font-bold leading-none flex-shrink-0 w-6 h-6 flex items-center justify-center"
@@ -382,36 +517,118 @@ const TravelPlannerApp = () => {
     );
   };
 
+  // 선택된 날이 없거나 timetables가 로딩되지 않은 경우 로딩 표시
+  if (!selectedDay || !timetables.length) {
+    return (
+      <div className="min-h-screen font-pretendard">
+        <Navbar />
+        {data && <PlanInfo info={data.planFrame} id={id} />}
+        <div className="w-[1400px] mx-auto py-6 flex items-center justify-center">
+          <div>일정 정보를 불러오는 중...</div>
+        </div>
+      </div>
+    );
+  }
+
+
+  const addMinutes = (time, minsToAdd) => {
+    const [hour, min] = time.split(":").map(Number);
+    const date = new Date(0, 0, 0, hour, min + minsToAdd);
+    return date.toTimeString().slice(0, 5); // "HH:MM"
+  }
+
+  const getDateById = (id) => {
+    const matched = data.timetables.find(t => t.timetableId === id);
+    return matched?.date ?? null;
+  };
+
+  const exportSchedule = () => {
+    const grouped = {}; // { date: [block1, block2, ...] }
+
+    Object.entries(schedule).forEach(([timetableIdStr, day]) => {
+      if (!Array.isArray(day) || day.length === 0) return;
+
+      const timetableId = parseInt(timetableIdStr, 10);
+      const date = getDateById(timetableId);
+
+      for (const place of day) {
+        const startTime = place.timeSlot;
+        const endTime = addMinutes(startTime, place.duration * 15);
+
+        const block = {
+          placeCategory: place.categoryId,
+          placeName: place.name,
+          placeAddress: place.formatted_address,
+          placeRating: place.rating,
+          startTime: `${startTime}:00`,
+          endTime: `${endTime}:00`,
+          date: date,
+          xLocation: place.xlocation,
+          yLocation: place.ylocation,
+          placeLink: place.url,
+          placeTheme: "역사",
+        };
+
+        if (!grouped[date]) grouped[date] = [];
+        grouped[date].push(block);
+      }
+    });
+
+    // 2차원 배열 형태로 반환
+    return Object.values(grouped);
+  };
+
+
+  const savePlan = async (info) => {
+    const scheduleToExport = exportSchedule();
+    console.log(scheduleToExport)
+
+    if (isAuthenticated()) {
+      try {
+        await patch(`/api/plan/${id}/save`, {
+          departure: data.planFrame.departure,
+          travel: data.planFrame.travel,
+          transportationCategoryId: info.transportation,
+          adultCount: info.adultCount,
+          childCount: info.childCount,
+          timetables: data.timetables,
+          timetablePlaceBlocks: scheduleToExport,
+        });
+      } catch (err) {
+        console.error("저장에 실패해버렸습니다:", err);
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen font-pretendard">
-      <Navbar isLogin={true} />
+      <Navbar />
 
-      {data ? <PlanInfo info={data.planFrame} id={id} /> : <></>}
+      {data && <PlanInfo info={data.planFrame} id={id} savePlan={savePlan} />}
       <div className="w-[1400px] mx-auto py-6">
         <div className="flex space-x-6 flex-1">
           {/* 일차 선택 */}
           <div className="flex flex-col space-y-4">
-            {[1, 2, 3].map((day) => (
+            {timetables.map((timetable) => (
               <button
-                key={day}
+                key={timetable.timetableId}
                 className={`px-4 py-4 rounded-lg ${
-                  selectedDay === day
+                  selectedDay === timetable.timetableId
                     ? "bg-main text-white"
                     : "bg-white text-gray-700 border border-gray-300"
                 }`}
-                onClick={() => setSelectedDay(day)}
+                onClick={() => setSelectedDay(timetable.timetableId)}
               >
-                <div className="text-xl font-semibold">{day}일차</div>
-                <div className="text-sm">07.0{3 + day}.</div>
+                <div className="text-xl font-semibold">{getDayNumber(timetable.timetableId)}일차</div>
+                <div className="text-sm">{formatDate(timetable.date)}</div>
               </button>
             ))}
-            
           </div>
+          
           {/* 시간표 */}
           <div className="w-[450px] h-full">
             <div 
-              className="border border-gray-300 bg-white rounded-lg px-5 py-7 relative h-[calc(100vh-189px)]" 
-              style={{ overflowY: 'auto' }}
+              className="border border-gray-300 bg-white rounded-lg px-5 py-7 relative h-[calc(100vh-189px)] overflow-y-auto"
             >
               <div className="relative border-t border-gray-200">
                 {timeSlots.map((time, index) => (
@@ -427,7 +644,7 @@ const TravelPlannerApp = () => {
                     </div>
                     {index + 1 === timeSlots.length ? (
                       <div className="w-10 text-xs text-gray-500 absolute bottom-[-30%] bg-white">
-                        {endTime}:00
+                        {getCurrentEndTime()}
                       </div>
                     ) : (
                       <></>
@@ -437,11 +654,12 @@ const TravelPlannerApp = () => {
                 ))}
 
                 {/* 스케줄 아이템들 */}
-                {schedule[selectedDay].map((item) => renderScheduleItem(item))}
+                {(schedule[selectedDay] || []).map((item) => renderScheduleItem(item))}
               </div>
             </div>
           </div>
-          {/* 장소 추천 탭 */} {/* 삭제 후 CreateSetting.jsx로 이동 예정 */}
+          
+          {/* 장소 추천 탭 */}
           <div className="flex-1">
             <div className="flex space-x-1">
               {["관광지", "숙소", "식당"].map((tab) => (
