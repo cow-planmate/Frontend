@@ -140,6 +140,17 @@ function App() {
         return;
       }
 
+      if (
+        !departureLocation ||
+        !destinationLocation ||
+        !dateRange[0].startDate ||
+        !dateRange[0].endDate ||
+        personCount.adults + personCount.children === 0
+      ) {
+        alert("입력되지 않은 값이 있습니다");
+        return;
+      }
+
       const allDates = getDatesBetween(
         dateRange[0].startDate,
         dateRange[0].endDate
