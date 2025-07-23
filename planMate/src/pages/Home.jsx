@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import img1 from "../assets/imgs/img1.jpg";
+
 import Navbar from "../components/navbar";
 import DateRangeModal from "../components/HomeCal";
 import PersonCountModal from "../components/HomePerson";
@@ -122,7 +123,7 @@ function App() {
       </div>
 
       <div className="flex flex-col items-center ">
-        <img src={img1} className=" w-[140rem] h-[38rem] object-cover" />
+        <img src={img1} className=" w-[140rem] h-[43rem] object-cover" />
       </div>
 
       <div className="absolute bottom-[5rem] left-0 right-0 px-8">
