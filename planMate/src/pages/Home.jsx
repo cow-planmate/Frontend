@@ -123,6 +123,15 @@ function App() {
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
+  const getDatesBetween = (start, end) => {
+    const dateArray = [];
+    const currentDate = new Date(start);
+    while (currentDate <= end) {
+      dateArray.push(new Date(currentDate)); // 날짜 복사
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return dateArray;
+  };
 
   const makePlan = async () => {
     try {
@@ -130,19 +139,23 @@ function App() {
         alert("로그인 후 이용가능한 서비스입니다");
         return;
       }
+
+      const allDates = getDatesBetween(
+        dateRange[0].startDate,
+        dateRange[0].endDate
+      );
+      const formattedDates = allDates.map((date) => formatDateForApi(date));
+
       const requestData = {
         departure: departureLocation.name,
         travelId: destinationLocation.id,
-        dates: [
-          formatDateForApi(dateRange[0].startDate),
-          formatDateForApi(dateRange[0].endDate),
-        ],
+        dates: formattedDates, // <-- ✅ 전체 날짜 배열 전송
         adultCount: Number(personCount.adults),
         childCount: Number(personCount.children),
-        transportation: `${getTransportText()}` === "대중교통" ? 0 : 1,
+        transportation: getTransportText() === "대중교통" ? 0 : 1,
       };
 
-      console.log("보내는 데이터:", requestData); // ✅ 이 부분 추가
+      console.log("보내는 데이터:", requestData);
 
       const data = await post("/api/plan", requestData);
 
