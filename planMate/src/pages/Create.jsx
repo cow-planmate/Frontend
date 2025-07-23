@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useApiClient } from "../assets/hooks/useApiClient";
 
 const TravelPlannerApp = () => {
-  const { get, isAuthenticated } = useApiClient();
+  const { get, post, isAuthenticated } = useApiClient();
   const [searchParams] = useSearchParams();
   const id = searchParams.get('id');
   const [data, setData] = useState(null);
@@ -36,103 +36,37 @@ const TravelPlannerApp = () => {
   });
   const [draggedItem, setDraggedItem] = useState(null);
   const [draggedFromSchedule, setDraggedFromSchedule] = useState(null);
+
+  // place 받아오기
   const [places, setPlaces] = useState({
-    관광지: [
-      {
-        id: 1,
-        name: "동궁과 월지",
-        type: "유적지",
-        rating: 4.5,
-        location: "경북 경주시 원화로 102",
-        image: "/api/placeholder/60/60",
-      },
-      {
-        id: 2,
-        name: "불국사",
-        type: "문화재",
-        rating: 4.7,
-        location: "경북 경주시 불국로 385",
-        image: "/api/placeholder/60/60",
-      },
-      {
-        id: 3,
-        name: "석굴암",
-        type: "문화재",
-        rating: 4.6,
-        location: "경북 경주시 석굴로 238",
-        image: "/api/placeholder/60/60",
-      },
-      {
-        id: 4,
-        name: "첨성대",
-        type: "유적지",
-        rating: 4.3,
-        location: "경북 경주시 첨성로 169-5",
-        image: "/api/placeholder/60/60",
-      },
-      {
-        id: 5,
-        name: "대릉원",
-        type: "유적지",
-        rating: 4.4,
-        location: "경북 경주시 황리단길 20-1",
-        image: "/api/placeholder/60/60",
-      },
-    ],
-    숙소: [
-      {
-        id: 6,
-        name: "경주 힐튼 호텔",
-        type: "호텔",
-        rating: 4.8,
-        location: "경북 경주시 마동 370",
-        image: "/api/placeholder/60/60",
-      },
-      {
-        id: 7,
-        name: "경주 펜션 하우스",
-        type: "펜션",
-        rating: 4.2,
-        location: "경북 경주시 양북면 장항리",
-        image: "/api/placeholder/60/60",
-      },
-      {
-        id: 8,
-        name: "한옥 게스트하우스",
-        type: "한옥",
-        rating: 4.5,
-        location: "경북 경주시 황남동 123",
-        image: "/api/placeholder/60/60",
-      },
-    ],
-    식당: [
-      {
-        id: 9,
-        name: "경주 쌈밥집",
-        type: "한식",
-        rating: 4.6,
-        location: "경북 경주시 황남동 456",
-        image: "/api/placeholder/60/60",
-      },
-      {
-        id: 10,
-        name: "보문 해물탕",
-        type: "해물요리",
-        rating: 4.4,
-        location: "경북 경주시 보문로 789",
-        image: "/api/placeholder/60/60",
-      },
-      {
-        id: 11,
-        name: "전통 불고기 맛집",
-        type: "고기요리",
-        rating: 4.7,
-        location: "경북 경주시 중앙로 321",
-        image: "/api/placeholder/60/60",
-      },
-    ],
+    관광지: [],
+    숙소: [],
+    식당: [],
   });
 
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (id && isAuthenticated()) {
+        try {
+          const tour = await post(`/api/plan/${id}/tour`);
+          const lodging = await post(`/api/plan/${id}/lodging`);
+          const restaurant = await post(`/api/plan/${id}/restaurant`);
+
+          setPlaces({
+            관광지: tour.places,
+            숙소: lodging.places,
+            식당: restaurant.places
+          });
+        } catch (err) {
+          console.error("추천 장소를 가져오는데 실패했습니다:", err);
+        }
+      }
+    };
+
+    fetchUserProfile();
+  }, [id]);
+
+  {places ? console.log(places) : null}
   const startTime = 8;
   const endTime = 22;
   const timeSlots = [];
@@ -153,7 +87,7 @@ const TravelPlannerApp = () => {
     const newEndIndex = newStartIndex + newItem.duration - 1;
 
     return daySchedule.some((item) => {
-      if (excludeId && item.id === excludeId) return false;
+      if (excludeId && item.placeId === excludeId) return false;
 
       const existingStartIndex = getTimeSlotIndex(item.timeSlot);
       const existingEndIndex = existingStartIndex + item.duration - 1;
@@ -188,11 +122,11 @@ const TravelPlannerApp = () => {
     return null;
   };
 
-  // 삭제 함수
+   // 삭제 함수
   const handleDeleteItem = (item) => {
     const newSchedule = { ...schedule };
     newSchedule[selectedDay] = newSchedule[selectedDay].filter(
-      (scheduleItem) => scheduleItem.id !== item.id
+      (scheduleItem) => scheduleItem.placeId !== item.placeId
     );
     setSchedule(newSchedule);
 
@@ -202,17 +136,26 @@ const TravelPlannerApp = () => {
     delete originalItem.timeSlot;
     delete originalItem.duration;
 
-    if (originalItem.type === "유적지" || originalItem.type === "문화재") {
-      newPlaces["관광지"].push(originalItem);
-    } else if (
-      originalItem.type === "호텔" ||
-      originalItem.type === "펜션" ||
-      originalItem.type === "한옥"
-    ) {
-      newPlaces["숙소"].push(originalItem);
-    } else {
-      newPlaces["식당"].push(originalItem);
+    // 원래 카테고리가 있으면 그것을 사용, 없으면 iconUrl로 판단
+    let category = originalItem.originalCategory;
+    
+    if (!category) {
+      // iconUrl을 기반으로 카테고리 결정
+      const getCategory = (iconUrl) => {
+        if (iconUrl.includes('park') || iconUrl.includes('tourist') || iconUrl.includes('museum') || iconUrl.includes('church')) {
+          return '관광지';
+        } else if (iconUrl.includes('lodging')) {
+          return '숙소';
+        } else if (iconUrl.includes('restaurant') || iconUrl.includes('food')) {
+          return '식당';
+        }
+        return '관광지'; // 기본값
+      };
+      category = getCategory(originalItem.iconUrl);
     }
+
+    delete originalItem.originalCategory; // 원래 카테고리 정보 제거
+    newPlaces[category].push(originalItem);
 
     setPlaces(newPlaces);
   };
@@ -237,14 +180,14 @@ const TravelPlannerApp = () => {
     if (draggedFromSchedule) {
       // 스케줄 내에서 이동
       const originalItem = newSchedule[selectedDay].find(
-        (item) => item.id === draggedItem.id
+        (item) => item.placeId === draggedItem.placeId
       );
       if (!originalItem) return;
 
       const testItem = { ...originalItem, timeSlot };
 
       // 겹침 체크 (자기 자신은 제외)
-      if (checkTimeOverlap(testItem, draggedItem.id)) {
+      if (checkTimeOverlap(testItem, draggedItem.placeId)) {
         // 겹치면 가장 가까운 빈 시간대로 이동
         const availableTime = findNearestAvailableTime(
           timeSlot,
@@ -261,14 +204,14 @@ const TravelPlannerApp = () => {
       }
 
       newSchedule[selectedDay] = newSchedule[selectedDay].filter(
-        (item) => item.id !== draggedItem.id
+        (item) => item.placeId !== draggedItem.placeId
       );
       newSchedule[selectedDay].push(testItem);
     } else {
       // 추천 탭에서 스케줄로 이동
       const newPlaces = { ...places };
       const category = Object.keys(newPlaces).find((key) =>
-        newPlaces[key].some((place) => place.id === draggedItem.id)
+        newPlaces[key].some((place) => place.placeId === draggedItem.placeId)
       );
 
       if (category) {
@@ -296,7 +239,7 @@ const TravelPlannerApp = () => {
         }
 
         newPlaces[category] = newPlaces[category].filter(
-          (place) => place.id !== draggedItem.id
+          (place) => place.placeId !== draggedItem.placeId
         );
         setPlaces(newPlaces);
         newSchedule[selectedDay].push(newItem);
@@ -322,7 +265,7 @@ const TravelPlannerApp = () => {
 
       const newSchedule = { ...schedule };
       const itemIndex = newSchedule[selectedDay].findIndex(
-        (scheduleItem) => scheduleItem.id === item.id
+        (scheduleItem) => scheduleItem.placeId === item.placeId
       );
 
       if (itemIndex !== -1) {
@@ -361,7 +304,7 @@ const TravelPlannerApp = () => {
         }
 
         // 겹침 체크 (자기 자신은 제외)
-        if (!checkTimeOverlap(testItem, item.id)) {
+        if (!checkTimeOverlap(testItem, item.placeId)) {
           newSchedule[selectedDay][itemIndex] = testItem;
           setSchedule(newSchedule);
         }
@@ -387,7 +330,7 @@ const TravelPlannerApp = () => {
 
     return (
       <div
-        key={item.id}
+        key={item.placeId}
         className="absolute left-16 bg-sub rounded-md z-10 group"
         style={{
           top: `${startIndex * 30}px`,
@@ -413,7 +356,6 @@ const TravelPlannerApp = () => {
         >
           <div className="flex-1 min-w-0">
             <div className="font-bold text-lg truncate">{item.name}</div>
-            <div className="text-xs text-gray-500 truncate">{item.type}</div>
           </div>
           <button
             className="ml-2 text-red-500 hover:text-red-700 text-lg font-bold leading-none flex-shrink-0 w-6 h-6 flex items-center justify-center"
@@ -520,14 +462,14 @@ const TravelPlannerApp = () => {
             <div className="border border-gray-300 rounded-lg rounded-tl-none h-[calc(100vh-229px)] overflow-y-auto">
               {places[selectedTab].map(place => (
                 <div
-                  key={place.id}
+                  key={place.placeId}
                   className="flex items-center p-5 cursor-move border-b border-gray-300 hover:bg-gray-100"
                   draggable
                   onDragStart={(e) => handleDragStart(e, place)}
                 >
                   <div className="w-12 h-12 bg-gray-300 rounded-lg mr-4 flex items-center justify-center">
                     <img
-                      src={place.image}
+                      src={place.iconUrl}
                       alt={place.name}
                       className="w-full h-full object-cover rounded-lg"
                     />
@@ -535,16 +477,15 @@ const TravelPlannerApp = () => {
                   <div className="flex-1 space-y-1">
                     <div className="font-bold text-xl">{place.name}</div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-main">{place.type}</span>
                       <p>
                         <span className="text-yellow-400">★</span>{" "}
                         {place.rating}
                       </p>
-                      <span className="text-gray-500">{place.location}</span>
+                      <span className="text-gray-500">{place.formatted_address}</span>
                     </div>
                   </div>
-                  <button className="p-1 hover:bg-gray-200 rounded">
-                    자세히 보기
+                  <button onClick={() => window.open(place.url)} className="px-2 py-1 hover:bg-gray-200 rounded-lg border border-gray-300">
+                    구글 맵스
                   </button>
                 </div>
               ))}

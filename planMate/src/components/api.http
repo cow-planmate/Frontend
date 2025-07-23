@@ -19,3 +19,8 @@ Content-Type: application/json; charset=UTF-8
 Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4IiwiaWF0IjoxNzUzMjMyNDA5LCJleHAiOjE3NTMzMTg4MDl9._1jHr5r6Cg-qSbtfoKbAaif6Z_z0OB8lJTxDxsbvxMY
 
 {"planName": "똥!ㅋㅋ"}
+
+###
+
+POST http://localhost:8080/api/plan/4/tour
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4IiwiaWF0IjoxNzUzMjMyNDA5LCJleHAiOjE3NTMzMTg4MDl9._1jHr5r6Cg-qSbtfoKbAaif6Z_z0OB8lJTxDxsbvxMY
