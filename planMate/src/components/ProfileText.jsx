@@ -1,12 +1,32 @@
 import { useState } from "react"
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, faEyeSlash, faCheck, faC } from "@fortawesome/free-solid-svg-icons";
+import { faEye, faEyeSlash, faCheck } from "@fortawesome/free-solid-svg-icons";
 
 export default function ProfileText({title, content, change}) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [naeyong, setNaeyong] = useState(content);
+
+  let categoryNames = null;
+  let groupedThemes = null;
+
+  if (title == "선호테마") {
+    categoryNames = {
+      0: '관광지',
+      1: '식당',
+      2: '숙소'
+    };
+
+    groupedThemes = content.reduce((acc, theme) => {
+      const categoryId = theme.preferredThemeCategoryId;
+      if (!acc[categoryId]) {
+        acc[categoryId] = [];
+      }
+      acc[categoryId].push(theme);
+      return acc;
+    }, {});
+  }
 
   return (
     <div className="py-3 border-b border-gray-300">
@@ -16,7 +36,20 @@ export default function ProfileText({title, content, change}) {
       </div>
       {content === 'password'
       ?<button onClick={() => setIsPasswordOpen(true)} className="mt-1 px-2 py-1 border border-gray-300 rounded-lg hover:bg-gray-100">변경하기</button>
-      :<p>{naeyong}</p>}
+      : title === "선호테마" ? 
+        <div className="space-y-2 pt-2">
+          {Object.entries(groupedThemes).map(([categoryId, themes]) => (
+            <div key={categoryId} className="grid grid-cols-[1fr_3fr] gap-4 w-full">
+              <div className="font-semibold">{categoryNames[categoryId]}</div>
+              <ul className="list-disc">
+                {themes.map((theme) => (
+                  <li key={theme.preferredThemeId}>{theme.preferredThemeName}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      : <p>{naeyong}</p>}
 
       {isModalOpen ? <Modal title={title} setIsModalOpen={setIsModalOpen} content={naeyong} setNaeyong={setNaeyong}/> : <></>}
       {isPasswordOpen ? <PasswordModal setIsPasswordOpen={setIsPasswordOpen} /> : <></>}
@@ -48,7 +81,7 @@ const Modal = ({title, setIsModalOpen, content, setNaeyong}) => { // 나이, 성
         className="w-full px-3 py-2 border border-gray-300 rounded-lg" 
         value={selected}
         type="number"
-        min={0}
+        min={1}
         onChange={handleChange}
       />
     </div>

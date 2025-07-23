@@ -31,10 +31,16 @@ export default function Profile() {
     fetchUserProfile();
   }, [isAuthenticated, get]);
 
+  const categoryNames = {
+    0: '관광지',
+    1: '식당',
+    2: '숙소'
+  };
+
   const gender = {0: "남자", 1: "여자"};
 
   return (
-    <div className='relative border border-gray-300 rounded-lg w-[380px] p-7 mr-5'>
+    <div className='border border-gray-300 rounded-lg w-[380px] p-7 mr-5 h-[calc(100vh-201px)] overflow-y-auto'>
       <div className="flex flex-col items-center text-2xl pb-5 border-b border-gray-300">
         <div className="w-24 h-24 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full"></div>
         {userProfile && <p className="pt-3 font-bold">{userProfile.nickname}</p>}
@@ -44,18 +50,18 @@ export default function Profile() {
           <ProfileText title="이메일" content={userProfile.email} change={false} />
           <ProfileText title="나이" content={userProfile.age} change={true} />
           <ProfileText title="성별" content={gender[userProfile.gender]} change={true} />
-          <ProfileText title="선호테마" content="써넣을말이없음" change={true} />
+          <ProfileText title="선호테마" content={userProfile.preferredThemes} change={true} />
           <ProfileText title="비밀번호" content="password" change={false} />
         </>
       }
-      <button onClick={() => setIsDeleteOpen(true)} className="underline text-red-500 text-sm absolute bottom-7">탈퇴하기</button>
+      <button onClick={() => setIsDeleteOpen(true)} className="pt-6 underline text-red-500 text-sm">탈퇴하기</button>
       {isDeleteOpen ? <DeleteModal setIsDeleteOpen={setIsDeleteOpen} /> : <></>}
     </div>
   );
 }
 
 const DeleteModal = ({setIsDeleteOpen}) => {
-  const { del, isAuthenticated, logout } = useApiClient();
+  const { del, isAuthenticated } = useApiClient();
   const navigate = useNavigate();
 
   const handleDelete = async () => {

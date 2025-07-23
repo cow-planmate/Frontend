@@ -20,7 +20,7 @@ export default function PlanList() {
   };
 
   return (
-    <div className='border border-gray-300 rounded-lg w-[1000px]'>
+    <div className='border border-gray-300 rounded-lg w-[1000px] overflow-y-auto h-[calc(100vh-201px)]'>
       <div className="font-bold text-2xl p-7 pb-5">나의 일정</div>
       <div className="px-4">
         <div className="text-gray-500 font-normal text-sm pl-3 pb-1">제목</div>

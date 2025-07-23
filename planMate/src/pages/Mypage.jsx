@@ -21,7 +21,7 @@ function App() {
   return (
     <div className="font-pretendard min-h-screen max-h-fit">
       <Navbar isLogin={true} />
-      <div className="flex flex-col mx-auto w-[1400px] py-8 min-h-[calc(100vh-77px)] max-h-max">
+      <div className="flex flex-col mx-auto w-[1400px] py-8 h-[calc(100vh-77px)]">
         <div className="font-bold text-3xl pb-6">마이페이지</div>
         <div className="flex w-full flex-1">
           <Profile />

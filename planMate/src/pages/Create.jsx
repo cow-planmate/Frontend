@@ -1,10 +1,32 @@
 import { useState, useEffect } from "react";
 import Navbar from "../components/navbar";
 import PlanInfo from "../components/PlanInfo";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faGear } from "@fortawesome/free-solid-svg-icons";
+import { useSearchParams } from 'react-router-dom';
+import { useApiClient } from "../assets/hooks/useApiClient";
 
-const TravelPlannerApp = () => {    
+const TravelPlannerApp = () => {
+  const { get, isAuthenticated } = useApiClient();
+  const [searchParams] = useSearchParams();
+  const id = searchParams.get('id');
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (id && isAuthenticated()) {
+        try {
+          const planData = await get(`/api/plan/${id}`);
+          setData(planData);
+        } catch (err) {
+          console.error("일정 정보를 가져오는데 실패했습니다:", err);
+        }
+      } else {
+        setData(null);
+      }
+    };
+
+    fetchUserProfile();
+  }, [id]);
+
   const [selectedDay, setSelectedDay] = useState(1);
   const [selectedTab, setSelectedTab] = useState('관광지'); // -
   const [schedule, setSchedule] = useState({
@@ -418,22 +440,11 @@ const TravelPlannerApp = () => {
     );
   };
 
-  const [info, setInfo] = useState({
-    "title": "제목없는 여행1",
-    "person": {
-      "adult": 2,
-      "children": 1,
-    },
-    "departure": "명지대학교 인문캠퍼스 방목학술정보관",
-    "travel": "부산",
-    "trans": "bus"
-  });
-
   return (
     <div className="min-h-screen font-pretendard">
       <Navbar isLogin={true} />
 
-      <PlanInfo info={info} />
+      {data ? <PlanInfo info={data.planFrame} id={id} /> : <></>}
       <div className="w-[1400px] mx-auto py-6">
         <div className="flex space-x-6 flex-1">
           {/* 일차 선택 */}

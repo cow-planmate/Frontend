@@ -1,11 +1,11 @@
 POST http://localhost:8080/api/plan HTTP/1.1
 Content-Type: application/json; charset=UTF-8
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzUzMTkzNjc3LCJleHAiOjE3NTMyODAwNzd9.LtWB05zsBHGg-FwaGOnbgSmfqqcoXc3MvP_SWyfF51Q
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4IiwiaWF0IjoxNzUzMjMyNDA5LCJleHAiOjE3NTMzMTg4MDl9._1jHr5r6Cg-qSbtfoKbAaif6Z_z0OB8lJTxDxsbvxMY
 
 {
     "departure": "의정부시",
     "travelId": 33,
-    "dates": ["2025-08-22", "2025-08-23"],
+    "dates": ["2025-08-22", "2025-08-23", "2025-08-24"],
     "adultCount": 2,
     "childCount": 2,
     "transportation": 1
@@ -13,7 +13,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzUzMTkzNjc3L
 
 ###
 
-PATCH http://localhost:8080/api/plan/1/title
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzUzMTkzNjc3LCJleHAiOjE3NTMyODAwNzd9.LtWB05zsBHGg-FwaGOnbgSmfqqcoXc3MvP_SWyfF51Q
 
-{"planName": "테스트"}
+PATCH  http://localhost:8080/api/plan/4/name
+Content-Type: application/json; charset=UTF-8
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4IiwiaWF0IjoxNzUzMjMyNDA5LCJleHAiOjE3NTMzMTg4MDl9._1jHr5r6Cg-qSbtfoKbAaif6Z_z0OB8lJTxDxsbvxMY
+
+{"planName": "똥!ㅋㅋ"}

@@ -1,16 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import TransportModal from "./TransportModal";
 import PersonCountModal from "./HomePerson";
+import { useApiClient } from "../assets/hooks/useApiClient";
 
-export default function PlanInfo({info}) {
+export default function PlanInfo({info, id}) {
+  const { patch, isAuthenticated } = useApiClient();
+
   const transInfo = {"bus": "대중교통", "car": "자동차"};
+  const transInfo2 = {0: "bus", 1: "car"}
   const flexCenter = "flex items-center";
 
   const [isTransportOpen, setIsTransportOpen] = useState(false); 
-  const [selectedTransport, setSelectedTransport] = useState(info.trans);
+  const [selectedTransport, setSelectedTransport] = useState(transInfo2[info.transportation]);
   const [isPersonCountOpen, setIsPersonCountOpen] = useState(false);
-  const [personCount, setPersonCount] = useState({ adults: info.person.adult, children: info.person.children });
-  const [title, setTitle] = useState(info.title);
+  const [personCount, setPersonCount] = useState({ adults: info.adultCount, children: info.childCount });
+  const [title, setTitle] = useState(info.planName);
 
   const spanRef = useRef(null);
   const inputRef = useRef(null);
@@ -20,6 +24,21 @@ export default function PlanInfo({info}) {
       const spanWidth = spanRef.current.offsetWidth;
       inputRef.current.style.width = `${spanWidth + 2}px`;
     }
+  }, [title]);
+
+  useEffect(() => {
+    const patchApi = async () => {
+      if (isAuthenticated()) {
+        try {
+          await patch(`/api/plan/${id}/name`, {
+            planName: title
+          });
+        } catch (err) {
+          console.error("패치에 실패해버렸습니다:", err);
+        }
+      }
+    };
+    patchApi();
   }, [title]);
 
   const handleTransportOpen = () => {
