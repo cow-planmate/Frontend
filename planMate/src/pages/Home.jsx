@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import img1 from "../assets/imgs/img1.jpg";
-
+import { useApiClient } from "../assets/hooks/useApiClient";
 import Navbar from "../components/navbar";
 import DateRangeModal from "../components/HomeCal";
 import PersonCountModal from "../components/HomePerson";
 import TransportModal from "../components/TransportModal";
-import DepartureModal from "../components/Departure"; // 출발지와 여행지에 같은 컴포넌트 사용
+import DepartureModal from "../components/Departure";
+import DestinationModal from "../components/HomeDestination";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUser,
@@ -14,18 +15,19 @@ import {
   faCar,
   faBus,
 } from "@fortawesome/free-solid-svg-icons";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function App() {
+  const navigate = useNavigate();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isPersonCountOpen, setIsPersonCountOpen] = useState(false);
   const [isTransportOpen, setIsTransportOpen] = useState(false);
   const [isDepartureOpen, setIsDepartureOpen] = useState(false);
   const [personCount, setPersonCount] = useState({ adults: 0, children: 0 });
   const [selectedTransport, setSelectedTransport] = useState("bus");
-  const [departureLocation, setDepartureLocation] = useState(null); // 출발지 상태를 객체로 변경
-  const [destinationLocation, setDestinationLocation] = useState(null); // 여행지 상태 추가
-  const [isDestinationOpen, setIsDestinationOpen] = useState(false); // 여행지 모달 상태 추가
+  const [departureLocation, setDepartureLocation] = useState(null);
+  const [destinationLocation, setDestinationLocation] = useState(null);
+  const [isDestinationOpen, setIsDestinationOpen] = useState(false);
   const [dateRange, setDateRange] = useState([
     {
       startDate: new Date(),
@@ -33,6 +35,7 @@ function App() {
       key: "selection",
     },
   ]);
+  const { post, isAuthenticated } = useApiClient();
 
   const handleDateChange = (item) => {
     setDateRange([item.selection]);
@@ -44,7 +47,6 @@ function App() {
     return `${start} ~ ${end}`;
   };
 
-  // 출발지 관련 함수들
   const handleDepartureOpen = () => {
     setIsDepartureOpen(true);
   };
@@ -54,6 +56,7 @@ function App() {
   };
 
   const handleDepartureLocationSelect = (location) => {
+    console.log("선택된 출발지:", location); // 디버깅용
     setDepartureLocation(location);
   };
 
@@ -61,7 +64,6 @@ function App() {
     setDestinationLocation(location);
   };
 
-  // 여행지 관련 함수들
   const handleDestinationOpen = () => {
     setIsDestinationOpen(true);
   };
@@ -115,6 +117,45 @@ function App() {
   const getTransportText = () => {
     return selectedTransport === "car" ? "자동차" : "대중교통";
   };
+  const formatDateForApi = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const makePlan = async () => {
+    try {
+      if (!isAuthenticated()) {
+        alert("로그인 후 이용가능한 서비스입니다");
+        return;
+      }
+      const requestData = {
+        departure: departureLocation.name,
+        travelId: destinationLocation.id,
+        dates: [
+          formatDateForApi(dateRange[0].startDate),
+          formatDateForApi(dateRange[0].endDate),
+        ],
+        adultCount: Number(personCount.adults),
+        childCount: Number(personCount.children),
+        transportation: `${getTransportText()}` === "대중교통" ? 0 : 1,
+      };
+
+      console.log("보내는 데이터:", requestData); // ✅ 이 부분 추가
+
+      const data = await post("/api/plan", requestData);
+
+      console.log("서버 응답:", data);
+
+      if (data && data.planId) {
+        navigate(`/create?id=${data.planId}`);
+      }
+    } catch (err) {
+      console.error("에러 , 다시시도해주세요", err);
+      alert("에러, 다시시도 해주세요");
+    }
+  };
 
   return (
     <div className="absolute pr-0 pl-0 right-0 left-0">
@@ -122,13 +163,16 @@ function App() {
         <Navbar isLogin={false} />
       </div>
 
-      <div className="flex flex-col items-center ">
-        <img src={img1} className=" w-[140rem] h-[43rem] object-cover" />
+      <div className=" flex flex-col items-center ">
+        <img
+          src={img1}
+          className=" w-[140rem] h-[38rem] object-cover bg-gradient-to-b "
+        />
       </div>
 
       <div className="absolute bottom-[5rem] left-0 right-0 px-8">
         <div className="w-full max-w-7xl min-w-[1000px] mx-auto">
-          <div className="font-pretendard text-white text-5xl font-bold text-left">
+          <div className="font-pretendard text-white text-5xl font-bold text-left ">
             <div className="mb-4">나다운, 우리다운</div>
             <div>여행의 시작</div>
           </div>
@@ -248,14 +292,13 @@ function App() {
             </div>
 
             <div className="block min-w-[160px]">
-              <Link to="/Create">
-                <button
-                  className="cursor-pointer transition-all bg-[#1344FF] text-white px-4 py-3 rounded-lg
+              <button
+                className="cursor-pointer transition-all bg-[#1344FF] text-white px-4 py-3 rounded-lg
             border-[#1344FF] active:translate-y-[2px] hover:bg-blue-600 shadow-lg w-full font-pretendard whitespace-nowrap"
-                >
-                  일정생성
-                </button>
-              </Link>
+                onClick={makePlan}
+              >
+                일정생성
+              </button>
             </div>
           </div>
         </div>
@@ -290,7 +333,7 @@ function App() {
         placeholder="출발지를 입력해주세요"
       />
 
-      <DepartureModal
+      <DestinationModal
         isOpen={isDestinationOpen}
         onClose={handleDestinationClose}
         onLocationSelect={handleDestinationLocationSelect}

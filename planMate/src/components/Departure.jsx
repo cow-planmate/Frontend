@@ -5,6 +5,8 @@ import {
   faLocationDot,
   faSearch,
   faTimes,
+  faMapMarkerAlt,
+  faExternalLinkAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { useApiClient } from "../assets/hooks/useApiClient";
 
@@ -21,7 +23,7 @@ const DepartureModal = ({
   const inputRef = useRef(null);
 
   // API 클라이언트 훅 사용
-  const { post, isLoading, error, isAuthenticated } = useApiClient();
+  const { isLoading, error } = useApiClient();
 
   // 모달이 열릴 때 input에 포커스
   useEffect(() => {
@@ -37,33 +39,27 @@ const DepartureModal = ({
       return;
     }
 
-    // 인증 체크
-    if (!isAuthenticated()) {
-      if (onAuthError) {
-        onAuthError();
-      }
-      return;
-    }
-
     try {
-      const data = await post("/api/departure", {
-        departureQuery: query,
+      const response = await fetch("/api/departure", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ departureQuery: query }),
       });
+
+      if (!response.ok) {
+        throw new Error("검색 실패: " + response.status);
+      }
+
+      const data = await response.json();
       console.log(data);
       setSearchResults(data.departures || []);
     } catch (err) {
       console.error("검색 API 에러:", err);
-
-      // 인증 에러인 경우 콜백 호출
-      if (err.message.includes("인증이 만료") && onAuthError) {
-        onAuthError();
-      }
-
-      // 검색 결과 초기화
       setSearchResults([]);
     }
   };
-
   // 검색어 변경 시 디바운싱 적용
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -79,23 +75,12 @@ const DepartureModal = ({
     setSearchQuery(e.target.value);
   };
 
-  // 위치 선택 핸들러 - 객체와 문자열 모두 처리
+  // 위치 선택 핸들러 - 전체 location 객체를 전달
   const handleLocationClick = (location) => {
-    let locationName;
-
-    // location이 객체인지 문자열인지 확인
-    if (typeof location === "object" && location !== null) {
-      locationName =
-        location.name ||
-        location.departureName ||
-        location.address ||
-        String(location);
-    } else {
-      locationName = String(location);
-    }
-
-    const locationObject = { name: locationName };
-    onLocationSelect(locationObject);
+    // 전체 location 객체를 그대로 전달 (placeId, url, departureName, departureAddress 포함)
+    onLocationSelect({
+      name: location.departureName,
+    });
     setSearchQuery("");
     setSearchResults([]);
     onClose();
@@ -124,17 +109,6 @@ const DepartureModal = ({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
-
-  // 모달이 열릴 때 인증 상태 체크
-  useEffect(() => {
-    if (isOpen && !isAuthenticated()) {
-      if (onAuthError) {
-        setTimeout(() => {
-          onAuthError();
-        }, 1000);
-      }
-    }
-  }, [isOpen, isAuthenticated, onAuthError]);
 
   if (!isOpen) return null;
 
@@ -170,7 +144,6 @@ const DepartureModal = ({
               value={searchQuery}
               onChange={handleSearchChange}
               placeholder={placeholder}
-              disabled={!isAuthenticated()}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-pretendard disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
             <FontAwesomeIcon
@@ -218,20 +191,8 @@ const DepartureModal = ({
             </div>
           )}
 
-          {/* 인증되지 않은 경우 메시지 */}
-          {!isAuthenticated() && !error && (
-            <div className="p-6 text-center">
-              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-                <p className="text-yellow-700 font-pretendard">
-                  로그인이 필요한 서비스입니다.
-                </p>
-              </div>
-            </div>
-          )}
-
           {!isLoading &&
             !error &&
-            isAuthenticated() &&
             searchQuery &&
             searchResults.length === 0 && (
               <div className="p-6 text-center">
@@ -243,43 +204,79 @@ const DepartureModal = ({
 
           {!isLoading && !error && searchResults.length > 0 && (
             <div className="py-2">
-              {searchResults.map((location, index) => {
-                // location이 객체인지 문자열인지 확인하고 적절히 처리
-                let displayName;
-                if (typeof location === "object" && location !== null) {
-                  displayName =
-                    location.name ||
-                    location.departureName ||
-                    location.address ||
-                    JSON.stringify(location);
-                } else {
-                  displayName = String(location);
-                }
+              {searchResults.map((location, index) => (
+                <button
+                  key={location.placeId || index}
+                  onClick={() => handleLocationClick(location)}
+                  className="w-full px-6 py-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 group"
+                >
+                  <div className="flex items-start space-x-3">
+                    <FontAwesomeIcon
+                      icon={faLocationDot}
+                      className="text-blue-500 mt-1 flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      {/* 장소명 */}
+                      <p className="font-semibold text-gray-800 font-pretendard truncate">
+                        {location.departureName}
+                      </p>
 
-                return (
-                  <button
-                    key={index}
-                    onClick={() => handleLocationClick(location)}
-                    className="w-full px-6 py-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                  >
-                    <div className="flex items-center">
-                      <FontAwesomeIcon
-                        icon={faLocationDot}
-                        className="text-blue-500 mr-3 flex-shrink-0"
-                      />
-                      <div>
-                        <p className="font-medium text-gray-800 font-pretendard">
-                          {displayName}
-                        </p>
-                      </div>
+                      {/* 주소 */}
+                      {location.departureAddress && (
+                        <div className="flex items-center mt-1">
+                          <FontAwesomeIcon
+                            icon={faMapMarkerAlt}
+                            className="text-gray-400 text-xs mr-1"
+                          />
+                          <p className="text-sm text-gray-600 font-pretendard truncate">
+                            {location.departureAddress}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* URL이 있는 경우 외부 링크 버튼 */}
+                      {location.url && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation(); // 부모 버튼 클릭 방지
+                            window.open(location.url, "_blank");
+                          }}
+                          className="flex items-center mt-1 text-blue-600 hover:text-blue-800 transition-colors"
+                        >
+                          <FontAwesomeIcon
+                            icon={faExternalLinkAlt}
+                            className="text-xs mr-1"
+                          />
+                          <span className="text-xs font-pretendard">
+                            상세 정보 보기(Google Map)
+                          </span>
+                        </button>
+                      )}
                     </div>
-                  </button>
-                );
-              })}
+
+                    {/* 호버 시 선택 화살표 */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </button>
+              ))}
             </div>
           )}
 
-          {!searchQuery && !error && isAuthenticated() && (
+          {!searchQuery && !error && (
             <div className="p-6 text-center">
               <FontAwesomeIcon
                 icon={faLocationDot}

@@ -76,7 +76,8 @@ export default function PasswordFind({ isOpen, onClose }) {
 
       const data = await response.json();
       console.log("서버 응답:", data);
-      alert("인증번호가 이메일로 전송되었습니다!");
+      alert(`임시비밀번호가 메일로 전송되었습니다!
+         로그인 후 마이페이지에서 비밀번호변경을 해주세요`);
       setTimeLeft(300);
       setShowVerification(true); // 인증번호 입력 영역 표시
     } catch (error) {
