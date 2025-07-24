@@ -353,7 +353,7 @@ export default function Signup({
         <div className="space-y-4">
           {/* 이메일 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
+            <label className="block text-sm font-medium text-gray-700 mb-2 text-left pl-2">
               이메일
             </label>
             <div className="flex gap-2">
@@ -411,7 +411,7 @@ export default function Signup({
 
           {/* 비밀번호 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
+            <label className="block text-sm font-medium text-gray-700 mb-2 text-left pl-2">
               비밀번호
             </label>
             <div className="relative">
@@ -480,7 +480,7 @@ export default function Signup({
 
           {/* 비밀번호 재입력 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
+            <label className="block text-sm font-medium text-gray-700 mb-2 text-left pl-2">
               비밀번호 재입력
             </label>
             <div className="relative">
@@ -519,7 +519,7 @@ export default function Signup({
 
           {/* 닉네임 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
+            <label className="block text-sm font-medium text-gray-700 mb-2 text-left pl-2">
               닉네임
             </label>
             <div className="flex gap-2">
@@ -548,7 +548,7 @@ export default function Signup({
           {/* 나이와 성별 */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-left pl-2">
                 나이
               </label>
               <input
@@ -571,7 +571,7 @@ export default function Signup({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-left pl-2">
                 성별
               </label>
               <div className="flex gap-2">

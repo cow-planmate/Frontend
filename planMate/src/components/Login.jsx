@@ -71,6 +71,7 @@ export default function Login({
     } catch (err) {
       // 에러는 useApiClient에서 자동으로 설정됨
       console.error("로그인 실패:", err);
+      alert("이메일 또는 비밀번호가 일치하지 않습니다 ");
     }
   };
 
@@ -113,7 +114,7 @@ export default function Login({
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className=" block text-left left-2 text-sm font-medium text-gray-700 mb-2 pl-2">
               이메일
             </label>
             <input
@@ -129,7 +130,7 @@ export default function Login({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-left left-2 text-sm font-medium text-gray-700 mb-2 pl-2">
               비밀번호
             </label>
             <input
@@ -148,7 +149,7 @@ export default function Login({
             <button
               onClick={handleLogin}
               disabled={isLoading}
-              className="w-[6rem] py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-[6rem] py-3 bg-main text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

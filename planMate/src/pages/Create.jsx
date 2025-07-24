@@ -1,55 +1,58 @@
 import { useState, useEffect } from "react";
 import Navbar from "../components/navbar";
 import PlanInfo from "../components/PlanInfo";
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
 
 const TravelPlannerApp = () => {
   const { get, post, patch, isAuthenticated } = useApiClient();
   const [searchParams] = useSearchParams();
-  const id = searchParams.get('id');
+  const id = searchParams.get("id");
   const [data, setData] = useState(null);
   const [timetables, setTimetables] = useState([]);
-  const tripCategory = {0: "관광지", 1: "숙소", 2: "식당"}
+  const tripCategory = { 0: "관광지", 1: "숙소", 2: "식당" };
   const [transformedData, setTransformedData] = useState(null);
   const [schedule, setSchedule] = useState({});
 
   // 두 번째 API 응답을 첫 번째 형태로 변환하는 함수
   const transformApiResponse = (apiResponse) => {
-    const { placeBlocks, timetables } = apiResponse;    
+    const { placeBlocks, timetables } = apiResponse;
     // timetableId를 키로 하는 객체 생성
     const result = {};
-    
+
     // 각 timetable에 대해 빈 배열 초기화
-    timetables.forEach(timetable => {
+    timetables.forEach((timetable) => {
       result[timetable.timetableId] = [];
     });
-    
+
     // placeBlocks를 순회하면서 데이터 변환
-    placeBlocks.forEach(place => {
+    placeBlocks.forEach((place) => {
       // startTime과 endTime으로부터 duration 계산 (15분 단위)
       const startTime = new Date(`2000-01-01T${place.startTime}`);
       const endTime = new Date(`2000-01-01T${place.endTime}`);
       const durationMinutes = (endTime - startTime) / (1000 * 60); // 분 단위
       const duration = Math.round(durationMinutes / 15); // 15분 단위로 변환
-      
+
       // timeSlot을 HH:MM 형태로 변환
       const timeSlot = place.startTime.substring(0, 5);
-      
+
       // Google Maps URL에서 placeId 추출
       const urlMatch = place.placeLink.match(/place_id:([^&]+)/);
-      const placeId = urlMatch ? urlMatch[1] : '';
-      
+      const placeId = urlMatch ? urlMatch[1] : "";
+
       // categoryId에 따른 iconUrl 설정
       let iconUrl;
       if (place.placeCategory === 0) {
-        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png";
+        iconUrl =
+          "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png";
       } else if (place.placeCategory === 1) {
-        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/lodging-71.png";
+        iconUrl =
+          "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/lodging-71.png";
       } else {
-        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png";
+        iconUrl =
+          "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png";
       }
-      
+
       // 변환된 객체 생성
       const transformedPlace = {
         placeId: placeId,
@@ -62,15 +65,15 @@ const TravelPlannerApp = () => {
         xlocation: place.xlocation || 0, // 원본 데이터에서 0.0으로 되어있음
         ylocation: place.ylocation || 0,
         timeSlot: timeSlot,
-        duration: duration
+        duration: duration,
       };
-      
+
       // 해당하는 timetableId를 찾아서 데이터 추가
       // 여기서는 순서대로 배치하는 로직이 필요할 수 있습니다.
       // 예시로 첫 3개는 78, 다음 3개는 79, 마지막 4개는 80에 배치
       const placeIndex = placeBlocks.indexOf(place);
       let targetTimetableId;
-      
+
       if (placeIndex < 4) {
         targetTimetableId = timetables[0]?.timetableId || 78;
       } else if (placeIndex < 7) {
@@ -78,12 +81,12 @@ const TravelPlannerApp = () => {
       } else {
         targetTimetableId = timetables[2]?.timetableId || 80;
       }
-      
+
       if (result[targetTimetableId]) {
         result[targetTimetableId].push(transformedPlace);
       }
     });
-    
+
     return result;
   };
 
@@ -104,7 +107,6 @@ const TravelPlannerApp = () => {
 
           const result = transformApiResponse(planData);
           setTransformedData(result);
-
         } catch (err) {
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
         }
@@ -116,12 +118,11 @@ const TravelPlannerApp = () => {
     fetchUserProfile();
   }, [id]);
 
-  
   const [selectedDay, setSelectedDay] = useState(null);
-  const [selectedTab, setSelectedTab] = useState('관광지');
+  const [selectedTab, setSelectedTab] = useState("관광지");
   const [draggedItem, setDraggedItem] = useState(null);
   const [draggedFromSchedule, setDraggedFromSchedule] = useState(null);
-  
+
   useEffect(() => {
     console.log(schedule);
   }, [schedule]);
@@ -132,7 +133,7 @@ const TravelPlannerApp = () => {
       setSchedule(transformedData);
     } else if (timetables.length > 0) {
       const initialSchedule = {};
-      timetables.forEach(timetable => {
+      timetables.forEach((timetable) => {
         initialSchedule[timetable.timetableId] = [];
       });
       setSchedule(initialSchedule);
@@ -157,7 +158,7 @@ const TravelPlannerApp = () => {
           setPlaces({
             관광지: tour.places,
             숙소: lodging.places,
-            식당: restaurant.places
+            식당: restaurant.places,
           });
         } catch (err) {
           console.error("추천 장소를 가져오는데 실패했습니다:", err);
@@ -171,13 +172,15 @@ const TravelPlannerApp = () => {
   // 현재 선택된 날의 시간 슬롯 계산
   const getCurrentTimeSlots = () => {
     if (!selectedDay || !timetables.length) return [];
-    
-    const currentTimetable = timetables.find(t => t.timetableId === selectedDay);
+
+    const currentTimetable = timetables.find(
+      (t) => t.timetableId === selectedDay
+    );
     if (!currentTimetable) return [];
 
-    const startHour = parseInt(currentTimetable.startTime.split(':')[0]);
-    const endHour = parseInt(currentTimetable.endTime.split(':')[0]);
-    
+    const startHour = parseInt(currentTimetable.startTime.split(":")[0]);
+    const endHour = parseInt(currentTimetable.endTime.split(":")[0]);
+
     const timeSlots = [];
     for (let hour = startHour; hour < endHour; hour++) {
       for (let minute = 0; minute < 60; minute += 15) {
@@ -196,22 +199,26 @@ const TravelPlannerApp = () => {
   // 현재 선택된 날의 종료 시간 가져오기
   const getCurrentEndTime = () => {
     if (!selectedDay || !timetables.length) return "20:00";
-    
-    const currentTimetable = timetables.find(t => t.timetableId === selectedDay);
-    return currentTimetable ? currentTimetable.endTime.substring(0, 5) : "20:00";
+
+    const currentTimetable = timetables.find(
+      (t) => t.timetableId === selectedDay
+    );
+    return currentTimetable
+      ? currentTimetable.endTime.substring(0, 5)
+      : "20:00";
   };
 
   // 날짜 포맷팅 함수
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
     return `${month}.${day}.`;
   };
 
   // 일차 번호 계산 함수
   const getDayNumber = (timetableId) => {
-    const index = timetables.findIndex(t => t.timetableId === timetableId);
+    const index = timetables.findIndex((t) => t.timetableId === timetableId);
     return index + 1;
   };
 
@@ -257,7 +264,7 @@ const TravelPlannerApp = () => {
     return null;
   };
 
-   // 삭제 함수
+  // 삭제 함수
   const handleDeleteItem = (item) => {
     const newSchedule = { ...schedule };
     newSchedule[selectedDay] = newSchedule[selectedDay].filter(
@@ -273,16 +280,16 @@ const TravelPlannerApp = () => {
 
     // 원래 카테고리가 있으면 그것을 사용, 없으면 iconUrl로 판단
     let category = originalItem.originalCategory;
-    
+
     if (!category) {
       // iconUrl을 기반으로 카테고리 결정 (아님)
       const getCategory = (categoryId) => {
         if (categoryId == 0) {
-          return '관광지';
+          return "관광지";
         } else if (categoryId == 1) {
-          return '숙소';
+          return "숙소";
         } else {
-          return '식당';
+          return "식당";
         }
       };
       category = getCategory(originalItem.categoryId);
@@ -490,7 +497,9 @@ const TravelPlannerApp = () => {
         >
           <div className="flex-1 min-w-0">
             <div className="font-bold text-lg truncate">{item.name}</div>
-            <div className="text-gray-500 truncate text-sm">{tripCategory[item.categoryId]}</div>
+            <div className="text-gray-500 truncate text-sm">
+              {tripCategory[item.categoryId]}
+            </div>
           </div>
           <button
             className="ml-2 text-red-500 hover:text-red-700 text-lg font-bold leading-none flex-shrink-0 w-6 h-6 flex items-center justify-center"
@@ -530,15 +539,14 @@ const TravelPlannerApp = () => {
     );
   }
 
-
   const addMinutes = (time, minsToAdd) => {
     const [hour, min] = time.split(":").map(Number);
     const date = new Date(0, 0, 0, hour, min + minsToAdd);
     return date.toTimeString().slice(0, 5); // "HH:MM"
-  }
+  };
 
   const getDateById = (id) => {
-    const matched = data.timetables.find(t => t.timetableId === id);
+    const matched = data.timetables.find((t) => t.timetableId === id);
     return matched?.date ?? null;
   };
 
@@ -578,10 +586,9 @@ const TravelPlannerApp = () => {
     return Object.values(grouped);
   };
 
-
   const savePlan = async (info) => {
     const scheduleToExport = exportSchedule();
-    console.log(scheduleToExport)
+    console.log(scheduleToExport);
 
     if (isAuthenticated()) {
       try {
@@ -598,7 +605,7 @@ const TravelPlannerApp = () => {
         console.error("저장에 실패해버렸습니다:", err);
       }
     }
-  }
+  };
 
   return (
     <div className="min-h-screen font-pretendard">
@@ -619,17 +626,17 @@ const TravelPlannerApp = () => {
                 }`}
                 onClick={() => setSelectedDay(timetable.timetableId)}
               >
-                <div className="text-xl font-semibold">{getDayNumber(timetable.timetableId)}일차</div>
+                <div className="text-xl font-semibold">
+                  {getDayNumber(timetable.timetableId)}일차
+                </div>
                 <div className="text-sm">{formatDate(timetable.date)}</div>
               </button>
             ))}
           </div>
-          
+
           {/* 시간표 */}
           <div className="w-[450px] h-full">
-            <div 
-              className="border border-gray-300 bg-white rounded-lg px-5 py-7 relative h-[calc(100vh-189px)] overflow-y-auto"
-            >
+            <div className="border border-gray-300 bg-white rounded-lg px-5 py-7 relative h-[calc(100vh-189px)] overflow-y-auto">
               <div className="relative border-t border-gray-200">
                 {timeSlots.map((time, index) => (
                   <div
@@ -654,11 +661,13 @@ const TravelPlannerApp = () => {
                 ))}
 
                 {/* 스케줄 아이템들 */}
-                {(schedule[selectedDay] || []).map((item) => renderScheduleItem(item))}
+                {(schedule[selectedDay] || []).map((item) =>
+                  renderScheduleItem(item)
+                )}
               </div>
             </div>
           </div>
-          
+
           {/* 장소 추천 탭 */}
           <div className="flex-1">
             <div className="flex space-x-1">
@@ -678,7 +687,7 @@ const TravelPlannerApp = () => {
             </div>
 
             <div className="border border-gray-300 rounded-lg rounded-tl-none h-[calc(100vh-229px)] overflow-y-auto">
-              {places[selectedTab].map(place => (
+              {places[selectedTab].map((place) => (
                 <div
                   key={place.placeId}
                   className="flex items-center p-5 cursor-move border-b border-gray-300 hover:bg-gray-100"
@@ -699,10 +708,15 @@ const TravelPlannerApp = () => {
                         <span className="text-yellow-400">★</span>{" "}
                         {place.rating}
                       </p>
-                      <span className="text-gray-500">{place.formatted_address}</span>
+                      <span className="text-gray-500">
+                        {place.formatted_address}
+                      </span>
                     </div>
                   </div>
-                  <button onClick={() => window.open(place.url)} className="px-2 py-1 hover:bg-gray-200 rounded-lg border border-gray-300">
+                  <button
+                    onClick={() => window.open(place.url)}
+                    className="px-2 py-1 hover:bg-gray-200 rounded-lg border border-gray-300"
+                  >
                     구글 맵스
                   </button>
                 </div>
