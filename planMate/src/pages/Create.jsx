@@ -310,11 +310,34 @@ const TravelPlannerApp = () => {
   const handleDragOver = (e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
+
+    // 드래그 오버 시각적 피드백 추가
+    e.currentTarget.style.backgroundColor = "#f0f8ff";
   };
 
-  const handleDrop = (e, timeSlot) => {
+  const handleDragLeave = (e) => {
+    e.currentTarget.style.backgroundColor = "";
+  };
+
+  const handleDrop = (e, targetTimeSlot) => {
     e.preventDefault();
+    e.currentTarget.style.backgroundColor = "";
+
     if (!draggedItem) return;
+
+    // 마우스 위치를 기반으로 더 정확한 시간 슬롯 계산
+    const rect = e.currentTarget.getBoundingClientRect();
+    const relativeY = e.clientY - rect.top;
+    const slotHeight = 30; // 각 15분 슬롯의 높이
+    const additionalSlots = Math.floor(relativeY / slotHeight);
+
+    // 현재 타겟 시간 슬롯의 인덱스
+    const targetIndex = timeSlots.indexOf(targetTimeSlot);
+    const actualTargetIndex = Math.min(
+      targetIndex + additionalSlots,
+      timeSlots.length - 1
+    );
+    const actualTimeSlot = timeSlots[actualTargetIndex];
 
     const newSchedule = { ...schedule };
 
@@ -325,13 +348,13 @@ const TravelPlannerApp = () => {
       );
       if (!originalItem) return;
 
-      const testItem = { ...originalItem, timeSlot };
+      const testItem = { ...originalItem, timeSlot: actualTimeSlot };
 
       // 겹침 체크 (자기 자신은 제외)
       if (checkTimeOverlap(testItem, draggedItem.placeId)) {
         // 겹치면 가장 가까운 빈 시간대로 이동
         const availableTime = findNearestAvailableTime(
-          timeSlot,
+          actualTimeSlot,
           originalItem.duration
         );
         if (availableTime) {
@@ -358,7 +381,7 @@ const TravelPlannerApp = () => {
       if (category) {
         const newItem = {
           ...draggedItem,
-          timeSlot,
+          timeSlot: actualTimeSlot,
           duration: 4, // 기본 1시간 (15분 * 4)
         };
 
@@ -366,7 +389,7 @@ const TravelPlannerApp = () => {
         if (checkTimeOverlap(newItem)) {
           // 겹치면 가장 가까운 빈 시간대로 이동
           const availableTime = findNearestAvailableTime(
-            timeSlot,
+            actualTimeSlot,
             newItem.duration
           );
           if (availableTime) {
@@ -472,37 +495,43 @@ const TravelPlannerApp = () => {
     return (
       <div
         key={item.placeId}
-        className="absolute left-16 bg-sub rounded-md z-10 group"
+        className="absolute left-16 bg-sub rounded-md z-10 group cursor-move"
         style={{
           top: `${startIndex * 30}px`,
           height: `${height}px`,
           width: "329px",
         }}
+        draggable
+        onDragStart={(e) => {
+          e.stopPropagation();
+          handleDragStart(e, item, true);
+        }}
       >
         {/* 위쪽 리사이즈 핸들 */}
         <div
           className="absolute top-0 left-0 right-0 h-3 cursor-ns-resize bg-[#718FFF] opacity-0 group-hover:opacity-70 transition-opacity rounded-t-md flex items-center justify-center"
-          onMouseDown={(e) => handleResizeStart(e, item, "top")}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            handleResizeStart(e, item, "top");
+          }}
           draggable={false}
         >
           <div className="w-8 h-0.5 bg-main rounded"></div>
         </div>
 
-        {/* 컨텐츠 */}
+        {/* 컨텐츠 - 드래그 핸들링 제거하고 전체 컨테이너에서 처리 */}
         <div
-          className="p-3 h-full flex items-center justify-between cursor-move"
+          className="p-3 h-full flex items-center justify-between"
           style={{ paddingTop: "12px", paddingBottom: "12px" }}
-          draggable
-          onDragStart={(e) => handleDragStart(e, item, true)}
         >
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pointer-events-none">
             <div className="font-bold text-lg truncate">{item.name}</div>
             <div className="text-gray-500 truncate text-sm">
               {tripCategory[item.categoryId]}
             </div>
           </div>
           <button
-            className="ml-2 text-red-500 hover:text-red-700 text-lg font-bold leading-none flex-shrink-0 w-6 h-6 flex items-center justify-center"
+            className="ml-2 text-red-500 hover:text-red-700 text-lg font-bold leading-none flex-shrink-0 w-6 h-6 flex items-center justify-center pointer-events-auto"
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
@@ -517,7 +546,10 @@ const TravelPlannerApp = () => {
         {/* 아래쪽 리사이즈 핸들 */}
         <div
           className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize bg-[#718FFF] opacity-0 group-hover:opacity-70 transition-opacity rounded-b-md flex items-center justify-center"
-          onMouseDown={(e) => handleResizeStart(e, item, "bottom")}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            handleResizeStart(e, item, "bottom");
+          }}
           draggable={false}
         >
           <div className="w-8 h-0.5 bg-main rounded"></div>
@@ -564,7 +596,7 @@ const TravelPlannerApp = () => {
         const endTime = addMinutes(startTime, place.duration * 15);
 
         const block = {
-          placeCategoryId: place.categoryId,
+          placeCategory: place.categoryId,
           placeName: place.name,
           placeAddress: place.formatted_address,
           placeRating: place.rating,
@@ -641,22 +673,25 @@ const TravelPlannerApp = () => {
                 {timeSlots.map((time, index) => (
                   <div
                     key={time}
-                    className="flex items-center relative border-b border-gray-200"
-                    style={{ height: "30px" }}
+                    className="flex items-center relative border-b border-gray-200 hover:bg-gray-50"
+                    style={{ height: "30px", minHeight: "30px" }}
                     onDrop={(e) => handleDrop(e, time)}
                     onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
                   >
-                    <div className="w-10 text-xs text-gray-500 absolute top-[-25%] bg-white">
+                    <div className="w-10 text-xs text-gray-500 absolute top-[-25%] bg-white z-20">
                       {time}
                     </div>
                     {index + 1 === timeSlots.length ? (
-                      <div className="w-10 text-xs text-gray-500 absolute bottom-[-30%] bg-white">
+                      <div className="w-10 text-xs text-gray-500 absolute bottom-[-30%] bg-white z-20">
                         {getCurrentEndTime()}
                       </div>
-                    ) : (
-                      <></>
-                    )}
-                    <div className="flex-1 h-full"></div>
+                    ) : null}
+                    {/* 전체 영역을 드롭존으로 활용 */}
+                    <div
+                      className="flex-1 h-full relative"
+                      style={{ minHeight: "30px" }}
+                    ></div>
                   </div>
                 ))}
 
