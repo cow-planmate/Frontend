@@ -47,18 +47,16 @@ export default function Profile() {
   const gender = { 0: "남자", 1: "여자" };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 w-[30rem] flex flex-col h-[62rem]">
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 w-[30rem] flex flex-col">
       {/* 프로필 헤더 */}
-      <div className="bg-gradient-to-br from-blue-50 via-white to-blue-50 px-6 py-4 border-b border-gray-100">
+      <div className="bg-gradient-to-br from-blue-50 via-white to-blue-50 p-6 border-b border-gray-100">
         <div className="flex flex-col items-center text-black">
-          <div className="w-20 h-20  bg-contain bg-[url('./assets/imgs/default.png')] rounded-full shadow-md ring-4 ring-white"></div>
-
+          <div className="w-20 h-20 bg-contain bg-[url('./assets/imgs/default.png')] rounded-full shadow-md ring-4 ring-white"></div>
           {userProfile && (
             <div className="text-center mt-4">
               <h2 className="text-2xl font-bold text-gray-800">
                 {userProfile.nickname}
               </h2>
-              <div className="w-12 h-0.5 bg-main- mx-auto mt-2 rounded-full"></div>
             </div>
           )}
         </div>

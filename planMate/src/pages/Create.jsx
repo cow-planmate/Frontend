@@ -596,7 +596,7 @@ const TravelPlannerApp = () => {
         const endTime = addMinutes(startTime, place.duration * 15);
 
         const block = {
-          placeCategory: place.categoryId,
+          placeCategoryId: place.categoryId,
           placeName: place.name,
           placeAddress: place.formatted_address,
           placeRating: place.rating,
