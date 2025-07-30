@@ -92,12 +92,16 @@ export default function ProfileText({
           ))}
         </div>
 
+        {/* 선호테마 선택 모달 */}
         {isModalOpen && (
-          <Modal
-            title={title}
-            setIsModalOpen={setIsModalOpen}
-            content={naeyong}
-            setNaeyong={setNaeyong}
+          <ThemeSelectionModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onComplete={(selectedThemes) => {
+              // 선택된 테마로 업데이트
+              setNaeyong(selectedThemes);
+              setIsModalOpen(false);
+            }}
           />
         )}
       </div>
@@ -148,7 +152,222 @@ export default function ProfileText({
   );
 }
 
-// Modal 컴포넌트 (나이, 성별, 선호테마 전용)
+// 선호테마 선택 모달 컴포넌트 (두 번째 코드에서 가져옴)
+const ThemeSelectionModal = ({ isOpen, onClose, onComplete }) => {
+  const [selectedKeywords, setSelectedKeywords] = useState([]);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [allSelectedKeywords, setAllSelectedKeywords] = useState({});
+  const [keywordsByStep, setKeywordsByStep] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const { get, patch } = useApiClient();
+
+  const getPreferredTheme = async () => {
+    try {
+      const res = await get("/api/user/preferredTheme");
+      const themeList = res.preferredThemes || [];
+
+      console.log(themeList);
+
+      if (Array.isArray(themeList) && themeList.length > 0) {
+        const categoryMap = {};
+        const categorizedKeywords = [];
+        const categoryList = [];
+
+        themeList.forEach((item) => {
+          const catId = item.preferredThemeCategoryId;
+          const catName = item.preferredThemeCategoryName;
+
+          if (!categoryMap[catId]) {
+            categoryMap[catId] = [];
+            categoryList.push({
+              id: catId,
+              name: catName,
+            });
+          }
+          categoryMap[catId].push(item);
+        });
+
+        categoryList.sort((a, b) => a.id - b.id);
+
+        categoryList.forEach((cat) => {
+          categorizedKeywords.push(categoryMap[cat.id] || []);
+        });
+
+        setCategories(categoryList);
+        setKeywordsByStep(categorizedKeywords);
+
+        const initialSelected = {};
+        categoryList.forEach((cat) => {
+          initialSelected[cat.id] = [];
+        });
+        setAllSelectedKeywords(initialSelected);
+      }
+    } catch (err) {
+      console.error("선호 테마 가져오기 실패:", err.message);
+    }
+  };
+
+  useState(() => {
+    if (isOpen) {
+      getPreferredTheme();
+    }
+  }, [isOpen]);
+
+  const toggleKeyword = (index) => {
+    setSelectedKeywords((prev) =>
+      prev.includes(index)
+        ? prev.filter((i) => i !== index)
+        : prev.length < 5
+        ? [...prev, index]
+        : prev
+    );
+  };
+
+  const nextStep = async () => {
+    if (step < 2) {
+      setStep(step + 1);
+    } else {
+      // 마지막 단계 - 선택 완료 후 API 호출
+      try {
+        // ✅ 1. 선택된 모든 테마를 categoryId 기준으로 묶기
+        const groupedByCategory = {};
+
+        Object.values(newAllSelected)
+          .flat()
+          .forEach((theme) => {
+            const categoryId = theme.preferredThemeCategoryId;
+            const themeId = theme.preferredThemeId;
+
+            if (!groupedByCategory[categoryId]) {
+              groupedByCategory[categoryId] = new Set();
+            }
+            groupedByCategory[categoryId].add(themeId);
+          });
+
+        // ✅ 2. 각 카테고리마다 PATCH 요청 보내기
+        for (const [categoryId, themeIdSet] of Object.entries(
+          groupedByCategory
+        )) {
+          const payload = {
+            preferredThemeCategoryId: Number(categoryId),
+            preferredThemeIds: Array.from(themeIdSet),
+          };
+
+          console.log("🔥 보낼 payload:", payload);
+
+          await patch("/api/user/preferredThemes", payload);
+        }
+
+        // ✅ 3. UI용으로 선택된 테마 넘기기
+        const selectedThemesForDisplay = Object.values(newAllSelected).flat();
+        onComplete(selectedThemesForDisplay);
+      } catch (err) {
+        console.error("선호 테마 저장 실패:", err);
+        const selectedThemesForDisplay = Object.values(newAllSelected).flat();
+        onComplete(selectedThemesForDisplay);
+      }
+    }
+  };
+  const skipStep = () => {
+    if (categories.length === 0) return;
+
+    const currentCategoryId = categories[currentStep].id;
+    const newAllSelected = {
+      ...allSelectedKeywords,
+      [currentCategoryId]: [],
+    };
+    setAllSelectedKeywords(newAllSelected);
+
+    if (currentStep < categories.length - 1) {
+      setCurrentStep(currentStep + 1);
+      setSelectedKeywords([]);
+    } else {
+      const selectedThemesForDisplay = Object.values(newAllSelected).flat();
+      onComplete(selectedThemesForDisplay);
+    }
+  };
+
+  const currentKeywords = keywordsByStep[currentStep];
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60] font-pretendard"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 max-h-[70vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h1 className="text-lg font-bold text-gray-900 text-center mb-4">
+          {categories.length > 0 && categories[currentStep]
+            ? `좋아하는 ${categories[currentStep].name} 키워드를 선택해주세요!`
+            : "로딩 중..."}
+        </h1>
+
+        <div className="flex-1 overflow-y-auto mb-4">
+          <div className="grid grid-cols-3 gap-3">
+            {currentKeywords && Array.isArray(currentKeywords) ? (
+              currentKeywords.map((keyword, index) => (
+                <button
+                  key={keyword.preferredThemeId}
+                  onClick={() => toggleKeyword(index)}
+                  className={`rounded-lg px-2 py-2 text-sm text-gray-800 border border-gray-300 hover:bg-blue-100 transition-all ${
+                    selectedKeywords.includes(index)
+                      ? "bg-blue-200 border-blue-400"
+                      : ""
+                  }`}
+                >
+                  {keyword.preferredThemeName}
+                </button>
+              ))
+            ) : (
+              <div className="col-span-3 text-center text-gray-500">
+                키워드를 불러오는 중...
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="text-center text-sm text-gray-500 mb-4">
+          {selectedKeywords.length}/5 선택됨
+        </div>
+
+        <div className="flex justify-between items-center">
+          <button
+            onClick={skipStep}
+            className="px-4 py-2 text-gray-500 hover:text-gray-700"
+          >
+            건너뛰기
+          </button>
+
+          <div className="flex space-x-2">
+            {currentStep > 0 && (
+              <button
+                onClick={() => {
+                  setCurrentStep(currentStep - 1);
+                  setSelectedKeywords([]);
+                }}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+              >
+                이전
+              </button>
+            )}
+            <button
+              onClick={nextStep}
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            >
+              {currentStep === categories.length - 1 ? "완료" : "다음"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Modal 컴포넌트 (나이, 성별 전용)
 const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
   const [selected, setSelected] = useState(content);
   const { patch, isAuthenticated } = useApiClient();
@@ -157,7 +376,6 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
   const apiUrl = {
     나이: "/api/user/age",
     성별: "/api/user/gender",
-    선호테마: "/api/user/preferredThemes",
   };
 
   const handleChange = (e) => {
@@ -233,13 +451,7 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white p-6 rounded-2xl shadow-2xl w-96 border border-gray-100">
         <h2 className="text-xl font-bold text-gray-800 mb-2">{title} 변경</h2>
-        {title === "나이" ? (
-          age
-        ) : title === "성별" ? (
-          gender()
-        ) : (
-          <div className="my-6 text-center text-gray-500">준비 중입니다</div>
-        )}
+        {title === "나이" ? age : title === "성별" ? gender() : null}
         <div className="flex justify-end gap-3 mt-6">
           <button
             onClick={() => setIsModalOpen(false)}
@@ -259,7 +471,7 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
   );
 };
 
-// PasswordModal 컴포넌트
+// PasswordModal 컴포넌트 (기존과 동일)
 const PasswordModal = ({ setIsPasswordOpen }) => {
   const { post, patch, isAuthenticated } = useApiClient();
 
@@ -307,7 +519,6 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
     </div>
   );
 
-  // 비밀번호 검증 함수
   const validatePassword = (password) => {
     const hasMinLength = password.length >= 8;
     const hasMaxLength = password.length <= 20;
@@ -335,6 +546,7 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
       setPasswordValidation(validation);
     }
   };
+
   const passwordChange = async () => {
     setWrongPrev(false);
     setWrongRe(false);
@@ -420,7 +632,7 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
                 className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
                 type={showNew ? "text" : "password"}
                 placeholder="새 비밀번호를 입력하세요"
-                value={password} // ✅ value 추가
+                value={password}
                 onChange={(e) => handleInputChange("password", e.target.value)}
               />
               <button
@@ -454,7 +666,6 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
                   isError={passwordValidation.hasInvalidChar}
                 />
 
-                {/* 에러 메시지 */}
                 {!passwordValidation.hasMinLength && (
                   <div className="text-red-600 text-sm mt-2">
                     최소 8글자 이상 작성해야합니다
@@ -490,7 +701,7 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
                 className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
                 type={showRe ? "text" : "password"}
                 placeholder="비밀번호를 다시 입력하세요"
-                value={rePassword} // ✅ value 추가
+                value={rePassword}
                 onChange={(e) => setRePassword(e.target.value)}
               />
               <button

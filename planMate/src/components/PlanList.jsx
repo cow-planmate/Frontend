@@ -1,13 +1,13 @@
 // PlanList.jsx
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faCalendarPlus,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCalendarPlus } from "@fortawesome/free-solid-svg-icons";
 import { useState, useRef, useEffect } from "react";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import PlanListList from "./PlanListList";
+import { useNavigate } from "react-router-dom";
 
 export default function PlanList() {
+  const navigate = useNavigate();
   const [plan, setPlan] = useState(null);
   const { get, isAuthenticated } = useApiClient();
 
@@ -49,12 +49,9 @@ export default function PlanList() {
       <div className="flex-1 p-6 overflow-y-auto">
         {plan && plan.length > 0 ? (
           <div className="space-y-4">
-            {plan.map((lst) => (
-              lst ? <PlanListList
-                key = {lst.planId}
-                lst = {lst}
-              /> : null
-            ))}
+            {plan.map((lst) =>
+              lst ? <PlanListList key={lst.planId} lst={lst} /> : null
+            )}
           </div>
         ) : (
           <div className="text-center py-12">
@@ -80,7 +77,6 @@ export default function PlanList() {
           </div>
         )}
       </div>
-
     </div>
   );
 }
