@@ -224,50 +224,50 @@ const ThemeSelectionModal = ({ isOpen, onClose, onComplete }) => {
   };
 
   const nextStep = async () => {
-    if (step < 2) {
-      setStep(step + 1);
+    if (categories.length === 0 || !keywordsByStep[currentStep]) return;
+
+    const currentCategoryId = categories[currentStep].id;
+    const currentStepKeywords = keywordsByStep[currentStep];
+    const selected = selectedKeywords
+      .map((i) => currentStepKeywords[i])
+      .filter((item) => !!item);
+
+    const newAllSelected = {
+      ...allSelectedKeywords,
+      [currentCategoryId]: selected,
+    };
+    setAllSelectedKeywords(newAllSelected);
+
+    if (currentStep < categories.length - 1) {
+      setCurrentStep(currentStep + 1);
+      setSelectedKeywords([]);
     } else {
-      // 마지막 단계 - 선택 완료 후 API 호출
+      // 마지막 단계 - API 호출해서 저장하고 완료
+
       try {
-        // ✅ 1. 선택된 모든 테마를 categoryId 기준으로 묶기
-        const groupedByCategory = {};
-
-        Object.values(newAllSelected)
+        // 선택된 테마 ID들을 배열로 변환
+        const selectedThemeIds = Object.values(newAllSelected)
           .flat()
-          .forEach((theme) => {
-            const categoryId = theme.preferredThemeCategoryId;
-            const themeId = theme.preferredThemeId;
+          .map((theme) => theme.preferredThemeId);
 
-            if (!groupedByCategory[categoryId]) {
-              groupedByCategory[categoryId] = new Set();
-            }
-            groupedByCategory[categoryId].add(themeId);
-          });
+        console.log("💡 보낼 ID 목록:", selectedThemeIds);
 
-        // ✅ 2. 각 카테고리마다 PATCH 요청 보내기
-        for (const [categoryId, themeIdSet] of Object.entries(
-          groupedByCategory
-        )) {
-          const payload = {
-            preferredThemeCategoryId: Number(categoryId),
-            preferredThemeIds: Array.from(themeIdSet),
-          };
+        await patch("/api/user/preferredThemes", {
+          preferredThemeIds: selectedThemeIds,
+        });
 
-          console.log("🔥 보낼 payload:", payload);
-
-          await patch("/api/user/preferredThemes", payload);
-        }
-
-        // ✅ 3. UI용으로 선택된 테마 넘기기
+        // 선택된 테마 데이터를 변환해서 전달
         const selectedThemesForDisplay = Object.values(newAllSelected).flat();
         onComplete(selectedThemesForDisplay);
       } catch (err) {
         console.error("선호 테마 저장 실패:", err);
+        // 에러가 발생해도 UI는 업데이트
         const selectedThemesForDisplay = Object.values(newAllSelected).flat();
         onComplete(selectedThemesForDisplay);
       }
     }
   };
+
   const skipStep = () => {
     if (categories.length === 0) return;
 
