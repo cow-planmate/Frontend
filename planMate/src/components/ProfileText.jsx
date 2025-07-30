@@ -10,6 +10,7 @@ import {
   faBed,
   faMapMarkerAlt,
 } from "@fortawesome/free-solid-svg-icons";
+import { Check, X } from "lucide-react";
 
 export default function ProfileText({
   icon,
@@ -273,8 +274,68 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
   const [wrongPrev, setWrongPrev] = useState(false);
   const [wrongRe, setWrongRe] = useState(false);
 
-  const [is8to20, setIs8to20] = useState(false);
-  const [isMix, setIsMix] = useState(false);
+  const [passwordValidation, setPasswordValidation] = useState({
+    hasMinLength: false,
+    hasMaxLength: true,
+    hasEnglish: false,
+    hasNumber: false,
+    hasSpecialChar: false,
+    hasInvalidChar: false,
+    hasAllRequired: false,
+  });
+
+  const ValidationItem = ({ isValid, text, isError = false }) => (
+    <div className="flex items-center gap-2 text-sm">
+      {isValid ? (
+        <Check className="w-4 h-4 text-green-500" />
+      ) : (
+        <X
+          className={`w-4 h-4 ${isError ? "text-red-500" : "text-gray-400"}`}
+        />
+      )}
+      <span
+        className={
+          isValid
+            ? "text-green-600"
+            : isError
+            ? "text-red-600"
+            : "text-gray-500"
+        }
+      >
+        {text}
+      </span>
+    </div>
+  );
+
+  // 비밀번호 검증 함수
+  const validatePassword = (password) => {
+    const hasMinLength = password.length >= 8;
+    const hasMaxLength = password.length <= 20;
+    const hasEnglish = /[a-zA-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const hasInvalidChar = !/^[a-zA-Z0-9!@#$%^&*(),.?":{}|<>]*$/.test(password);
+    const hasAllRequired = hasEnglish && hasNumber && hasSpecialChar;
+
+    return {
+      hasMinLength,
+      hasMaxLength,
+      hasEnglish,
+      hasNumber,
+      hasSpecialChar,
+      hasInvalidChar,
+      hasAllRequired,
+    };
+  };
+
+  const handleInputChange = (field, value) => {
+    // 비밀번호 검증
+    if (field === "password") {
+      const validation = validatePassword(value);
+      setPasswordValidation(validation);
+    }
+    setShowPrev((prev) => !prev);
+  };
 
   const passwordChange = async () => {
     setWrongPrev(false);
@@ -316,16 +377,6 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
       } else {
         setWrongRe(true);
       }
-    }
-  };
-
-  const handlePassword = (e) => {
-    setPassword(e.target.value);
-
-    if (password.length >= 8 && password.length <= 20) {
-      setIs8to20(true);
-    } else {
-      setIs8to20(false);
     }
   };
 
@@ -371,7 +422,7 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
                 className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
                 type={showNew ? "text" : "password"}
                 placeholder="새 비밀번호를 입력하세요"
-                onChange={handlePassword}
+                onChange={(e) => handleInputChange("password", e.target.value)}
               />
               <button
                 onClick={() => setShowNew((prev) => !prev)}
@@ -384,22 +435,51 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
               </button>
             </div>
             <div className="mt-3 space-y-2">
-              <p
-                className={`text-xs flex items-center gap-2 ${
-                  isMix ? "text-green-600" : "text-gray-500"
-                }`}
-              >
-                <FontAwesomeIcon icon={faCheck} className="w-3 h-3" />
-                영어, 숫자, 특수문자 3가지 조합
-              </p>
-              <p
-                className={`text-xs flex items-center gap-2 ${
-                  is8to20 ? "text-green-600" : "text-gray-500"
-                }`}
-              >
-                <FontAwesomeIcon icon={faCheck} className="w-3 h-3" />
-                최소 8자 ~ 최대 20자
-              </p>
+              {password && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                  <ValidationItem
+                    isValid={passwordValidation.hasMinLength}
+                    text="최소 8자"
+                  />
+                  <ValidationItem
+                    isValid={
+                      passwordValidation.hasEnglish &&
+                      passwordValidation.hasNumber &&
+                      passwordValidation.hasSpecialChar
+                    }
+                    text="영문, 숫자, 특수문자 3가지 조합"
+                  />
+                  <ValidationItem
+                    isValid={!passwordValidation.hasInvalidChar}
+                    text="연속 문자, 숫자 금지"
+                    isError={passwordValidation.hasInvalidChar}
+                  />
+
+                  {/* 에러 메시지 */}
+                  {!passwordValidation.hasMinLength && (
+                    <div className="text-red-600 text-sm mt-2">
+                      최소 8글자 이상 작성해야합니다
+                    </div>
+                  )}
+                  {!passwordValidation.hasMaxLength && (
+                    <div className="text-red-600 text-sm mt-2">
+                      최대 20글자까지 작성할 수 있습니다
+                    </div>
+                  )}
+                  {passwordValidation.hasInvalidChar && (
+                    <div className="text-red-600 text-sm mt-2">
+                      사용 불가능한 문자입니다
+                    </div>
+                  )}
+                  {!passwordValidation.hasAllRequired &&
+                    passwordValidation.hasMinLength &&
+                    !passwordValidation.hasInvalidChar && (
+                      <div className="text-red-600 text-sm mt-2">
+                        영어, 숫자, 특수문자 모두 포함해서 작성해주십시오
+                      </div>
+                    )}
+                </div>
+              )}
             </div>
           </div>
 

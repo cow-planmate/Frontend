@@ -47,7 +47,7 @@ export default function Profile() {
   const gender = { 0: "남자", 1: "여자" };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 w-[30rem] flex flex-col">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 w-[30rem]  flex flex-col">
       {/* 프로필 헤더 */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex flex-col items-center text-black">
@@ -91,7 +91,7 @@ export default function Profile() {
               title="선호테마"
               content={userProfile.preferredThemes}
               change={true}
-              iconColor="text-red-700"
+              iconColor="text-gray-700"
             />
             <ProfileText
               icon={faLock}
@@ -117,7 +117,6 @@ export default function Profile() {
           )}
         </div>
       </div>
-
     </div>
   );
 }
