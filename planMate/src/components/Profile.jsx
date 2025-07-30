@@ -1,15 +1,29 @@
+// Profile.jsx
 import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faUser,
+  faEnvelope,
+  faCalendar,
+  faVenus,
+  faMars,
+  faHeart,
+  faLock,
+  faSignOutAlt,
+  faUtensils,
+  faBed,
+  faMapMarkerAlt,
+} from "@fortawesome/free-solid-svg-icons";
 import ProfileText from "./ProfileText";
 import { useApiClient } from "../assets/hooks/useApiClient";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
   const [userProfile, setUserProfile] = useState(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-    
+
   const { get, isAuthenticated } = useApiClient();
 
-  // 로그인 상태 확인 및 프로필 정보 가져오기
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (isAuthenticated()) {
@@ -18,7 +32,6 @@ export default function Profile() {
           setUserProfile(profileData);
         } catch (err) {
           console.error("프로필 정보를 가져오는데 실패했습니다:", err);
-          // 토큰이 유효하지 않은 경우 로그아웃 처리
           if (err.message.includes("인증이 만료")) {
             handleLogout();
           }
@@ -31,36 +44,87 @@ export default function Profile() {
     fetchUserProfile();
   }, [isAuthenticated, get]);
 
-  const categoryNames = {
-    0: '관광지',
-    1: '식당',
-    2: '숙소'
-  };
-
-  const gender = {0: "남자", 1: "여자"};
+  const gender = { 0: "남자", 1: "여자" };
 
   return (
-    <div className='border border-gray-300 rounded-lg w-[380px] p-7 mr-5 h-[calc(100vh-201px)] overflow-y-auto'>
-      <div className="flex flex-col items-center text-2xl pb-5 border-b border-gray-300">
-        <div className="w-24 h-24 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full"></div>
-        {userProfile && <p className="pt-3 font-bold">{userProfile.nickname}</p>}
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 w-[30rem] flex flex-col h-[62rem]">
+      {/* 프로필 헤더 */}
+      <div className="bg-gradient-to-br from-blue-50 via-white to-blue-50 px-6 py-4 border-b border-gray-100">
+        <div className="flex flex-col items-center text-black">
+          <div className="w-20 h-20  bg-contain bg-[url('./assets/imgs/default.png')] rounded-full shadow-md ring-4 ring-white"></div>
+
+          {userProfile && (
+            <div className="text-center mt-4">
+              <h2 className="text-2xl font-bold text-gray-800">
+                {userProfile.nickname}
+              </h2>
+              <div className="w-12 h-0.5 bg-main- mx-auto mt-2 rounded-full"></div>
+            </div>
+          )}
+        </div>
       </div>
-      {userProfile && 
-        <>
-          <ProfileText title="이메일" content={userProfile.email} change={false} />
-          <ProfileText title="나이" content={userProfile.age} change={true} />
-          <ProfileText title="성별" content={gender[userProfile.gender]} change={true} />
-          <ProfileText title="선호테마" content={userProfile.preferredThemes} change={true} />
-          <ProfileText title="비밀번호" content="password" change={false} />
-        </>
-      }
-      <button onClick={() => setIsDeleteOpen(true)} className="pt-6 underline text-red-500 text-sm">탈퇴하기</button>
-      {isDeleteOpen ? <DeleteModal setIsDeleteOpen={setIsDeleteOpen} /> : <></>}
+
+      <div className="flex-1 p-6 space-y-4 bg-gray-50/30">
+        {userProfile && (
+          <>
+            <ProfileText
+              icon={faEnvelope}
+              title="이메일"
+              content={userProfile.email}
+              change={false}
+              iconColor="text-gray-700"
+            />
+            <ProfileText
+              icon={faCalendar}
+              title="나이"
+              content={userProfile.age}
+              change={true}
+              iconColor="text-gray-700"
+            />
+            <ProfileText
+              icon={userProfile.gender === 0 ? faMars : faVenus}
+              title="성별"
+              content={gender[userProfile.gender]}
+              change={true}
+              iconColor="text-gray-700"
+            />
+            <ProfileText
+              icon={faHeart}
+              title="선호테마"
+              content={userProfile.preferredThemes}
+              change={true}
+              iconColor="text-red-700"
+            />
+            <ProfileText
+              icon={faLock}
+              title="비밀번호"
+              content="password"
+              change={false}
+              iconColor="text-gray-500"
+            />
+          </>
+        )}
+      </div>
+
+      {/* 탈퇴 버튼 */}
+      <div className="px-6 pb-6 pt-1 bg-white">
+        <button
+          onClick={() => setIsDeleteOpen(true)}
+          className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
+        >
+          탈퇴하기
+        </button>
+        {isDeleteOpen ? (
+          <DeleteModal setIsDeleteOpen={setIsDeleteOpen} />
+        ) : (
+          <></>
+        )}
+      </div>
     </div>
   );
 }
 
-const DeleteModal = ({setIsDeleteOpen}) => {
+const DeleteModal = ({ setIsDeleteOpen }) => {
   const { del, isAuthenticated } = useApiClient();
   const navigate = useNavigate();
 
@@ -70,13 +134,13 @@ const DeleteModal = ({setIsDeleteOpen}) => {
         await del("/api/user/account");
         localStorage.removeItem("token");
         localStorage.removeItem("userId");
-        navigate('/');
+        navigate("/");
         setIsDeleteOpen(false);
       } catch (err) {
         console.error("탈퇴 과정에서 오류가 발생했습니다:", err);
       }
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -84,7 +148,12 @@ const DeleteModal = ({setIsDeleteOpen}) => {
         <h2 className="text-xl font-bold">탈퇴하기</h2>
         <ul className="my-4 list-disc ml-5">
           <li>확인 버튼을 누를 시 탈퇴 처리됩니다.</li>
-          <li>탈퇴 처리는 <span className="text-red-500 underline">절대 되돌릴 수 없습니다.</span></li>
+          <li>
+            탈퇴 처리는{" "}
+            <span className="text-red-500 underline">
+              절대 되돌릴 수 없습니다.
+            </span>
+          </li>
           <li className="font-semibold">정말로 탈퇴하시겠습니까?</li>
         </ul>
         <div className="flex justify-between gap-2">
@@ -103,5 +172,5 @@ const DeleteModal = ({setIsDeleteOpen}) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

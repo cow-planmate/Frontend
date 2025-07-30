@@ -182,7 +182,7 @@ function App() {
   };
 
   return (
-    <div className="absolute pr-0 pl-0 right-0 left-0">
+    <div className="relative pr-0 pl-0 right-0 left-0">
       <div className="text-center h-auto font-pretendard">
         <Navbar isLogin={false} />
       </div>

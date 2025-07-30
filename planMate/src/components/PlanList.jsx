@@ -1,8 +1,15 @@
+// PlanList.jsx
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEllipsisVertical, faTrash, faPen } from "@fortawesome/free-solid-svg-icons";
-import { useState, useRef, useEffect } from 'react';
-import TitleIcon from '../assets/imgs/title.svg?react';
-import { useNavigate } from 'react-router-dom';
+import {
+  faEllipsisVertical,
+  faTrash,
+  faPen,
+  faCalendarPlus,
+  faCalendarAlt,
+} from "@fortawesome/free-solid-svg-icons";
+import { useState, useRef, useEffect } from "react";
+import TitleIcon from "../assets/imgs/title.svg?react";
+import { useNavigate } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
 
 export default function PlanList() {
@@ -10,8 +17,7 @@ export default function PlanList() {
   const [isTitleOpen, setIsTitleOpen] = useState(false);
   const [id, setId] = useState(null);
   const { get, isAuthenticated } = useApiClient();
-  
-  // 로그인 상태 확인 및 프로필 정보 가져오기
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (isAuthenticated()) {
@@ -28,105 +34,153 @@ export default function PlanList() {
 
     fetchUserProfile();
   }, [isAuthenticated, get]);
+
   const [openId, setOpenId] = useState(null);
   const modalRef = useRef(null);
   const navigate = useNavigate();
 
   const toggleModal = (id) => {
-    setOpenId(prev => (prev === id ? null : id));
+    setOpenId((prev) => (prev === id ? null : id));
   };
 
   return (
-    <div className='border border-gray-300 rounded-lg w-[1000px] overflow-y-auto h-[calc(100vh-201px)]'>
-      <div className="font-bold text-2xl p-7 pb-5">나의 일정</div>
-      <div className="px-4">
-        <div className="text-gray-500 font-normal text-sm pl-3 pb-1">제목</div>
-        {plan && plan.map((lst) => {
-          const isOpen = openId === lst.planId;
-          return (
-            <div 
-              key={lst.planId}
-              onClick={() => navigate(`/complete?id=${lst.planId}`)} 
-              className="relative cursor-pointer flex justify-between items-center py-3 px-3 hover:bg-sub"
-            >
-              <div className="font-semibold text-xl">{lst.planName}</div>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation(); // 다른 클릭 이벤트 방지
-                  toggleModal(lst.planId);
-                }}
-                className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-300"
-              >
-                <FontAwesomeIcon className="text-gray-500" icon={faEllipsisVertical} />
-              </button>
+    <div className="bg-white w-[60rem] rounded-2xl shadow-sm border border-gray-200 flex-1 flex flex-col h-[62rem] font-pretendard">
+      {/* 헤더 */}
+      <div className="border-b border-gray-200 px-6 py-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">나의 일정</h2>
+            <p className="text-gray-600 mt-1">
+              생성된 여행 계획을 확인하고 관리하세요
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <FontAwesomeIcon icon={faCalendarPlus} className="w-4 h-4" />
+            <span>{plan ? plan.length : 0}개의 계획</span>
+          </div>
+        </div>
+      </div>
 
-              {isOpen && (
-                <div ref={modalRef} className="absolute right-0 top-full w-36 p-2 bg-white border rounded-lg shadow-md z-50">
-                  <button onClick={(e) => {e.stopPropagation();}} className="flex items-center p-3 hover:bg-gray-100 cursor-pointer">
-                    <TitleIcon className="mr-3 w-4" />
-                    제목 바꾸기
-                  </button>
-                  <button 
-                    onClick={
-                      (e) => {
+      <div className="flex-1 p-6 overflow-y-auto">
+        {plan && plan.length > 0 ? (
+          <div className="space-y-4">
+            {plan.map((lst) => {
+              const isOpen = openId === lst.planId;
+              return (
+                <div
+                  key={lst.planId}
+                  className="group relative bg-gray-50 hover:bg-blue-50 rounded-xl p-4 transition-all duration-200 cursor-pointer border border-gray hover:border-blue-200"
+                  onClick={() => navigate(`/complete?id=${lst.planId}`)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <FontAwesomeIcon
+                          icon={faCalendarAlt}
+                          className="w-5 h-5 text-blue-600"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 text-lg group-hover:text-blue-700 transition-colors">
+                          {lst.planName}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          클릭하여 상세보기
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/create?id=${lst.planId}`);
-                    }} 
-                    className="w-full flex items-center p-3 hover:bg-gray-100 cursor-pointer"
-                  >
-                    <FontAwesomeIcon icon={faPen} className="mr-3 w-4" />
-                    수정
-                  </button>
-                  <div className="flex items-center p-3 hover:bg-gray-100 cursor-pointer">
-                    <FontAwesomeIcon icon={faTrash} className="mr-3 w-4" />
-                    삭제
+                        toggleModal(lst.planId);
+                      }}
+                      className="w-8 h-8 rounded-lg hover:bg-white/80 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <FontAwesomeIcon
+                        className="text-gray-500 hover:text-gray-700"
+                        icon={faEllipsisVertical}
+                      />
+                    </button>
                   </div>
+
+                  {isOpen && (
+                    <div
+                      ref={modalRef}
+                      className="absolute right-4 top-16 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden"
+                    >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                      >
+                        <TitleIcon className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-700">
+                          제목 바꾸기
+                        </span>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/create?id=${lst.planId}`);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                      >
+                        <FontAwesomeIcon
+                          icon={faPen}
+                          className="w-4 h-4 text-black"
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                          수정하기
+                        </span>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left border-t border-gray-100"
+                      >
+                        <FontAwesomeIcon
+                          icon={faTrash}
+                          className="w-4 h-4 text-red-500"
+                        />
+                        <span className="text-sm font-medium text-red-600">
+                          삭제하기
+                        </span>
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FontAwesomeIcon
+                icon={faCalendarPlus}
+                className="w-8 h-8 text-gray-400"
+              />
             </div>
-          )
-        }
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              아직 여행 계획이 없습니다
+            </h3>
+            <p className="text-gray-500 mb-6">
+              새로운 여행 계획을 만들어보세요!
+            </p>
+            <button
+              onClick={() => navigate("/")}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-main hover:bg-blue-900 text-white font-medium rounded-xl transition-colors duration-200"
+            >
+              <FontAwesomeIcon icon={faCalendarPlus} className="w-4 h-4" />
+              여행 계획 만들기
+            </button>
+          </div>
         )}
       </div>
 
-      {isTitleOpen ? <DeleteModal setIsTitleOpen={setIsTitleOpen} /> : <></>}
+      {isTitleOpen && <TitleModal setIsTitleOpen={setIsTitleOpen} id={id} />}
     </div>
-  )
-}
-
-const TitleModal = ({setIsTitleOpen, id}) => {
-  const { patch, isAuthenticated } = useApiClient();
-
-  const handleTitle = async () => {
-    if (isAuthenticated()) {
-      try {
-        await patch(`/api/plan/${id}/name`);
-        setIsDeleteOpen(false);
-      } catch (err) {
-        console.error("탈퇴 과정에서 오류가 발생했습니다:", err);
-      }
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-80">
-        <h2 className="text-xl font-bold">제목 변경하기</h2>
-        <div className="flex justify-between gap-2">
-          <button
-            onClick={() => setIsTitleOpen(false)}
-            className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 w-full"
-          >
-            취소
-          </button>
-          <button
-            onClick={() => handleTitle()}
-            className="px-3 py-1 bg-red-500 text-white rounded w-full hover:bg-red-700"
-          >
-            탈퇴하기
-          </button>
-        </div>
-      </div>
-    </div>
-  )
+  );
 }
