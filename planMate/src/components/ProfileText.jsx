@@ -329,14 +329,12 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
   };
 
   const handleInputChange = (field, value) => {
-    // 비밀번호 검증
     if (field === "password") {
+      setPassword(value);
       const validation = validatePassword(value);
       setPasswordValidation(validation);
     }
-    setShowPrev((prev) => !prev);
   };
-
   const passwordChange = async () => {
     setWrongPrev(false);
     setWrongRe(false);
@@ -422,6 +420,7 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
                 className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
                 type={showNew ? "text" : "password"}
                 placeholder="새 비밀번호를 입력하세요"
+                value={password} // ✅ value 추가
                 onChange={(e) => handleInputChange("password", e.target.value)}
               />
               <button
@@ -434,53 +433,52 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
                 />
               </button>
             </div>
-            <div className="mt-3 space-y-2">
-              {password && (
-                <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
-                  <ValidationItem
-                    isValid={passwordValidation.hasMinLength}
-                    text="최소 8자"
-                  />
-                  <ValidationItem
-                    isValid={
-                      passwordValidation.hasEnglish &&
-                      passwordValidation.hasNumber &&
-                      passwordValidation.hasSpecialChar
-                    }
-                    text="영문, 숫자, 특수문자 3가지 조합"
-                  />
-                  <ValidationItem
-                    isValid={!passwordValidation.hasInvalidChar}
-                    text="연속 문자, 숫자 금지"
-                    isError={passwordValidation.hasInvalidChar}
-                  />
 
-                  {/* 에러 메시지 */}
-                  {!passwordValidation.hasMinLength && (
+            {password && password.length > 0 && (
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                <ValidationItem
+                  isValid={passwordValidation.hasMinLength}
+                  text="최소 8자"
+                />
+                <ValidationItem
+                  isValid={
+                    passwordValidation.hasEnglish &&
+                    passwordValidation.hasNumber &&
+                    passwordValidation.hasSpecialChar
+                  }
+                  text="영문, 숫자, 특수문자 3가지 조합"
+                />
+                <ValidationItem
+                  isValid={!passwordValidation.hasInvalidChar}
+                  text="연속 문자, 숫자 금지"
+                  isError={passwordValidation.hasInvalidChar}
+                />
+
+                {/* 에러 메시지 */}
+                {!passwordValidation.hasMinLength && (
+                  <div className="text-red-600 text-sm mt-2">
+                    최소 8글자 이상 작성해야합니다
+                  </div>
+                )}
+                {!passwordValidation.hasMaxLength && (
+                  <div className="text-red-600 text-sm mt-2">
+                    최대 20글자까지 작성할 수 있습니다
+                  </div>
+                )}
+                {passwordValidation.hasInvalidChar && (
+                  <div className="text-red-600 text-sm mt-2">
+                    사용 불가능한 문자입니다
+                  </div>
+                )}
+                {!passwordValidation.hasAllRequired &&
+                  passwordValidation.hasMinLength &&
+                  !passwordValidation.hasInvalidChar && (
                     <div className="text-red-600 text-sm mt-2">
-                      최소 8글자 이상 작성해야합니다
+                      영어, 숫자, 특수문자 모두 포함해서 작성해주십시오
                     </div>
                   )}
-                  {!passwordValidation.hasMaxLength && (
-                    <div className="text-red-600 text-sm mt-2">
-                      최대 20글자까지 작성할 수 있습니다
-                    </div>
-                  )}
-                  {passwordValidation.hasInvalidChar && (
-                    <div className="text-red-600 text-sm mt-2">
-                      사용 불가능한 문자입니다
-                    </div>
-                  )}
-                  {!passwordValidation.hasAllRequired &&
-                    passwordValidation.hasMinLength &&
-                    !passwordValidation.hasInvalidChar && (
-                      <div className="text-red-600 text-sm mt-2">
-                        영어, 숫자, 특수문자 모두 포함해서 작성해주십시오
-                      </div>
-                    )}
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           <div>
@@ -492,6 +490,7 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
                 className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
                 type={showRe ? "text" : "password"}
                 placeholder="비밀번호를 다시 입력하세요"
+                value={rePassword} // ✅ value 추가
                 onChange={(e) => setRePassword(e.target.value)}
               />
               <button
