@@ -8,14 +8,30 @@ import {
 import TitleIcon from "../assets/imgs/title.svg?react";
 import { useNavigate } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
-export default function PlanListList({lst}) {
+export default function PlanListList({ lst }) {
   const navigate = useNavigate();
   const [isTitleOpen, setIsTitleOpen] = useState(false);
   const [toggleModal, setToggleModal] = useState(false);
   const [title, setTitle] = useState(lst.planName);
+  const modalRef = useRef(null);
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        toggleModal &&
+        modalRef.current &&
+        !modalRef.current.contains(e.target)
+      ) {
+        setToggleModal(false);
+      }
+    };
 
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [toggleModal]);
   return (
     <div
       className="relative bg-gray-50 hover:bg-blue-50 rounded-xl p-4 transition-all duration-200 cursor-pointer border border-gray hover:border-blue-200"
@@ -33,9 +49,7 @@ export default function PlanListList({lst}) {
             <h3 className="font-semibold text-gray-900 text-lg group-hover:text-blue-700 transition-colors">
               {title}
             </h3>
-            <p className="text-sm text-gray-500">
-              클릭하여 상세보기
-            </p>
+            <p className="text-sm text-gray-500">클릭하여 상세보기</p>
           </div>
         </div>
 
@@ -56,6 +70,7 @@ export default function PlanListList({lst}) {
       {toggleModal && (
         <div
           className="absolute right-4 top-16 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden"
+          ref={modalRef}
         >
           <button
             onClick={(e) => {
@@ -76,13 +91,8 @@ export default function PlanListList({lst}) {
             }}
             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
           >
-            <FontAwesomeIcon
-              icon={faPen}
-              className="w-4 h-4 text-black"
-            />
-            <span className="text-sm font-medium text-gray-700">
-              수정하기
-            </span>
+            <FontAwesomeIcon icon={faPen} className="w-4 h-4 text-black" />
+            <span className="text-sm font-medium text-gray-700">수정하기</span>
           </button>
           <button
             onClick={(e) => {
@@ -90,17 +100,19 @@ export default function PlanListList({lst}) {
             }}
             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left border-t border-gray-100"
           >
-            <FontAwesomeIcon
-              icon={faTrash}
-              className="w-4 h-4 text-red-500"
-            />
-            <span className="text-sm font-medium text-red-600">
-              삭제하기
-            </span>
+            <FontAwesomeIcon icon={faTrash} className="w-4 h-4 text-red-500" />
+            <span className="text-sm font-medium text-red-600">삭제하기</span>
           </button>
         </div>
       )}
-      {isTitleOpen && <TitleModal setIsTitleOpen={setIsTitleOpen} id={lst.planId} title={title} setTitle={setTitle} />}
+      {isTitleOpen && (
+        <TitleModal
+          setIsTitleOpen={setIsTitleOpen}
+          id={lst.planId}
+          title={title}
+          setTitle={setTitle}
+        />
+      )}
     </div>
   );
 }
@@ -113,7 +125,7 @@ const TitleModal = ({ setIsTitleOpen, id, title, setTitle }) => {
     if (isAuthenticated()) {
       try {
         await patch(`/api/plan/${id}/name`, {
-          planName: newTitle
+          planName: newTitle,
         });
         setTitle(newTitle);
         setIsTitleOpen(false);
@@ -123,8 +135,8 @@ const TitleModal = ({ setIsTitleOpen, id, title, setTitle }) => {
     }
   };
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm cursor-default" 
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm cursor-default"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="bg-white p-6 rounded-2xl shadow-2xl w-96 border border-gray-100">

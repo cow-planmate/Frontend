@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useApiClient } from "../assets/hooks/useApiClient";
 
 export default function Themestart({
-  isOpen = false,
-  onClose = () => {},
-  onThemeOpen = () => {},
+  isOpen,
+  onClose,
+  onThemeOpen,
   selectedThemeKeywords = {},
 }) {
   const [showThemes, setShowThemes] = useState(false);
-  const { post } = useApiClient();
+  const { patch } = useApiClient();
   const categoryMap = {
     0: "관광지",
     1: "식당",
@@ -16,16 +16,37 @@ export default function Themestart({
   };
 
   if (!isOpen) return null;
-  const savePreferredTheme = async () => {
+  const changePreferredTheme = async () => {
     try {
-      const selectedIds = Object.values(selectedThemeKeywords)
+      const selectedData = Object.values(selectedThemeKeywords)
         .flat()
-        .map((item) => item.preferredThemeId); // ID만 추출
-      console.log(selectedIds);
-      await post("/api/user/preferredTheme", {
-        preferredThemeIds: selectedIds,
-      });
+        .reduce((acc, item) => {
+          const categoryId = item.preferredThemeCategoryId;
+          const themeId = item.preferredThemeId;
 
+          if (!acc[categoryId]) {
+            acc[categoryId] = [];
+          }
+          acc[categoryId].push(themeId);
+          return acc;
+        }, {});
+
+      // 구조 확인
+      console.log("grouped:", selectedData);
+      // 예: { 0: [1,2,3], 2: [28,29], 3: [] }
+
+      const finalData = Object.entries(selectedData).map(
+        ([categoryId, themeIds]) => ({
+          preferredThemeCategoryId: parseInt(categoryId),
+          preferredThemeIds: themeIds,
+        })
+      );
+
+      console.log("보낼 데이터:", finalData);
+
+      for (const data of finalData) {
+        await patch("/api/user/preferredThemes", data);
+      }
       onClose();
     } catch (err) {
       console.error("선호 테마 저장 실패:", err);
@@ -37,17 +58,20 @@ export default function Themestart({
       (sum, arr) => sum + arr.length,
       0
     );
-    return totalSelected === 0 ? "선호테마 선택하기" : "선호테마 수정하기";
+    return totalSelected === 0 ? "선호테마 선택하기" : "선호테마 재선택하기";
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 font-pretendard">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 font-pretendard"
+      onClick={onClose}
+    >
       <div
         className="w-full max-w-md bg-white rounded-lg shadow-lg p-6 relative"
         onClick={(e) => e.stopPropagation()}
       >
         <h1 className="text-2xl font-bold text-gray-900 text-center mb-6">
-          끌리는 여행 키워드를 골라주세요!
+          선호 테마 변경
         </h1>
 
         <div className="space-y-4">
@@ -84,7 +108,7 @@ export default function Themestart({
 
             <button
               className="bg-main text-white text-sm rounded-md py-1"
-              onClick={savePreferredTheme}
+              onClick={changePreferredTheme}
             >
               완료
             </button>

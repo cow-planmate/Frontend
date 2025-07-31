@@ -2,6 +2,9 @@
 import { useState } from "react";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import ThemeStart from "../components/changeThemeStart";
+import Theme from "../components/changeTheme";
+
 import {
   faEye,
   faEyeSlash,
@@ -22,7 +25,33 @@ export default function ProfileText({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [naeyong, setNaeyong] = useState(content);
+  const [isThemestartOpen, setIsThemestartOpen] = useState(false);
+  const [selectedThemeKeywords, setSelectedThemeKeywords] = useState({
+    tourist: [],
+    accommodation: [],
+    restaurant: [],
+  });
+  const [isThemeOpen, setIsThemeOpen] = useState(false);
+  const handleThemestartOpen = () => {
+    setIsThemestartOpen(true);
+  };
 
+  const handleThemestartClose = () => {
+    setIsThemestartOpen(false);
+  };
+
+  const handleThemeOpen = () => {
+    setIsThemeOpen(true);
+  };
+
+  const handleThemeClose = () => {
+    setIsThemeOpen(false);
+  };
+
+  const handleThemeComplete = (keywords) => {
+    setSelectedThemeKeywords(keywords);
+    setIsThemeOpen(false);
+  };
   let categoryNames = null;
   let groupedThemes = null;
 
@@ -58,7 +87,7 @@ export default function ProfileText({
           </div>
           {change && (
             <button
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => handleThemestartOpen()}
               className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
             >
               변경하기
@@ -93,10 +122,12 @@ export default function ProfileText({
         </div>
 
         {/* 선호테마 선택 모달 */}
-        {isModalOpen && (
-          <ThemeSelectionModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
+        {isThemestartOpen && (
+          <ThemeStart
+            isOpen={isThemestartOpen}
+            onClose={handleThemestartClose}
+            onThemeOpen={handleThemeOpen}
+            selectedThemeKeywords={selectedThemeKeywords}
             onComplete={(selectedThemes) => {
               // 선택된 테마로 업데이트
               setNaeyong(selectedThemes);
@@ -104,6 +135,11 @@ export default function ProfileText({
             }}
           />
         )}
+        <Theme
+          isOpen={isThemeOpen}
+          onClose={handleThemeClose}
+          onComplete={handleThemeComplete}
+        />
       </div>
     );
   }
@@ -151,221 +187,6 @@ export default function ProfileText({
     </div>
   );
 }
-
-// 선호테마 선택 모달 컴포넌트 (두 번째 코드에서 가져옴)
-const ThemeSelectionModal = ({ isOpen, onClose, onComplete }) => {
-  const [selectedKeywords, setSelectedKeywords] = useState([]);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [allSelectedKeywords, setAllSelectedKeywords] = useState({});
-  const [keywordsByStep, setKeywordsByStep] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const { get, patch } = useApiClient();
-
-  const getPreferredTheme = async () => {
-    try {
-      const res = await get("/api/user/preferredTheme");
-      const themeList = res.preferredThemes || [];
-
-      console.log(themeList);
-
-      if (Array.isArray(themeList) && themeList.length > 0) {
-        const categoryMap = {};
-        const categorizedKeywords = [];
-        const categoryList = [];
-
-        themeList.forEach((item) => {
-          const catId = item.preferredThemeCategoryId;
-          const catName = item.preferredThemeCategoryName;
-
-          if (!categoryMap[catId]) {
-            categoryMap[catId] = [];
-            categoryList.push({
-              id: catId,
-              name: catName,
-            });
-          }
-          categoryMap[catId].push(item);
-        });
-
-        categoryList.sort((a, b) => a.id - b.id);
-
-        categoryList.forEach((cat) => {
-          categorizedKeywords.push(categoryMap[cat.id] || []);
-        });
-
-        setCategories(categoryList);
-        setKeywordsByStep(categorizedKeywords);
-
-        const initialSelected = {};
-        categoryList.forEach((cat) => {
-          initialSelected[cat.id] = [];
-        });
-        setAllSelectedKeywords(initialSelected);
-      }
-    } catch (err) {
-      console.error("선호 테마 가져오기 실패:", err.message);
-    }
-  };
-
-  useState(() => {
-    if (isOpen) {
-      getPreferredTheme();
-    }
-  }, [isOpen]);
-
-  const toggleKeyword = (index) => {
-    setSelectedKeywords((prev) =>
-      prev.includes(index)
-        ? prev.filter((i) => i !== index)
-        : prev.length < 5
-        ? [...prev, index]
-        : prev
-    );
-  };
-
-  const nextStep = async () => {
-    if (categories.length === 0 || !keywordsByStep[currentStep]) return;
-
-    const currentCategoryId = categories[currentStep].id;
-    const currentStepKeywords = keywordsByStep[currentStep];
-    const selected = selectedKeywords
-      .map((i) => currentStepKeywords[i])
-      .filter((item) => !!item);
-
-    const newAllSelected = {
-      ...allSelectedKeywords,
-      [currentCategoryId]: selected,
-    };
-    setAllSelectedKeywords(newAllSelected);
-
-    if (currentStep < categories.length - 1) {
-      setCurrentStep(currentStep + 1);
-      setSelectedKeywords([]);
-    } else {
-      // 마지막 단계 - API 호출해서 저장하고 완료
-
-      try {
-        // 선택된 테마 ID들을 배열로 변환
-        const selectedThemeIds = Object.values(newAllSelected)
-          .flat()
-          .map((theme) => theme.preferredThemeId);
-
-        console.log("💡 보낼 ID 목록:", selectedThemeIds);
-
-        await patch("/api/user/preferredThemes", {
-          preferredThemeIds: selectedThemeIds,
-        });
-
-        // 선택된 테마 데이터를 변환해서 전달
-        const selectedThemesForDisplay = Object.values(newAllSelected).flat();
-        onComplete(selectedThemesForDisplay);
-      } catch (err) {
-        console.error("선호 테마 저장 실패:", err);
-        // 에러가 발생해도 UI는 업데이트
-        const selectedThemesForDisplay = Object.values(newAllSelected).flat();
-        onComplete(selectedThemesForDisplay);
-      }
-    }
-  };
-
-  const skipStep = () => {
-    if (categories.length === 0) return;
-
-    const currentCategoryId = categories[currentStep].id;
-    const newAllSelected = {
-      ...allSelectedKeywords,
-      [currentCategoryId]: [],
-    };
-    setAllSelectedKeywords(newAllSelected);
-
-    if (currentStep < categories.length - 1) {
-      setCurrentStep(currentStep + 1);
-      setSelectedKeywords([]);
-    } else {
-      const selectedThemesForDisplay = Object.values(newAllSelected).flat();
-      onComplete(selectedThemesForDisplay);
-    }
-  };
-
-  const currentKeywords = keywordsByStep[currentStep];
-
-  if (!isOpen) return null;
-
-  return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60] font-pretendard"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 max-h-[70vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h1 className="text-lg font-bold text-gray-900 text-center mb-4">
-          {categories.length > 0 && categories[currentStep]
-            ? `좋아하는 ${categories[currentStep].name} 키워드를 선택해주세요!`
-            : "로딩 중..."}
-        </h1>
-
-        <div className="flex-1 overflow-y-auto mb-4">
-          <div className="grid grid-cols-3 gap-3">
-            {currentKeywords && Array.isArray(currentKeywords) ? (
-              currentKeywords.map((keyword, index) => (
-                <button
-                  key={keyword.preferredThemeId}
-                  onClick={() => toggleKeyword(index)}
-                  className={`rounded-lg px-2 py-2 text-sm text-gray-800 border border-gray-300 hover:bg-blue-100 transition-all ${
-                    selectedKeywords.includes(index)
-                      ? "bg-blue-200 border-blue-400"
-                      : ""
-                  }`}
-                >
-                  {keyword.preferredThemeName}
-                </button>
-              ))
-            ) : (
-              <div className="col-span-3 text-center text-gray-500">
-                키워드를 불러오는 중...
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="text-center text-sm text-gray-500 mb-4">
-          {selectedKeywords.length}/5 선택됨
-        </div>
-
-        <div className="flex justify-between items-center">
-          <button
-            onClick={skipStep}
-            className="px-4 py-2 text-gray-500 hover:text-gray-700"
-          >
-            건너뛰기
-          </button>
-
-          <div className="flex space-x-2">
-            {currentStep > 0 && (
-              <button
-                onClick={() => {
-                  setCurrentStep(currentStep - 1);
-                  setSelectedKeywords([]);
-                }}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-              >
-                이전
-              </button>
-            )}
-            <button
-              onClick={nextStep}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-            >
-              {currentStep === categories.length - 1 ? "완료" : "다음"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // Modal 컴포넌트 (나이, 성별 전용)
 const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
