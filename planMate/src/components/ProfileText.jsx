@@ -151,26 +151,28 @@ export default function ProfileText({
           <FontAwesomeIcon icon={icon} className={`w-4 h-4 ${iconColor}`} />
           <div className="flex-1">
             <span className="font-semibold text-lg text-gray-800">{title}</span>
-            <div className="text-gray-600 text-sm mt-1">
-              {content === "password" ? "••••••••" : naeyong}
-            </div>
+            {title !== "비밀번호" && (
+              <div className="text-gray-600 text-sm mt-1">{naeyong}</div>
+            )}
           </div>
         </div>
-        {change ? (
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
-          >
-            변경하기
-          </button>
-        ) : content === "password" ? (
+        {title === "비밀번호" ? (
           <button
             onClick={() => setIsPasswordOpen(true)}
             className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
           >
             변경하기
           </button>
-        ) : null}
+        ) : (
+          change && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
+            >
+              변경하기
+            </button>
+          )
+        )}
       </div>
 
       {isModalOpen && (
