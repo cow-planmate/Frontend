@@ -8,6 +8,7 @@ import Signuptest from "../pages/Signuptest";
 import Passwordfindtest from "../pages/Passwordfindtest";
 import Logintest from "../pages/Logintest";
 import Themetest from "../pages/Themetest";
+import Landingpage from "../pages/Landingpage";
 
 // 2. Router 라는 함수를 만들고 아래와 같이 작성합니다.
 //BrowserRouter를 Router로 감싸는 이유는,
@@ -23,6 +24,7 @@ const Router = () => {
                         path는 우리가 흔히 말하는 사용하고싶은 "주소"를 넣어주면 됩니다.
                         element는 해당 주소로 이동했을 때 보여주고자 하는 컴포넌트를 넣어줍니다.
                  */}
+
         <Route path="/" element={<Home />} />
         <Route path="complete" element={<Complete />} />
         <Route path="create" element={<Create />} />
@@ -31,6 +33,7 @@ const Router = () => {
         <Route path="logintest" element={<Logintest />} />
         <Route path="themetest" element={<Themetest />} />
         <Route path="passwordfindtest" element={<Passwordfindtest />} />
+        <Route path="landingpage" element={<Landingpage />} />
       </Routes>
     </BrowserRouter>
   );

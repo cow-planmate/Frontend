@@ -38,7 +38,7 @@ export default function Signup({
     hasInvalidChar: false,
     hasAllRequired: false,
   });
-
+  const [isEmailSending, setIsEmailSending] = useState(false);
   // 비밀번호 일치 검증
   const [passwordMatch, setPasswordMatch] = useState(true);
   //킬때마다 초기화
@@ -164,7 +164,7 @@ export default function Signup({
       alert("올바른 이메일 형식을 입력해주세요.");
       return;
     }
-
+    setIsEmailSending(true);
     try {
       const response = await fetch("/api/auth/register/email", {
         method: "POST",
@@ -189,6 +189,8 @@ export default function Signup({
     } catch (error) {
       console.error("에러 발생:", error);
       alert("이메일 전송에 실패했습니다.");
+    } finally {
+      setIsEmailSending(false); // 로딩 종료
     }
   };
 
@@ -377,7 +379,17 @@ export default function Signup({
                 onClick={sendEmail}
                 disabled={isEmailVerified}
               >
-                {isEmailVerified ? "인증완료" : "인증번호발송"}
+                {isEmailVerified ? (
+                  "인증완료"
+                ) : isEmailSending ? (
+                  <div className="flex flex-row justify-center gap-1">
+                    <div className="w-2 h-2 rounded-full bg-white animate-bounce [animation-delay:.7s]" />
+                    <div className="w-2 h-2 rounded-full bg-white animate-bounce [animation-delay:.3s]" />
+                    <div className="w-2 h-2 rounded-full bg-white animate-bounce [animation-delay:.7s]" />
+                  </div>
+                ) : (
+                  "인증번호발송"
+                )}
               </button>
             </div>
           </div>
