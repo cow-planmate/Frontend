@@ -20,7 +20,6 @@ function App() {
     accommodation: [],
     restaurant: [],
   });
-  const { get, isLoading, error, isAuthenticated, logout } = useApiClient();
 
   // Navbar의 핸들러 함수들 복사
   const handleSignupOpen = () => {
@@ -124,7 +123,6 @@ function App() {
               </div>
             </div>
 
-            {/* Right Section */}
             <div className="w-1/2 flex items-center justify-center">
               <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-8 w-full max-w-2xl">
                 <svg
@@ -135,7 +133,6 @@ function App() {
                   width="614"
                   className="max-w-full h-auto"
                 >
-                  {/* Background Schedule Image */}
                   <g id="schedule" className="cursor-pointer">
                     <image
                       x="50"
@@ -146,7 +143,7 @@ function App() {
                       preserveAspectRatio="xMidYMid slice"
                       className="border-gray-400 rounded-lg shadow-lg"
                     />
-                    {/* Optional: Add a subtle overlay for better cursor visibility */}
+
                     <rect
                       x="50"
                       y="40"
@@ -157,12 +154,10 @@ function App() {
                     />
                   </g>
 
-                  {/* Interactive Box */}
                   <g
                     id="box"
                     className="cursor-pointer opacity-0 animate-[box_5s_ease_infinite_alternate]"
                   >
-                    {/* Main Rectangle */}
                     <rect
                       x="28"
                       y="20"
@@ -174,7 +169,6 @@ function App() {
                       strokeWidth="2"
                     />
 
-                    {/* Corner Handles */}
                     <rect
                       x="23"
                       y="15"
@@ -213,7 +207,6 @@ function App() {
                     />
                   </g>
 
-                  {/* First Animated Cursor */}
                   <g
                     id="cursor1"
                     className="cursor-pointer animate-[cursor1_6s_ease_infinite_alternate] origin-center"
@@ -227,7 +220,6 @@ function App() {
                     />
                   </g>
 
-                  {/* Second Animated Cursor */}
                   <g
                     id="cursor2"
                     className="cursor-pointer animate-[cursor2_7s_ease_infinite_alternate] origin-center"
