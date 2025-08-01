@@ -3,9 +3,32 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: 'Pretendard';
-	font-weight: 45 920;
-	font-style: normal;
-	font-display: swap;
-  src: url('./assets/fonts/PretendardVariable.woff2') format('woff2-variations');
+  font-family: "Pretendard";
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+  src: url("./assets/fonts/PretendardVariable.woff2") format("woff2-variations");
+}
+@font-face {
+  font-family: "medium-Paperlogy";
+  src: url("./assets/fonts/Paperlogy-5Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "semibold-Paperlogy";
+  src: url("./assets/fonts/Paperlogy-6SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SCDream";
+  src: url("/fonts/SCDream3.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
 }

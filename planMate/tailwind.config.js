@@ -4,12 +4,15 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        pretendard: ['Pretendard', 'sans-serif'],
+        pretendard: ["Pretendard", "sans-serif"],
+        semiboldpaperlogy: ["semibold-Paperlogy", "sans-serif"],
+        mediumpaperlogy: ["medium-Paperlogy", "sans-serif"],
+        scdream: ["SCDream", "sans-serif"],
       },
       colors: {
         main: "#1344FF",
-        sub: "#E8EDFF"
-      }
+        sub: "#E8EDFF",
+      },
     },
   },
   plugins: [],
