@@ -495,11 +495,12 @@ const TravelPlannerApp = () => {
     return (
       <div
         key={item.placeId}
-        className="absolute left-16 bg-sub rounded-md z-10 group cursor-move"
+        className="absolute left-16 p-2 font-hand text-sm shadow-lg border border-[#718FFF] rounded-lg z-10 group cursor-move"
         style={{
           top: `${startIndex * 30}px`,
           height: `${height}px`,
           width: "329px",
+          backgroundImage: "linear-gradient(to bottom, transparent, #E8EDFF), linear-gradient(-45deg, #718FFF 40px, #E8EDFF 40px)"
         }}
         draggable
         onDragStart={(e) => {
@@ -594,7 +595,7 @@ const TravelPlannerApp = () => {
       for (const place of day) {
         const startTime = place.timeSlot;
         const endTime = addMinutes(startTime, place.duration * 15);
-
+        console.log(place)
         const block = {
           placeCategoryId: place.categoryId,
           placeName: place.name,
