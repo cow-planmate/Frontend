@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import TransportModal from "./TransportModal";
 import PersonCountModal from "./HomePerson";
+import DepartureModal from "./Departure";
+import LocationModal from "./HomeDestination";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { useNavigate } from 'react-router-dom';
 
@@ -10,13 +12,23 @@ export default function PlanInfo({info, id, savePlan}) {
   const flexCenter = "flex items-center";
   
   const [sendCreate, setSendCreate] = useState({});
+
   const transInfo = {"bus": "대중교통", "car": "자동차"};
   const transInfo2 = {0: "bus", 1: "car"}
   const transInfo3 = {"bus": 0, "car": 1}
+
+  const [isDepartureOpen, setIsDepartureOpen] = useState(false);
+  const [departureLocation, setDepartureLocation] = useState(info.departure);
+
+  const [destinationLocation, setDestinationLocation] = useState(info.travel);
+  const [isDestinationOpen, setIsDestinationOpen] = useState(false);
+
   const [isTransportOpen, setIsTransportOpen] = useState(false); 
   const [selectedTransport, setSelectedTransport] = useState(transInfo2[info.transportation]);
+
   const [isPersonCountOpen, setIsPersonCountOpen] = useState(false);
   const [personCount, setPersonCount] = useState({ adults: info.adultCount, children: info.childCount });
+
   const [title, setTitle] = useState(info.planName);
 
   const spanRef = useRef(null);
@@ -68,6 +80,30 @@ export default function PlanInfo({info, id, savePlan}) {
     setPersonCount(count);
   };
 
+  const handleDepartureOpen = () => {
+    setIsDepartureOpen(true);
+  };
+
+  const handleDepartureClose = () => {
+    setIsDepartureOpen(false);
+  };
+
+  const handleDepartureLocationSelect = (location) => {
+    setDepartureLocation(location.name);
+  };
+
+  const handleDestinationLocationSelect = (location) => {
+    setDestinationLocation(location.name);
+  };
+
+  const handleDestinationOpen = () => {
+    setIsDestinationOpen(true);
+  };
+
+  const handleDestinationClose = () => {
+    setIsDestinationOpen(false);
+  };
+
   useEffect(() => {
     setSendCreate({"transportation": transInfo3[selectedTransport], "adultCount": personCount["adults"], "childCount": personCount["children"]});
   }, [selectedTransport, personCount])
@@ -96,16 +132,16 @@ export default function PlanInfo({info, id, savePlan}) {
             <p className="text-lg">{personCount["children"]}명</p>
           </div>
         </button>
-        <button className="rounded-lg py-1 px-2 hover:bg-gray-100">
+        <button className="rounded-lg py-1 px-2 hover:bg-gray-100" onClick={handleDepartureOpen}>
           <div className={`${flexCenter}`}>
             <p className="text-gray-500 mr-3">출발지</p>
-            <p className="text-lg truncate max-w-56">{info.departure}</p>
+            <p className="text-lg truncate max-w-56">{departureLocation}</p>
           </div>
         </button>
-        <button className="rounded-lg py-1 px-2 hover:bg-gray-100">
+        <button className="rounded-lg py-1 px-2 hover:bg-gray-100" onClick={handleDestinationOpen}>
           <div className={`${flexCenter}`}>
             <p className="text-gray-500 mr-3">여행지</p>
-            <p className="text-lg">{info.travel}</p>
+            <p className="text-lg">{destinationLocation}</p>
           </div>
         </button>
         <button className="rounded-lg py-1 px-2 hover:bg-gray-100" onClick={handleTransportOpen}>
@@ -126,6 +162,22 @@ export default function PlanInfo({info, id, savePlan}) {
           완료
         </button>
       </div>
+
+      <DepartureModal
+        isOpen={isDepartureOpen}
+        onClose={handleDepartureClose}
+        onLocationSelect={handleDepartureLocationSelect}
+        title="출발지 검색"
+        placeholder="출발지를 입력해주세요"
+      />
+
+      <LocationModal
+        isOpen={isDestinationOpen}
+        onClose={handleDestinationClose}
+        onLocationSelect={handleDestinationLocationSelect}
+        title="여행지 검색"
+        placeholder="여행지를 입력해주세요"
+      />
 
       <PersonCountModal
         isOpen={isPersonCountOpen}
