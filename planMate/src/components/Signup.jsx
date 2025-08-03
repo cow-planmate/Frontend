@@ -262,6 +262,7 @@ export default function Signup({
       alert("오류. 나중에 다시 시도해주세요.");
     }
   };
+
   const handleRegisterAndLogin = async () => {
     try {
       const headers = {
@@ -270,6 +271,7 @@ export default function Signup({
 
       // 이메일 인증 토큰을 Authorization 헤더에 포함
       if (emailVerificationToken) {
+        console.log("토큰전송 :", emailVerificationToken);
         headers["Authorization"] = `Bearer ${emailVerificationToken}`;
       }
 
@@ -287,8 +289,12 @@ export default function Signup({
 
       const registerData = await registerResponse.json();
       console.log("회원가입 응답:", registerData);
+      console.log(registerData.isRegistered, registerData.message);
 
-      if (!registerData.isRegistered) {
+      if (
+        registerData.isRegistered ||
+        registerData.message === "User registered successfully"
+      ) {
         alert("회원가입이 완료되었습니다!");
 
         // 2. 회원가입 성공 시 로그인 시도
@@ -308,90 +314,12 @@ export default function Signup({
         }
       } else if (registerData.message === "Invalid token") {
         alert("토큰 오류, 회원가입실패 다시시도 해주세요");
-        // 폼 데이터 초기화
-        setFormData({
-          email: "",
-          verificationCode: "",
-          password: "",
-          confirmPassword: "",
-          nickname: "",
-          age: "",
-          gender: "male",
-        });
-
-        // 비밀번호 보기 상태 초기화
-        setShowPassword(false);
-        setShowConfirmPassword(false);
-
-        // 타이머 관련 초기화
-        setTimeLeft(0);
-        setIsTimerRunning(false);
-
-        // 이메일 인증 관련 초기화
-        setIsEmailVerified(false);
-        setShowVerification(false);
-        // 닉네임 검증상태 초기화
-        setIsNicknameVerified(false);
-        // 비밀번호 검증 상태 초기화
-        setPasswordValidation({
-          hasMinLength: false,
-          hasMaxLength: true,
-          hasEnglish: false,
-          hasNumber: false,
-          hasSpecialChar: false,
-
-          hasAllRequired: false,
-        });
-
-        // 비밀번호 일치 검증 초기화
-        setPasswordMatch(true);
-
-        setEmailVerificationToken("");
       } else {
         alert("회원가입 실패. 다시 시도해주세요.");
-        // 폼 데이터 초기화
-        setFormData({
-          email: "",
-          verificationCode: "",
-          password: "",
-          confirmPassword: "",
-          nickname: "",
-          age: "",
-          gender: "male",
-        });
-
-        // 비밀번호 보기 상태 초기화
-        setShowPassword(false);
-        setShowConfirmPassword(false);
-
-        // 타이머 관련 초기화
-        setTimeLeft(0);
-        setIsTimerRunning(false);
-
-        // 이메일 인증 관련 초기화
-        setIsEmailVerified(false);
-        setShowVerification(false);
-        // 닉네임 검증상태 초기화
-        setIsNicknameVerified(false);
-        // 비밀번호 검증 상태 초기화
-        setPasswordValidation({
-          hasMinLength: false,
-          hasMaxLength: true,
-          hasEnglish: false,
-          hasNumber: false,
-          hasSpecialChar: false,
-
-          hasAllRequired: false,
-        });
-
-        // 비밀번호 일치 검증 초기화
-        setPasswordMatch(true);
-
-        setEmailVerificationToken("");
       }
     } catch (error) {
       console.error("회원가입 또는 로그인 중 오류:", error);
-      alert("오류 발생. 나중에 다시 시도해주세요.");
+      alert("오류 발생.  다시 시도해주세요.");
       // 폼 데이터 초기화
       setFormData({
         email: "",
