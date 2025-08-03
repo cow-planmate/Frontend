@@ -28,6 +28,7 @@ export default function Signup({
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [isNicknameVerified, setIsNicknameVerified] = useState(false);
+  const [emailVerificationToken, setEmailVerificationToken] = useState("");
   // 비밀번호 검증 상태
   const [passwordValidation, setPasswordValidation] = useState({
     hasMinLength: false,
@@ -35,7 +36,6 @@ export default function Signup({
     hasEnglish: false,
     hasNumber: false,
     hasSpecialChar: false,
-    hasInvalidChar: false,
     hasAllRequired: false,
   });
   const [isEmailSending, setIsEmailSending] = useState(false);
@@ -75,12 +75,13 @@ export default function Signup({
         hasEnglish: false,
         hasNumber: false,
         hasSpecialChar: false,
-        hasInvalidChar: false,
         hasAllRequired: false,
       });
 
       // 비밀번호 일치 검증 초기화
       setPasswordMatch(true);
+
+      setEmailVerificationToken("");
     }
   }, [isOpen]);
 
@@ -107,7 +108,6 @@ export default function Signup({
     const hasEnglish = /[a-zA-Z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    const hasInvalidChar = !/^[a-zA-Z0-9!@#$%^&*(),.?":{}|<>]*$/.test(password);
     const hasAllRequired = hasEnglish && hasNumber && hasSpecialChar;
 
     return {
@@ -116,7 +116,7 @@ export default function Signup({
       hasEnglish,
       hasNumber,
       hasSpecialChar,
-      hasInvalidChar,
+
       hasAllRequired,
     };
   };
@@ -166,13 +166,14 @@ export default function Signup({
     }
     setIsEmailSending(true);
     try {
-      const response = await fetch("/api/auth/register/email", {
+      const response = await fetch("/api/auth/email/verification", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email: formData.email,
+          purpose: "SIGN_UP",
         }),
       });
 
@@ -182,13 +183,21 @@ export default function Signup({
 
       const data = await response.json();
       console.log("서버 응답:", data);
-      alert("인증번호가 이메일로 전송되었습니다!");
-      setTimeLeft(300);
-      setIsTimerRunning(true);
-      setShowVerification(true); // 인증번호 입력 영역 표시
+      if (!data.isVerificationSent) {
+        alert("인증번호가 이메일로 전송되었습니다!");
+        setTimeLeft(300);
+        setIsTimerRunning(true);
+        setShowVerification(true); // 인증번호 입력 영역 표시
+      } else if (data.message === "Email already in use") {
+        alert("이미 사용중인 이메일입니다.");
+      } else if (data.message === "Email not found") {
+        alert("이메일을 찾을 수 없습니다.");
+      } else {
+        alert(data.message || "발송 실패");
+      }
     } catch (error) {
       console.error("에러 발생:", error);
-      alert("이메일 전송에 실패했습니다.");
+      alert("이메일 전송에 실패했습니다. 다시 시도해주세요");
     } finally {
       setIsEmailSending(false); // 로딩 종료
     }
@@ -196,12 +205,13 @@ export default function Signup({
 
   const verifyEmail = async () => {
     try {
-      const response = await fetch("/api/auth/register/email/verify", {
+      const response = await fetch("/api/auth/email/verification/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: formData.email,
           verificationCode: formData.verificationCode,
+          purpose: "SIGN_UP",
         }),
       });
 
@@ -210,14 +220,21 @@ export default function Signup({
 
       if (data.emailVerified) {
         alert("인증 성공!");
-        setIsEmailVerified(true); // 인증 완료 상태로 변경
-        setIsTimerRunning(false); // 타이머 중지
+        setIsEmailVerified(true);
+        setIsTimerRunning(false);
+        setEmailVerificationToken(data.token);
       } else {
-        alert(data.message || "인증 실패. 코드를 다시 확인하세요.");
+        if (data.message === "Verification request not found or expired") {
+          alert("만료된 인증번호 : 다시 인증번호를 발송해주세요");
+        } else if (data.message === "Invalid verification code") {
+          alert("인증번호가 일치하지 않습니다.");
+        } else {
+          alert(data.message || "인증 실패");
+        }
       }
     } catch (error) {
       console.error("에러 발생:", error);
-      alert("서버 오류. 나중에 다시 시도해주세요.");
+      alert("오류 발생 : 잘못된 인증번호 형식일 수 있습니다");
     }
   };
 
@@ -247,9 +264,18 @@ export default function Signup({
   };
   const handleRegisterAndLogin = async () => {
     try {
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      // 이메일 인증 토큰을 Authorization 헤더에 포함
+      if (emailVerificationToken) {
+        headers["Authorization"] = `Bearer ${emailVerificationToken}`;
+      }
+
       const registerResponse = await fetch("/api/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: headers,
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
@@ -280,12 +306,131 @@ export default function Signup({
         if (onThemeOpen) {
           onThemeOpen();
         }
+      } else if (registerData.message === "Invalid token") {
+        alert("토큰 오류, 회원가입실패 다시시도 해주세요");
+        // 폼 데이터 초기화
+        setFormData({
+          email: "",
+          verificationCode: "",
+          password: "",
+          confirmPassword: "",
+          nickname: "",
+          age: "",
+          gender: "male",
+        });
+
+        // 비밀번호 보기 상태 초기화
+        setShowPassword(false);
+        setShowConfirmPassword(false);
+
+        // 타이머 관련 초기화
+        setTimeLeft(0);
+        setIsTimerRunning(false);
+
+        // 이메일 인증 관련 초기화
+        setIsEmailVerified(false);
+        setShowVerification(false);
+        // 닉네임 검증상태 초기화
+        setIsNicknameVerified(false);
+        // 비밀번호 검증 상태 초기화
+        setPasswordValidation({
+          hasMinLength: false,
+          hasMaxLength: true,
+          hasEnglish: false,
+          hasNumber: false,
+          hasSpecialChar: false,
+
+          hasAllRequired: false,
+        });
+
+        // 비밀번호 일치 검증 초기화
+        setPasswordMatch(true);
+
+        setEmailVerificationToken("");
       } else {
         alert("회원가입 실패. 다시 시도해주세요.");
+        // 폼 데이터 초기화
+        setFormData({
+          email: "",
+          verificationCode: "",
+          password: "",
+          confirmPassword: "",
+          nickname: "",
+          age: "",
+          gender: "male",
+        });
+
+        // 비밀번호 보기 상태 초기화
+        setShowPassword(false);
+        setShowConfirmPassword(false);
+
+        // 타이머 관련 초기화
+        setTimeLeft(0);
+        setIsTimerRunning(false);
+
+        // 이메일 인증 관련 초기화
+        setIsEmailVerified(false);
+        setShowVerification(false);
+        // 닉네임 검증상태 초기화
+        setIsNicknameVerified(false);
+        // 비밀번호 검증 상태 초기화
+        setPasswordValidation({
+          hasMinLength: false,
+          hasMaxLength: true,
+          hasEnglish: false,
+          hasNumber: false,
+          hasSpecialChar: false,
+
+          hasAllRequired: false,
+        });
+
+        // 비밀번호 일치 검증 초기화
+        setPasswordMatch(true);
+
+        setEmailVerificationToken("");
       }
     } catch (error) {
       console.error("회원가입 또는 로그인 중 오류:", error);
       alert("오류 발생. 나중에 다시 시도해주세요.");
+      // 폼 데이터 초기화
+      setFormData({
+        email: "",
+        verificationCode: "",
+        password: "",
+        confirmPassword: "",
+        nickname: "",
+        age: "",
+        gender: "male",
+      });
+
+      // 비밀번호 보기 상태 초기화
+      setShowPassword(false);
+      setShowConfirmPassword(false);
+
+      // 타이머 관련 초기화
+      setTimeLeft(0);
+      setIsTimerRunning(false);
+
+      // 이메일 인증 관련 초기화
+      setIsEmailVerified(false);
+      setShowVerification(false);
+      // 닉네임 검증상태 초기화
+      setIsNicknameVerified(false);
+      // 비밀번호 검증 상태 초기화
+      setPasswordValidation({
+        hasMinLength: false,
+        hasMaxLength: true,
+        hasEnglish: false,
+        hasNumber: false,
+        hasSpecialChar: false,
+
+        hasAllRequired: false,
+      });
+
+      // 비밀번호 일치 검증 초기화
+      setPasswordMatch(true);
+
+      setEmailVerificationToken("");
     }
   };
 
@@ -298,15 +443,13 @@ export default function Signup({
     !passwordValidation.hasMinLength ||
     !passwordValidation.hasMaxLength ||
     !passwordValidation.hasAllRequired ||
-    passwordValidation.hasInvalidChar ||
     !passwordMatch;
 
   // 비밀번호 재입력 필드 활성화 조건
   const isConfirmPasswordDisabled =
     !passwordValidation.hasMinLength ||
     !passwordValidation.hasMaxLength ||
-    !passwordValidation.hasAllRequired ||
-    passwordValidation.hasInvalidChar;
+    !passwordValidation.hasAllRequired;
 
   const ValidationItem = ({ isValid, text, isError = false }) => (
     <div className="flex items-center gap-2 text-sm">
@@ -457,11 +600,6 @@ export default function Signup({
                   }
                   text="영문, 숫자, 특수문자 3가지 조합"
                 />
-                <ValidationItem
-                  isValid={!passwordValidation.hasInvalidChar}
-                  text="연속 문자, 숫자 금지"
-                  isError={passwordValidation.hasInvalidChar}
-                />
 
                 {/* 에러 메시지 */}
                 {!passwordValidation.hasMinLength && (
@@ -474,14 +612,9 @@ export default function Signup({
                     최대 20글자까지 작성할 수 있습니다
                   </div>
                 )}
-                {passwordValidation.hasInvalidChar && (
-                  <div className="text-red-600 text-sm mt-2">
-                    사용 불가능한 문자입니다
-                  </div>
-                )}
+
                 {!passwordValidation.hasAllRequired &&
-                  passwordValidation.hasMinLength &&
-                  !passwordValidation.hasInvalidChar && (
+                  passwordValidation.hasMinLength && (
                     <div className="text-red-600 text-sm mt-2">
                       영어, 숫자, 특수문자 모두 포함해서 작성해주십시오
                     </div>

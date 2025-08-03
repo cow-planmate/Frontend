@@ -52,7 +52,7 @@ function App() {
   };
   const options = {
     activeClass: "active",
-    anchors: ["One", "Two", "Three"],
+    anchors: ["One", "Two", "Three", "Four"],
     arrowNavigation: true,
     rollingSpeed: 1000,
     navigation: true,
@@ -436,6 +436,7 @@ function App() {
             </div>
           </div>
         </Section>
+        <Section></Section>
       </SectionsContainer>
       <Signup
         isOpen={isSignupOpen}

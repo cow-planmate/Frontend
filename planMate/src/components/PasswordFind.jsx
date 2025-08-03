@@ -7,6 +7,8 @@ export default function PasswordFind({ isOpen, onClose }) {
   const [timeLeft, setTimeLeft] = useState(0);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
+  const [emailVerificationToken, setEmailVerificationToken] = useState("");
+  const [isEmailSending, setIsEmailSending] = useState(false);
 
   //킬때마다 초기화
   useEffect(() => {
@@ -22,6 +24,7 @@ export default function PasswordFind({ isOpen, onClose }) {
       // 이메일 인증 관련 초기화
       setIsEmailVerified(false);
       setShowVerification(false);
+      setEmailVerificationToken("");
     }
   }, [isOpen]);
 
@@ -58,15 +61,16 @@ export default function PasswordFind({ isOpen, onClose }) {
       alert("올바른 이메일 형식을 입력해주세요.");
       return;
     }
-
+    setIsEmailSending(true);
     try {
-      const response = await fetch("/api/auth/password/email", {
+      const response = await fetch("/api/auth/email/verification", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email: formData.email,
+          purpose: "RESET_PASSWORD",
         }),
       });
 
@@ -76,35 +80,57 @@ export default function PasswordFind({ isOpen, onClose }) {
 
       const data = await response.json();
       console.log("서버 응답:", data);
-      alert(`임시비밀번호가 메일로 전송되었습니다!
-         로그인 후 마이페이지에서 비밀번호변경을 해주세요`);
-      setTimeLeft(300);
-      setShowVerification(true); // 인증번호 입력 영역 표시
+      if (!data.isVerificationSent) {
+        alert("인증번호가 전송되었습니다.");
+        setTimeLeft(300);
+        setShowVerification(true); // 인증번호 입력 영역 표시
+      } else if (data.message === "Email not found") {
+        alert("이메일을 찾을 수 없습니다.");
+      } else {
+        alert(data.message || "발송 실패");
+      }
     } catch (error) {
       console.error("에러 발생:", error);
       alert("이메일 전송에 실패했습니다.");
+    } finally {
+      setIsEmailSending(false); // 로딩 종료
     }
   };
 
   const verifyEmail = async () => {
     try {
-      const response = await fetch("//api/auth/password/email/verify", {
+      const response = await fetch("/api/auth/email/verification/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: formData.email,
           verificationCode: formData.verificationCode,
+          purpose: "RESET_PASSWORD",
         }),
       });
 
       const data = await response.json();
       console.log("서버 응답:", data);
 
-      if (data.emailVerified) {
-        alert("인증 성공! 이메일로 비밀번호가 전송되었습니다!");
+      if (
+        !data.emailVerified ||
+        data.message === "Verification completed successfully"
+      ) {
+        alert("인증 성공! ");
         setIsEmailVerified(true); // 인증 완료 상태로 변경
+        setEmailVerificationToken(data.token);
       } else {
-        alert(data.message || "인증 실패. 코드를 다시 확인하세요.");
+        if (data.message === "Email already in use") {
+          alert("이미 사용중인 이메일입니다.");
+        } else if (
+          data.message === "Verification request not found or expired"
+        ) {
+          alert("만료된 인증번호 : 다시 인증번호를 발송해주세요");
+        } else if (data.message === "Invalid verification code") {
+          alert("인증번호가 일치하지 않습니다.");
+        } else {
+          alert(data.message || "인증 실패");
+        }
       }
     } catch (error) {
       console.error("에러 발생:", error);
@@ -112,11 +138,66 @@ export default function PasswordFind({ isOpen, onClose }) {
     }
   };
 
+  const sendTempPassword = async () => {
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      // 이메일 인증 토큰을 Authorization 헤더에 포함
+      if (emailVerificationToken) {
+        headers["Authorization"] = `Bearer ${emailVerificationToken}`;
+      }
+
+      const response = await fetch("/api/auth/password/email", {
+        method: "POST",
+        headers: headers,
+      });
+
+      if (!response.ok) {
+        throw new Error("임시 비밀번호 발송 실패");
+      }
+
+      const data = await response.json();
+
+      if (data.message === "Temp password sent") {
+        alert(
+          "임시 비밀번호가 이메일로 발송되었습니다. 로그인 후 마이페이지에서 변경해주세요"
+        );
+        onClose();
+      } else {
+        alert(data.message || "발송 실패 다시시도해주세요");
+        setFormData({
+          email: "",
+          verificationCode: "",
+        });
+        // 타이머 관련 초기화
+        setTimeLeft(0);
+
+        // 이메일 인증 관련 초기화
+        setIsEmailVerified(false);
+        setShowVerification(false);
+        setEmailVerificationToken("");
+      }
+    } catch (err) {
+      console.log(err);
+      alert("오류 발생 다시시도 해주세요");
+      setFormData({
+        email: "",
+        verificationCode: "",
+      });
+      // 타이머 관련 초기화
+      setTimeLeft(0);
+
+      // 이메일 인증 관련 초기화
+      setIsEmailVerified(false);
+      setShowVerification(false);
+      setEmailVerificationToken("");
+    }
+  };
+
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 font-pretendard"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 font-pretendard">
       <div
         className="w-full max-w-md bg-white rounded-lg shadow-lg p-8 relative"
         onClick={(e) => e.stopPropagation()}
@@ -127,9 +208,7 @@ export default function PasswordFind({ isOpen, onClose }) {
         >
           ×
         </button>
-
         <h1 className="text-2xl font-bold text-gray-900 mb-8">비밀번호 찾기</h1>
-
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
@@ -156,7 +235,17 @@ export default function PasswordFind({ isOpen, onClose }) {
                 onClick={sendEmail}
                 disabled={isEmailVerified}
               >
-                {isEmailVerified ? "인증완료" : "인증번호발송"}
+                {isEmailVerified ? (
+                  "인증완료"
+                ) : isEmailSending ? (
+                  <div className="flex flex-row justify-center gap-1">
+                    <div className="w-2 h-2 rounded-full bg-white animate-bounce [animation-delay:.7s]" />
+                    <div className="w-2 h-2 rounded-full bg-white animate-bounce [animation-delay:.3s]" />
+                    <div className="w-2 h-2 rounded-full bg-white animate-bounce [animation-delay:.7s]" />
+                  </div>
+                ) : (
+                  "인증번호발송"
+                )}
               </button>
             </div>
           </div>
@@ -188,6 +277,18 @@ export default function PasswordFind({ isOpen, onClose }) {
             </div>
           )}
         </div>
+        <button
+          type="button"
+          className={`w-full py-3 font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mt-6 ${
+            isEmailVerified
+              ? "bg-main text-white hover:bg-blue-700"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          }`}
+          onClick={sendTempPassword}
+          disabled={!isEmailVerified}
+        >
+          임시비밀번호발송
+        </button>
       </div>
     </div>
   );

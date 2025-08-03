@@ -315,7 +315,7 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
     hasEnglish: false,
     hasNumber: false,
     hasSpecialChar: false,
-    hasInvalidChar: false,
+
     hasAllRequired: false,
   });
 
@@ -348,7 +348,7 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
     const hasEnglish = /[a-zA-Z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    const hasInvalidChar = !/^[a-zA-Z0-9!@#$%^&*(),.?":{}|<>]*$/.test(password);
+
     const hasAllRequired = hasEnglish && hasNumber && hasSpecialChar;
 
     return {
@@ -357,7 +357,7 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
       hasEnglish,
       hasNumber,
       hasSpecialChar,
-      hasInvalidChar,
+
       hasAllRequired,
     };
   };
@@ -483,11 +483,6 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
                   }
                   text="영문, 숫자, 특수문자 3가지 조합"
                 />
-                <ValidationItem
-                  isValid={!passwordValidation.hasInvalidChar}
-                  text="연속 문자, 숫자 금지"
-                  isError={passwordValidation.hasInvalidChar}
-                />
 
                 {!passwordValidation.hasMinLength && (
                   <div className="text-red-600 text-sm mt-2">
@@ -499,14 +494,9 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
                     최대 20글자까지 작성할 수 있습니다
                   </div>
                 )}
-                {passwordValidation.hasInvalidChar && (
-                  <div className="text-red-600 text-sm mt-2">
-                    사용 불가능한 문자입니다
-                  </div>
-                )}
+
                 {!passwordValidation.hasAllRequired &&
-                  passwordValidation.hasMinLength &&
-                  !passwordValidation.hasInvalidChar && (
+                  passwordValidation.hasMinLength && (
                     <div className="text-red-600 text-sm mt-2">
                       영어, 숫자, 특수문자 모두 포함해서 작성해주십시오
                     </div>
