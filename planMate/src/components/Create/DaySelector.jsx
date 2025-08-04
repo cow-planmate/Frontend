@@ -1,4 +1,31 @@
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCalendarDays } from "@fortawesome/free-solid-svg-icons";
+import DateRangeModal from "../HomeCal";
+import { useState } from "react";
+
 const DaySelector = ({ timetables, selectedDay, onDaySelect }) => {
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  const handleCalendarOpen = () => {
+    setIsCalendarOpen(true);
+  };
+
+  const handleCalendarClose = () => {
+    setIsCalendarOpen(false);
+  };
+
+  const [dateRange, setDateRange] = useState([
+    {
+      startDate: new Date(),
+      endDate: new Date(),
+      key: "selection",
+    },
+  ]);
+
+  const handleDateChange = (item) => {
+    setDateRange([item.selection]);
+  };
+
   // 날짜 포맷팅 함수
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -31,6 +58,19 @@ const DaySelector = ({ timetables, selectedDay, onDaySelect }) => {
           <div className="text-sm">{formatDate(timetable.date)}</div>
         </button>
       ))}
+      <button 
+        className="text-2xl text-gray-500 hover:text-gray-700"
+        onClick={handleCalendarOpen}
+      >
+        <FontAwesomeIcon icon={faCalendarDays} />
+      </button>
+
+      <DateRangeModal
+        isOpen={isCalendarOpen}
+        onClose={handleCalendarClose}
+        dateRange={dateRange}
+        onDateChange={handleDateChange}
+      />
     </div>
   );
 };

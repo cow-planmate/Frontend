@@ -1,17 +1,104 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useReducer, useRef } from "react";
+import SockJS from 'sockjs-client';
+import { Client } from '@stomp/stompjs';
+
 import Navbar from "../components/navbar";
-import PlanInfo from "../components/PlanInfo";
+import PlanInfo from "../components/NewPlanInfo";
 import DaySelector from "../components/Create/DaySelector";
 import TimeTable from "../components/Create/TimeTable";
 import PlaceRecommendations from "../components/Create/PlaceRecommendations";
+
 import { useSearchParams } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { transformApiResponse, addMinutes } from "../utils/scheduleUtils";
 
+const initialPlanState = {
+  planName: '',
+  travelId: 0,
+  departure: '',
+  transportationCategoryId: 0,
+  adultCount: 0,
+  childCount: 0,
+  travel: ''
+};
+
+function planReducer(state, action) {
+  switch (action.type) {
+    case 'SET_FIELD':
+      return {
+        ...state,
+        [action.field]: action.value,
+      };
+    case 'SET_ALL':
+      return { ...action.payload };
+      case 'RESET':
+        return initialPlanState;
+        default:
+          return state;
+        }
+      }
+      
 function App() {
-  const { get, post, patch, isAuthenticated } = useApiClient();
+  let stompClient = null;
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
+  const stompClientRef = useRef(null);
+
+  useEffect(() => {
+    const socket = new SockJS("http://192.168.219.108:8080/ws-plan");
+    stompClient = new Client({
+      webSocketFactory: () => socket,
+      onConnect: (frame) => {
+        console.log("✅ WebSocket 연결 완료:", frame);
+        stompClientRef.current = stompClient;
+
+        stompClient.subscribe(`/topic/plan/${id}/update/plan`, (message) => {
+          console.log("📩 수신된 메시지:", message.body);
+          alert("수신된 메시지: " + message.body);
+        });
+
+        stompClient.subscribe(`/topic/plan/${id}/create/timetable`, (message) => {
+          console.log("📩 수신된 메시지:", message.body);
+          alert("수신된 메시지: " + message.body);
+        });
+
+        stompClient.subscribe(`/topic/plan/${id}/update/timetable`, (message) => {
+          console.log("📩 수신된 메시지:", message.body);
+          alert("수신된 메시지: " + message.body);
+        });
+
+        stompClient.subscribe(`/topic/plan/${id}/delete/timetable`, (message) => {
+          console.log("📩 수신된 메시지:", message.body);
+          alert("수신된 메시지: " + message.body);
+        });
+
+        stompClient.subscribe(`/topic/plan/${id}/create/timetableplaceblock`, (message) => {
+          console.log("📩 수신된 메시지:", message.body);
+          alert("수신된 메시지: " + message.body);
+        });
+
+        stompClient.subscribe(`/topic/plan/${id}/update/timetableplaceblock`, (message) => {
+          console.log("📩 수신된 메시지:", message.body);
+          alert("수신된 메시지: " + message.body);
+        });
+
+        stompClient.subscribe(`/topic/plan/${id}/delete/timetableplaceblock`, (message) => {
+          console.log("📩 수신된 메시지:", message.body);
+          alert("수신된 메시지: " + message.body);
+        });
+      },
+    });
+
+    stompClient.activate();
+
+    return () => {
+      stompClient.deactivate();
+    };
+  }, []);
+
+  const [plan, planDispatch] = useReducer(planReducer, initialPlanState);
+
+  const { get, post, patch, isAuthenticated } = useApiClient();
   
   // State
   const [data, setData] = useState(null);
@@ -31,7 +118,18 @@ function App() {
       if (id && isAuthenticated()) {
         try {
           const planData = await get(`/api/plan/${id}`);
+          const planFrame = planData.planFrame
+          
           setData(planData);
+          
+          // plan 정보 등록 (* /api/plan/${id}와 웹소켓으로 보내야 하는거랑 묘하게 달라서 이렇게 씀)
+          planDispatch({ type: 'SET_FIELD', field: "planName", value: planFrame.planName });
+          planDispatch({ type: 'SET_FIELD', field: "travelId", value: planFrame.travelId });
+          planDispatch({ type: 'SET_FIELD', field: "travel", value: planFrame.travel });
+          planDispatch({ type: 'SET_FIELD', field: "departure", value: planFrame.departure });
+          planDispatch({ type: 'SET_FIELD', field: "transportationCategoryId", value: planFrame.transportation });
+          planDispatch({ type: 'SET_FIELD', field: "adultCount", value: planFrame.adultCount });
+          planDispatch({ type: 'SET_FIELD', field: "childCount", value: planFrame.childCount });
           
           if (planData.timetables) {
             setTimetables(planData.timetables);
@@ -75,6 +173,10 @@ function App() {
 
     fetchPlaces();
   }, [id]);
+
+  useEffect(() => {
+    console.log(plan)
+  }, [plan])
 
   // 스케줄 초기화
   useEffect(() => {
@@ -160,6 +262,18 @@ function App() {
     const matched = data.timetables.find((t) => t.timetableId === id);
     return matched?.date ?? null;
   };
+  
+  useEffect(() => {
+    const client = stompClientRef.current;
+    if (client && client.connected) {
+      const planData = plan;
+      client.publish({
+        destination: `/app/plan/${id}/update/plan`,
+        body: JSON.stringify(planData),
+      });
+      console.log("🚀 메시지 전송:", planData);
+    }
+  }, [plan])
 
   // 로딩 상태
   if (!selectedDay || !timetables.length) {
@@ -177,7 +291,7 @@ function App() {
   return (
     <div className="min-h-screen font-pretendard">
       <Navbar />
-      {data && <PlanInfo info={data.planFrame} id={id} savePlan={savePlan} />}
+      {data && <PlanInfo info={plan} planDispatch={planDispatch} id={id} savePlan={savePlan} />}
       
       <div className="w-[1400px] mx-auto py-6">
         <div className="flex space-x-6 flex-1">

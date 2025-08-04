@@ -1,3 +1,5 @@
+// useReducer로 바꾸기 위한 컴포넌트입니다.
+
 import { useState, useEffect, useRef } from "react";
 import TransportModal from "./TransportModal";
 import PersonCountModal from "./HomePerson";
@@ -6,7 +8,7 @@ import LocationModal from "./HomeDestination";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { useNavigate } from 'react-router-dom';
 
-export default function PlanInfo({info, id, savePlan}) {
+export default function PlanInfo({info, id, savePlan, planDispatch}) {
   const { patch, isAuthenticated } = useApiClient();
   const navigate = useNavigate();
   const flexCenter = "flex items-center";
@@ -18,16 +20,16 @@ export default function PlanInfo({info, id, savePlan}) {
   const transInfo3 = {"bus": 0, "car": 1};
 
   const [isDepartureOpen, setIsDepartureOpen] = useState(false);
-  const [departureLocation, setDepartureLocation] = useState(info.departure);
+  //const [departureLocation, setDepartureLocation] = useState(info.departure);
 
-  const [destinationLocation, setDestinationLocation] = useState(info.travel);
+  //const [destinationLocation, setDestinationLocation] = useState(info.travel);
   const [isDestinationOpen, setIsDestinationOpen] = useState(false);
 
   const [isTransportOpen, setIsTransportOpen] = useState(false); 
-  const [selectedTransport, setSelectedTransport] = useState(transInfo2[info.transportation]);
+  const [selectedTransport, setSelectedTransport] = useState(transInfo2[info.transportationCategoryId]);
 
   const [isPersonCountOpen, setIsPersonCountOpen] = useState(false);
-  const [personCount, setPersonCount] = useState({ adults: info.adultCount, children: info.childCount });
+  //const [personCount, setPersonCount] = useState({ adults: info.adultCount, children: info.childCount });
 
   const [title, setTitle] = useState(info.planName);
 
@@ -38,10 +40,11 @@ export default function PlanInfo({info, id, savePlan}) {
     if (spanRef.current && inputRef.current) {
       const spanWidth = spanRef.current.offsetWidth;
       inputRef.current.style.width = `${spanWidth + 2}px`;
+      console.log(spanWidth)
     }
   }, [title]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     const patchApi = async () => {
       if (isAuthenticated()) {
         try {
@@ -54,7 +57,7 @@ export default function PlanInfo({info, id, savePlan}) {
       }
     };
     patchApi();
-  }, [title]);
+  }, [title]);*/
 
   const handleTransportOpen = () => {
     setIsTransportOpen(true);
@@ -66,6 +69,7 @@ export default function PlanInfo({info, id, savePlan}) {
 
   const handleTransportChange = (transport) => {
     setSelectedTransport(transport);
+    planDispatch({ type: 'SET_FIELD', field: "transportationCategoryId", value: transInfo3[transport] });
   };
 
   const handlePersonCountOpen = () => {
@@ -77,7 +81,8 @@ export default function PlanInfo({info, id, savePlan}) {
   };
 
   const handlePersonCountChange = (count) => {
-    setPersonCount(count);
+    planDispatch({ type: 'SET_FIELD', field: "adultCount", value: count.adults });
+    planDispatch({ type: 'SET_FIELD', field: "childCount", value: count.children });
   };
 
   const handleDepartureOpen = () => {
@@ -89,11 +94,12 @@ export default function PlanInfo({info, id, savePlan}) {
   };
 
   const handleDepartureLocationSelect = (location) => {
-    setDepartureLocation(location.name);
+    planDispatch({ type: 'SET_FIELD', field: "departure", value: location.name });
   };
 
   const handleDestinationLocationSelect = (location) => {
-    setDestinationLocation(location.name);
+    planDispatch({ type: 'SET_FIELD', field: "travelId", value: location.id });
+    planDispatch({ type: 'SET_FIELD', field: "travel", value: location.name });
   };
 
   const handleDestinationOpen = () => {
@@ -104,9 +110,9 @@ export default function PlanInfo({info, id, savePlan}) {
     setIsDestinationOpen(false);
   };
 
-  useEffect(() => {
+  /*useEffect(() => {
     setSendCreate({"transportation": transInfo3[selectedTransport], "adultCount": personCount["adults"], "childCount": personCount["children"]});
-  }, [selectedTransport, personCount])
+  }, [selectedTransport, personCount])*/
 
   return (
     <div className={`mx-auto w-[1416px] pt-6 ${flexCenter} justify-between`}>
@@ -116,9 +122,12 @@ export default function PlanInfo({info, id, savePlan}) {
             ref={inputRef}
             type="text"
             className="rounded-lg py-1 px-2 hover:bg-gray-100 mr-3 text-lg font-semibold"
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value)
+              planDispatch({ type: 'SET_FIELD', field: "planName", value: e.target.value })
+            }}
             style={{ minWidth: '1ch', maxWidth: "220px" }}
-            value={title}
+            value={info.planName}
           />
         </div>
         <button className="rounded-lg py-1 px-2 hover:bg-gray-100" onClick={handlePersonCountOpen}>
@@ -126,22 +135,22 @@ export default function PlanInfo({info, id, savePlan}) {
             <p className="text-gray-500 mr-3">인원 수</p>
 
             <p className="px-2 py-1 bg-gray-200 text-gray-700 rounded-md text-sm mr-2">성인</p>
-            <p className="text-lg mr-4">{personCount["adults"]}명</p>
+            <p className="text-lg mr-4">{info.adultCount}명</p>
 
             <p className="px-2 py-1 bg-gray-200 text-gray-700 rounded-md text-sm mr-2">어린이</p>
-            <p className="text-lg">{personCount["children"]}명</p>
+            <p className="text-lg">{info.childCount}명</p>
           </div>
         </button>
         <button className="rounded-lg py-1 px-2 hover:bg-gray-100" onClick={handleDepartureOpen}>
           <div className={`${flexCenter}`}>
             <p className="text-gray-500 mr-3">출발지</p>
-            <p className="text-lg truncate max-w-56">{departureLocation}</p>
+            <p className="text-lg truncate max-w-56">{info.departure}</p>
           </div>
         </button>
         <button className="rounded-lg py-1 px-2 hover:bg-gray-100" onClick={handleDestinationOpen}>
           <div className={`${flexCenter}`}>
             <p className="text-gray-500 mr-3">여행지</p>
-            <p className="text-lg">{destinationLocation}</p>
+            <p className="text-lg">{info.travel}</p>
           </div>
         </button>
         <button className="rounded-lg py-1 px-2 hover:bg-gray-100" onClick={handleTransportOpen}>
@@ -182,7 +191,7 @@ export default function PlanInfo({info, id, savePlan}) {
       <PersonCountModal
         isOpen={isPersonCountOpen}
         onClose={handlePersonCountClose}
-        personCount={personCount}
+        personCount={{adults: info.adultCount, children: info.childCount}}
         onPersonCountChange={handlePersonCountChange}
       />
       

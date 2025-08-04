@@ -14,11 +14,17 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4IiwiaWF0IjoxNzUzMjMyNDA5L
 ###
 
 
-GET http://localhost:8080/api/plan/9
+GET http://localhost:8080/api/travel
 Content-Type: application/json; charset=UTF-8
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4IiwiaWF0IjoxNzUzMjMyNDA5LCJleHAiOjE3NTMzMTg4MDl9._1jHr5r6Cg-qSbtfoKbAaif6Z_z0OB8lJTxDxsbvxMY
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4IiwiaWF0IjoxNzU0MjkyMzI2LCJleHAiOjE3NTQzNzg3MjZ9.aaCed4f9b4oiniijyfLZn2SYCx4CE6kLDkZwD469HmE
 
 //{"planName": "똥!ㅋㅋ"}
+
+###
+
+GET http://localhost:8080/api/plan/14
+Content-Type: application/json; charset=UTF-8
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4IiwiaWF0IjoxNzU0MjkyMzI2LCJleHAiOjE3NTQzNzg3MjZ9.aaCed4f9b4oiniijyfLZn2SYCx4CE6kLDkZwD469HmE
 
 ###
 
