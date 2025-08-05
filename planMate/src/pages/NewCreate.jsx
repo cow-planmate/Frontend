@@ -42,66 +42,15 @@ function App() {
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
   const stompClientRef = useRef(null);
-
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState([]);
-
-  useEffect(() => {
-    // SockJS와 STOMP 클라이언트 시뮬레이션 (실제 라이브러리 없이)
-    const connectWebSocket = () => {
-      console.log("🔄 WebSocket 연결 시도 중...");
-      
-      // 실제 환경에서는 SockJS와 STOMP 라이브러리가 필요합니다
-      // 여기서는 시뮬레이션으로 연결 상태만 관리
-      setTimeout(() => {
-        setIsConnected(true);
-        console.log("✅ WebSocket 연결 완료");
-        
-        // 구독 시뮬레이션
-        const subscriptions = [
-          `/topic/plan/${id}/update/plan`,
-          `/topic/plan/${id}/create/timetable`,
-          `/topic/plan/${id}/update/timetable`,
-          `/topic/plan/${id}/delete/timetable`,
-          `/topic/plan/${id}/create/timetableplaceblock`,
-          `/topic/plan/${id}/update/timetableplaceblock`,
-          `/topic/plan/${id}/delete/timetableplaceblock`
-        ];
-        
-        subscriptions.forEach(topic => {
-          console.log(`📡 구독 완료: ${topic}`);
-        });
-      }, 1000);
-    };
-
-    connectWebSocket();
-
-    // 정리 함수
-    return () => {
-      if (stompClientRef.current) {
-        console.log("🔌 WebSocket 연결 해제");
-        setIsConnected(false);
-      }
-    };
-  }, [id]);
-
-  const [plan, planDispatch] = useReducer(planReducer, initialPlanState);
-
-  const { get, post, patch, isAuthenticated } = useApiClient();
   
-  // State
-  const [data, setData] = useState(null);
-  const [timetables, setTimetables] = useState([]);
-  const [transformedData, setTransformedData] = useState(null);
-  const [schedule, setSchedule] = useState({});
-  const [selectedDay, setSelectedDay] = useState(null);
-  const [places, setPlaces] = useState({
-    관광지: [],
-    숙소: [],
-    식당: [],
-  });
+  // URL에서 id 파라미터 가져오기 (없으면 기본값 사용)
+  const getIdFromUrl = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get("id") || "1"; // 기본값으로 "1" 사용
+  };
 
-  // 초기 데이터 로딩
   useEffect(() => {
     // 🔥 실제 서버 URL을 여기에 설정하세요!
     const SERVER_URL = "https://pmserver.salmakis.online/ws-plan";
@@ -109,6 +58,7 @@ function App() {
     const connectWebSocket = () => {
       console.log("🔄 WebSocket 연결 시도 중...", SERVER_URL);
       
+      // 실제 연결을 위한 코드 (라이브러리 설치 후 주석 해제)
       const socket = new SockJS(SERVER_URL);
       const client = new Client({
         webSocketFactory: () => socket,
@@ -195,6 +145,59 @@ function App() {
         setIsConnected(false);
       }
     };
+  }, [id]);
+
+  const [plan, planDispatch] = useReducer(planReducer, initialPlanState);
+
+  const { get, post, patch, isAuthenticated } = useApiClient();
+  
+  // State
+  const [data, setData] = useState(null);
+  const [timetables, setTimetables] = useState([]);
+  const [transformedData, setTransformedData] = useState(null);
+  const [schedule, setSchedule] = useState({});
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [places, setPlaces] = useState({
+    관광지: [],
+    숙소: [],
+    식당: [],
+  });
+
+  // 초기 데이터 로딩
+  useEffect(() => {
+    const fetchPlanData = async () => {
+      if (id && isAuthenticated()) {
+        try {
+          const planData = await get(`/api/plan/${id}`);
+          const planFrame = planData.planFrame
+          
+          setData(planData);
+          
+          // plan 정보 등록 (* /api/plan/${id}와 웹소켓으로 보내야 하는거랑 묘하게 달라서 이렇게 씀)
+          planDispatch({ type: 'SET_FIELD', field: "planName", value: planFrame.planName });
+          planDispatch({ type: 'SET_FIELD', field: "travelId", value: planFrame.travelId });
+          planDispatch({ type: 'SET_FIELD', field: "travel", value: planFrame.travel });
+          planDispatch({ type: 'SET_FIELD', field: "departure", value: planFrame.departure });
+          planDispatch({ type: 'SET_FIELD', field: "transportationCategoryId", value: planFrame.transportation });
+          planDispatch({ type: 'SET_FIELD', field: "adultCount", value: planFrame.adultCount });
+          planDispatch({ type: 'SET_FIELD', field: "childCount", value: planFrame.childCount });
+          
+          if (planData.timetables) {
+            setTimetables(planData.timetables);
+            if (planData.timetables.length > 0) {
+              setSelectedDay(planData.timetables[0].timetableId);
+            }
+          }
+
+          const result = transformApiResponse(planData);
+          setTransformedData(result);
+        } catch (err) {
+          console.error("일정 정보를 가져오는데 실패했습니다:", err);
+        }
+      }
+    };
+
+    fetchPlanData();
   }, [id]);
 
   // 추천 장소 데이터 로딩
