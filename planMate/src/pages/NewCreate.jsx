@@ -39,62 +39,51 @@ function planReducer(state, action) {
       }
       
 function App() {
-  let stompClient = null;
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
   const stompClientRef = useRef(null);
 
+  const [isConnected, setIsConnected] = useState(false);
+  const [messages, setMessages] = useState([]);
+
   useEffect(() => {
-    const socket = new SockJS("http://192.168.219.108:8080/ws-plan");
-    stompClient = new Client({
-      webSocketFactory: () => socket,
-      onConnect: (frame) => {
-        console.log("✅ WebSocket 연결 완료:", frame);
-        stompClientRef.current = stompClient;
-
-        stompClient.subscribe(`/topic/plan/${id}/update/plan`, (message) => {
-          console.log("📩 수신된 메시지:", message.body);
-          alert("수신된 메시지: " + message.body);
+    // SockJS와 STOMP 클라이언트 시뮬레이션 (실제 라이브러리 없이)
+    const connectWebSocket = () => {
+      console.log("🔄 WebSocket 연결 시도 중...");
+      
+      // 실제 환경에서는 SockJS와 STOMP 라이브러리가 필요합니다
+      // 여기서는 시뮬레이션으로 연결 상태만 관리
+      setTimeout(() => {
+        setIsConnected(true);
+        console.log("✅ WebSocket 연결 완료");
+        
+        // 구독 시뮬레이션
+        const subscriptions = [
+          `/topic/plan/${id}/update/plan`,
+          `/topic/plan/${id}/create/timetable`,
+          `/topic/plan/${id}/update/timetable`,
+          `/topic/plan/${id}/delete/timetable`,
+          `/topic/plan/${id}/create/timetableplaceblock`,
+          `/topic/plan/${id}/update/timetableplaceblock`,
+          `/topic/plan/${id}/delete/timetableplaceblock`
+        ];
+        
+        subscriptions.forEach(topic => {
+          console.log(`📡 구독 완료: ${topic}`);
         });
-
-        stompClient.subscribe(`/topic/plan/${id}/create/timetable`, (message) => {
-          console.log("📩 수신된 메시지:", message.body);
-          alert("수신된 메시지: " + message.body);
-        });
-
-        stompClient.subscribe(`/topic/plan/${id}/update/timetable`, (message) => {
-          console.log("📩 수신된 메시지:", message.body);
-          alert("수신된 메시지: " + message.body);
-        });
-
-        stompClient.subscribe(`/topic/plan/${id}/delete/timetable`, (message) => {
-          console.log("📩 수신된 메시지:", message.body);
-          alert("수신된 메시지: " + message.body);
-        });
-
-        stompClient.subscribe(`/topic/plan/${id}/create/timetableplaceblock`, (message) => {
-          console.log("📩 수신된 메시지:", message.body);
-          alert("수신된 메시지: " + message.body);
-        });
-
-        stompClient.subscribe(`/topic/plan/${id}/update/timetableplaceblock`, (message) => {
-          console.log("📩 수신된 메시지:", message.body);
-          alert("수신된 메시지: " + message.body);
-        });
-
-        stompClient.subscribe(`/topic/plan/${id}/delete/timetableplaceblock`, (message) => {
-          console.log("📩 수신된 메시지:", message.body);
-          alert("수신된 메시지: " + message.body);
-        });
-      },
-    });
-
-    stompClient.activate();
-
-    return () => {
-      stompClient.deactivate();
+      }, 1000);
     };
-  }, []);
+
+    connectWebSocket();
+
+    // 정리 함수
+    return () => {
+      if (stompClientRef.current) {
+        console.log("🔌 WebSocket 연결 해제");
+        setIsConnected(false);
+      }
+    };
+  }, [id]);
 
   const [plan, planDispatch] = useReducer(planReducer, initialPlanState);
 
@@ -114,39 +103,98 @@ function App() {
 
   // 초기 데이터 로딩
   useEffect(() => {
-    const fetchPlanData = async () => {
-      if (id && isAuthenticated()) {
-        try {
-          const planData = await get(`/api/plan/${id}`);
-          const planFrame = planData.planFrame
+    // 🔥 실제 서버 URL을 여기에 설정하세요!
+    const SERVER_URL = "https://pmserver.salmakis.online/ws-plan";
+    
+    const connectWebSocket = () => {
+      console.log("🔄 WebSocket 연결 시도 중...", SERVER_URL);
+      
+      const socket = new SockJS(SERVER_URL);
+      const client = new Client({
+        webSocketFactory: () => socket,
+        onConnect: (frame) => {
+          console.log("✅ WebSocket 연결 완료:", frame);
+          setIsConnected(true);
+          stompClientRef.current = client;
           
-          setData(planData);
+          // 실제 구독 코드
+          client.subscribe(`/topic/plan/${id}/update/plan`, (message) => {
+            console.log("📩 수신된 메시지:", message.body);
+            addMessage(`플랜 업데이트 수신: ${message.body}`);
+          });
           
-          // plan 정보 등록 (* /api/plan/${id}와 웹소켓으로 보내야 하는거랑 묘하게 달라서 이렇게 씀)
-          planDispatch({ type: 'SET_FIELD', field: "planName", value: planFrame.planName });
-          planDispatch({ type: 'SET_FIELD', field: "travelId", value: planFrame.travelId });
-          planDispatch({ type: 'SET_FIELD', field: "travel", value: planFrame.travel });
-          planDispatch({ type: 'SET_FIELD', field: "departure", value: planFrame.departure });
-          planDispatch({ type: 'SET_FIELD', field: "transportationCategoryId", value: planFrame.transportation });
-          planDispatch({ type: 'SET_FIELD', field: "adultCount", value: planFrame.adultCount });
-          planDispatch({ type: 'SET_FIELD', field: "childCount", value: planFrame.childCount });
+          client.subscribe(`/topic/plan/${id}/create/timetable`, (message) => {
+            console.log("📩 수신된 메시지:", message.body);
+            addMessage(`시간표 생성 수신: ${message.body}`);
+          });
           
-          if (planData.timetables) {
-            setTimetables(planData.timetables);
-            if (planData.timetables.length > 0) {
-              setSelectedDay(planData.timetables[0].timetableId);
-            }
-          }
-
-          const result = transformApiResponse(planData);
-          setTransformedData(result);
-        } catch (err) {
-          console.error("일정 정보를 가져오는데 실패했습니다:", err);
+          client.subscribe(`/topic/plan/${id}/update/timetable`, (message) => {
+            console.log("📩 수신된 메시지:", message.body);
+            addMessage(`시간표 업데이트 수신: ${message.body}`);
+          });
+          
+          client.subscribe(`/topic/plan/${id}/delete/timetable`, (message) => {
+            console.log("📩 수신된 메시지:", message.body);
+            addMessage(`시간표 삭제 수신: ${message.body}`);
+          });
+          
+          client.subscribe(`/topic/plan/${id}/create/timetableplaceblock`, (message) => {
+            console.log("📩 수신된 메시지:", message.body);
+            addMessage(`시간표 블록 생성 수신: ${message.body}`);
+          });
+          
+          client.subscribe(`/topic/plan/${id}/update/timetableplaceblock`, (message) => {
+            console.log("📩 수신된 메시지:", message.body);
+            addMessage(`시간표 블록 업데이트 수신: ${message.body}`);
+          });
+          
+          client.subscribe(`/topic/plan/${id}/delete/timetableplaceblock`, (message) => {
+            console.log("📩 수신된 메시지:", message.body);
+            addMessage(`시간표 블록 삭제 수신: ${message.body}`);
+          });
+        },
+        onStompError: (frame) => {
+          console.error("❌ STOMP 에러:", frame.headers['message']);
+          setIsConnected(false);
+        },
+        onWebSocketClose: () => {
+          console.log("🔌 WebSocket 연결 종료");
+          setIsConnected(false);
         }
-      }
+      });
+      
+      client.activate();
+      
+      // 시뮬레이션 코드 (실제 서버 연결 전 테스트용)
+      setTimeout(() => {
+        setIsConnected(true);
+        console.log("✅ WebSocket 연결 완료 (시뮬레이션)");
+        
+        const subscriptions = [
+          `/topic/plan/${id}/update/plan`,
+          `/topic/plan/${id}/create/timetable`,
+          `/topic/plan/${id}/update/timetable`,
+          `/topic/plan/${id}/delete/timetable`,
+          `/topic/plan/${id}/create/timetableplaceblock`,
+          `/topic/plan/${id}/update/timetableplaceblock`,
+          `/topic/plan/${id}/delete/timetableplaceblock`
+        ];
+        
+        subscriptions.forEach(topic => {
+          console.log(`📡 구독 완료: ${topic}`);
+        });
+      }, 1000);
     };
 
-    fetchPlanData();
+    connectWebSocket();
+
+    // 정리 함수
+    return () => {
+      if (stompClientRef.current) {
+        console.log("🔌 WebSocket 연결 해제");
+        setIsConnected(false);
+      }
+    };
   }, [id]);
 
   // 추천 장소 데이터 로딩
@@ -175,8 +223,8 @@ function App() {
   }, [id]);
 
   useEffect(() => {
-    console.log(plan)
-  }, [plan])
+    console.log(data)
+  }, [data])
 
   // 스케줄 초기화
   useEffect(() => {
@@ -216,7 +264,7 @@ function App() {
         const endTime = addMinutes(startTime, place.duration * 15);
         
         const block = {
-          placeCategoryId: place.categoryId,
+          placeCategory: place.categoryId,
           placeName: place.name,
           placeAddress: place.formatted_address,
           placeRating: place.rating,

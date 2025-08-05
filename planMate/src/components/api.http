@@ -14,9 +14,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4IiwiaWF0IjoxNzUzMjMyNDA5L
 ###
 
 
-GET http://localhost:8080/api/travel
+GET https://pmserver.salmakis.online/api/user/profile
 Content-Type: application/json; charset=UTF-8
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4IiwiaWF0IjoxNzU0MjkyMzI2LCJleHAiOjE3NTQzNzg3MjZ9.aaCed4f9b4oiniijyfLZn2SYCx4CE6kLDkZwD469HmE
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzU0MzMxMDcxLCJleHAiOjE3NTQ0MTc0NzF9.RjWjVPszBjM5enlVUUHtfoxBeEbSt2Uz7Sm2O5f6Ufc
 
 //{"planName": "똥!ㅋㅋ"}
 
