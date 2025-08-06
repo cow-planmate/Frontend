@@ -11,6 +11,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faRightFromBracket,
   faHouseUser,
+  faBell,
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function Navbar() {
@@ -137,29 +138,33 @@ export default function Navbar() {
   }, []);
 
   return (
-    <div className="border-b border-gray-200">
+    <div className="border-b border-gray-200 ">
       <div className="mx-auto w-[1400px] bg-white flex justify-between py-4 items-center">
         <div>
           <Link to="/">
             <Logo />
           </Link>
         </div>
-
         {isAuthenticated() && userProfile ? (
           <div className="relative" ref={wrapperRef}>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsProfileOpen((prev) => !prev);
-              }}
-            >
-              <div className="flex items-center h-[42px]">
-                <div className="w-8 h-8 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full mr-3"></div>
-                <span>
-                  {userProfile.nickname || userProfile.name || "사용자"}님
-                </span>
-              </div>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsProfileOpen((prev) => !prev);
+                }}
+              >
+                <div className="flex items-center h-[42px]">
+                  <div className="w-8 h-8 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full mr-3"></div>
+                  <span>
+                    {userProfile.nickname || userProfile.name || "사용자"}님
+                  </span>
+                </div>
+              </button>
+              <button>
+                <FontAwesomeIcon icon={faBell} className="text-gray-400" />
+              </button>
+            </div>
 
             {isProfileOpen && (
               <div className="absolute right-0 top-full w-36 p-2 bg-white border rounded-lg shadow-md z-50">
