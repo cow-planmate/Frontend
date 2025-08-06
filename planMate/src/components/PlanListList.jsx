@@ -10,7 +10,8 @@ import { useNavigate } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { useState, useEffect, useRef } from "react";
 
-export default function PlanListList({ lst }) {
+export default function PlanListList({ lst, onPlanDeleted }) {
+  const { del } = useApiClient();
   const navigate = useNavigate();
   const [isTitleOpen, setIsTitleOpen] = useState(false);
   const [toggleModal, setToggleModal] = useState(false);
@@ -32,6 +33,16 @@ export default function PlanListList({ lst }) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [toggleModal]);
+
+  const deletePlan = async () => {
+    try {
+      const res = await del(`/api/plan/${lst.planId}`);
+      console.log("API응답", res);
+      onPlanDeleted(lst.planId);
+    } catch (err) {
+      console.log("오류발생", err);
+    }
+  };
   return (
     <div
       className="relative bg-gray-50 hover:bg-blue-50 rounded-xl p-4 transition-all duration-200 cursor-pointer border border-gray hover:border-blue-200"
@@ -101,7 +112,12 @@ export default function PlanListList({ lst }) {
             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left border-t border-gray-100"
           >
             <FontAwesomeIcon icon={faTrash} className="w-4 h-4 text-red-500" />
-            <span className="text-sm font-medium text-red-600">삭제하기</span>
+            <span
+              className="text-sm font-medium text-red-600"
+              onClick={deletePlan}
+            >
+              삭제하기
+            </span>
           </button>
         </div>
       )}

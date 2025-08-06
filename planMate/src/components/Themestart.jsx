@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useApiClient } from "../assets/hooks/useApiClient";
 
 export default function Themestart({
@@ -7,7 +6,6 @@ export default function Themestart({
   onThemeOpen = () => {},
   selectedThemeKeywords = {},
 }) {
-  const [showThemes, setShowThemes] = useState(false);
   const { post } = useApiClient();
   const categoryMap = {
     0: "관광지",
@@ -41,65 +39,64 @@ export default function Themestart({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 font-pretendard">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 font-pretendard"
+      onClick={onClose}
+    >
       <div
         className="w-full max-w-md bg-white rounded-lg shadow-lg p-6 relative"
         onClick={(e) => e.stopPropagation()}
       >
         <h1 className="text-2xl font-bold text-gray-900 text-center mb-6">
-          끌리는 여행 키워드를 골라주세요!
+          선호 테마 변경
         </h1>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-[16rem]">
-            <div
-              className="relative"
-              onMouseEnter={() => setShowThemes(true)}
-              onMouseLeave={() => setShowThemes(false)}
-            >
-              <button className="text-sm text-main cursor-pointer hover:underline">
+          {Object.values(selectedThemeKeywords).some(
+            (arr) => arr.length > 0
+          ) && (
+            <div className="p-3 border bg-gray-100 border-blue-200 rounded-xl text-sm font-medium text-gray-600 shadow-sm">
+              <div className="text-sm font-bold mb-2 text-gray-800">
                 선택된 테마
-              </button>
-              {showThemes &&
+              </div>
+              <div className="space-y-1 text-sm">
+                {Object.entries(selectedThemeKeywords).map(
+                  ([categoryId, keywords]) =>
+                    keywords.length > 0 ? (
+                      <div key={categoryId} className="flex flex-wrap  gap-1">
+                        <span className="font-bold text-gray-700">
+                          {categoryMap[categoryId]}:
+                        </span>
+                        <span className="font-semibold text-gray-700">
+                          {keywords.map((k) => k.preferredThemeName).join(", ")}
+                        </span>
+                      </div>
+                    ) : null
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              onClick={onThemeOpen}
+              className={`flex-1 py-2 px-3 text-sm font-medium rounded-lg border transition-colors ${
                 Object.values(selectedThemeKeywords).some(
                   (arr) => arr.length > 0
-                ) && (
-                  <div className="absolute top-6 left-0 bg-white border rounded-lg shadow-lg p-3 whitespace-nowrap z-10">
-                    <div className="text-sm space-y-1">
-                      {Object.entries(selectedThemeKeywords).map(
-                        ([categoryId, keywords]) =>
-                          keywords.length > 0 ? (
-                            <div key={categoryId}>
-                              <strong>{categoryMap[categoryId]}:</strong>{" "}
-                              {keywords
-                                .map((k) => k.preferredThemeName)
-                                .join(", ")}
-                            </div>
-                          ) : null
-                      )}
-                    </div>
-                  </div>
-                )}
-            </div>
-
+                )
+                  ? "bg-main text-white border-main"
+                  : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+              }`}
+            >
+              {getThemeSelectionText()}
+            </button>
             <button
-              className="bg-main text-white text-sm rounded-md py-1"
               onClick={savePreferredTheme}
+              className="bg-main text-white px-4 py-2 text-sm font-medium rounded-lg hover:bg-main/90 transition-colors"
             >
               완료
             </button>
           </div>
-
-          <button
-            onClick={onThemeOpen}
-            className={`w-full py-2 px-3 text-sm font-medium rounded-lg border transition-colors ${
-              Object.values(selectedThemeKeywords).some((arr) => arr.length > 0)
-                ? "bg-main text-white border-main"
-                : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-            }`}
-          >
-            {getThemeSelectionText()}
-          </button>
         </div>
       </div>
     </div>

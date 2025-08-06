@@ -12,6 +12,8 @@ import {
   faUtensils,
   faBed,
   faMapMarkerAlt,
+  faMars,
+  faVenus,
 } from "@fortawesome/free-solid-svg-icons";
 import { Check, X } from "lucide-react";
 
@@ -32,6 +34,15 @@ export default function ProfileText({
     restaurant: [],
   });
   const [isThemeOpen, setIsThemeOpen] = useState(false);
+
+  // 성별 아이콘 결정 함수
+  const getGenderIcon = (genderText) => {
+    return genderText === "남자" ? faMars : faVenus;
+  };
+
+  // 표시할 아이콘 결정
+  const displayIcon = title === "성별" ? getGenderIcon(naeyong) : icon;
+
   const handleThemestartOpen = () => {
     setIsThemestartOpen(true);
   };
@@ -52,6 +63,7 @@ export default function ProfileText({
     setSelectedThemeKeywords(keywords);
     setIsThemeOpen(false);
   };
+
   let categoryNames = null;
   let groupedThemes = null;
 
@@ -69,7 +81,8 @@ export default function ProfileText({
       2: faBed, // 숙소
     };
 
-    groupedThemes = content.reduce((acc, theme) => {
+    // naeyong 사용 (content 대신)
+    groupedThemes = naeyong.reduce((acc, theme) => {
       const categoryId = theme.preferredThemeCategoryId;
       if (!acc[categoryId]) {
         acc[categoryId] = [];
@@ -131,7 +144,7 @@ export default function ProfileText({
             onComplete={(selectedThemes) => {
               // 선택된 테마로 업데이트
               setNaeyong(selectedThemes);
-              setIsModalOpen(false);
+              setIsThemestartOpen(false); // 수정: setIsModalOpen -> setIsThemestartOpen
             }}
           />
         )}
@@ -148,7 +161,10 @@ export default function ProfileText({
     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <FontAwesomeIcon icon={icon} className={`w-4 h-4 ${iconColor}`} />
+          <FontAwesomeIcon
+            icon={displayIcon}
+            className={`w-4 h-4 ${iconColor}`}
+          />
           <div className="flex-1">
             <span className="font-semibold text-lg text-gray-800">{title}</span>
             {title !== "비밀번호" && (
@@ -315,7 +331,6 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
     hasEnglish: false,
     hasNumber: false,
     hasSpecialChar: false,
-
     hasAllRequired: false,
   });
 
@@ -357,7 +372,6 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
       hasEnglish,
       hasNumber,
       hasSpecialChar,
-
       hasAllRequired,
     };
   };

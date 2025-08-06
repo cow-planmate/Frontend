@@ -10,6 +10,9 @@ export default function PlanList() {
   const navigate = useNavigate();
   const [plan, setPlan] = useState(null);
   const { get, isAuthenticated } = useApiClient();
+  const removePlanFromState = (planId) => {
+    setPlan((prevPlans) => prevPlans.filter((p) => p.planId !== planId));
+  };
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -30,7 +33,6 @@ export default function PlanList() {
 
   return (
     <div className="bg-white w-[60rem] rounded-2xl shadow-sm border border-gray-200 flex-1 flex flex-col font-pretendard">
-      {/* 헤더 */}
       <div className="border-b border-gray-200 px-6 py-5">
         <div className="flex items-center justify-between">
           <div>
@@ -50,7 +52,13 @@ export default function PlanList() {
         {plan && plan.length > 0 ? (
           <div className="space-y-4">
             {plan.map((lst) =>
-              lst ? <PlanListList key={lst.planId} lst={lst} /> : null
+              lst ? (
+                <PlanListList
+                  key={lst.planId}
+                  lst={lst}
+                  onPlanDeleted={removePlanFromState}
+                />
+              ) : null
             )}
           </div>
         ) : (
