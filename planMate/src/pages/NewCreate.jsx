@@ -14,12 +14,12 @@ import { transformApiResponse, addMinutes } from "../utils/scheduleUtils";
 
 const initialPlanState = {
   planName: '',
+  travelName: '',
   travelId: 0,
   departure: '',
   transportationCategoryId: 0,
   adultCount: 0,
   childCount: 0,
-  travel: ''
 };
 
 function planReducer(state, action) {
@@ -31,12 +31,12 @@ function planReducer(state, action) {
       };
     case 'SET_ALL':
       return { ...action.payload };
-      case 'RESET':
-        return initialPlanState;
-        default:
-          return state;
-        }
-      }
+    case 'RESET':
+      return initialPlanState;
+    default:
+      return state;
+  }
+}
       
 function App() {
   const [searchParams] = useSearchParams();
@@ -44,12 +44,9 @@ function App() {
   const stompClientRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState([]);
-  
-  // URL에서 id 파라미터 가져오기 (없으면 기본값 사용)
-  const getIdFromUrl = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get("id") || "1"; // 기본값으로 "1" 사용
-  };
+
+  const [plan, planDispatch] = useReducer(planReducer, initialPlanState);
+  const planRef = useRef(plan);
 
   useEffect(() => {
     // 🔥 실제 서버 URL을 여기에 설정하세요!
@@ -69,28 +66,32 @@ function App() {
           
           // 실제 구독 코드
           client.subscribe(`/topic/plan/${id}/update/plan`, (message) => {
-            console.log("📩 수신된 메시지:", message.body);
-            addMessage(`플랜 업데이트 수신: ${message.body}`);
+            const received = JSON.parse(message.body);
+            if (JSON.stringify(planRef.current) !== JSON.stringify(received)) {
+              console.log(`플랜 업데이트 수신: ${message.body}`);
+              alert(`플랜 업데이트 수신: ${message.body}`);
+              planDispatch({ type: 'SET_ALL', payload: received });
+            }
           });
           
           client.subscribe(`/topic/plan/${id}/create/timetable`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            addMessage(`시간표 생성 수신: ${message.body}`);
+            //addMessage(`시간표 생성 수신: ${message.body}`);
           });
           
           client.subscribe(`/topic/plan/${id}/update/timetable`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            addMessage(`시간표 업데이트 수신: ${message.body}`);
+            //addMessage(`시간표 업데이트 수신: ${message.body}`);
           });
           
           client.subscribe(`/topic/plan/${id}/delete/timetable`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            addMessage(`시간표 삭제 수신: ${message.body}`);
+            //addMessage(`시간표 삭제 수신: ${message.body}`);
           });
           
           client.subscribe(`/topic/plan/${id}/create/timetableplaceblock`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            addMessage(`시간표 블록 생성 수신: ${message.body}`);
+            //addMessage(`시간표 블록 생성 수신: ${message.body}`);
           });
           
           client.subscribe(`/topic/plan/${id}/update/timetableplaceblock`, (message) => {
@@ -100,7 +101,7 @@ function App() {
           
           client.subscribe(`/topic/plan/${id}/delete/timetableplaceblock`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            addMessage(`시간표 블록 삭제 수신: ${message.body}`);
+            //addMessage(`시간표 블록 삭제 수신: ${message.body}`);
           });
         },
         onStompError: (frame) => {
@@ -115,6 +116,7 @@ function App() {
       
       client.activate();
       
+      /*
       // 시뮬레이션 코드 (실제 서버 연결 전 테스트용)
       setTimeout(() => {
         setIsConnected(true);
@@ -133,7 +135,7 @@ function App() {
         subscriptions.forEach(topic => {
           console.log(`📡 구독 완료: ${topic}`);
         });
-      }, 1000);
+      }, 1000);*/
     };
 
     connectWebSocket();
@@ -143,11 +145,10 @@ function App() {
       if (stompClientRef.current) {
         console.log("🔌 WebSocket 연결 해제");
         setIsConnected(false);
+        stompClientRef.deactivate();
       }
     };
   }, [id]);
-
-  const [plan, planDispatch] = useReducer(planReducer, initialPlanState);
 
   const { get, post, patch, isAuthenticated } = useApiClient();
   
@@ -172,11 +173,12 @@ function App() {
           const planFrame = planData.planFrame
           
           setData(planData);
+          console.log("똥", planData)
           
           // plan 정보 등록 (* /api/plan/${id}와 웹소켓으로 보내야 하는거랑 묘하게 달라서 이렇게 씀)
           planDispatch({ type: 'SET_FIELD', field: "planName", value: planFrame.planName });
           planDispatch({ type: 'SET_FIELD', field: "travelId", value: planFrame.travelId });
-          planDispatch({ type: 'SET_FIELD', field: "travel", value: planFrame.travel });
+          planDispatch({ type: 'SET_FIELD', field: "travelName", value: planFrame.travel });
           planDispatch({ type: 'SET_FIELD', field: "departure", value: planFrame.departure });
           planDispatch({ type: 'SET_FIELD', field: "transportationCategoryId", value: planFrame.transportation });
           planDispatch({ type: 'SET_FIELD', field: "adultCount", value: planFrame.adultCount });
@@ -226,8 +228,8 @@ function App() {
   }, [id]);
 
   useEffect(() => {
-    console.log(data)
-  }, [data])
+    planRef.current = plan;
+  }, [plan]);
 
   // 스케줄 초기화
   useEffect(() => {
@@ -315,14 +317,16 @@ function App() {
   };
   
   useEffect(() => {
-    const client = stompClientRef.current;
-    if (client && client.connected) {
-      const planData = plan;
-      client.publish({
-        destination: `/app/plan/${id}/update/plan`,
-        body: JSON.stringify(planData),
-      });
-      console.log("🚀 메시지 전송:", planData);
+    if (plan) {  
+      const client = stompClientRef.current;
+      if (client && client.connected) {
+        const planData = plan;
+        client.publish({
+          destination: `/app/plan/${id}/update/plan`,
+          body: JSON.stringify(planData),
+        });
+        console.log("🚀 메시지 전송:", planData);
+      }
     }
   }, [plan])
 
@@ -342,7 +346,7 @@ function App() {
   return (
     <div className="min-h-screen font-pretendard">
       <Navbar />
-      {data && <PlanInfo info={plan} planDispatch={planDispatch} id={id} savePlan={savePlan} />}
+      {plan && <PlanInfo info={plan} planDispatch={planDispatch} id={id} savePlan={savePlan} />}
       
       <div className="w-[1400px] mx-auto py-6">
         <div className="flex space-x-6 flex-1">

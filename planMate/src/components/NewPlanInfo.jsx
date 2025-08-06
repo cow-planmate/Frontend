@@ -29,7 +29,7 @@ export default function PlanInfo({info, id, savePlan, planDispatch}) {
   const [selectedTransport, setSelectedTransport] = useState(transInfo2[info.transportationCategoryId]);
 
   const [isPersonCountOpen, setIsPersonCountOpen] = useState(false);
-  //const [personCount, setPersonCount] = useState({ adults: info.adultCount, children: info.childCount });
+  const [personCount, setPersonCount] = useState({ adults: info.adultCount, children: info.childCount });
 
   const [title, setTitle] = useState(info.planName);
 
@@ -98,8 +98,9 @@ export default function PlanInfo({info, id, savePlan, planDispatch}) {
   };
 
   const handleDestinationLocationSelect = (location) => {
+    console.log(location)
     planDispatch({ type: 'SET_FIELD', field: "travelId", value: location.id });
-    planDispatch({ type: 'SET_FIELD', field: "travel", value: location.name });
+    planDispatch({ type: 'SET_FIELD', field: "travelName", value: location.name });
   };
 
   const handleDestinationOpen = () => {
@@ -109,6 +110,11 @@ export default function PlanInfo({info, id, savePlan, planDispatch}) {
   const handleDestinationClose = () => {
     setIsDestinationOpen(false);
   };
+
+  useEffect(() => {
+    setSelectedTransport(transInfo2[info.transportationCategoryId]);
+    setTitle(info.planName);
+  }, [info]);
 
   /*useEffect(() => {
     setSendCreate({"transportation": transInfo3[selectedTransport], "adultCount": personCount["adults"], "childCount": personCount["children"]});
@@ -124,10 +130,12 @@ export default function PlanInfo({info, id, savePlan, planDispatch}) {
             className="rounded-lg py-1 px-2 hover:bg-gray-100 mr-3 text-lg font-semibold"
             onChange={(e) => {
               setTitle(e.target.value)
-              planDispatch({ type: 'SET_FIELD', field: "planName", value: e.target.value })
+            }}
+            onBlur={() => {
+              planDispatch({ type: 'SET_FIELD', field: 'planName', value: title });
             }}
             style={{ minWidth: '1ch', maxWidth: "220px" }}
-            value={info.planName}
+            value={title}
           />
         </div>
         <button className="rounded-lg py-1 px-2 hover:bg-gray-100" onClick={handlePersonCountOpen}>
@@ -150,7 +158,7 @@ export default function PlanInfo({info, id, savePlan, planDispatch}) {
         <button className="rounded-lg py-1 px-2 hover:bg-gray-100" onClick={handleDestinationOpen}>
           <div className={`${flexCenter}`}>
             <p className="text-gray-500 mr-3">여행지</p>
-            <p className="text-lg">{info.travel}</p>
+            <p className="text-lg">{info.travelName}</p>
           </div>
         </button>
         <button className="rounded-lg py-1 px-2 hover:bg-gray-100" onClick={handleTransportOpen}>
