@@ -96,14 +96,13 @@ export default function LocationModal({
           onClick={handleClose}
           className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 text-xl"
         >
-          ×
+          ✕
         </button>
 
         <div
           className="p-4 max-h-[450px] overflow-y-auto"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {/* 상위 지역 선택 */}
           <div className="mb-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-3 font-pretendard">
               상위 지역
@@ -125,7 +124,6 @@ export default function LocationModal({
             </div>
           </div>
 
-          {/* 선택된 상위 지역의 하위 지역들 */}
           {selectedUpperRegion && (
             <div className="mb-4">
               <h4 className="text-sm font-semibold text-gray-700 mb-3 font-pretendard">

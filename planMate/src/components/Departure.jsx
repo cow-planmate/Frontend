@@ -129,9 +129,9 @@ const DepartureModal = ({
           </h2>
           <button
             onClick={handleClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 text-xl"
           >
-            <FontAwesomeIcon icon={faTimes} className="text-gray-500" />
+            ✕
           </button>
         </div>
 

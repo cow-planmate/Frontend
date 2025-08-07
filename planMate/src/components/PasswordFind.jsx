@@ -206,7 +206,7 @@ export default function PasswordFind({ isOpen, onClose }) {
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
         >
-          ×
+          ✕
         </button>
         <h1 className="text-2xl font-bold text-gray-900 mb-8">비밀번호 찾기</h1>
         <div className="space-y-6">
