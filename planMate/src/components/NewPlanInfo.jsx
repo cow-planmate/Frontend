@@ -100,7 +100,7 @@ export default function PlanInfo({info, id, savePlan, planDispatch}) {
   const handleDestinationLocationSelect = (location) => {
     console.log(location)
     planDispatch({ type: 'SET_FIELD', field: "travelId", value: location.id });
-    planDispatch({ type: 'SET_FIELD', field: "travelName", value: location.name });
+    planDispatch({ type: 'SET_FIELD', field: "travelName", value: location.name.split(" ").pop() });
   };
 
   const handleDestinationOpen = () => {

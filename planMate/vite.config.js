@@ -16,6 +16,7 @@ export default defineConfig({
     proxy: {
       "/api": {
         target: "https://pmserver.salmakis.online", // 백엔드 서버 포트
+        // target: "http://localhost:8080"
         changeOrigin: true,
         secure: false,
       },

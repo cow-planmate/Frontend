@@ -15,7 +15,7 @@ import { transformApiResponse, addMinutes } from "../utils/scheduleUtils";
 const initialPlanState = {
   planName: '',
   travelName: '',
-  travelId: 0,
+  travelId: null,
   departure: '',
   transportationCategoryId: 0,
   adultCount: 0,
@@ -49,7 +49,6 @@ function App() {
   const planRef = useRef(plan);
 
   useEffect(() => {
-    // 🔥 실제 서버 URL을 여기에 설정하세요!
     const SERVER_URL = "https://pmserver.salmakis.online/ws-plan";
     
     const connectWebSocket = () => {
@@ -76,7 +75,7 @@ function App() {
           
           client.subscribe(`/topic/plan/${id}/create/timetable`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            //addMessage(`시간표 생성 수신: ${message.body}`);
+            alert(`수신된 메시지: ${message.body}`);
           });
           
           client.subscribe(`/topic/plan/${id}/update/timetable`, (message) => {
@@ -107,10 +106,12 @@ function App() {
         onStompError: (frame) => {
           console.error("❌ STOMP 에러:", frame.headers['message']);
           setIsConnected(false);
+          client.deactivate();
         },
         onWebSocketClose: () => {
           console.log("🔌 WebSocket 연결 종료");
           setIsConnected(false);
+          client.deactivate();
         }
       });
       
@@ -145,10 +146,10 @@ function App() {
       if (stompClientRef.current) {
         console.log("🔌 WebSocket 연결 해제");
         setIsConnected(false);
-        stompClientRef.deactivate();
+        stompClientRef.current.deactivate();
       }
     };
-  }, [id]);
+  }, []);
 
   const { get, post, patch, isAuthenticated } = useApiClient();
   
@@ -173,16 +174,10 @@ function App() {
           const planFrame = planData.planFrame
           
           setData(planData);
-          console.log("똥", planData)
+          console.log("똥", planData);
           
           // plan 정보 등록 (* /api/plan/${id}와 웹소켓으로 보내야 하는거랑 묘하게 달라서 이렇게 씀)
-          planDispatch({ type: 'SET_FIELD', field: "planName", value: planFrame.planName });
-          planDispatch({ type: 'SET_FIELD', field: "travelId", value: planFrame.travelId });
-          planDispatch({ type: 'SET_FIELD', field: "travelName", value: planFrame.travel });
-          planDispatch({ type: 'SET_FIELD', field: "departure", value: planFrame.departure });
-          planDispatch({ type: 'SET_FIELD', field: "transportationCategoryId", value: planFrame.transportation });
-          planDispatch({ type: 'SET_FIELD', field: "adultCount", value: planFrame.adultCount });
-          planDispatch({ type: 'SET_FIELD', field: "childCount", value: planFrame.childCount });
+          planDispatch({ type: 'SET_ALL', payload: planFrame });
           
           if (planData.timetables) {
             setTimetables(planData.timetables);
@@ -200,7 +195,7 @@ function App() {
     };
 
     fetchPlanData();
-  }, [id]);
+  }, []);
 
   // 추천 장소 데이터 로딩
   useEffect(() => {
@@ -354,6 +349,8 @@ function App() {
             timetables={timetables}
             selectedDay={selectedDay}
             onDaySelect={setSelectedDay}
+            stompClientRef={stompClientRef}
+            id={id}
           />
           
           <TimeTable
