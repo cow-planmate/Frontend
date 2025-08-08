@@ -92,9 +92,7 @@ export const useApiClient = () => {
 
   // 5. 편의 메서드들
   const get = useCallback(
-    (url) => apiRequest(url, { method: "GET" ,
-      <Credentials></Credentials>
-    }),
+    (url) => apiRequest(url, { method: "GET" }),
     [apiRequest]
   );
 
