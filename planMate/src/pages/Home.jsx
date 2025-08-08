@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import img1 from "../assets/imgs/img1.jpg";
 import { useApiClient } from "../assets/hooks/useApiClient";
-import Navbar from "../components/navbar";
+import Navbar from "../components/Navbar";
 import DateRangeModal from "../components/HomeCal";
 import PersonCountModal from "../components/HomePerson";
 import TransportModal from "../components/TransportModal";
@@ -165,10 +165,11 @@ function App() {
         childCount: Number(personCount.children),
         transportation: getTransportText() === "대중교통" ? 0 : 1,
       };
+      const BASE_URL = import.meta.env.VITE_API_URL;
 
       console.log("보내는 데이터:", requestData);
 
-      const data = await post("/api/plan", requestData);
+      const data = await post(`${BASE_URL}/api/plan`, requestData);
 
       console.log("서버 응답:", data);
 

@@ -211,10 +211,11 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
   const [selected, setSelected] = useState(content);
   const { patch, isAuthenticated } = useApiClient();
   const genderGubun = { 남자: 0, 여자: 1 };
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   const apiUrl = {
-    나이: "/api/user/age",
-    성별: "/api/user/gender",
+    나이: `${BASE_URL}/api/user/age`,
+    성별: `${BASE_URL}/api/user/gender`,
   };
 
   const handleChange = (e) => {
@@ -387,18 +388,22 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
   const passwordChange = async () => {
     setWrongPrev(false);
     setWrongRe(false);
+    const BASE_URL = import.meta.env.VITE_API_URL;
 
     if (isAuthenticated()) {
       if (rePassword != "" && password == rePassword) {
         if (prevPassword != "") {
           try {
-            const passwordVerified = await post("/api/auth/password/verify", {
-              password: prevPassword,
-            });
+            const passwordVerified = await post(
+              `${BASE_URL}/api/auth/password/verify`,
+              {
+                password: prevPassword,
+              }
+            );
 
             if (passwordVerified.passwordVerified) {
               try {
-                await patch("/api/auth/password", {
+                await patch(`${BASE_URL}/api/auth/password`, {
                   password: password,
                   confirmPassword: rePassword,
                 });

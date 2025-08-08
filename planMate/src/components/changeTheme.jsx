@@ -8,6 +8,7 @@ export default function Theme({ isOpen, onClose, onComplete }) {
   const [keywordsByStep, setKeywordsByStep] = useState([]);
   const [categories, setCategories] = useState([]);
   const { get } = useApiClient();
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     if (isOpen) {
@@ -19,7 +20,7 @@ export default function Theme({ isOpen, onClose, onComplete }) {
 
   const getPreferredTheme = async () => {
     try {
-      const res = await get("/api/user/preferredTheme");
+      const res = await get(`${BASE_URL}/api/user/preferredTheme`);
       console.log("API 응답:", res); // 디버깅용
 
       const themeList = res.preferredThemes || [];

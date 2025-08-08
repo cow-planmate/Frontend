@@ -1,5 +1,5 @@
 import { SectionsContainer, Section } from "react-fullpage";
-import Navbar from "../components/navbar";
+import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
 import schedule from "../assets/imgs/schedule.png";
 import bg1 from "../assets/imgs/bg1.jpg";

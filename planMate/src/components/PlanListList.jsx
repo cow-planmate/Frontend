@@ -17,6 +17,8 @@ export default function PlanListList({ lst, onPlanDeleted }) {
   const [toggleModal, setToggleModal] = useState(false);
   const [title, setTitle] = useState(lst.planName);
   const modalRef = useRef(null);
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (
@@ -36,7 +38,7 @@ export default function PlanListList({ lst, onPlanDeleted }) {
 
   const deletePlan = async () => {
     try {
-      const res = await del(`/api/plan/${lst.planId}`);
+      const res = await del(`${BASE_URL}/api/plan/${lst.planId}`);
       console.log("API응답", res);
       onPlanDeleted(lst.planId);
     } catch (err) {
@@ -136,11 +138,12 @@ export default function PlanListList({ lst, onPlanDeleted }) {
 const TitleModal = ({ setIsTitleOpen, id, title, setTitle }) => {
   const { patch, isAuthenticated } = useApiClient();
   const [newTitle, setNewTitle] = useState(title);
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   const patchApi = async () => {
     if (isAuthenticated()) {
       try {
-        await patch(`/api/plan/${id}/name`, {
+        await patch(`${BASE_URL}/api/plan/${id}/name`, {
           planName: newTitle,
         });
         setTitle(newTitle);

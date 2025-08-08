@@ -12,6 +12,7 @@ export default function Themestart({
     1: "식당",
     2: "숙소",
   };
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   if (!isOpen) return null;
   const savePreferredTheme = async () => {
@@ -20,7 +21,7 @@ export default function Themestart({
         .flat()
         .map((item) => item.preferredThemeId); // ID만 추출
       console.log(selectedIds);
-      await post("/api/user/preferredTheme", {
+      await post(`${BASE_URL}/api/user/preferredTheme`, {
         preferredThemeIds: selectedIds,
       });
 

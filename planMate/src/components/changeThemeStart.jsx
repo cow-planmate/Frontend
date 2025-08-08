@@ -13,6 +13,7 @@ export default function Themestart({
     1: "식당",
     2: "숙소",
   };
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   if (!isOpen) return null;
 
@@ -44,7 +45,7 @@ export default function Themestart({
       console.log("보낼 데이터:", finalData);
 
       for (const data of finalData) {
-        await patch("/api/user/preferredThemes", data);
+        await patch(`${BASE_URL}/api/user/preferredThemes`, data);
       }
       onClose();
       if (onComplete) {

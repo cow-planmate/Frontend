@@ -13,12 +13,13 @@ export default function PlanList() {
   const removePlanFromState = (planId) => {
     setPlan((prevPlans) => prevPlans.filter((p) => p.planId !== planId));
   };
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (isAuthenticated()) {
         try {
-          const profileData = await get("/api/user/profile");
+          const profileData = await get(`${BASE_URL}/api/user/profile`);
           setPlan(profileData.planVOs);
         } catch (err) {
           console.error("프로필 정보를 가져오는데 실패했습니다:", err);

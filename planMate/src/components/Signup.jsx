@@ -10,6 +10,8 @@ export default function Signup({
   onLoginSuccess,
   onThemeOpen,
 }) {
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
   const { login } = useApiClient();
   const [formData, setFormData] = useState({
     email: "",
@@ -166,7 +168,7 @@ export default function Signup({
     }
     setIsEmailSending(true);
     try {
-      const response = await fetch("/api/auth/email/verification", {
+      const response = await fetch(`${BASE_URL}/api/auth/email/verification`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -205,15 +207,18 @@ export default function Signup({
 
   const verifyEmail = async () => {
     try {
-      const response = await fetch("/api/auth/email/verification/confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          verificationCode: formData.verificationCode,
-          purpose: "SIGN_UP",
-        }),
-      });
+      const response = await fetch(
+        `${BASE_URL}/api/auth/email/verification/confirm`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            verificationCode: formData.verificationCode,
+            purpose: "SIGN_UP",
+          }),
+        }
+      );
 
       const data = await response.json();
       console.log("서버 응답:", data);
@@ -240,13 +245,16 @@ export default function Signup({
 
   const verifyNickname = async () => {
     try {
-      const response = await fetch("/api/auth/register/nickname/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nickname: formData.nickname,
-        }),
-      });
+      const response = await fetch(
+        `${BASE_URL}/api/auth/register/nickname/verify`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nickname: formData.nickname,
+          }),
+        }
+      );
       const data = await response.json();
       console.log("서버 응답:", data);
       if (formData.nickname === "") {
@@ -275,7 +283,7 @@ export default function Signup({
         headers["Authorization"] = `Bearer ${emailVerificationToken}`;
       }
 
-      const registerResponse = await fetch("/api/auth/register", {
+      const registerResponse = await fetch(`${BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: headers,
         body: JSON.stringify({

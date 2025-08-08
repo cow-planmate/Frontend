@@ -32,13 +32,14 @@ export default function Navbar() {
   const [userProfile, setUserProfile] = useState(null);
 
   const { get, isLoading, error, isAuthenticated, logout } = useApiClient();
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   // 기존 코드 그대로...
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (isAuthenticated()) {
         try {
-          const profileData = await get("/api/user/profile");
+          const profileData = await get(`${BASE_URL}/api/user/profile`);
           setUserProfile(profileData);
         } catch (err) {
           console.error("프로필 정보를 가져오는데 실패했습니다:", err);
@@ -115,7 +116,7 @@ export default function Navbar() {
   const refreshUserProfile = async () => {
     if (isAuthenticated()) {
       try {
-        const profileData = await get("/api/user/profile");
+        const profileData = await get(`${BASE_URL}/api/user/profile`);
         setUserProfile(profileData);
       } catch (err) {
         console.error("프로필 정보 새로고침 실패:", err);

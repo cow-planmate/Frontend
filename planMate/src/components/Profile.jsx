@@ -23,12 +23,13 @@ export default function Profile() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const { get, isAuthenticated } = useApiClient();
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (isAuthenticated()) {
         try {
-          const profileData = await get("/api/user/profile");
+          const profileData = await get(`${BASE_URL}/api/user/profile`);
           setUserProfile(profileData);
         } catch (err) {
           console.error("프로필 정보를 가져오는데 실패했습니다:", err);
@@ -124,11 +125,12 @@ export default function Profile() {
 const DeleteModal = ({ setIsDeleteOpen }) => {
   const { del, isAuthenticated } = useApiClient();
   const navigate = useNavigate();
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   const handleDelete = async () => {
     if (isAuthenticated()) {
       try {
-        await del("/api/user/account");
+        await del(`${BASE_URL}/api/user/account`);
         localStorage.removeItem("token");
         localStorage.removeItem("userId");
         navigate("/");

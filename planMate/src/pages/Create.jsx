@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Navbar from "../components/navbar";
+import Navbar from "../components/Navbar";
 import PlanInfo from "../components/PlanInfo";
 import { useSearchParams } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
@@ -500,7 +500,8 @@ const TravelPlannerApp = () => {
           top: `${startIndex * 30}px`,
           height: `${height}px`,
           width: "329px",
-          backgroundImage: "linear-gradient(to bottom, transparent, #E8EDFF), linear-gradient(-45deg, #718FFF 40px, #E8EDFF 40px)"
+          backgroundImage:
+            "linear-gradient(to bottom, transparent, #E8EDFF), linear-gradient(-45deg, #718FFF 40px, #E8EDFF 40px)",
         }}
         draggable
         onDragStart={(e) => {
@@ -595,7 +596,7 @@ const TravelPlannerApp = () => {
       for (const place of day) {
         const startTime = place.timeSlot;
         const endTime = addMinutes(startTime, place.duration * 15);
-        console.log(place)
+        console.log(place);
         const block = {
           placeCategoryId: place.categoryId,
           placeName: place.name,

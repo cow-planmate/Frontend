@@ -9,6 +9,7 @@ export default function PasswordFind({ isOpen, onClose }) {
   const [showVerification, setShowVerification] = useState(false);
   const [emailVerificationToken, setEmailVerificationToken] = useState("");
   const [isEmailSending, setIsEmailSending] = useState(false);
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   //킬때마다 초기화
   useEffect(() => {
@@ -63,7 +64,7 @@ export default function PasswordFind({ isOpen, onClose }) {
     }
     setIsEmailSending(true);
     try {
-      const response = await fetch("/api/auth/email/verification", {
+      const response = await fetch(`${BASE_URL}/api/auth/email/verification`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -99,15 +100,18 @@ export default function PasswordFind({ isOpen, onClose }) {
 
   const verifyEmail = async () => {
     try {
-      const response = await fetch("/api/auth/email/verification/confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          verificationCode: formData.verificationCode,
-          purpose: "RESET_PASSWORD",
-        }),
-      });
+      const response = await fetch(
+        `${BASE_URL}/api/auth/email/verification/confirm`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            verificationCode: formData.verificationCode,
+            purpose: "RESET_PASSWORD",
+          }),
+        }
+      );
 
       const data = await response.json();
       console.log("서버 응답:", data);
@@ -149,7 +153,7 @@ export default function PasswordFind({ isOpen, onClose }) {
         headers["Authorization"] = `Bearer ${emailVerificationToken}`;
       }
 
-      const response = await fetch("/api/auth/password/email", {
+      const response = await fetch("/auth/password/email", {
         method: "POST",
         headers: headers,
       });

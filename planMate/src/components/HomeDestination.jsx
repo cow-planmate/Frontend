@@ -11,11 +11,12 @@ export default function LocationModal({
   const [selectedLowerRegion, setSelectedLowerRegion] = useState(null); // 초기값을 null로 변경
   const [regionData, setRegionData] = useState({ 상위지역: {}, 하위지역: {} });
   const { get, isLoading, error } = useApiClient();
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const getTravel = async () => {
       try {
-        const res = await get("/api/travel");
+        const res = await get(`${BASE_URL}/api/travel`);
         console.log("API 응답 : ", res);
 
         const upperRegions = {};
