@@ -13,7 +13,7 @@ const TravelPlannerApp = () => {
   const tripCategory = { 0: "관광지", 1: "숙소", 2: "식당" };
   const [transformedData, setTransformedData] = useState(null);
   const [schedule, setSchedule] = useState({});
-
+  const BASE_URL = import.meta.env.VITE_API_URL;
   // 두 번째 API 응답을 첫 번째 형태로 변환하는 함수
   const transformApiResponse = (apiResponse) => {
     const { placeBlocks, timetables } = apiResponse;
@@ -94,7 +94,7 @@ const TravelPlannerApp = () => {
     const fetchUserProfile = async () => {
       if (id && isAuthenticated()) {
         try {
-          const planData = await get(`/api/plan/${id}`);
+          const planData = await get(`${BASE_URL}/api/plan/${id}`);
           setData(planData);
           // timetables 데이터 설정
           if (planData.timetables) {
@@ -151,9 +151,11 @@ const TravelPlannerApp = () => {
     const fetchUserProfile = async () => {
       if (id && isAuthenticated()) {
         try {
-          const tour = await post(`/api/plan/${id}/tour`);
-          const lodging = await post(`/api/plan/${id}/lodging`);
-          const restaurant = await post(`/api/plan/${id}/restaurant`);
+          const tour = await post(`${BASE_URL}/api/plan/${id}/tour`);
+          const lodging = await post(`${BASE_URL}/api/plan/${id}/lodging`);
+          const restaurant = await post(
+            `${BASE_URL}/api/plan/${id}/restaurant`
+          );
 
           setPlaces({
             관광지: tour.places,
@@ -626,7 +628,7 @@ const TravelPlannerApp = () => {
 
     if (isAuthenticated()) {
       try {
-        await patch(`/api/plan/${id}/save`, {
+        await patch(`${BASE_URL}/api/plan/${id}/save`, {
           departure: data.planFrame.departure,
           travel: data.planFrame.travel,
           transportationCategoryId: info.transportation,
