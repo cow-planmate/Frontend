@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Navbar from "../components/navbar";
+import Navbar from "../components/Navbar";
 import PlanInfo from "../components/PlanInfo";
 import DaySelector from "../components/Create/DaySelector";
 import TimeTable from "../components/Create/TimeTable";
@@ -12,7 +12,7 @@ function App() {
   const { get, post, patch, isAuthenticated } = useApiClient();
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
-  
+
   // State
   const [data, setData] = useState(null);
   const [timetables, setTimetables] = useState([]);
@@ -32,7 +32,7 @@ function App() {
         try {
           const planData = await get(`/api/plan/${id}`);
           setData(planData);
-          
+
           if (planData.timetables) {
             setTimetables(planData.timetables);
             if (planData.timetables.length > 0) {
@@ -59,7 +59,7 @@ function App() {
           const [tour, lodging, restaurant] = await Promise.all([
             post(`/api/plan/${id}/tour`),
             post(`/api/plan/${id}/lodging`),
-            post(`/api/plan/${id}/restaurant`)
+            post(`/api/plan/${id}/restaurant`),
           ]);
 
           setPlaces({
@@ -112,7 +112,7 @@ function App() {
       for (const place of day) {
         const startTime = place.timeSlot;
         const endTime = addMinutes(startTime, place.duration * 15);
-        
+
         const block = {
           placeCategoryId: place.categoryId,
           placeName: place.name,
@@ -138,7 +138,7 @@ function App() {
   // 일정 저장
   const savePlan = async (info) => {
     const scheduleToExport = exportSchedule();
-    
+
     if (isAuthenticated()) {
       try {
         await patch(`/api/plan/${id}/save`, {
@@ -178,7 +178,7 @@ function App() {
     <div className="min-h-screen font-pretendard">
       <Navbar />
       {data && <PlanInfo info={data.planFrame} id={id} savePlan={savePlan} />}
-      
+
       <div className="w-[1400px] mx-auto py-6">
         <div className="flex space-x-6 flex-1">
           <DaySelector
@@ -186,7 +186,7 @@ function App() {
             selectedDay={selectedDay}
             onDaySelect={setSelectedDay}
           />
-          
+
           <TimeTable
             selectedDay={selectedDay}
             timetables={timetables}
@@ -195,15 +195,12 @@ function App() {
             onScheduleUpdate={updateSchedule}
             onPlacesUpdate={updatePlaces}
           />
-          
-          <PlaceRecommendations
-            places={places}
-            onPlacesUpdate={updatePlaces}
-          />
+
+          <PlaceRecommendations places={places} onPlacesUpdate={updatePlaces} />
         </div>
       </div>
     </div>
   );
-};
+}
 
 export default App;
