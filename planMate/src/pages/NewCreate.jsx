@@ -47,6 +47,8 @@ function App() {
 
   const [plan, planDispatch] = useReducer(planReducer, initialPlanState);
   const planRef = useRef(plan);
+  const [data, setData] = useState(null);
+  const [timetables, setTimetables] = useState([]);
 
   useEffect(() => {
     const SERVER_URL = "https://pmserver.salmakis.online/ws-plan";
@@ -75,7 +77,13 @@ function App() {
           
           client.subscribe(`/topic/plan/${id}/create/timetable`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            alert(`수신된 메시지: ${message.body}`);
+            // let timetableVO = JSON.parse(message.body.timetableVOs);;
+            // const timetableDates = timetables.map(item => item.date);
+            // timetableVO = timetableVO.filter(vo => !timetableDates.includes(vo.date));
+            
+            // if (timetables) {
+            //   setTimetables((prev) => [...prev, timetableVO]);
+            // }
           });
           
           client.subscribe(`/topic/plan/${id}/update/timetable`, (message) => {
@@ -95,7 +103,7 @@ function App() {
           
           client.subscribe(`/topic/plan/${id}/update/timetableplaceblock`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            addMessage(`시간표 블록 업데이트 수신: ${message.body}`);
+            //addMessage(`시간표 블록 업데이트 수신: ${message.body}`);
           });
           
           client.subscribe(`/topic/plan/${id}/delete/timetableplaceblock`, (message) => {
@@ -154,8 +162,6 @@ function App() {
   const { get, post, patch, isAuthenticated } = useApiClient();
   
   // State
-  const [data, setData] = useState(null);
-  const [timetables, setTimetables] = useState([]);
   const [transformedData, setTransformedData] = useState(null);
   const [schedule, setSchedule] = useState({});
   const [selectedDay, setSelectedDay] = useState(null);
@@ -338,6 +344,10 @@ function App() {
     );
   }
 
+  const handleTimetable = (item) => {
+    setTimetables(item)
+  }
+
   return (
     <div className="min-h-screen font-pretendard">
       <Navbar />
@@ -347,6 +357,7 @@ function App() {
         <div className="flex space-x-6 flex-1">
           <DaySelector
             timetables={timetables}
+            setTimetables={handleTimetable}
             selectedDay={selectedDay}
             onDaySelect={setSelectedDay}
             stompClientRef={stompClientRef}
