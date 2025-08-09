@@ -2,7 +2,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Home from "../pages/Home";
 import Complete from "../pages/Complete";
-import Create from "../pages/NewCreate";
+import Create from "../pages/Create";
 import Mypage from "../pages/Mypage";
 import Signuptest from "../pages/Signuptest";
 import Passwordfindtest from "../pages/Passwordfindtest";
