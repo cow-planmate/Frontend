@@ -60,8 +60,8 @@ export default function Navbar() {
   const handleLogout = () => {
     logout();
     setUserProfile(null);
-    // 필요한 경우 홈페이지로 리다이렉트
-    // window.location.href = '/';
+
+    window.location.href = "/";
   };
 
   const handleLoginOpen = () => {
