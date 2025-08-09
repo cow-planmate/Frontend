@@ -7,8 +7,11 @@ import DepartureModal from "./Departure";
 import LocationModal from "./HomeDestination";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { useNavigate } from 'react-router-dom';
+import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk"
+import useKakaoLoader from "../hooks/useKakaoLoader"
 
-export default function PlanInfo({info, id, savePlan, planDispatch}) {
+
+export default function PlanInfo({info, id, planDispatch, schedule, selectedDay}) {
   const { patch, isAuthenticated } = useApiClient();
   const navigate = useNavigate();
   const flexCenter = "flex items-center";
@@ -32,6 +35,8 @@ export default function PlanInfo({info, id, savePlan, planDispatch}) {
   const [personCount, setPersonCount] = useState({ adults: info.adultCount, children: info.childCount });
 
   const [title, setTitle] = useState(info.planName);
+
+  const [mapModalOpen, setMapModalOpen] = useState(false);
 
   const spanRef = useRef(null);
   const inputRef = useRef(null);
@@ -169,12 +174,13 @@ export default function PlanInfo({info, id, savePlan, planDispatch}) {
         </button>
       </div>
       <div className={`${flexCenter} mr-2`}>
-        <button className="px-4 py-2 rounded-lg bg-gray-300 mr-6 hover:bg-gray-400">
+        <button onClick={() => setMapModalOpen(true)} className="px-4 py-2 rounded-lg bg-gray-300 mr-3 hover:bg-gray-400">
           지도로 보기
         </button>
-        <button onClick={() => savePlan(sendCreate)} className="px-4 py-2 rounded-lg bg-gray-300 mr-3 hover:bg-gray-400">
-          저장
-        </button>
+        {//<button onClick={() => savePlan(sendCreate)} className="px-4 py-2 rounded-lg bg-gray-300 mr-3 hover:bg-gray-400">
+         // 저장
+         //</button>
+        }
         <button onClick={() => navigate(`/complete?id=${id}`)} className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400">
           완료
         </button>
@@ -210,12 +216,124 @@ export default function PlanInfo({info, id, savePlan, planDispatch}) {
         onTransportChange={handleTransportChange}
       />
 
+      {mapModalOpen && <MapModal
+        setMapModalOpen={setMapModalOpen}
+        schedule={schedule}
+        selectedDay={selectedDay}
+      />}
+
       <span
         ref={spanRef}
         className="invisible absolute whitespace-pre text-lg font-semibold px-2"
       >
         {title || ' '}
       </span>
+    </div>
+  )
+}
+
+const MapModal = ({setMapModalOpen, schedule, selectedDay}) => {
+  useKakaoLoader()
+
+  const [map, setMap] = useState();
+
+  const sortedSchedule = [...schedule[selectedDay]].sort((a, b) =>
+    a.timeSlot.localeCompare(b.timeSlot)
+  );
+
+  const positions = sortedSchedule.length > 0
+  ? sortedSchedule.map(item => ({
+      lat: item.ylocation,
+      lng: item.xlocation,
+    }))
+  : [
+      { lat: 37.5665, lng: 126.9780 } // 기본 좌표 (예: 서울 시청)
+    ];
+
+  console.log(schedule[selectedDay])
+
+  // useEffect를 사용하여 map 인스턴스가 생성된 후 한 번만 실행되도록 설정
+  useEffect(() => {
+    if (!map) return; // map 인스턴스가 아직 생성되지 않았다면 아무것도 하지 않음
+
+    // LatLngBounds 객체에 모든 마커의 좌표를 추가합니다.
+    const bounds = new window.kakao.maps.LatLngBounds();
+    positions.forEach((pos) => {
+      bounds.extend(new window.kakao.maps.LatLng(pos.lat, pos.lng));
+    });
+
+    // 계산된 bounds를 지도에 적용합니다.
+    map.setBounds(bounds);
+  }, [map]); // map 인스턴스가 변경될 때마다 이 useEffect를 다시 실행
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm font-pretendard">
+      <div className="w-[1200px] shadow-2xl relative">
+        <Map // 지도를 표시할 Container
+          id="map"
+          className="rounded-2xl"
+          center={{
+            // 지도의 중심좌표
+            lat: 33.452278,
+            lng: 126.567803,
+          }}
+          style={{
+            // 지도의 크기
+            width: "100%",
+            height: "700px",
+          }}
+          level={3} // 지도의 확대 레벨
+          onCreate={setMap}
+        >
+          {schedule[selectedDay].map((item) => {
+            return (
+              <MapMarker // 인포윈도우를 생성하고 지도에 표시합니다
+                position={{
+                  // 인포윈도우가 표시될 위치입니다
+                  lat: item.ylocation,
+                  lng: item.xlocation,
+                }}
+              >
+                <div className="p-2 w-[159px]" style={{borderRadius: '4rem'}}>
+                  <p className="text-lg font-semibold truncate">{item.name}</p>
+                  <a
+                    href={item.url}
+                    style={{ color: "blue" }}
+                    className="text-sm"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    장소 정보 보기
+                  </a>
+                </div>
+              </MapMarker>
+            )
+          })}
+          {positions.slice(0, -1).map((pos, idx) => {
+            return (
+              <Polyline
+                path={[
+                  [
+                    pos, 
+                    positions[idx + 1],
+                  ],
+                ]}
+                strokeWeight={4} // 선의 두께 입니다
+                strokeColor={"#1344FF"} // 선의 색깔입니다
+                strokeOpacity={0.5} // 선의 불투명도 입니다 1에서 0 사이의 값이며 0에 가까울수록 투명합니다
+                strokeStyle={"arrow"} // 선의 스타일입니다
+                endArrow={true}
+              />
+            )
+          })}
+        </Map>
+        <button
+          onClick={() => setMapModalOpen(false)}
+          className="absolute shadow-2xl top-6 right-6 z-50 text-2xl w-10 h-10 bg-main/60 hover:bg-[#0E32C5]/60 backdrop-blur-sm text-white rounded-full font-medium transition-all duration-200"
+        >
+          ×
+        </button>
+      </div>
     </div>
   )
 }

@@ -23,6 +23,7 @@
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^19.1.0",
     "react-fullpage": "^0.1.19",
+    "react-kakao-maps-sdk": "^1.2.0",
     "react-router-dom": "^7.6.3",
     "sockjs-client": "^1.6.1"
   },

@@ -4,18 +4,9 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import TimeTable from "./TimeTable";
 
-const DaySelector = ({ timetables, setTimetables, selectedDay, onDaySelect, stompClientRef, id }) => {
+const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stompClientRef, id }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [tt, setTt] = useState(timetables);
 
-  useEffect(() => {
-    setTimetables(tt);
-  }, [timetables]);
-
-  useEffect(() => {
-    setTt(timetables);
-  }, [timetables]);
-  
   // 날짜 포맷팅 함수
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -26,16 +17,14 @@ const DaySelector = ({ timetables, setTimetables, selectedDay, onDaySelect, stom
 
   // 일차 번호 계산 함수
   const getDayNumber = (timetableId) => {
-    const index = tt.findIndex((t) => t.timetableId === timetableId);
+    const index = timetables.findIndex((t) => t.timetableId === timetableId);
     return index + 1;
   };
-
-  console.log(tt)
 
   return (
     <>
       <div className="flex flex-col space-y-4">
-        {tt.map((timetable) => (
+        {timetables.map((timetable) => (
           <button
             key={timetable.timetableId}
             className={`px-4 py-4 rounded-lg ${
@@ -59,14 +48,14 @@ const DaySelector = ({ timetables, setTimetables, selectedDay, onDaySelect, stom
         </button>
       </div>
       {isModalOpen && createPortal(
-        <Modal setIsModalOpen={setIsModalOpen} timetables={tt} setTt={setTt} stompClientRef={stompClientRef} id={id} />,
+        <Modal setIsModalOpen={setIsModalOpen} timetables={timetables} timeDispatch={timeDispatch} stompClientRef={stompClientRef} id={id} />,
         document.body
       )}
     </>
   );
 };
 
-const Modal = ({ setIsModalOpen, timetables, setTt, stompClientRef, id }) => {
+const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id }) => {
   const [newTime, setNewTime] = useState(timetables);
 
   const [create, setCreate] = useState({"timetableVOs": []});
@@ -225,7 +214,7 @@ const Modal = ({ setIsModalOpen, timetables, setTt, stompClientRef, id }) => {
         console.log("🚀 메시지 전송:", deleteTime);
       }
       
-      setTt(newTime);
+      timeDispatch({type: "update", payload: newTime});
       setIsModalOpen(false);
     }
   }

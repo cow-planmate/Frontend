@@ -37,18 +37,42 @@ function planReducer(state, action) {
       return state;
   }
 }
+
+function timetableReducer(state, action) {
+  switch (action.type) {
+    case 'create':
+      return [
+        ...state,
+        action.value,
+      ]
+    case 'update':
+      return [ ...action.payload ];
+    case 'delete':
+      return state.slice(0, -1);
+    default:
+      return state;
+  }
+}
       
 function App() {
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
   const stompClientRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [messages, setMessages] = useState([]);
 
   const [plan, planDispatch] = useReducer(planReducer, initialPlanState);
   const planRef = useRef(plan);
   const [data, setData] = useState(null);
-  const [timetables, setTimetables] = useState([]);
+  const [timetables, timeDispatch] = useReducer(timetableReducer, []);
+  const timetablesRef = useRef(timetables);
+
+  useEffect(()=>{
+    console.log(plan)
+  }, [plan])
+  
+  useEffect(() => {
+    timetablesRef.current = timetables;
+  }, [timetables]);
 
   useEffect(() => {
     const SERVER_URL = "https://pmserver.salmakis.online/ws-plan";
@@ -70,45 +94,47 @@ function App() {
             const received = JSON.parse(message.body);
             if (JSON.stringify(planRef.current) !== JSON.stringify(received)) {
               console.log(`플랜 업데이트 수신: ${message.body}`);
-              alert(`플랜 업데이트 수신: ${message.body}`);
+              //alert(`플랜 업데이트 수신: ${message.body}`);
               planDispatch({ type: 'SET_ALL', payload: received });
             }
           });
           
           client.subscribe(`/topic/plan/${id}/create/timetable`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            // let timetableVO = JSON.parse(message.body.timetableVOs);;
-            // const timetableDates = timetables.map(item => item.date);
-            // timetableVO = timetableVO.filter(vo => !timetableDates.includes(vo.date));
+            const received = JSON.parse(message.body);
+            let timetableVO = received.timetableVOs;
+            const timetableDates = timetablesRef.current.map(item => item.date);
+            timetableVO = timetableVO.filter(vo => !timetableDates.includes(vo.date));
             
-            // if (timetables) {
-            //   setTimetables((prev) => [...prev, timetableVO]);
-            // }
+            timetableVO.forEach(vo => {
+              timeDispatch({ type: 'create', value: vo });
+            });
           });
           
           client.subscribe(`/topic/plan/${id}/update/timetable`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            //addMessage(`시간표 업데이트 수신: ${message.body}`);
+            const received = JSON.parse(message.body);
+            timeDispatch({ type: "update", payload: received.timetableVOs })
           });
           
           client.subscribe(`/topic/plan/${id}/delete/timetable`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            //addMessage(`시간표 삭제 수신: ${message.body}`);
+            timeDispatch({ type: 'delete' })
           });
           
           client.subscribe(`/topic/plan/${id}/create/timetableplaceblock`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            //addMessage(`시간표 블록 생성 수신: ${message.body}`);
+            alert(`시간표 블록 생성 수신: ${message.body}`);
           });
           
           client.subscribe(`/topic/plan/${id}/update/timetableplaceblock`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            //addMessage(`시간표 블록 업데이트 수신: ${message.body}`);
+            alert(`시간표 블록 생성 수신: ${message.body}`);
           });
           
           client.subscribe(`/topic/plan/${id}/delete/timetableplaceblock`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            //addMessage(`시간표 블록 삭제 수신: ${message.body}`);
+            alert(`시간표 블록 생성 수신: ${message.body}`);
           });
         },
         onStompError: (frame) => {
@@ -124,27 +150,6 @@ function App() {
       });
       
       client.activate();
-      
-      /*
-      // 시뮬레이션 코드 (실제 서버 연결 전 테스트용)
-      setTimeout(() => {
-        setIsConnected(true);
-        console.log("✅ WebSocket 연결 완료 (시뮬레이션)");
-        
-        const subscriptions = [
-          `/topic/plan/${id}/update/plan`,
-          `/topic/plan/${id}/create/timetable`,
-          `/topic/plan/${id}/update/timetable`,
-          `/topic/plan/${id}/delete/timetable`,
-          `/topic/plan/${id}/create/timetableplaceblock`,
-          `/topic/plan/${id}/update/timetableplaceblock`,
-          `/topic/plan/${id}/delete/timetableplaceblock`
-        ];
-        
-        subscriptions.forEach(topic => {
-          console.log(`📡 구독 완료: ${topic}`);
-        });
-      }, 1000);*/
     };
 
     connectWebSocket();
@@ -181,12 +186,12 @@ function App() {
           
           setData(planData);
           console.log("똥", planData);
-          
-          // plan 정보 등록 (* /api/plan/${id}와 웹소켓으로 보내야 하는거랑 묘하게 달라서 이렇게 씀)
+
           planDispatch({ type: 'SET_ALL', payload: planFrame });
           
           if (planData.timetables) {
-            setTimetables(planData.timetables);
+            //setTimetables(planData.timetables);
+            timeDispatch({type: "update", payload: planData.timetables})
             if (planData.timetables.length > 0) {
               setSelectedDay(planData.timetables[0].timetableId);
             }
@@ -226,7 +231,7 @@ function App() {
     };
 
     fetchPlaces();
-  }, [id]);
+  }, [id, plan.travelId]);
 
   useEffect(() => {
     planRef.current = plan;
@@ -331,6 +336,50 @@ function App() {
     }
   }, [plan])
 
+  const prevScheduleRef = useRef({});
+
+  useEffect(() => {
+    const prevSchedule = prevScheduleRef.current;
+    const newSchedule = schedule;
+
+    // 모든 키를 모음
+    const allKeys = new Set([...Object.keys(prevSchedule), ...Object.keys(newSchedule)]);
+
+    allKeys.forEach(key => {
+      const prevArr = prevSchedule[key] || [];
+      const newArr = newSchedule[key] || [];
+
+      // 추가된 항목: 새 배열에 있지만 이전 배열에 없는 placeId
+      const added = newArr.filter(
+        newItem => !prevArr.some(prevItem => prevItem.placeId === newItem.placeId)
+      );
+
+      // 삭제된 항목: 이전 배열에 있었는데 새 배열에 없는 placeId
+      const removed = prevArr.filter(
+        prevItem => !newArr.some(newItem => newItem.placeId === prevItem.placeId)
+      );
+
+      // 변경된 항목: 같은 placeId인데 내용이 다름
+      const changed = newArr.filter(newItem => {
+        const prevItem = prevArr.find(prevItem => prevItem.placeId === newItem.placeId);
+        return prevItem && JSON.stringify(prevItem) !== JSON.stringify(newItem);
+      });
+
+      if (added.length > 0) {
+        console.log(`Key ${key} - Added:`, added);
+      }
+      if (removed.length > 0) {
+        console.log(`Key ${key} - Removed:`, removed);
+      }
+      if (changed.length > 0) {
+        console.log(`Key ${key} - Changed:`, changed);
+      }
+    });
+
+    // 이전 스케줄 업데이트
+    prevScheduleRef.current = newSchedule;
+  }, [schedule]);
+
   // 로딩 상태
   if (!selectedDay || !timetables.length) {
     return (
@@ -344,20 +393,52 @@ function App() {
     );
   }
 
-  const handleTimetable = (item) => {
-    setTimetables(item)
+  const balsa = () => {
+    const client = stompClientRef.current;
+    const yesi = {
+      timetablePlaceBlockVO: {
+      timetableId: 1,
+      timetablePlaceBlockId: null,
+      placeCategoryId: 3,
+      placeName: "경복궁",
+      placeTheme: "역사",
+      placeRating: 4.7,
+      placeAddress: "서울 종로구 사직로 161",
+      placeLink: "https://example.com/경복궁",
+      date: "2025-08-11",
+      startTime: "10:00:00",
+      endTime: "11:30:00",
+      xLocation: 126.9769,
+      yLocation: 37.5796
+      }
+    }
+    client.publish({
+      destination: `/app/plan/${id}/create/timetableplaceblock`,
+      body: JSON.stringify(yesi),
+      
+    });
+    console.log("발사성공!")
   }
 
   return (
     <div className="min-h-screen font-pretendard">
       <Navbar />
-      {plan && <PlanInfo info={plan} planDispatch={planDispatch} id={id} savePlan={savePlan} />}
+      {plan && 
+        <PlanInfo 
+          info={plan} 
+          planDispatch={planDispatch} 
+          id={id} 
+          savePlan={savePlan}
+          schedule={schedule}
+          selectedDay={selectedDay}
+        />
+      }
       
       <div className="w-[1400px] mx-auto py-6">
         <div className="flex space-x-6 flex-1">
           <DaySelector
             timetables={timetables}
-            setTimetables={handleTimetable}
+            timeDispatch={timeDispatch}
             selectedDay={selectedDay}
             onDaySelect={setSelectedDay}
             stompClientRef={stompClientRef}
@@ -377,7 +458,9 @@ function App() {
             places={places}
             onPlacesUpdate={updatePlaces}
           />
+
         </div>
+        <button className="hover:bg-gray-300" onClick={() => balsa()}>테스트 버튼</button>
       </div>
     </div>
   );
