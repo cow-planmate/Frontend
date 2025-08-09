@@ -28,7 +28,7 @@ const TravelPlannerApp = () => {
     // placeBlocks를 순회하면서 데이터 변환
     placeBlocks.forEach((place) => {
       // startTime과 endTime으로부터 duration 계산 (15분 단위)
-      const startTime = new Date(`2000-01-01T${place.satrtTime}`);
+      const startTime = new Date(`2000-01-01T${place.startTime}`);
       const endTime = new Date(`2000-01-01T${place.endTime}`);
       const durationMinutes = (endTime - startTime) / (1000 * 60); // 분 단위
       const duration = Math.round(durationMinutes / 15); // 15분 단위로 변환
