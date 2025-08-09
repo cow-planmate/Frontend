@@ -152,6 +152,7 @@ const TitleModal = ({ setIsTitleOpen, id, title, setTitle }) => {
           setIsTitleOpen(false);
         } else {
           console.warn("이미 존재하는 제목입니다");
+          alert("이미 존재하는 제목입니다");
         }
       } catch (err) {
         console.error("패치에 실패했습니다:", err);
