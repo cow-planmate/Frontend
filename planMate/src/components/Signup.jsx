@@ -185,15 +185,15 @@ export default function Signup({
 
       const data = await response.json();
       console.log("서버 응답:", data);
-      if (data.verificationSent) {
+      if (data.message === "Email already in use") {
+        alert("이미 사용중인 이메일입니다.");
+      } else if (data.message === "Email not found") {
+        alert("이메일을 찾을 수 없습니다.");
+      } else if (data.verificationSent) {
         alert("인증번호가 이메일로 전송되었습니다!");
         setTimeLeft(300);
         setIsTimerRunning(true);
         setShowVerification(true); // 인증번호 입력 영역 표시
-      } else if (data.message === "Email already in use") {
-        alert("이미 사용중인 이메일입니다.");
-      } else if (data.message === "Email not found") {
-        alert("이메일을 찾을 수 없습니다.");
       } else {
         alert(data.message || "발송 실패");
       }
