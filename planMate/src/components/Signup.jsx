@@ -185,7 +185,7 @@ export default function Signup({
 
       const data = await response.json();
       console.log("서버 응답:", data);
-      if (data.isVerificationSent) {
+      if (data.verificationSent) {
         alert("인증번호가 이메일로 전송되었습니다!");
         setTimeLeft(300);
         setIsTimerRunning(true);
