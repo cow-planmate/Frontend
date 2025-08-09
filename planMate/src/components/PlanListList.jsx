@@ -143,13 +143,18 @@ const TitleModal = ({ setIsTitleOpen, id, title, setTitle }) => {
   const patchApi = async () => {
     if (isAuthenticated()) {
       try {
-        await patch(`${BASE_URL}/api/plan/${id}/name`, {
+        const response = await patch(`${BASE_URL}/api/plan/${id}/name`, {
           planName: newTitle,
         });
-        setTitle(newTitle);
-        setIsTitleOpen(false);
+
+        if (response.isEdited) {
+          setTitle(newTitle);
+          setIsTitleOpen(false);
+        } else {
+          console.warn("이미 존재하는 제목입니다");
+        }
       } catch (err) {
-        console.error("패치에 실패해버렸습니다:", err);
+        console.error("패치에 실패했습니다:", err);
       }
     }
   };
