@@ -147,7 +147,7 @@ const TitleModal = ({ setIsTitleOpen, id, title, setTitle }) => {
           planName: newTitle,
         });
         console.log(response);
-        if (response.isEdited) {
+        if (response.isEdited === true) {
           setTitle(newTitle);
           setIsTitleOpen(false);
         } else {
