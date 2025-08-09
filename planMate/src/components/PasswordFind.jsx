@@ -84,7 +84,7 @@ export default function PasswordFind({ isOpen, onClose }) {
       if (data.verificationSent) {
         alert("인증번호가 전송되었습니다.");
         setTimeLeft(300);
-        setShowVerification(true); // 인증번호 입력 영역 표시
+        setShowVerification(true);
       } else if (data.message === "Email not found") {
         alert("이메일을 찾을 수 없습니다.");
       } else {
@@ -153,7 +153,7 @@ export default function PasswordFind({ isOpen, onClose }) {
         headers["Authorization"] = `Bearer ${emailVerificationToken}`;
       }
 
-      const response = await fetch("/auth/password/email", {
+      const response = await fetch(`${BASE_URL}/auth/password/email`, {
         method: "POST",
         headers: headers,
       });
