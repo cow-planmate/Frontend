@@ -146,7 +146,7 @@ const TitleModal = ({ setIsTitleOpen, id, title, setTitle }) => {
         const response = await patch(`${BASE_URL}/api/plan/${id}/name`, {
           planName: newTitle,
         });
-
+        console.log(response);
         if (response.isEdited) {
           setTitle(newTitle);
           setIsTitleOpen(false);
