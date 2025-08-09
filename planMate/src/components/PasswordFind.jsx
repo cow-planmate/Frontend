@@ -81,7 +81,7 @@ export default function PasswordFind({ isOpen, onClose }) {
 
       const data = await response.json();
       console.log("서버 응답:", data);
-      if (!data.isVerificationSent) {
+      if (data.verificationSent) {
         alert("인증번호가 전송되었습니다.");
         setTimeLeft(300);
         setShowVerification(true); // 인증번호 입력 영역 표시
