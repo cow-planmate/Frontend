@@ -20,9 +20,20 @@ export default function PlanList() {
       if (isAuthenticated()) {
         try {
           const profileData = await get(`${BASE_URL}/api/user/profile`);
-          setPlan(profileData.planVOs);
+
+          const userInfo = profileData.userInfo;
+          if (userInfo) {
+            // myPlanVOs와 editablePlanVOs를 합쳐서 전체 계획 목록 생성
+            const myPlans = userInfo.myPlanVOs || [];
+            const editablePlans = userInfo.editablePlanVOs || [];
+            const allPlans = [...myPlans, ...editablePlans];
+            setPlan(allPlans);
+          } else {
+            setPlan([]);
+          }
         } catch (err) {
           console.error("프로필 정보를 가져오는데 실패했습니다:", err);
+          setPlan([]);
         }
       } else {
         setPlan(null);
