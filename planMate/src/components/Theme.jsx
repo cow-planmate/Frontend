@@ -12,6 +12,9 @@ export default function Theme({ isOpen, onClose, onComplete }) {
 
   useEffect(() => {
     if (isOpen) {
+      setCurrentStep(0);
+      setSelectedKeywords([]);
+      setAllSelectedKeywords({});
       getPreferredTheme();
     }
   }, [isOpen]);
