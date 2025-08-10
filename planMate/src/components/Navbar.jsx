@@ -27,11 +27,13 @@ export default function Navbar() {
   });
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isInvitationOpen, setisInvitationOpen] = useState(false);
+  const [invitations, setInvitations] = useState([]);
 
   // 사용자 프로필 상태 추가
   const [userProfile, setUserProfile] = useState(null);
 
-  const { get, isLoading, error, isAuthenticated, logout } = useApiClient();
+  const { get, post, isLoading, error, isAuthenticated, logout } =
+    useApiClient();
   const BASE_URL = import.meta.env.VITE_API_URL;
 
   // 기존 코드 그대로...
@@ -139,6 +141,40 @@ export default function Navbar() {
     };
   }, []);
 
+  const acceptRequest = async (requestId) => {
+    try {
+      await post(`${BASE_URL}/api/collaboration-requests/${requestId}/accept`);
+      fetchInvitations();
+      console.log("초대 수락 완료");
+    } catch (err) {
+      console.error("초대 수락 실패:", err);
+    }
+  };
+  const rejectRequest = async (requestId) => {
+    try {
+      await post(`${BASE_URL}/api/collaboration-requests/${requestId}/reject`);
+      fetchInvitations();
+      console.log("초대 거절 완료");
+    } catch (err) {
+      console.error("초대 거절 실패:", err);
+    }
+  };
+  const fetchInvitations = async () => {
+    if (isAuthenticated()) {
+      try {
+        const response = await get(
+          `${BASE_URL}/api/collaboration-requests/pending`
+        );
+        setInvitations(response.pendingRequests || []);
+      } catch (err) {
+        console.error("초대 목록을 가져오는데 실패했습니다:", err);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchInvitations();
+  }, [isAuthenticated]);
   return (
     <div className="border-b border-gray-200 ">
       <div className="mx-auto w-[1400px] bg-white flex justify-between py-4 items-center">
@@ -218,66 +254,41 @@ export default function Navbar() {
                     </div>
 
                     <div className="space-y-3 max-h-96 overflow-y-auto">
-                      <div className="border border-gray-200 rounded-lg p-3 ">
-                        <div className="text-sm text-gray-600 mb-2 ">
-                          '<span className="font-medium">홍길동</span>' 님께서
-                          'plan1' 협업 초대를 보냈습니다
+                      {invitations.length > 0 ? (
+                        invitations.map((invitation) => (
+                          <div
+                            key={invitation.id}
+                            className="border border-gray-200 rounded-lg p-3"
+                          >
+                            <div className="text-sm text-gray-600 mb-2">
+                              '
+                              <span className="font-medium">
+                                {invitation.senderName}
+                              </span>
+                              ' 님께서 '{invitation.planName}' 협업 초대를
+                              보냈습니다
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => acceptRequest(invitation.id)}
+                                className="flex-1 bg-main text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-600"
+                              >
+                                수락
+                              </button>
+                              <button
+                                onClick={() => rejectRequest(invitation.id)}
+                                className="flex-1 bg-gray-300 text-gray-700 py-2 px-3 rounded-lg text-sm font-medium hover:bg-gray-400"
+                              >
+                                거절
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-gray-500">
+                          받은 초대가 없습니다
                         </div>
-                        <div className="flex gap-2">
-                          <button className="flex-1 bg-main text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-600">
-                            수락
-                          </button>
-                          <button className="flex-1 bg-gray-300 text-gray-700 py-2 px-3 rounded-lg text-sm font-medium hover:bg-gray-400">
-                            거절
-                          </button>
-                        </div>
-                      </div>
-                      <div className="border border-gray-200 rounded-lg p-3">
-                        <div className="text-sm text-gray-600 mb-2">
-                          '<span className="font-medium">김철수</span>' 님께서
-                          'plan1' 협업 초대를 보냈습니다
-                        </div>
-                        <div className="flex gap-2">
-                          <button className="flex-1 bg-main text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-600">
-                            수락
-                          </button>
-                          <button className="flex-1 bg-gray-300 text-gray-700 py-2 px-3 rounded-lg text-sm font-medium hover:bg-gray-400">
-                            거절
-                          </button>
-                        </div>
-                      </div>
-                      <div className="border border-gray-200 rounded-lg p-3">
-                        <div className="text-sm text-gray-600 mb-2">
-                          '<span className="font-medium">이영희</span>' 님께서
-                          'plan2' 협업 초대를 보냈습니다
-                        </div>
-                        <div className="flex gap-2">
-                          <button className="flex-1 bg-main text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-600">
-                            수락
-                          </button>
-                          <button className="flex-1 bg-gray-300 text-gray-700 py-2 px-3 rounded-lg text-sm font-medium hover:bg-gray-400">
-                            거절
-                          </button>
-                        </div>
-                      </div>
-                      <div className="border border-gray-200 rounded-lg p-3">
-                        <div className="text-sm text-gray-600 mb-2">
-                          '<span className="font-medium">박민수</span>' 님께서
-                          'plan3' 협업 초대를 보냈습니다
-                        </div>
-                        <div className="flex gap-2">
-                          <button className="flex-1 bg-main text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-600">
-                            수락
-                          </button>
-                          <button className="flex-1 bg-gray-300 text-gray-700 py-2 px-3 rounded-lg text-sm font-medium hover:bg-gray-400">
-                            거절
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* <div className="text-center py-8 text-gray-500">
-          받은 초대가 없습니다
-        </div> */}
+                      )}
                     </div>
                   </div>
                 </div>
