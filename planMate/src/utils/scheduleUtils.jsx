@@ -60,22 +60,22 @@ export const transformApiResponse = (apiResponse) => {
     };
 
     // 해당하는 timetableId를 찾아서 데이터 추가
-    const placeIndex = placeBlocks.indexOf(place);
-    let targetTimetableId;
+    // const placeIndex = placeBlocks.indexOf(place);
+    const targetTimetableId = place.timetableId;
 
-    if (placeIndex < 4) {
-      targetTimetableId = timetables[0]?.timetableId || 78;
-    } else if (placeIndex < 7) {
-      targetTimetableId = timetables[1]?.timetableId || 79;
-    } else {
-      targetTimetableId = timetables[2]?.timetableId || 80;
-    }
+    // if (placeIndex < 4) {
+    //   targetTimetableId = timetables[0]?.timetableId || 78;
+    // } else if (placeIndex < 7) {
+    //   targetTimetableId = timetables[1]?.timetableId || 79;
+    // } else {
+    //   targetTimetableId = timetables[2]?.timetableId || 80;
+    // }
 
     if (result[targetTimetableId]) {
       result[targetTimetableId].push(transformedPlace);
     }
   });
-
+  console.log(result)
   return result;
 };
 

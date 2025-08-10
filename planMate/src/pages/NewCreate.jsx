@@ -104,6 +104,8 @@ function App() {
   useEffect(() => {
     timetablesRef.current = timetables;
   }, [timetables]);
+  
+  const lastMessageRef = useRef(null);
 
   useEffect(() => {
     const SERVER_URL = "https://pmserver.salmakis.online/ws-plan";
@@ -147,27 +149,105 @@ function App() {
           });
           
           client.subscribe(`/topic/plan/${id}/create/timetableplaceblock`, (message) => {
-            console.log("📩 수신된 메시지:", message.body);
-            alert(`시간표 블록 생성 수신: ${message.body}`);
-            const received = JSON.parse(message.body);
+            //if (JSON.stringify(message.body) === JSON.stringify(lastMessageRef.current)) {
+              console.log("📩 수신된 메시지:", message.body);
+              //alert(`시간표 블록 생성 수신: ${message.body}`);
+              const received = JSON.parse(message.body);
 
-            const converted = {
-              timetables: timetables,
-              placeBlocks: [received.timetablePlaceBlockVO]
-            };
-            console.log(converted)
-            const result = transformApiResponse(converted);
-            console.log(result)
+              const converted = {
+                timetables: timetablesRef.current,
+                placeBlocks: [received.timetablePlaceBlockVO]
+              };
+              console.log(converted)
+              const result = transformApiResponse(converted);
+              console.log(result)
+              const allItems = Object.values(result).flat();
+              console.log(allItems)
+              
+              setSchedule(prev => {
+                const updated = { ...prev };
+                Object.keys(result).forEach(key => {
+                  const existingItems = prev[key] || [];
+
+                  // 새 항목들을 timetablePlaceBlockId로 맵 만들기
+                  const newItemsMap = new Map(result[key].map(item => [item.timetablePlaceBlockId, item]));
+
+                  // 기존 아이템을 순회하며, 새 아이템으로 덮어쓰거나 유지
+                  const mergedItems = existingItems.map(item =>
+                    newItemsMap.has(item.timetablePlaceBlockId) ? newItemsMap.get(item.timetablePlaceBlockId) : item
+                  );
+
+                  // 새 아이템 중 기존에 없는 항목만 추가
+                  const existingIds = new Set(existingItems.map(item => item.timetablePlaceBlockId));
+                  const newItemsToAdd = result[key].filter(item => !existingIds.has(item.timetablePlaceBlockId));
+
+                  updated[key] = [...mergedItems, ...newItemsToAdd];
+                });
+                console.log(updated)
+                return updated;
+              });
+            //}
+
+            lastMessageRef.current = message.body;
           });
           
           client.subscribe(`/topic/plan/${id}/update/timetableplaceblock`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            alert(`시간표 블록 생성 수신: ${message.body}`);
+            //alert(`시간표 블록 생성 수신: ${message.body}`);
+
+            const received = JSON.parse(message.body);
+
+            const converted = {
+              timetables: timetablesRef.current,
+              placeBlocks: [received.timetablePlaceBlockVO]
+            };
+            console.log(converted)
+            const result = transformApiResponse(converted);
+
+            const allItems = Object.values(result).flat();
+            console.log(allItems)
+            
+            setSchedule(prev => {
+              const updated = { ...prev };
+              Object.keys(result).forEach(key => {
+                const existingItems = prev[key] || [];
+
+                // 새 항목들을 timetablePlaceBlockId로 맵 만들기
+                const newItemsMap = new Map(result[key].map(item => [item.timetablePlaceBlockId, item]));
+
+                // 기존 아이템을 순회하며, 새 아이템으로 덮어쓰거나 유지
+                const mergedItems = existingItems.map(item =>
+                  newItemsMap.has(item.timetablePlaceBlockId) ? newItemsMap.get(item.timetablePlaceBlockId) : item
+                );
+
+                // 새 아이템 중 기존에 없는 항목만 추가
+                const existingIds = new Set(existingItems.map(item => item.timetablePlaceBlockId));
+                const newItemsToAdd = result[key].filter(item => !existingIds.has(item.timetablePlaceBlockId));
+
+                updated[key] = [...mergedItems, ...newItemsToAdd];
+              });
+              return updated;
+            });
           });
           
           client.subscribe(`/topic/plan/${id}/delete/timetableplaceblock`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            alert(`시간표 블록 생성 수신: ${message.body}`);
+            //alert(`시간표 블록 생성 수신: ${message.body}`);
+
+            const received = JSON.parse(message.body).timetablePlaceBlockVO.timetablePlaceBlockId;
+
+            setSchedule(prevSchedule => {
+              // 모든 timetableId 키에 대해 순회하며 필터링
+              const newSchedule = {};
+
+              Object.entries(prevSchedule).forEach(([timetableId, blocks]) => {
+                newSchedule[timetableId] = blocks.filter(
+                  block => block.timetablePlaceBlockId !== received
+                );
+              });
+
+              return newSchedule;
+            });
           });
         },
         onStompError: (frame) => {
@@ -263,6 +343,7 @@ function App() {
   useEffect(() => {
     if (transformedData) {
       setSchedule(transformedData);
+      // firstScheduleRef.current(transformedData);
     } else if (timetables.length > 0) {
       const initialSchedule = {};
       timetables.forEach((timetable) => {
@@ -361,121 +442,143 @@ function App() {
   const prevScheduleRef = useRef({});
 
   useEffect(() => {
-    console.log(schedule);
-    const prevSchedule = prevScheduleRef.current;
-    const newSchedule = schedule;
+    const timer = setTimeout(() => {
+      console.log(schedule);
 
-    const allKeys = new Set([...Object.keys(prevSchedule), ...Object.keys(newSchedule)]);
-
-    allKeys.forEach(key => {
-      const prevArr = prevSchedule[key] || [];
-      const newArr = newSchedule[key] || [];
-
-      const added = newArr.filter(
-        newItem => !prevArr.some(prevItem => prevItem.placeId === newItem.placeId)
-      );
-
-      const removed = prevArr.filter(
-        prevItem => !newArr.some(newItem => newItem.placeId === prevItem.placeId)
-      );
-
-      const changed = newArr.filter(newItem => {
-        const prevItem = prevArr.find(prevItem => prevItem.placeId === newItem.placeId);
-        return prevItem && JSON.stringify(prevItem) !== JSON.stringify(newItem);
+      const prevSchedule = prevScheduleRef.current;
+      const newSchedule = schedule;
+  
+      const allKeys = new Set([...Object.keys(prevSchedule), ...Object.keys(newSchedule)]);
+  
+      allKeys.forEach(key => {
+        const prevArr = prevSchedule[key] || [];
+        const newArr = newSchedule[key] || [];
+  
+        const added = newArr.filter(
+          newItem => !prevArr.some(prevItem => prevItem.placeId === newItem.placeId)
+        );
+  
+        const removed = prevArr.filter(
+          prevItem => !newArr.some(newItem => newItem.placeId === prevItem.placeId)
+        );
+  
+        const changed = newArr.filter(newItem => {
+          const prevItem = prevArr.find(prevItem => prevItem.placeId === newItem.placeId);
+          return prevItem && JSON.stringify(prevItem) !== JSON.stringify(newItem);
+        });
+  
+        if (added.length > 0) {
+          console.log(`Key ${key} - Added:`, added[0]);
+          
+          const item = added[0];
+          const date = getDateById(Number(key));
+          const endTime = addMinutes(item.timeSlot, item.duration * 15);
+  
+          const initialCreate = {
+            timetablePlaceBlockVO: {
+              timetableId: Number(key),
+              timetablePlaceBlockId: null,
+              placeCategoryId: item.categoryId,
+              placeName: item.name,
+              placeTheme: "테스트",
+              placeRating: item.rating,
+              placeAddress: item.formatted_address,
+              placeLink: item.url,
+              date: date,
+              startTime: `${item.timeSlot}:00`,
+              endTime: `${endTime}:00`,
+              xLocation: item.xlocation,
+              yLocation: item.ylocation
+            }
+          }
+          
+          const client = stompClientRef.current;
+          if (client && client.connected) {
+            client.publish({
+              destination: `/app/plan/${id}/create/timetableplaceblock`,
+              body: JSON.stringify(initialCreate),
+            });
+            console.log("🚀 메시지 전송:", initialCreate);
+          }
+        }
+        if (removed.length > 0) {
+          console.log(`Key ${key} - Removed:`, removed);
+          const item = removed[0];
+  
+          const initialDelete = {
+            timetablePlaceBlockVO: {
+              timetablePlaceBlockId: item.timetablePlaceBlockId,
+              timetableId: Number(key)
+            }
+          }
+  
+          const client = stompClientRef.current;
+          if (client && client.connected) {
+            client.publish({
+              destination: `/app/plan/${id}/delete/timetableplaceblock`,
+              body: JSON.stringify(initialDelete),
+            });
+            console.log("🚀 메시지 전송:", initialDelete);
+          }
+        }
+        if (changed.length > 0) {
+          console.log(`Key ${key} - Changed:`, changed);
+          
+          const item = changed[0];
+          const date = getDateById(Number(key));
+          const endTime = addMinutes(item.timeSlot, item.duration * 15);
+  
+          const initialUpdate = {
+            timetablePlaceBlockVO: {
+              timetableId: Number(key),
+              timetablePlaceBlockId: item.timetablePlaceBlockId,
+              placeCategoryId: item.categoryId,
+              placeName: item.name,
+              placeTheme: "테스트",
+              placeRating: item.rating,
+              placeAddress: item.formatted_address,
+              placeLink: item.url,
+              date: date,
+              startTime: `${item.timeSlot}:00`,
+              endTime: `${endTime}:00`,
+              xLocation: item.xlocation,
+              yLocation: item.ylocation
+            }
+          }
+  
+          const client = stompClientRef.current;
+          if (client && client.connected) {
+            client.publish({
+              destination: `/app/plan/${id}/update/timetableplaceblock`,
+              body: JSON.stringify(initialUpdate),
+            });
+            console.log("🚀 메시지 전송:", initialUpdate);
+          }
+        }
       });
+  
+      // 깊은 복사로 이전 스케줄 저장
+      prevScheduleRef.current = JSON.parse(JSON.stringify(newSchedule));
+    }, 500); // 0.5초 지연 후 발사
 
-      if (added.length > 0) {
-        console.log(`Key ${key} - Added:`, added[0]);
-        
-        const item = added[0];
-        const date = getDateById(Number(key));
-        const endTime = addMinutes(item.timeSlot, item.duration * 15);
 
-        const initialCreate = {
-          timetablePlaceBlockVO: {
-            timetableId: Number(key),
-            timetablePlaceBlockId: null,
-            placeCategoryId: item.categoryId,
-            placeName: item.name,
-            placeTheme: "테스트",
-            placeRating: item.rating,
-            placeAddress: item.formatted_address,
-            placeLink: item.url,
-            date: date,
-            startTime: `${item.timeSlot}:00`,
-            endTime: `${endTime}:00`,
-            xLocation: item.xlocation,
-            yLocation: item.ylocation
-          }
-        }
-        
-        const client = stompClientRef.current;
-        if (client && client.connected) {
-          client.publish({
-            destination: `/app/plan/${id}/create/timetableplaceblock`,
-            body: JSON.stringify(initialCreate),
-          });
-          console.log("🚀 메시지 전송:", initialCreate);
-        }
-      }
-      if (removed.length > 0) {
-        console.log(`Key ${key} - Removed:`, removed);
-        const item = removed[0];
+    return () => clearTimeout(timer);
+  }, [schedule]);
 
-        const initialDelete = {
-          timetablePlaceBlockVO: {
-            timetablePlaceBlockId: item.timetablePlaceBlockId,
-            timetableId: Number(key)
-          }
-        }
+  useEffect(() => {
+    const filteredSchedule = {};
 
-        const client = stompClientRef.current;
-        if (client && client.connected) {
-          client.publish({
-            destination: `/app/plan/${id}/delete/timetableplaceblock`,
-            body: JSON.stringify(initialDelete),
-          });
-          console.log("🚀 메시지 전송:", initialDelete);
-        }
-      }
-      if (changed.length > 0) {
-        console.log(`Key ${key} - Changed:`, changed);
-        
-        const item = changed[0];
-        const date = getDateById(Number(key));
-        const endTime = addMinutes(item.timeSlot, item.duration * 15);
+    for (const dayKey in schedule) {
+      const arr = schedule[dayKey];
+      const uniqueArr = Array.from(
+        new Map(arr.map(item => [item.placeId, item])).values()
+      );
+      filteredSchedule[dayKey] = uniqueArr;
+    }
 
-        const initialUpdate = {
-          timetablePlaceBlockVO: {
-            timetableId: Number(key),
-            timetablePlaceBlockId: item.timetablePlaceBlockId,
-            placeCategoryId: item.categoryId,
-            placeName: item.name,
-            placeTheme: "테스트",
-            placeRating: item.rating,
-            placeAddress: item.formatted_address,
-            placeLink: item.url,
-            date: date,
-            startTime: `${item.timeSlot}:00`,
-            endTime: `${endTime}:00`,
-            xLocation: item.xlocation,
-            yLocation: item.ylocation
-          }
-        }
-
-        const client = stompClientRef.current;
-        if (client && client.connected) {
-          client.publish({
-            destination: `/app/plan/${id}/update/timetableplaceblock`,
-            body: JSON.stringify(initialUpdate),
-          });
-          console.log("🚀 메시지 전송:", initialUpdate);
-        }
-      }
-    });
-
-    // 깊은 복사로 이전 스케줄 저장
-    prevScheduleRef.current = JSON.parse(JSON.stringify(newSchedule));
+    if (JSON.stringify(filteredSchedule) !== JSON.stringify(schedule)) {
+      setSchedule(filteredSchedule);
+    }
   }, [schedule]);
 
 
@@ -558,7 +661,7 @@ function App() {
           />
 
         </div>
-        <button className="hover:bg-gray-300" onClick={() => balsa()}>테스트 버튼</button>
+        {/* <button className="hover:bg-gray-300" onClick={() => balsa()}>테스트 버튼</button> */}
       </div>
     </div>
   );

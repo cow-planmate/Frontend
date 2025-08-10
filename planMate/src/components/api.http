@@ -22,7 +22,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzU0MzMxMDcxL
 
 ###
 
-GET https://pmserver.salmakis.online/api/plan/79
+GET https://pmserver.salmakis.online/api/plan/88
 Content-Type: application/json; charset=UTF-8
 Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzU0ODAwMzIwLCJleHAiOjE3NTQ4ODY3MjB9.fh9ZoKS8d5c1rw-SnShneu-lX-iu18uZMAIqS-DDbcg
 

@@ -13,9 +13,6 @@ const TimeTable = ({
   const [draggedItem, setDraggedItem] = useState(null);
   const [draggedFromSchedule, setDraggedFromSchedule] = useState(null);
 
-  useEffect(() => {
-    console.log(draggedItem)
-  }, [draggedItem])
 
   const timeSlots = useTimeSlots(selectedDay, timetables);
   const {
