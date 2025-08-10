@@ -70,8 +70,8 @@ export default function ProfileText({
   if (title == "선호테마") {
     categoryNames = {
       0: "관광지",
-      1: "식당",
-      2: "숙소",
+      1: "숙소",
+      2: "식당",
     };
 
     // 카테고리 아이콘 매핑
