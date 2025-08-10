@@ -185,10 +185,8 @@ export default function Theme({ isOpen, onClose, onComplete }) {
                 <button
                   key={keyword.preferredThemeId}
                   onClick={() => toggleKeyword(index)}
-                  className={`rounded-lg px-2 py-2 text-sm text-gray-800 border border-gray-300 hover:bg-blue-100 transition-all ${
-                    selectedKeywords.includes(index)
-                      ? "bg-blue-200 border-blue-400"
-                      : ""
+                  className={`rounded-lg px-2 py-2 text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all ${
+                    selectedKeywords.includes(index) ? "bg-main text-white" : ""
                   }`}
                 >
                   {keyword.preferredThemeName}
