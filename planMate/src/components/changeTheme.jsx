@@ -186,7 +186,9 @@ export default function Theme({ isOpen, onClose, onComplete }) {
                   key={keyword.preferredThemeId}
                   onClick={() => toggleKeyword(index)}
                   className={`rounded-lg px-2 py-2 text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all ${
-                    selectedKeywords.includes(index) ? "bg-main text-white" : ""
+                    selectedKeywords.includes(index)
+                      ? "bg-main text-white hover:bg-blue-800"
+                      : ""
                   }`}
                 >
                   {keyword.preferredThemeName}
