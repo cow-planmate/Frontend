@@ -256,8 +256,8 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
             onClick={() => setSelected("여자")}
             className={`py-3 px-4 rounded-xl border-2 font-medium transition-all duration-200 ${
               selected === "여자"
-                ? "border-blue-300 bg-blue-50 text-blue-700"
-                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                ? "bg-main text-white hover:bg-blue-800"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
             여자
@@ -301,7 +301,7 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
           </button>
           <button
             onClick={() => patchApi(title, selected)}
-            className="px-4 py-2.5 bg-blue-600 hover:bg-main text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
+            className="px-4 py-2.5 bg-main hover:bg-main text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
           >
             확인
           </button>
@@ -566,7 +566,7 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
           </button>
           <button
             onClick={() => passwordChange()}
-            className="px-4 py-2.5 bg-blue-600 hover:bg-main text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
+            className="px-4 py-2.5 bg-main hover:bg-blue-700 text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
           >
             확인
           </button>
