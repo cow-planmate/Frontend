@@ -25,25 +25,36 @@ export const transformApiResponse = (apiResponse) => {
 
     // categoryId에 따른 iconUrl 설정
     let iconUrl;
-    if (place.placeCategory === 0) {
-      iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png";
-    } else if (place.placeCategory === 1) {
-      iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/lodging-71.png";
+    if (place.placeCategoryId) {
+      if (place.placeCategoryId === 0) {
+        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png";
+      } else if (place.placeCategoryId === 1) {
+        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/lodging-71.png";
+      } else {
+        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png";
+      }
     } else {
-      iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png";
+      if (place.placeCategory === 0) {
+        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png";
+      } else if (place.placeCategory === 1) {
+        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/lodging-71.png";
+      } else {
+        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png";
+      }
     }
 
     // 변환된 객체 생성
     const transformedPlace = {
+      timetablePlaceBlockId: place.timetablePlaceBlockId ?? place.blockId,
       placeId: placeId,
       url: place.placeLink,
       name: place.placeName,
       formatted_address: place.placeAddress,
       rating: place.placeRating,
       iconUrl: iconUrl,
-      categoryId: place.placeCategory,
-      xlocation: place.xlocation || 0,
-      ylocation: place.ylocation || 0,
+      categoryId: place.placeCategory ?? place.placeCategoryId,
+      xlocation: place.xLocation ?? place.xlocation,
+      ylocation: place.yLocation ?? place.ylocation,
       timeSlot: timeSlot,
       duration: duration,
     };

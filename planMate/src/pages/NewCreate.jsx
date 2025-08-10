@@ -81,7 +81,22 @@ function App() {
   const [data, setData] = useState(null);
   const [timetables, timeDispatch] = useReducer(timetableReducer, []);
   const timetablesRef = useRef(timetables);
-
+  
+  // State
+  const [transformedData, setTransformedData] = useState(null);
+  const [schedule, setSchedule] = useState({});
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [places, setPlaces] = useState({
+    관광지: [],
+    숙소: [],
+    식당: [],
+  });
+  
+  useEffect(()=>{
+    console.log(timetables)
+  },[timetables])
+  const { get, post, patch, isAuthenticated } = useApiClient();
+  
   useEffect(()=>{
     console.log(plan)
   }, [plan])
@@ -134,6 +149,15 @@ function App() {
           client.subscribe(`/topic/plan/${id}/create/timetableplaceblock`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
             alert(`시간표 블록 생성 수신: ${message.body}`);
+            const received = JSON.parse(message.body);
+
+            const converted = {
+              timetables: timetables,
+              placeBlocks: [received.timetablePlaceBlockVO]
+            };
+            console.log(converted)
+            const result = transformApiResponse(converted);
+            console.log(result)
           });
           
           client.subscribe(`/topic/plan/${id}/update/timetableplaceblock`, (message) => {
@@ -173,21 +197,6 @@ function App() {
       }
     };
   }, []);
-  
-  useEffect(()=>{
-    console.log(timetables)
-  },[timetables])
-  const { get, post, patch, isAuthenticated } = useApiClient();
-  
-  // State
-  const [transformedData, setTransformedData] = useState(null);
-  const [schedule, setSchedule] = useState({});
-  const [selectedDay, setSelectedDay] = useState(null);
-  const [places, setPlaces] = useState({
-    관광지: [],
-    숙소: [],
-    식당: [],
-  });
 
   // 초기 데이터 로딩
   useEffect(() => {
@@ -382,12 +391,13 @@ function App() {
         const date = getDateById(Number(key));
         const endTime = addMinutes(item.timeSlot, item.duration * 15);
 
-        const initialList = {
+        const initialCreate = {
           timetablePlaceBlockVO: {
             timetableId: Number(key),
             timetablePlaceBlockId: null,
             placeCategoryId: item.categoryId,
             placeName: item.name,
+            placeTheme: "테스트",
             placeRating: item.rating,
             placeAddress: item.formatted_address,
             placeLink: item.url,
@@ -403,16 +413,62 @@ function App() {
         if (client && client.connected) {
           client.publish({
             destination: `/app/plan/${id}/create/timetableplaceblock`,
-            body: JSON.stringify(initialList),
+            body: JSON.stringify(initialCreate),
           });
-          console.log("🚀 메시지 전송:", initialList);
+          console.log("🚀 메시지 전송:", initialCreate);
         }
       }
       if (removed.length > 0) {
         console.log(`Key ${key} - Removed:`, removed);
+        const item = removed[0];
+        const initialDelete = {
+          "timetablePlaceBlockVO": {
+            "timetablePlaceBlockId": item.timetablePlaceBlockId,
+          }
+        }
+
+        const client = stompClientRef.current;
+        if (client && client.connected) {
+          client.publish({
+            destination: `/app/plan/${id}/delete/timetableplaceblock`,
+            body: JSON.stringify(initialDelete),
+          });
+          console.log("🚀 메시지 전송:", initialDelete);
+        }
       }
       if (changed.length > 0) {
         console.log(`Key ${key} - Changed:`, changed);
+        
+        const item = changed[0];
+        const date = getDateById(Number(key));
+        const endTime = addMinutes(item.timeSlot, item.duration * 15);
+
+        const initialUpdate = {
+          timetablePlaceBlockVO: {
+            timetableId: Number(key),
+            timetablePlaceBlockId: item.timetablePlaceBlockId,
+            placeCategoryId: item.categoryId,
+            placeName: item.name,
+            placeTheme: "테스트",
+            placeRating: item.rating,
+            placeAddress: item.formatted_address,
+            placeLink: item.url,
+            date: date,
+            startTime: `${item.timeSlot}:00`,
+            endTime: `${endTime}:00`,
+            xLocation: item.xlocation,
+            yLocation: item.ylocation
+          }
+        }
+
+        const client = stompClientRef.current;
+        if (client && client.connected) {
+          client.publish({
+            destination: `/app/plan/${id}/update/timetableplaceblock`,
+            body: JSON.stringify(initialUpdate),
+          });
+          console.log("🚀 메시지 전송:", initialUpdate);
+        }
       }
     });
 
