@@ -408,20 +408,23 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
                   confirmPassword: rePassword,
                 });
                 setIsPasswordOpen(false);
+                alert("비밀번호가 변경되었습니다!");
               } catch (err) {
                 console.error(
                   "비밀번호를 변경하는 과정에서 오류가 발생했습니다:",
                   err
                 );
+                alert("비밀번호를 변경하는 과정에서 오류가 발생했습니다");
               }
             } else {
               setWrongPrev(true);
             }
           } catch (err) {
             console.error(
-              "현재 비밀번호를 검증하는 과정에서 오류가 발생했습니다:",
+              "현재 비밀번호를 검증하는 과정에서 오류가 발생했습니다",
               err
             );
+            alert("비밀번호를 변경하는 과정에서 오류가 발생했습니다");
           }
         } else {
           setWrongPrev(true);
