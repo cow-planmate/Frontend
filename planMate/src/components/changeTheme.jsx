@@ -167,10 +167,7 @@ export default function Theme({ isOpen, onClose, onComplete }) {
   const currentKeywords = keywordsByStep[currentStep];
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60] font-pretendard"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60] font-pretendard">
       <div
         className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 max-h-[70vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
