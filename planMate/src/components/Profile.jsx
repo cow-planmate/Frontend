@@ -135,6 +135,7 @@ const DeleteModal = ({ setIsDeleteOpen }) => {
         localStorage.removeItem("userId");
         navigate("/");
         setIsDeleteOpen(false);
+        alert("탈퇴되었습니다");
       } catch (err) {
         console.error("탈퇴 과정에서 오류가 발생했습니다:", err);
       }
