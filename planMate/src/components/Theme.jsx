@@ -19,6 +19,26 @@ export default function Theme({ isOpen, onClose, onComplete }) {
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    if (categories.length > 0 && keywordsByStep[currentStep]) {
+      const currentCategoryId = categories[currentStep].id;
+      const previousSelections = allSelectedKeywords[currentCategoryId] || [];
+
+      // 이전에 선택된 키워드들의 인덱스를 찾아서 복원
+      const restoredIndexes = [];
+      previousSelections.forEach((selectedItem) => {
+        const index = keywordsByStep[currentStep].findIndex(
+          (item) => item.preferredThemeId === selectedItem.preferredThemeId
+        );
+        if (index !== -1) {
+          restoredIndexes.push(index);
+        }
+      });
+
+      setSelectedKeywords(restoredIndexes);
+    }
+  }, [currentStep, categories, keywordsByStep, allSelectedKeywords]);
+
   if (!isOpen) return null;
 
   const getPreferredTheme = async () => {
@@ -92,9 +112,10 @@ export default function Theme({ isOpen, onClose, onComplete }) {
       ...prev,
       [currentCategoryId]: selected, // 객체 배열로 저장
     }));
+
     if (currentStep < categories.length - 1) {
       setCurrentStep(currentStep + 1);
-      setSelectedKeywords([]);
+      // selectedKeywords는 useEffect에서 자동으로 복원됨
     } else {
       const final = {
         ...allSelectedKeywords,
@@ -112,9 +133,10 @@ export default function Theme({ isOpen, onClose, onComplete }) {
       ...prev,
       [currentCategoryId]: [],
     }));
+
     if (currentStep < categories.length - 1) {
       setCurrentStep(currentStep + 1);
-      setSelectedKeywords([]);
+      // selectedKeywords는 useEffect에서 자동으로 복원됨
     } else {
       const final = {
         ...allSelectedKeywords,
@@ -122,6 +144,23 @@ export default function Theme({ isOpen, onClose, onComplete }) {
       };
       onComplete(final);
     }
+  };
+
+  const goToPreviousStep = () => {
+    // 현재 선택사항을 저장하고 이전 단계로
+    const currentCategoryId = categories[currentStep].id;
+    const currentStepKeywords = keywordsByStep[currentStep];
+    const selected = selectedKeywords
+      .map((i) => currentStepKeywords[i])
+      .filter((item) => !!item);
+
+    setAllSelectedKeywords((prev) => ({
+      ...prev,
+      [currentCategoryId]: selected,
+    }));
+
+    setCurrentStep(currentStep - 1);
+    // selectedKeywords는 useEffect에서 자동으로 복원됨
   };
 
   const currentKeywords = keywordsByStep[currentStep];
@@ -180,10 +219,7 @@ export default function Theme({ isOpen, onClose, onComplete }) {
           <div className="flex space-x-2">
             {currentStep > 0 && (
               <button
-                onClick={() => {
-                  setCurrentStep(currentStep - 1);
-                  setSelectedKeywords([]);
-                }}
+                onClick={goToPreviousStep}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
               >
                 이전
