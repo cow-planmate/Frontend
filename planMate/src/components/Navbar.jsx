@@ -258,26 +258,30 @@ export default function Navbar() {
                       {invitations.length > 0 ? (
                         invitations.map((invitation) => (
                           <div
-                            key={invitation.id}
+                            key={invitation.requestId}
                             className="border border-gray-200 rounded-lg p-3"
                           >
                             <div className="text-sm text-gray-600 mb-2">
                               '
                               <span className="font-medium">
-                                {invitation.senderName}
+                                {invitation.senderNickname}
                               </span>
                               ' 님께서 '{invitation.planName}' 협업 초대를
                               보냈습니다
                             </div>
                             <div className="flex gap-2">
                               <button
-                                onClick={() => acceptRequest(invitation.id)}
+                                onClick={() =>
+                                  acceptRequest(invitation.requestId)
+                                }
                                 className="flex-1 bg-main text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-600"
                               >
                                 수락
                               </button>
                               <button
-                                onClick={() => rejectRequest(invitation.id)}
+                                onClick={() =>
+                                  rejectRequest(invitation.requestId)
+                                }
                                 className="flex-1 bg-gray-300 text-gray-700 py-2 px-3 rounded-lg text-sm font-medium hover:bg-gray-400"
                               >
                                 거절
