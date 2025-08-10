@@ -24,7 +24,7 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
   return (
     <>
       <div className="flex flex-col space-y-4">
-        {timetables.map((timetable) => (
+        {timetables.map((timetable, index) => (
           <button
             key={timetable.timetableId}
             className={`px-4 py-4 rounded-lg ${
@@ -35,7 +35,7 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
             onClick={() => onDaySelect(timetable.timetableId)}
           >
             <div className="text-xl font-semibold">
-              {getDayNumber(timetable.timetableId)}일차
+              {index+1}일차
             </div>
             <div className="text-sm">{formatDate(timetable.date)}</div>
           </button>
@@ -203,7 +203,6 @@ const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id })
           body: JSON.stringify(update),
         });
         console.log("🚀 메시지 전송:", update);
-        
       }
       
       if (deleteTime.timetableVOs && deleteTime.timetableVOs.length > 0) {

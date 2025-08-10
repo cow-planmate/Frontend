@@ -22,9 +22,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzU0MzMxMDcxL
 
 ###
 
-GET http://localhost:8080/api/plan/14
+GET https://pmserver.salmakis.online/api/plan/76
 Content-Type: application/json; charset=UTF-8
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4IiwiaWF0IjoxNzU0MjkyMzI2LCJleHAiOjE3NTQzNzg3MjZ9.aaCed4f9b4oiniijyfLZn2SYCx4CE6kLDkZwD469HmE
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzU0ODAwMzIwLCJleHAiOjE3NTQ4ODY3MjB9.fh9ZoKS8d5c1rw-SnShneu-lX-iu18uZMAIqS-DDbcg
 
 ###
 
