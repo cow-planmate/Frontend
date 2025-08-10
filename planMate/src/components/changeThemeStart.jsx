@@ -10,8 +10,8 @@ export default function Themestart({
   const { patch } = useApiClient();
   const categoryMap = {
     0: "관광지",
-    1: "식당",
-    2: "숙소",
+    1: "숙소",
+    2: "식당",
   };
   const BASE_URL = import.meta.env.VITE_API_URL;
 
