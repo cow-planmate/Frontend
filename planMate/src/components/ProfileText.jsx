@@ -301,7 +301,7 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
           </button>
           <button
             onClick={() => patchApi(title, selected)}
-            className="px-4 py-2.5 bg-main hover:bg-main text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
+            className="px-4 py-2.5 bg-main hover:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
           >
             확인
           </button>
@@ -566,7 +566,7 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
           </button>
           <button
             onClick={() => passwordChange()}
-            className="px-4 py-2.5 bg-main hover:bg-blue-700 text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
+            className="px-4 py-2.5 bg-main hover:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
           >
             확인
           </button>
