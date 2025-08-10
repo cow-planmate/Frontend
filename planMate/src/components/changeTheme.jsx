@@ -79,6 +79,31 @@ export default function Theme({ isOpen, onClose, onComplete }) {
     );
   };
 
+  const goToStep = (step) => {
+    setCurrentStep(step);
+
+    const categoryId = categories[step]?.id;
+    if (!categoryId) {
+      setSelectedKeywords([]);
+      return;
+    }
+
+    // 이미 저장된 키워드 가져오기
+    const savedKeywords = allSelectedKeywords[categoryId] || [];
+    const currentStepKeywords = keywordsByStep[step] || [];
+
+    // 저장된 키워드가 현재 step의 몇 번째 index인지 찾아서 복원
+    const restoredIndexes = savedKeywords
+      .map((saved) =>
+        currentStepKeywords.findIndex(
+          (k) => k.preferredThemeId === saved.preferredThemeId
+        )
+      )
+      .filter((i) => i !== -1);
+
+    setSelectedKeywords(restoredIndexes);
+  };
+
   const nextStep = () => {
     if (categories.length === 0 || !keywordsByStep[currentStep]) return;
 
@@ -86,15 +111,15 @@ export default function Theme({ isOpen, onClose, onComplete }) {
     const currentStepKeywords = keywordsByStep[currentStep];
     const selected = selectedKeywords
       .map((i) => currentStepKeywords[i])
-      .filter((item) => !!item); // null/undefined 제거
+      .filter((item) => !!item);
 
     setAllSelectedKeywords((prev) => ({
       ...prev,
-      [currentCategoryId]: selected, // 객체 배열로 저장
+      [currentCategoryId]: selected,
     }));
+
     if (currentStep < categories.length - 1) {
-      setCurrentStep(currentStep + 1);
-      setSelectedKeywords([]);
+      goToStep(currentStep + 1); // ✅ 변경
     } else {
       const final = {
         ...allSelectedKeywords,
@@ -112,9 +137,9 @@ export default function Theme({ isOpen, onClose, onComplete }) {
       ...prev,
       [currentCategoryId]: [],
     }));
+
     if (currentStep < categories.length - 1) {
-      setCurrentStep(currentStep + 1);
-      setSelectedKeywords([]);
+      goToStep(currentStep + 1); // ✅ 변경
     } else {
       const final = {
         ...allSelectedKeywords,
@@ -180,10 +205,7 @@ export default function Theme({ isOpen, onClose, onComplete }) {
           <div className="flex space-x-2">
             {currentStep > 0 && (
               <button
-                onClick={() => {
-                  setCurrentStep(currentStep - 1);
-                  setSelectedKeywords([]);
-                }}
+                onClick={() => goToStep(currentStep - 1)} // ✅ 변경
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
               >
                 이전
