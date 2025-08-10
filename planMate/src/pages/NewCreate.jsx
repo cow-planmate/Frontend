@@ -421,9 +421,11 @@ function App() {
       if (removed.length > 0) {
         console.log(`Key ${key} - Removed:`, removed);
         const item = removed[0];
+
         const initialDelete = {
-          "timetablePlaceBlockVO": {
-            "timetablePlaceBlockId": item.timetablePlaceBlockId,
+          timetablePlaceBlockVO: {
+            timetablePlaceBlockId: item.timetablePlaceBlockId,
+            timetableId: Number(key)
           }
         }
 
