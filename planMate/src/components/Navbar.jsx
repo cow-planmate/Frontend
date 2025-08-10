@@ -165,6 +165,7 @@ export default function Navbar() {
         const response = await get(
           `${BASE_URL}/api/collaboration-requests/pending`
         );
+        console.log(response);
         setInvitations(response.pendingRequests || []);
       } catch (err) {
         console.error("초대 목록을 가져오는데 실패했습니다:", err);
