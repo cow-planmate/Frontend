@@ -282,17 +282,21 @@ const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
     >
       <div className="bg-white p-6 rounded-2xl shadow-2xl w-96 border border-gray-100 max-h-[80vh] overflow-y-auto">
         <h2 className="text-xl font-bold text-gray-800 mb-6">공유 및 초대</h2>
-
+        <button
+          onClick={() => setIsShareOpen(false)}
+          className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 text-xl"
+        >
+          ✕
+        </button>
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            임시본 공유 URL
+            완성본 공유 URL
           </label>
           <div className="flex gap-2">
             <input
               className="flex-1 px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"
               value={shareURL}
               readOnly
-              placeholder="data.sharedPlanUrl"
             />
             <button
               onClick={copyToClipboard}
@@ -350,15 +354,6 @@ const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
               초대
             </button>
           </div>
-        </div>
-
-        <div className="flex justify-end">
-          <button
-            onClick={() => setIsShareOpen(false)}
-            className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-all duration-200"
-          >
-            취소
-          </button>
         </div>
       </div>
     </div>

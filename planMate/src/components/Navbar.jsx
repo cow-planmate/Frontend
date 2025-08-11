@@ -203,12 +203,17 @@ export default function Navbar() {
                   </div>
                 </button>
 
-                <button className="flex items-center">
+                <button
+                  className="relative flex items-center"
+                  onClick={() => setisInvitationOpen(true)}
+                >
                   <FontAwesomeIcon
                     icon={faBellRegular}
                     className="text-gray-500 text-[20px] align-middle hover:text-gray-400"
-                    onClick={() => setisInvitationOpen(true)}
                   />
+                  {invitations.length > 0 && (
+                    <span className="absolute -bottom-1 left-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                  )}
                 </button>
               </div>
               {isProfileOpen && (
