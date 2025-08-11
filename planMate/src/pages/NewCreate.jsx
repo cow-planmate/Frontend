@@ -303,6 +303,8 @@ function App() {
     };
   }, []);
 
+  const firstSchedule = useRef(false);
+
   // 초기 데이터 로딩
   useEffect(() => {
     const fetchPlanData = async () => {
@@ -326,6 +328,8 @@ function App() {
 
           const result = transformApiResponse(planData);
           setTransformedData(result);
+          
+          firstSchedule.current = true;
         } catch (err) {
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
         }
@@ -364,49 +368,24 @@ function App() {
     planRef.current = plan;
   }, [plan]);
 
-  // =================================================================
-  // ✨ 여기가 수정된 부분입니다.
-  // =================================================================
-
-  // 1. API 응답으로 받은 데이터로 스케줄을 "최초" 한 번만 채웁니다.
+  
+  
+  // 스케줄 초기화
   useEffect(() => {
-    if (transformedData) {
-      setSchedule(transformedData);
+    if (firstSchedule) {
+      if (transformedData) {
+        setSchedule(transformedData);
+        // firstScheduleRef.current(transformedData);
+      } else if (timetables.length > 0) {
+        const initialSchedule = {};
+        timetables.forEach((timetable) => {
+          initialSchedule[timetable.timetableId] = [];
+        });
+        setSchedule(initialSchedule);
+      }
     }
-  }, [transformedData]); // transformedData가 처음 설정될 때만 실행됩니다.
-
-  // 2. timetables 배열이 변경될 때마다 schedule 객체의 키를 동기화합니다.
-  useEffect(() => {
-    // timetables 데이터가 아직 없으면 아무것도 하지 않습니다.
-    if (timetables.length === 0) return;
-
-    setSchedule(currentSchedule => {
-      const newSchedule = { ...currentSchedule };
-      const existingTimetableIds = new Set(Object.keys(newSchedule).map(Number));
-      let isUpdated = false;
-
-      // timetables에 있는 ID가 schedule에 없으면 새로 추가합니다.
-      timetables.forEach(timetable => {
-        if (!existingTimetableIds.has(timetable.timetableId)) {
-          newSchedule[timetable.timetableId] = [];
-          isUpdated = true;
-        }
-      });
-
-      // schedule에 있는 ID가 timetables에 없으면 (삭제되었으면) 제거합니다.
-      const newTimetableIds = new Set(timetables.map(t => t.timetableId));
-      existingTimetableIds.forEach(id => {
-        if (!newTimetableIds.has(id)) {
-          delete newSchedule[id];
-          isUpdated = true;
-        }
-      });
-
-      // 변경이 있을 때만 state를 업데이트하여 불필요한 리렌더링을 방지합니다.
-      return isUpdated ? newSchedule : currentSchedule;
-    });
-  }, [timetables]); // timetables가 변경될 때만 실행됩니다.
-
+    firstSchedule.current = false;
+  }, [timetables, transformedData]);
 
   // 스케줄 업데이트 함수
   const updateSchedule = (newSchedule) => {
