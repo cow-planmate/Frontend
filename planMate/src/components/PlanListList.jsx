@@ -406,7 +406,7 @@ const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
   );
 };
 
-const EditorShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
+const EditorShareModal = ({ setIsShareOpen, id }) => {
   const { del } = useApiClient();
   const [shareURL, setShareURL] = useState("");
   const navigate = useNavigate();

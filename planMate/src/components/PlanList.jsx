@@ -8,10 +8,15 @@ import { useNavigate } from "react-router-dom";
 
 export default function PlanList() {
   const navigate = useNavigate();
-  const [plan, setPlan] = useState(null);
+  const [myPlans, setMyPlans] = useState([]);
+  const [editablePlans, setEditablePlans] = useState([]);
+
   const { get, isAuthenticated } = useApiClient();
   const removePlanFromState = (planId) => {
-    setPlan((prevPlans) => prevPlans.filter((p) => p.planId !== planId));
+    setMyPlans((prevPlans) => prevPlans.filter((p) => p.planId !== planId));
+    setEditablePlans((prevPlans) =>
+      prevPlans.filter((p) => p.planId !== planId)
+    );
   };
   const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -20,19 +25,16 @@ export default function PlanList() {
       if (isAuthenticated()) {
         try {
           const profileData = await get(`${BASE_URL}/api/user/profile`);
-
-          // MoveMypageResponse 구조에 맞게 수정
-          // myPlanVOs와 editablePlanVOs를 합쳐서 전체 계획 목록 생성
-          const myPlans = profileData.myPlanVOs || [];
-          const editablePlans = profileData.editablePlanVOs || [];
-          const allPlans = [...myPlans, ...editablePlans];
-          setPlan(allPlans);
+          setMyPlans(profileData.myPlanVOs || []);
+          setEditablePlans(profileData.editablePlanVOs || []);
         } catch (err) {
           console.error("프로필 정보를 가져오는데 실패했습니다:", err);
-          setPlan([]);
+          setMyPlans([]);
+          setEditablePlans([]);
         }
       } else {
-        setPlan(null);
+        setMyPlans([]);
+        setEditablePlans([]);
       }
     };
 
@@ -41,55 +43,82 @@ export default function PlanList() {
 
   return (
     <div className="bg-white w-[60rem] rounded-2xl shadow-sm border border-gray-200 flex-1 flex flex-col font-pretendard">
+      {/* 나의 일정 섹션 */}
       <div className="border-b border-gray-200 px-6 py-5">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">나의 일정</h2>
-            <p className="text-gray-600 mt-1">
-              생성된 여행 계획을 확인하고 관리하세요
-            </p>
+            <p className="text-gray-600 mt-1">직접 생성한 일정을 관리하세요</p>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <FontAwesomeIcon icon={faCalendarPlus} className="w-4 h-4" />
-            <span>{plan ? plan.length : 0}개의 계획</span>
+            <span>{myPlans.length}개의 계획</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6 border-b border-gray-200">
+        {myPlans.length > 0 ? (
+          <div className="space-y-4">
+            {myPlans.map((lst) => (
+              <PlanListList
+                key={lst.planId}
+                lst={lst}
+                onPlanDeleted={removePlanFromState}
+                isOwner={true}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <FontAwesomeIcon
+                icon={faCalendarPlus}
+                className="w-6 h-6 text-gray-400"
+              />
+            </div>
+            <p className="text-gray-500 mb-4">생성한 일정이 없습니다</p>
+            <button
+              onClick={() => navigate("/")}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-main hover:bg-blue-900 text-white font-medium rounded-lg transition-colors"
+            >
+              <FontAwesomeIcon icon={faCalendarPlus} className="w-4 h-4" />
+              여행 계획 만들기
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* 우리들의 일정 섹션 */}
+      <div className="px-6 py-5 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">우리들의 일정</h2>
+            <p className="text-gray-600 mt-1">
+              초대받은 일정에서 다른 멤버와 함께 편집하세요
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <span>{editablePlans.length}개의 계획</span>
           </div>
         </div>
       </div>
 
       <div className="flex-1 p-6 overflow-y-auto">
-        {plan && plan.length > 0 ? (
+        {editablePlans.length > 0 ? (
           <div className="space-y-4">
-            {plan.map((lst) =>
-              lst ? (
-                <PlanListList
-                  key={lst.planId}
-                  lst={lst}
-                  onPlanDeleted={removePlanFromState}
-                />
-              ) : null
-            )}
+            {editablePlans.map((lst) => (
+              <PlanListList
+                key={lst.planId}
+                lst={lst}
+                onPlanDeleted={removePlanFromState}
+                isOwner={false}
+              />
+            ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FontAwesomeIcon
-                icon={faCalendarPlus}
-                className="w-8 h-8 text-gray-400"
-              />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              아직 여행 계획이 없습니다
-            </h3>
-            <p className="text-gray-500 mb-6">
-              새로운 여행 계획을 만들어보세요!
-            </p>
-            <button
-              onClick={() => navigate("/")}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-main hover:bg-blue-900 text-white font-medium rounded-xl transition-colors duration-200"
-            >
-              <FontAwesomeIcon icon={faCalendarPlus} className="w-4 h-4" />
-              여행 계획 만들기
-            </button>
+          <div className="text-center py-8">
+            <p className="text-gray-500">편집 권한을 받은 일정이 없습니다</p>
           </div>
         )}
       </div>
