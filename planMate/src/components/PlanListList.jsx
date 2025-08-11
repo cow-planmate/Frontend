@@ -262,13 +262,22 @@ const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
 
   const getShareLink = async () => {
     try {
+      const completeURL = `${window.location.origin}/complete?id=${id}`;
+      setShareURL(completeURL);
+    } catch (error) {
+      console.error("공유 링크 생성 실패", error);
+    }
+  };
+  //get share 함수 api버전
+  /**  const getShareLink = async () => {
+    try {
       const response = await get(`${BASE_URL}/api/plan/${id}/share`);
       console.log(response);
       setShareURL(response.sharedPlanUrl || "");
     } catch (error) {
       console.error("공유 링크 조회 실패", error);
     }
-  };
+  };*/
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareURL);
