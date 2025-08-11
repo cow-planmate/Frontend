@@ -2,7 +2,7 @@ import { useState, useEffect, useReducer, useRef } from "react";
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 
-import Navbar from "../components/navbar";
+import Navbar from "../components/Navbar";
 import PlanInfo from "../components/NewPlanInfo";
 import DaySelector from "../components/Create/DaySelector";
 import TimeTable from "../components/Create/TimeTable";
