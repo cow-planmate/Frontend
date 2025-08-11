@@ -58,7 +58,7 @@ export default function PlanList() {
 
       <div className="p-6 border-b border-gray-200">
         {myPlans.length > 0 ? (
-          <div className="space-y-4  max-h-[300px] overflow-y-auto">
+          <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2">
             {myPlans.map((lst) => (
               <PlanListList
                 key={lst.planId}
@@ -102,9 +102,9 @@ export default function PlanList() {
         </div>
       </div>
 
-      <div className="flex-1 p-6 overflow-y-auto max-h-[300px]">
+      <div className="p-6">
         {editablePlans.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2">
             {editablePlans.map((lst) => (
               <PlanListList
                 key={lst.planId}
