@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { useState, useEffect, useRef } from "react";
 
-export default function PlanListList({ lst, onPlanDeleted }) {
+export default function PlanListList({ lst, onPlanDeleted, isOwner = true }) {
   const { del } = useApiClient();
   const navigate = useNavigate();
   const [isTitleOpen, setIsTitleOpen] = useState(false);
@@ -145,13 +145,20 @@ export default function PlanListList({ lst, onPlanDeleted }) {
           setTitle={setTitle}
         />
       )}
-      {isShareOpen && (
-        <ShareModal
-          setIsShareOpen={setIsShareOpen}
-          id={lst.planId}
-          isShareOpen={isShareOpen}
-        />
-      )}
+      {isShareOpen &&
+        (isOwner ? (
+          <ShareModal
+            setIsShareOpen={setIsShareOpen}
+            id={lst.planId}
+            isShareOpen={isShareOpen}
+          />
+        ) : (
+          <EditorShareModal
+            setIsShareOpen={setIsShareOpen}
+            id={lst.planId}
+            isShareOpen={isShareOpen}
+          />
+        ))}
     </div>
   );
 }
@@ -231,6 +238,15 @@ const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
       );
       console.log(response);
       getEditors();
+    } catch (err) {
+      console.error("에디터 제거에 실패했습니다:", err);
+    }
+  };
+
+  const resignEditorAccess = async () => {
+    try {
+      const response = await del(`/api/plan/${planId}/editor/me`);
+      console.log(response);
     } catch (err) {
       console.error("에디터 제거에 실패했습니다:", err);
     }
@@ -384,6 +400,94 @@ const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
               초대
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const EditorShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
+  const { del } = useApiClient();
+  const [shareURL, setShareURL] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const getShareLink = async () => {
+      try {
+        const completeURL = `${window.location.origin}/complete?id=${id}`;
+        setShareURL(completeURL);
+      } catch (error) {
+        console.error("공유 링크 생성 실패", error);
+      }
+    };
+    getShareLink();
+  }, [id]);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareURL);
+    alert("링크가 복사되었습니다!");
+  };
+
+  const resignEditorAccess = async () => {
+    if (confirm("편집 권한을 포기하시겠습니까?")) {
+      try {
+        const response = await del(
+          `${import.meta.env.VITE_API_URL}/api/plan/${id}/editor/me`
+        );
+        console.log(response);
+        alert("편집 권한을 포기했습니다.");
+        setIsShareOpen(false);
+
+        window.location.reload();
+      } catch (err) {
+        console.error("편집 권한 포기에 실패했습니다:", err);
+        alert("편집 권한 포기에 실패했습니다.");
+      }
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm cursor-default"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="relative bg-white p-6 rounded-2xl shadow-2xl w-96 border border-gray-100">
+        <h2 className="text-xl font-bold text-gray-800 mb-6">공유 및 초대</h2>
+        <button
+          onClick={() => setIsShareOpen(false)}
+          className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 text-xl"
+        >
+          ✕
+        </button>
+
+        {/* 완성본 공유 URL */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            완성본 공유 URL
+          </label>
+          <div className="flex gap-2">
+            <input
+              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"
+              value={shareURL}
+              readOnly
+            />
+            <button
+              onClick={copyToClipboard}
+              className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-all duration-200"
+            >
+              복사
+            </button>
+          </div>
+        </div>
+
+        {/* 편집 권한 포기하기 버튼 */}
+        <div className="mt-6">
+          <button
+            onClick={resignEditorAccess}
+            className="w-full px-4 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-medium transition-all duration-200 border border-red-200"
+          >
+            편집 권한 포기하기
+          </button>
         </div>
       </div>
     </div>
