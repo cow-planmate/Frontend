@@ -405,9 +405,10 @@ const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
 };
 
 const EditorShareModal = ({ setIsShareOpen, id, onResignEditorSuccess }) => {
-  const { del } = useApiClient();
+  const { del, post } = useApiClient();
   const [shareURL, setShareURL] = useState("");
   const [receiverNickname, setreceiverNickname] = useState("");
+  const BASE_URL = import.meta.env.VITE_API_URL;
   useEffect(() => {
     const getShareLink = async () => {
       try {
@@ -469,7 +470,7 @@ const EditorShareModal = ({ setIsShareOpen, id, onResignEditorSuccess }) => {
         alert("편집 권한을 포기했습니다.");
         setIsShareOpen(false);
 
-        onResignEditorSuccess(id);
+        window.location.reload();
       } catch (err) {
         console.error("편집 권한 포기에 실패했습니다:", err);
         alert("편집 권한 포기에 실패했습니다.");
