@@ -42,7 +42,7 @@ export default function PlanList() {
   }, [isAuthenticated, get]);
 
   return (
-    <div className="bg-white w-[60rem] rounded-2xl shadow-sm border border-gray-200 flex-1 flex flex-col font-pretendard">
+    <div className="bg-white w-[60rem] rounded-2xl shadow-sm border border-gray-200 flex-1 flex flex-col font-pretendard z-10">
       <div className="border-b border-gray-200 px-6 py-5">
         <div className="flex items-center justify-between">
           <div>
