@@ -3,6 +3,8 @@ import Navbar from "../components/Navbar";
 import PlanInfo from "../components/PlanInfo";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
+import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk"
+import useKakaoLoader from "../hooks/useKakaoLoader"
 
 const TravelPlannerApp = () => {
   const { get, post, patch, isAuthenticated } = useApiClient();
@@ -476,11 +478,12 @@ const TravelPlannerApp = () => {
     return (
       <div
         key={item.placeId}
-        className="absolute left-16 bg-sub rounded-md z-10 group"
+        className="absolute left-16 p-2 font-hand text-sm shadow-lg border border-[#718FFF] rounded-lg z-10 group"
         style={{
           top: `${startIndex * 30}px`,
           height: `${height}px`,
           width: "329px",
+          backgroundImage: "linear-gradient(to bottom, transparent, #E8EDFF), linear-gradient(-45deg, #718FFF 40px, #E8EDFF 40px)"
         }}
       >
         {/* 컨텐츠 */}
@@ -579,6 +582,38 @@ const TravelPlannerApp = () => {
     }
   };
 
+  useKakaoLoader();
+  const [map, setMap] = useState();
+
+  const sortedSchedule = [...schedule[selectedDay]].sort((a, b) =>
+    a.timeSlot.localeCompare(b.timeSlot)
+  );
+
+  const positions = sortedSchedule.length > 0
+  ? sortedSchedule.map(item => ({
+      lat: item.ylocation,
+      lng: item.xlocation,
+    }))
+  : [
+      { lat: 37.5665, lng: 126.9780 } // 기본 좌표 (예: 서울 시청)
+    ];
+
+  console.log(schedule[selectedDay])
+
+  // useEffect를 사용하여 map 인스턴스가 생성된 후 한 번만 실행되도록 설정
+  useEffect(() => {
+    if (!map) return; // map 인스턴스가 아직 생성되지 않았다면 아무것도 하지 않음
+
+    // LatLngBounds 객체에 모든 마커의 좌표를 추가합니다.
+    const bounds = new window.kakao.maps.LatLngBounds();
+    positions.forEach((pos) => {
+      bounds.extend(new window.kakao.maps.LatLng(pos.lat, pos.lng));
+    });
+
+    // 계산된 bounds를 지도에 적용합니다.
+    map.setBounds(bounds);
+  }, [map]); // map 인스턴스가 변경될 때마다 이 useEffect를 다시 실행
+
   return (
     <div className="min-h-screen font-pretendard">
       <Navbar />
@@ -658,7 +693,64 @@ const TravelPlannerApp = () => {
 
           {/* 장소 추천 탭 */}
           <div className="flex-1 border border-gray-300 rounded-lg h-[calc(100vh-189px)] overflow-y-auto">
-            (지도 추가 예정)
+            <Map // 지도를 표시할 Container
+              id="map"
+              className="rounded-2xl"
+              center={{
+                // 지도의 중심좌표
+                lat: 33.452278,
+                lng: 126.567803,
+              }}
+              style={{
+                // 지도의 크기
+                width: "100%",
+                height: "700px",
+              }}
+              level={3} // 지도의 확대 레벨
+              onCreate={setMap}
+            >
+              {schedule[selectedDay].map((item) => {
+                return (
+                  <MapMarker // 인포윈도우를 생성하고 지도에 표시합니다
+                    position={{
+                      // 인포윈도우가 표시될 위치입니다
+                      lat: item.ylocation,
+                      lng: item.xlocation,
+                    }}
+                  >
+                    <div className="p-2 w-[159px]" style={{borderRadius: '4rem'}}>
+                      <p className="text-lg font-semibold truncate">{item.name}</p>
+                      <a
+                        href={item.url}
+                        style={{ color: "blue" }}
+                        className="text-sm"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        장소 정보 보기
+                      </a>
+                    </div>
+                  </MapMarker>
+                )
+              })}
+              {positions.slice(0, -1).map((pos, idx) => {
+                return (
+                  <Polyline
+                    path={[
+                      [
+                        pos, 
+                        positions[idx + 1],
+                      ],
+                    ]}
+                    strokeWeight={4} // 선의 두께 입니다
+                    strokeColor={"#1344FF"} // 선의 색깔입니다
+                    strokeOpacity={0.5} // 선의 불투명도 입니다 1에서 0 사이의 값이며 0에 가까울수록 투명합니다
+                    strokeStyle={"arrow"} // 선의 스타일입니다
+                    endArrow={true}
+                  />
+                )
+              })}
+            </Map>
           </div>
         </div>
       </div>
