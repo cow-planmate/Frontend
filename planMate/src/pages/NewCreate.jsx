@@ -107,6 +107,7 @@ function App() {
   
   const lastMessageRef = useRef(null);
   const clientId = useRef(Date.now() + Math.random());
+  const noUpdate = useRef(false);
 
   function findSameById(data, checkItem) {
     // A 객체의 모든 값들을 배열로 만든 후 검색
@@ -179,6 +180,7 @@ function App() {
                 console.log("같은 아이디가 있어 리턴함")
                 return
               }
+              noUpdate.current = true;
               
               setSchedule(prev => {
                 const updated = { ...prev };
@@ -551,36 +553,40 @@ function App() {
         }
         if (changed.length > 0) {
           console.log(`Key ${key} - Changed:`, changed);
-          
-          const item = changed[0];
-          const date = getDateById(Number(key));
-          const endTime = addMinutes(item.timeSlot, item.duration * 15);
-  
-          const initialUpdate = {
-            timetablePlaceBlockVO: {
-              timetableId: Number(key),
-              timetablePlaceBlockId: item.timetablePlaceBlockId,
-              placeCategoryId: item.categoryId,
-              placeName: item.name,
-              placeTheme: "테스트",
-              placeRating: item.rating,
-              placeAddress: item.formatted_address,
-              placeLink: item.url,
-              date: date,
-              startTime: `${item.timeSlot}:00`,
-              endTime: `${endTime}:00`,
-              xLocation: item.xlocation,
-              yLocation: item.ylocation
+
+          if (!noUpdate.current) {
+            const item = changed[0];
+            const date = getDateById(Number(key));
+            const endTime = addMinutes(item.timeSlot, item.duration * 15);
+    
+            const initialUpdate = {
+              timetablePlaceBlockVO: {
+                timetableId: Number(key),
+                timetablePlaceBlockId: item.timetablePlaceBlockId,
+                placeCategoryId: item.categoryId,
+                placeName: item.name,
+                placeTheme: "테스트",
+                placeRating: item.rating,
+                placeAddress: item.formatted_address,
+                placeLink: item.url,
+                date: date,
+                startTime: `${item.timeSlot}:00`,
+                endTime: `${endTime}:00`,
+                xLocation: item.xlocation,
+                yLocation: item.ylocation
+              }
             }
-          }
-  
-          const client = stompClientRef.current;
-          if (client && client.connected) {
-            client.publish({
-              destination: `/app/plan/${id}/update/timetableplaceblock`,
-              body: JSON.stringify({eventId : clientId.current, ...initialUpdate}),
-            });
-            console.log("🚀 메시지 전송:", initialUpdate);
+    
+            const client = stompClientRef.current;
+            if (client && client.connected) {
+              client.publish({
+                destination: `/app/plan/${id}/update/timetableplaceblock`,
+                body: JSON.stringify({eventId : clientId.current, ...initialUpdate}),
+              });
+              console.log("🚀 메시지 전송:", initialUpdate);
+            }
+          } else {
+            noUpdate.current = false;
           }
         }
       });

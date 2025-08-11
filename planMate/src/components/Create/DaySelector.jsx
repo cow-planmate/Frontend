@@ -15,11 +15,9 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
     return `${month}.${day}.`;
   };
 
-  // 일차 번호 계산 함수
-  const getDayNumber = (timetableId) => {
-    const index = timetables.findIndex((t) => t.timetableId === timetableId);
-    return index + 1;
-  };
+  useEffect(() => {
+    console.log(timetables)
+  }, [timetables])
 
   return (
     <>
