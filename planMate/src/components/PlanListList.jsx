@@ -280,7 +280,7 @@ const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm cursor-default"
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="bg-white p-6 rounded-2xl shadow-2xl w-96 border border-gray-100 max-h-[80vh] overflow-y-auto">
+      <div className="relative bg-white p-6 rounded-2xl shadow-2xl w-96 border border-gray-100 max-h-[80vh] overflow-y-auto">
         <h2 className="text-xl font-bold text-gray-800 mb-6">공유 및 초대</h2>
         <button
           onClick={() => setIsShareOpen(false)}
