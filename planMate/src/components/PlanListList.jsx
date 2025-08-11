@@ -256,7 +256,28 @@ const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
       alert("초대를 보냈습니다!");
     } catch (err) {
       console.error("초대에 실패했습니다:", err);
-      alert("초대에 실패했습니다.");
+
+      const errorMessage = err.response?.data?.message || err.message;
+
+      if (errorMessage.includes("해당 닉네임의 유저가 존재하지 않습니다")) {
+        alert("존재하지 않는 닉네임입니다. 다시 확인해주세요.");
+      } else if (errorMessage.includes("이미 편집 권한이 있는 유저입니다")) {
+        alert("이미 편집 권한이 있는 유저입니다.");
+      } else if (errorMessage.includes("이미 초대한 유저입니다")) {
+        alert("이미 초대를 보낸 유저입니다.");
+      } else if (errorMessage.includes("자신에게는 초대를 보낼 수 없습니다")) {
+        alert("자신에게는 초대를 보낼 수 없습니다.");
+      } else if (errorMessage.includes("보낸 유저가 존재하지 않습니다")) {
+        alert("사용자 인증에 실패했습니다. 다시 로그인해주세요.");
+      } else if (err.response?.status === 403) {
+        alert("해당 플랜에 대한 권한이 없습니다.");
+      } else if (err.response?.status === 404) {
+        alert("존재하지 않는 플랜입니다.");
+      } else if (err.response?.status === 500) {
+        alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      } else {
+        alert("초대에 실패했습니다. 다시 시도해주세요.");
+      }
     }
   };
 
