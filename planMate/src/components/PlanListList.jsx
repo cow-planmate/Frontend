@@ -4,6 +4,7 @@ import {
   faTrash,
   faPen,
   faCalendarAlt,
+  faShare,
 } from "@fortawesome/free-solid-svg-icons";
 import TitleIcon from "../assets/imgs/title.svg?react";
 import { useNavigate } from "react-router-dom";
@@ -119,6 +120,18 @@ export default function PlanListList({ lst, onPlanDeleted }) {
               onClick={deletePlan}
             >
               삭제하기
+            </span>
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              //공유 초대 모달
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+          >
+            <FontAwesomeIcon icon={faShare} className="w-4 h-4 text-black" />
+            <span className="text-sm font-medium text-gray-700">
+              공유 및 초대
             </span>
           </button>
         </div>

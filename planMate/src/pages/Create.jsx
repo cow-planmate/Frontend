@@ -14,6 +14,7 @@ const TravelPlannerApp = () => {
   const [transformedData, setTransformedData] = useState(null);
   const [schedule, setSchedule] = useState({});
   const BASE_URL = import.meta.env.VITE_API_URL;
+
   // 두 번째 API 응답을 첫 번째 형태로 변환하는 함수
   const transformApiResponse = (apiResponse) => {
     const { placeBlocks, timetables } = apiResponse;
