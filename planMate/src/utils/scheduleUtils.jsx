@@ -61,7 +61,7 @@ export const transformApiResponse = (apiResponse) => {
 
     // 해당하는 timetableId를 찾아서 데이터 추가
     // const placeIndex = placeBlocks.indexOf(place);
-    const targetTimetableId = place.timetableId;
+    const targetTimetableId = place.timetableId ?? place.timeTableId;
 
     // if (placeIndex < 4) {
     //   targetTimetableId = timetables[0]?.timetableId || 78;
