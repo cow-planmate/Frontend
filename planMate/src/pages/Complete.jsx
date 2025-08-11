@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/navbar";
 import PlanInfo from "../components/PlanInfo";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
@@ -17,15 +17,16 @@ const TravelPlannerApp = () => {
   const [schedule, setSchedule] = useState({});
   const navigate = useNavigate();
   const BASE_URL = import.meta.env.VITE_API_URL;
-  const [selectedDay, setSelectedDay] = useState({});
+  const [selectedDay, setSelectedDay] = useState(null); // 초기값을 null로 변경
   const [selectedTab, setSelectedTab] = useState("관광지");
   const [draggedItem, setDraggedItem] = useState(null);
   const [draggedFromSchedule, setDraggedFromSchedule] = useState(null);
-
+  const [places, setPlaces] = useState({}); // places state 추가
 
   useKakaoLoader();
   
   const [map, setMap] = useState();
+  const [positions, setPositions] = useState([{ lat: 37.5665, lng: 126.9780 }]); // 초기값 설정
 
   // 두 번째 API 응답을 첫 번째 형태로 변환하는 함수
   const transformApiResponse = (apiResponse) => {
@@ -107,7 +108,7 @@ const TravelPlannerApp = () => {
     const fetchUserProfile = async () => {
       if (id && isAuthenticated()) {
         try {
-          const planData = await get(`${BASE_URL}/api/plan/${id}`);
+          const planData = await get(`${BASE_URL}/api/plan/${id}`); // BASE_URL
           setData(planData);
           // timetables 데이터 설정
           if (planData.timetables) {
@@ -129,13 +130,13 @@ const TravelPlannerApp = () => {
     };
 
     fetchUserProfile();
-  }, [id]);
+  }, [id, isAuthenticated, get]);
 
   useEffect(() => {
     console.log(schedule);
   }, [schedule]);
-  // timetables 변경 시 schedule 초기화
 
+  // timetables 변경 시 schedule 초기화
   useEffect(() => {
     if (transformedData) {
       setSchedule(transformedData);
@@ -146,27 +147,29 @@ const TravelPlannerApp = () => {
       });
       setSchedule(initialSchedule);
     }
-  }, [timetables]);
-  
-  let positions;
+  }, [timetables, transformedData]);
+
+  // positions 업데이트를 위한 별도 useEffect
   useEffect(() => {
-    const sortedSchedule = [...schedule[selectedDay]].sort((a, b) =>
-      a.timeSlot.localeCompare(b.timeSlot)
-    );
-    
-    positions = sortedSchedule.length > 0
-    ? sortedSchedule.map(item => ({
-        lat: item.ylocation,
-        lng: item.xlocation,
-      }))
-    : [
-        { lat: 37.5665, lng: 126.9780 } // 기본 좌표 (예: 서울 시청)
-      ];
-  }, [schedule, selectedDay])
+    if (selectedDay && schedule[selectedDay]) {
+      const sortedSchedule = [...(schedule[selectedDay] || [])].sort((a, b) =>
+        a.timeSlot.localeCompare(b.timeSlot)
+      );
+
+      const newPositions = sortedSchedule.length > 0
+        ? sortedSchedule.map(item => ({
+            lat: item.ylocation,
+            lng: item.xlocation,
+          }))
+        : [{ lat: 37.5665, lng: 126.9780 }]; // 기본값
+
+      setPositions(newPositions);
+    }
+  }, [selectedDay, schedule]);
 
   // useEffect를 사용하여 map 인스턴스가 생성된 후 한 번만 실행되도록 설정
   useEffect(() => {
-    if (!map) return; // map 인스턴스가 아직 생성되지 않았다면 아무것도 하지 않음
+    if (!map || !positions.length) return; // map 인스턴스가 아직 생성되지 않았다면 아무것도 하지 않음
 
     // LatLngBounds 객체에 모든 마커의 좌표를 추가합니다.
     const bounds = new window.kakao.maps.LatLngBounds();
@@ -176,7 +179,7 @@ const TravelPlannerApp = () => {
 
     // 계산된 bounds를 지도에 적용합니다.
     map.setBounds(bounds);
-  }, [map]); // map 인스턴스가 변경될 때마다 이 useEffect를 다시 실행
+  }, [map, positions]); // positions도 dependency에 추가
 
   // 현재 선택된 날의 시간 슬롯 계산
   const getCurrentTimeSlots = () => {
@@ -305,6 +308,9 @@ const TravelPlannerApp = () => {
     }
 
     delete originalItem.originalCategory; // 원래 카테고리 정보 제거
+    if (!newPlaces[category]) {
+      newPlaces[category] = [];
+    }
     newPlaces[category].push(originalItem);
 
     setPlaces(newPlaces);
@@ -524,7 +530,7 @@ const TravelPlannerApp = () => {
   };
 
   const getDateById = (id) => {
-    const matched = data.timetables.find((t) => t.timetableId === id);
+    const matched = data?.timetables?.find((t) => t.timetableId === id);
     return matched?.date ?? null;
   };
 
@@ -564,33 +570,12 @@ const TravelPlannerApp = () => {
     return Object.values(grouped);
   };
 
-  const savePlan = async (info) => {
-    const scheduleToExport = exportSchedule();
-    console.log(scheduleToExport);
-
-    if (isAuthenticated()) {
-      try {
-        await patch(`${BASE_URL}/api/plan/${id}/save`, {
-          departure: data.planFrame.departure,
-          travel: data.planFrame.travel,
-          transportationCategoryId: info.transportation,
-          adultCount: info.adultCount,
-          childCount: info.childCount,
-          timetables: data.timetables,
-          timetablePlaceBlocks: scheduleToExport,
-        });
-      } catch (err) {
-        console.error("저장에 실패해버렸습니다:", err);
-      }
-    }
-  };
-
   return (
     <div className="min-h-screen font-pretendard">
       <Navbar />
       <div className="w-[1400px] mx-auto py-6">
         <div className={`flex items-center justify-between pb-6`}>
-          <div className="font-bold text-2xl">{data.planFrame.planName}</div>
+          <div className="font-bold text-2xl">{data?.planFrame?.planName || '여행 계획'}</div>
           <div className="space-x-3">
             <button
               onClick={() => navigate(`/create?id=${id}`)}
@@ -662,11 +647,11 @@ const TravelPlannerApp = () => {
             </div>
           </div>
 
-          {/* 장소 추천 탭 */}
+          {/* 지도 */}
           <div className="flex-1 border border-gray-300 rounded-lg h-[calc(100vh-189px)] overflow-y-auto">
             <Map // 지도를 표시할 Container
               id="map"
-              className="rounded-2xl"
+              //className="rounded-2xl"
               center={{
                 // 지도의 중심좌표
                 lat: 33.452278,
@@ -675,14 +660,15 @@ const TravelPlannerApp = () => {
               style={{
                 // 지도의 크기
                 width: "100%",
-                height: "700px",
+                height: "100%",
               }}
               level={3} // 지도의 확대 레벨
               onCreate={setMap}
             >
-              {schedule[selectedDay].map((item) => {
+              {(schedule[selectedDay] || []).map((item) => {
                 return (
                   <MapMarker // 인포윈도우를 생성하고 지도에 표시합니다
+                    key={item.placeId}
                     position={{
                       // 인포윈도우가 표시될 위치입니다
                       lat: item.ylocation,
@@ -704,14 +690,13 @@ const TravelPlannerApp = () => {
                   </MapMarker>
                 )
               })}
-              {positions.slice(0, -1).map((pos, idx) => {
+              {positions.length > 1 && positions.slice(0, -1).map((pos, idx) => {
                 return (
                   <Polyline
+                    key={`polyline-${idx}`}
                     path={[
-                      [
-                        pos, 
-                        positions[idx + 1],
-                      ],
+                      pos, 
+                      positions[idx + 1],
                     ]}
                     strokeWeight={4} // 선의 두께 입니다
                     strokeColor={"#1344FF"} // 선의 색깔입니다
