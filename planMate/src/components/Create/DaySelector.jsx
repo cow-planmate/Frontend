@@ -119,7 +119,7 @@ const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id })
     const newDate = lastDate.toISOString().split('T')[0];
 
     const timetableVO = {
-      timetableId: Date.now() + Math.random(),
+      timetableId: Math.random(),
       date: newDate,
       startTime: "09:00:00",
       endTime: "20:00:00",

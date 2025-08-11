@@ -119,6 +119,7 @@ function App() {
       item.timetablePlaceBlockId === checkItem.timetablePlaceBlockId
     );
   }
+  
   useEffect(() => {
     const SERVER_URL = "https://pmserver.salmakis.online/ws-plan";
     
