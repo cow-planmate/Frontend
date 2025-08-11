@@ -531,7 +531,7 @@ const EditorShareModal = ({ setIsShareOpen, id, onResignEditorSuccess }) => {
             </button>
           </div>
         </div>
-        {/* 편집 권한 포기하기 버튼 */}
+
         <div className="mt-6">
           <button
             onClick={resignEditorAccess}
