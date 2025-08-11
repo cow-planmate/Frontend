@@ -1,5 +1,4 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
 import {
   faEllipsisVertical,
   faTrash,
@@ -12,7 +11,12 @@ import { useNavigate } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { useState, useEffect, useRef } from "react";
 
-export default function PlanListList({ lst, onPlanDeleted, isOwner = true }) {
+export default function PlanListList({
+  lst,
+  onPlanDeleted,
+  isOwner = true,
+  onResignEditorSuccess,
+}) {
   const { del } = useApiClient();
   const navigate = useNavigate();
   const [isTitleOpen, setIsTitleOpen] = useState(false);
@@ -48,6 +52,7 @@ export default function PlanListList({ lst, onPlanDeleted, isOwner = true }) {
       console.log("오류발생", err);
     }
   };
+
   return (
     <div
       className="relative bg-gray-50 hover:bg-blue-50 rounded-xl p-4 transition-all duration-200 cursor-pointer border border-gray hover:border-blue-200"
@@ -158,6 +163,7 @@ export default function PlanListList({ lst, onPlanDeleted, isOwner = true }) {
             setIsShareOpen={setIsShareOpen}
             id={lst.planId}
             isShareOpen={isShareOpen}
+            onResignEditorSuccess={onResignEditorSuccess}
           />
         ))}
     </div>
@@ -239,15 +245,6 @@ const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
       );
       console.log(response);
       getEditors();
-    } catch (err) {
-      console.error("에디터 제거에 실패했습니다:", err);
-    }
-  };
-
-  const resignEditorAccess = async () => {
-    try {
-      const response = await del(`/api/plan/${planId}/editor/me`);
-      console.log(response);
     } catch (err) {
       console.error("에디터 제거에 실패했습니다:", err);
     }
@@ -407,10 +404,10 @@ const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
   );
 };
 
-const EditorShareModal = ({ setIsShareOpen, id }) => {
+const EditorShareModal = ({ setIsShareOpen, id, onResignEditorSuccess }) => {
   const { del } = useApiClient();
   const [shareURL, setShareURL] = useState("");
-
+  const [receiverNickname, setreceiverNickname] = useState("");
   useEffect(() => {
     const getShareLink = async () => {
       try {
@@ -423,11 +420,45 @@ const EditorShareModal = ({ setIsShareOpen, id }) => {
     getShareLink();
   }, [id]);
 
+  const inviteUserToPlan = async () => {
+    try {
+      const response = await post(`${BASE_URL}/api/plan/${id}/invite`, {
+        receiverNickname: receiverNickname,
+      });
+      console.log(response);
+      setreceiverNickname("");
+      alert("초대를 보냈습니다!");
+    } catch (err) {
+      console.error("초대에 실패했습니다:", err);
+
+      const errorMessage = err.response?.data?.message || err.message;
+
+      if (errorMessage.includes("해당 닉네임의 유저가 존재하지 않습니다")) {
+        alert("존재하지 않는 닉네임입니다. 다시 확인해주세요.");
+      } else if (errorMessage.includes("이미 편집 권한이 있는 유저입니다")) {
+        alert("이미 편집 권한이 있는 유저입니다.");
+      } else if (errorMessage.includes("이미 초대한 유저입니다")) {
+        alert("이미 초대를 보낸 유저입니다.");
+      } else if (errorMessage.includes("자신에게는 초대를 보낼 수 없습니다")) {
+        alert("자신에게는 초대를 보낼 수 없습니다.");
+      } else if (errorMessage.includes("보낸 유저가 존재하지 않습니다")) {
+        alert("사용자 인증에 실패했습니다. 다시 로그인해주세요.");
+      } else if (err.response?.status === 403) {
+        alert("해당 플랜에 대한 권한이 없습니다.");
+      } else if (err.response?.status === 404) {
+        alert("존재하지 않는 플랜입니다.");
+      } else if (err.response?.status === 500) {
+        alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      } else {
+        alert("초대에 실패했습니다. 다시 시도해주세요.");
+      }
+    }
+  };
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareURL);
     alert("링크가 복사되었습니다!");
   };
-
   const resignEditorAccess = async () => {
     if (confirm("편집 권한을 포기하시겠습니까?")) {
       try {
@@ -438,14 +469,15 @@ const EditorShareModal = ({ setIsShareOpen, id }) => {
         alert("편집 권한을 포기했습니다.");
         setIsShareOpen(false);
 
-        window.location.reload();
+        if (typeof onResignEditorSuccess === "function") {
+          onResignEditorSuccess(id);
+        }
       } catch (err) {
         console.error("편집 권한 포기에 실패했습니다:", err);
         alert("편집 권한 포기에 실패했습니다.");
       }
     }
   };
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm cursor-default"
@@ -479,7 +511,26 @@ const EditorShareModal = ({ setIsShareOpen, id }) => {
             </button>
           </div>
         </div>
-
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            일정 편집 초대
+          </label>
+          <div className="flex gap-2">
+            <input
+              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
+              value={receiverNickname}
+              onChange={(e) => setreceiverNickname(e.target.value)}
+              placeholder="닉네임"
+            />
+            <button
+              onClick={inviteUserToPlan}
+              className="px-4 py-3 bg-main hover:bg-blue-700 text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
+              disabled={!receiverNickname.trim()}
+            >
+              초대
+            </button>
+          </div>
+        </div>
         {/* 편집 권한 포기하기 버튼 */}
         <div className="mt-6">
           <button

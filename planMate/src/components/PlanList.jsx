@@ -40,6 +40,9 @@ export default function PlanList() {
 
     fetchUserProfile();
   }, [isAuthenticated, get]);
+  const removeEditablePlanFromState = (planId) => {
+    setEditablePlans((prev) => prev.filter((p) => p.planId !== planId));
+  };
 
   return (
     <div className="bg-white w-[60rem] rounded-2xl shadow-sm border border-gray-200 flex-1 flex flex-col font-pretendard">
@@ -65,6 +68,7 @@ export default function PlanList() {
                 lst={lst}
                 onPlanDeleted={removePlanFromState}
                 isOwner={true}
+                onResignEditorSuccess={removeEditablePlanFromState}
               />
             ))}
           </div>
