@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ScheduleItem from "./ScheduleItem";
 import { useTimeSlots, useDragAndDrop } from "../../hooks/useScheduleLogic";
 
@@ -12,6 +12,7 @@ const TimeTable = ({
 }) => {
   const [draggedItem, setDraggedItem] = useState(null);
   const [draggedFromSchedule, setDraggedFromSchedule] = useState(null);
+
 
   const timeSlots = useTimeSlots(selectedDay, timetables);
   const {

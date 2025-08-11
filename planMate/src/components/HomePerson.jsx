@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function PersonCountModal({
   isOpen,
@@ -8,6 +8,11 @@ export default function PersonCountModal({
 }) {
   const [adults, setAdults] = useState(personCount.adults || 0);
   const [children, setChildren] = useState(personCount.children || 0);
+
+  useEffect(() => {
+    setAdults(personCount.adults || 0);
+    setChildren(personCount.children || 0);
+  }, [personCount]);
 
   if (!isOpen) return null;
 
