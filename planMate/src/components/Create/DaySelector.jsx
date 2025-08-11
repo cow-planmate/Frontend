@@ -113,15 +113,13 @@ const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id })
   }
 
   const addDay = () => {
-    const newId = newTime[newTime.length - 1].timetableId + 1;
-
     const lastDateStr = newTime[newTime.length - 1].date;
     const lastDate = new Date(lastDateStr);
     lastDate.setDate(lastDate.getDate() + 1);
     const newDate = lastDate.toISOString().split('T')[0];
 
     const timetableVO = {
-      timetableId: newId,
+      timetableId: null,
       date: newDate,
       startTime: "09:00:00",
       endTime: "20:00:00",
