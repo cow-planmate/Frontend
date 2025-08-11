@@ -58,7 +58,7 @@ function timetableReducer(state, action) {
 
       // date 기준 오름차순 정렬
       newState.sort((a, b) => new Date(a.date) - new Date(b.date));
-
+      console.log(newState)
       return newState;
     case 'update':
       return [ ...action.payload ];
@@ -104,6 +104,10 @@ function App() {
   useEffect(() => {
     timetablesRef.current = timetables;
   }, [timetables]);
+
+  useEffect(() => {
+    console.log(timetables)
+  }, [timetables])
   
   const lastMessageRef = useRef(null);
   const clientId = useRef(Date.now() + Math.random());
