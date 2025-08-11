@@ -93,8 +93,8 @@ function App() {
   });
   
   useEffect(()=>{
-    console.log(timetables)
-  },[timetables])
+    console.log(places)
+  },[places])
   const { get, post, patch, isAuthenticated } = useApiClient();
   
   useEffect(()=>{
@@ -108,6 +108,12 @@ function App() {
   const lastMessageRef = useRef(null);
   const clientId = useRef(Date.now() + Math.random());
 
+  function findSameById(data, checkItem) {
+    // A 객체의 모든 값들을 배열로 만든 후 검색
+    return Object.values(data).flat().find(item => 
+      item.timetablePlaceBlockId === checkItem.timetablePlaceBlockId
+    );
+  }
   useEffect(() => {
     const SERVER_URL = "https://pmserver.salmakis.online/ws-plan";
     
@@ -167,31 +173,35 @@ function App() {
               const result = transformApiResponse(converted);
               console.log(result)
               
+              const findId = findSameById(setTransformedData, result);
+              
+              if (findId) {
+                console.log("같은 아이디가 있어 리턴함")
+                return
+              }
+              
+              setSchedule(prev => {
+                const updated = { ...prev };
+                Object.keys(result).forEach(key => {
+                  const existingItems = prev[key] || [];
 
-              //if ():
-                setSchedule(prev => {
-                  const updated = { ...prev };
-                  Object.keys(result).forEach(key => {
-                    const existingItems = prev[key] || [];
+                  // 새 항목들을 timetablePlaceBlockId로 맵 만들기
+                  const newItemsMap = new Map(result[key].map(item => [item.url, item]));
 
-                    // 새 항목들을 timetablePlaceBlockId로 맵 만들기
-                    const newItemsMap = new Map(result[key].map(item => [item.url, item]));
+                  // 기존 아이템을 순회하며, 새 아이템으로 덮어쓰거나 유지
+                  const mergedItems = existingItems.map(item =>
+                    newItemsMap.has(item.url) ? newItemsMap.get(item.url) : item
+                  );
 
-                    // 기존 아이템을 순회하며, 새 아이템으로 덮어쓰거나 유지
-                    const mergedItems = existingItems.map(item =>
-                      newItemsMap.has(item.url) ? newItemsMap.get(item.url) : item
-                    );
+                  // 새 아이템 중 기존에 없는 항목만 추가
+                  const existingIds = new Set(existingItems.map(item => item.url));
+                  const newItemsToAdd = result[key].filter(item => !existingIds.has(item.url));
 
-                    // 새 아이템 중 기존에 없는 항목만 추가
-                    const existingIds = new Set(existingItems.map(item => item.url));
-                    const newItemsToAdd = result[key].filter(item => !existingIds.has(item.url));
-
-                    updated[key] = [...mergedItems, ...newItemsToAdd];
-                  });
-                  console.log(updated)
-                  return updated;
+                  updated[key] = [...mergedItems, ...newItemsToAdd];
                 });
-              //}
+                console.log(updated)
+                return updated;
+              });
             }
             lastMessageRef.current = message.body;
           });
@@ -484,37 +494,39 @@ function App() {
           console.log(`Key ${key} - Added:`, added[0]);
           
           const item = added[0];
-          const date = getDateById(Number(key));
-          const endTime = addMinutes(item.timeSlot, item.duration * 15);
-  
-          const initialCreate = {
-            timetablePlaceBlockVO: {
-              timetableId: Number(key),
-              timetablePlaceBlockId: null,
-              placeCategoryId: item.categoryId,
-              placeName: item.name,
-              placeTheme: "테스트",
-              placeRating: item.rating,
-              placeAddress: item.formatted_address,
-              placeLink: item.url,
-              date: date,
-              startTime: `${item.timeSlot}:00`,
-              endTime: `${endTime}:00`,
-              xLocation: item.xlocation,
-              yLocation: item.ylocation
+          if (!item.timetablePlaceBlockId) {
+            const date = getDateById(Number(key));
+            const endTime = addMinutes(item.timeSlot, item.duration * 15);
+    
+            const initialCreate = {
+              timetablePlaceBlockVO: {
+                timetableId: Number(key),
+                timetablePlaceBlockId: null,
+                placeCategoryId: item.categoryId,
+                placeName: item.name,
+                placeTheme: "테스트",
+                placeRating: item.rating,
+                placeAddress: item.formatted_address,
+                placeLink: item.url,
+                date: date,
+                startTime: `${item.timeSlot}:00`,
+                endTime: `${endTime}:00`,
+                xLocation: item.xlocation,
+                yLocation: item.ylocation
+              }
             }
-          }
-          
-          const client = stompClientRef.current;
-          if (client && client.connected) {
-            client.publish({
-              destination: `/app/plan/${id}/create/timetableplaceblock`,
-              body: JSON.stringify({
-                eventId : clientId.current,
-                ...initialCreate
-              }),
-            });
-            console.log("🚀 메시지 전송:", initialCreate);
+            
+            const client = stompClientRef.current;
+            if (client && client.connected) {
+              client.publish({
+                destination: `/app/plan/${id}/create/timetableplaceblock`,
+                body: JSON.stringify({
+                  eventId : clientId.current,
+                  ...initialCreate
+                }),
+              });
+              console.log("🚀 메시지 전송:", initialCreate);
+            }
           }
         }
         if (removed.length > 0) {
@@ -673,6 +685,7 @@ function App() {
           
           <PlaceRecommendations
             places={places}
+            schedule={schedule}
             onPlacesUpdate={updatePlaces}
           />
 
