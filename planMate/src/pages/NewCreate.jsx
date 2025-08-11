@@ -607,7 +607,7 @@ function App() {
   
       // 깊은 복사로 이전 스케줄 저장
       prevScheduleRef.current = JSON.parse(JSON.stringify(newSchedule));
-    }, 500); // 0.5초 지연 후 발사
+    }, 50); // 0.05초 지연 후 발사
 
 
     return () => clearTimeout(timer);
