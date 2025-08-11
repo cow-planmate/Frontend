@@ -372,7 +372,7 @@ function App() {
   
   // 스케줄 초기화
   useEffect(() => {
-    if (firstSchedule) {
+    if (firstSchedule.current) {
       if (transformedData) {
         setSchedule(transformedData);
         // firstScheduleRef.current(transformedData);
