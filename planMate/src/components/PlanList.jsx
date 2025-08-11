@@ -42,8 +42,8 @@ export default function PlanList() {
   }, [isAuthenticated, get]);
 
   return (
-    <div className="bg-white w-[60rem] h-[600px] rounded-2xl shadow-sm border border-gray-200 flex flex-col font-pretendard">
-      <div className="border-b border-gray-200 px-6 py-5 flex-shrink-0">
+    <div className="bg-white w-[60rem] rounded-2xl shadow-sm border border-gray-200 flex-1 flex flex-col font-pretendard">
+      <div className="border-b border-gray-200 px-6 py-5">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">나의 일정</h2>
@@ -56,7 +56,39 @@ export default function PlanList() {
         </div>
       </div>
 
-      <div className="px-6 py-5 border-b border-gray-200 flex-shrink-0">
+      <div className="p-6 border-b border-gray-200">
+        {myPlans.length > 0 ? (
+          <div className="space-y-4  max-h-[300px] overflow-y-auto">
+            {myPlans.map((lst) => (
+              <PlanListList
+                key={lst.planId}
+                lst={lst}
+                onPlanDeleted={removePlanFromState}
+                isOwner={true}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <FontAwesomeIcon
+                icon={faCalendarPlus}
+                className="w-6 h-6 text-gray-400"
+              />
+            </div>
+            <p className="text-gray-500 mb-4">생성한 일정이 없습니다</p>
+            <button
+              onClick={() => navigate("/")}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-main hover:bg-blue-900 text-white font-medium rounded-lg transition-colors"
+            >
+              <FontAwesomeIcon icon={faCalendarPlus} className="w-4 h-4" />
+              여행 계획 만들기
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="px-6 py-5 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">우리들의 일정</h2>
@@ -70,57 +102,23 @@ export default function PlanList() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-6 border-b border-gray-100">
-          {myPlans.length > 0 ? (
-            <div className="space-y-4">
-              {myPlans.map((lst) => (
-                <PlanListList
-                  key={lst.planId}
-                  lst={lst}
-                  onPlanDeleted={removePlanFromState}
-                  isOwner={true}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <FontAwesomeIcon
-                  icon={faCalendarPlus}
-                  className="w-6 h-6 text-gray-400"
-                />
-              </div>
-              <p className="text-gray-500 mb-4">생성한 일정이 없습니다</p>
-              <button
-                onClick={() => navigate("/")}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-main hover:bg-blue-900 text-white font-medium rounded-lg transition-colors"
-              >
-                <FontAwesomeIcon icon={faCalendarPlus} className="w-4 h-4" />
-                여행 계획 만들기
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="p-6">
-          {editablePlans.length > 0 ? (
-            <div className="space-y-4">
-              {editablePlans.map((lst) => (
-                <PlanListList
-                  key={lst.planId}
-                  lst={lst}
-                  onPlanDeleted={removePlanFromState}
-                  isOwner={false}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-500">편집 권한을 받은 일정이 없습니다</p>
-            </div>
-          )}
-        </div>
+      <div className="flex-1 p-6 overflow-y-auto max-h-[300px]">
+        {editablePlans.length > 0 ? (
+          <div className="space-y-4">
+            {editablePlans.map((lst) => (
+              <PlanListList
+                key={lst.planId}
+                lst={lst}
+                onPlanDeleted={removePlanFromState}
+                isOwner={false}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-500">편집 권한을 받은 일정이 없습니다</p>
+          </div>
+        )}
       </div>
     </div>
   );
