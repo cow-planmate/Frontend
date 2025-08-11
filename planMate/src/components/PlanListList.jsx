@@ -469,9 +469,7 @@ const EditorShareModal = ({ setIsShareOpen, id, onResignEditorSuccess }) => {
         alert("편집 권한을 포기했습니다.");
         setIsShareOpen(false);
 
-        if (typeof onResignEditorSuccess === "function") {
-          onResignEditorSuccess(id);
-        }
+        onResignEditorSuccess(id);
       } catch (err) {
         console.error("편집 권한 포기에 실패했습니다:", err);
         alert("편집 권한 포기에 실패했습니다.");
