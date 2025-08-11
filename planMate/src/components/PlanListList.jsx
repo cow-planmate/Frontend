@@ -142,7 +142,8 @@ export default function PlanListList({ lst, onPlanDeleted, isOwner = true }) {
                 공유 및 초대
               </span>
             </button>
-          </div>
+          </div>,
+          document.body // 또는 특정 modal-root DOM 요소
         )}
       {isTitleOpen && (
         <TitleModal
