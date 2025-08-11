@@ -106,6 +106,7 @@ function App() {
   }, [timetables]);
   
   const lastMessageRef = useRef(null);
+  const createBlockNewRef = useRef(0)
 
   useEffect(() => {
     const SERVER_URL = "https://pmserver.salmakis.online/ws-plan";
@@ -149,7 +150,7 @@ function App() {
           });
           
           client.subscribe(`/topic/plan/${id}/create/timetableplaceblock`, (message) => {
-            //if (JSON.stringify(message.body) === JSON.stringify(lastMessageRef.current)) {
+            if (JSON.stringify(message.body) !== JSON.stringify(lastMessageRef.current)) {
               console.log("📩 수신된 메시지:", message.body);
               //alert(`시간표 블록 생성 수신: ${message.body}`);
               const received = JSON.parse(message.body);
@@ -161,8 +162,46 @@ function App() {
               console.log(converted)
               const result = transformApiResponse(converted);
               console.log(result)
-              const allItems = Object.values(result).flat();
-              console.log(allItems)
+              
+              setSchedule(prev => {
+                const updated = { ...prev };
+                Object.keys(result).forEach(key => {
+                  const existingItems = prev[key] || [];
+
+                  // 새 항목들을 timetablePlaceBlockId로 맵 만들기
+                  const newItemsMap = new Map(result[key].map(item => [item.url, item]));
+
+                  // 기존 아이템을 순회하며, 새 아이템으로 덮어쓰거나 유지
+                  const mergedItems = existingItems.map(item =>
+                    newItemsMap.has(item.url) ? newItemsMap.get(item.url) : item
+                  );
+
+                  // 새 아이템 중 기존에 없는 항목만 추가
+                  const existingIds = new Set(existingItems.map(item => item.url));
+                  const newItemsToAdd = result[key].filter(item => !existingIds.has(item.url));
+
+                  updated[key] = [...mergedItems, ...newItemsToAdd];
+                });
+                console.log(updated)
+                return updated;
+              });
+            }
+            lastMessageRef.current = message.body;
+          });
+          
+          client.subscribe(`/topic/plan/${id}/update/timetableplaceblock`, (message) => {
+            if (JSON.stringify(message.body) !== JSON.stringify(lastMessageRef.current)) {
+              console.log("📩 수신된 메시지:", message.body);
+              //alert(`시간표 블록 생성 수신: ${message.body}`);
+
+              const received = JSON.parse(message.body);
+
+              const converted = {
+                timetables: timetablesRef.current,
+                placeBlocks: [received.timetablePlaceBlockVO]
+              };
+              console.log(converted)
+              const result = transformApiResponse(converted);
               
               setSchedule(prev => {
                 const updated = { ...prev };
@@ -183,71 +222,34 @@ function App() {
 
                   updated[key] = [...mergedItems, ...newItemsToAdd];
                 });
-                console.log(updated)
                 return updated;
               });
-            //}
+            }
 
             lastMessageRef.current = message.body;
           });
           
-          client.subscribe(`/topic/plan/${id}/update/timetableplaceblock`, (message) => {
-            console.log("📩 수신된 메시지:", message.body);
-            //alert(`시간표 블록 생성 수신: ${message.body}`);
-
-            const received = JSON.parse(message.body);
-
-            const converted = {
-              timetables: timetablesRef.current,
-              placeBlocks: [received.timetablePlaceBlockVO]
-            };
-            console.log(converted)
-            const result = transformApiResponse(converted);
-
-            const allItems = Object.values(result).flat();
-            console.log(allItems)
-            
-            setSchedule(prev => {
-              const updated = { ...prev };
-              Object.keys(result).forEach(key => {
-                const existingItems = prev[key] || [];
-
-                // 새 항목들을 timetablePlaceBlockId로 맵 만들기
-                const newItemsMap = new Map(result[key].map(item => [item.timetablePlaceBlockId, item]));
-
-                // 기존 아이템을 순회하며, 새 아이템으로 덮어쓰거나 유지
-                const mergedItems = existingItems.map(item =>
-                  newItemsMap.has(item.timetablePlaceBlockId) ? newItemsMap.get(item.timetablePlaceBlockId) : item
-                );
-
-                // 새 아이템 중 기존에 없는 항목만 추가
-                const existingIds = new Set(existingItems.map(item => item.timetablePlaceBlockId));
-                const newItemsToAdd = result[key].filter(item => !existingIds.has(item.timetablePlaceBlockId));
-
-                updated[key] = [...mergedItems, ...newItemsToAdd];
-              });
-              return updated;
-            });
-          });
-          
           client.subscribe(`/topic/plan/${id}/delete/timetableplaceblock`, (message) => {
-            console.log("📩 수신된 메시지:", message.body);
-            //alert(`시간표 블록 생성 수신: ${message.body}`);
+            if (JSON.stringify(message.body) !== JSON.stringify(lastMessageRef.current)) {
+              console.log("📩 수신된 메시지:", message.body);
+              //alert(`시간표 블록 생성 수신: ${message.body}`);
 
-            const received = JSON.parse(message.body).timetablePlaceBlockVO.timetablePlaceBlockId;
+              const received = JSON.parse(message.body).timetablePlaceBlockVO.timetablePlaceBlockId;
 
-            setSchedule(prevSchedule => {
-              // 모든 timetableId 키에 대해 순회하며 필터링
-              const newSchedule = {};
+              setSchedule(prevSchedule => {
+                // 모든 timetableId 키에 대해 순회하며 필터링
+                const newSchedule = {};
 
-              Object.entries(prevSchedule).forEach(([timetableId, blocks]) => {
-                newSchedule[timetableId] = blocks.filter(
-                  block => block.timetablePlaceBlockId !== received
-                );
+                Object.entries(prevSchedule).forEach(([timetableId, blocks]) => {
+                  newSchedule[timetableId] = blocks.filter(
+                    block => block.timetablePlaceBlockId !== received
+                  );
+                });
+
+                return newSchedule;
               });
-
-              return newSchedule;
-            });
+            }
+            lastMessageRef.current = message.body;
           });
         },
         onStompError: (frame) => {
