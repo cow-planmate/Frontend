@@ -98,15 +98,15 @@ function App() {
   const { get, post, patch, isAuthenticated } = useApiClient();
   
   useEffect(()=>{
-    console.log(plan)
-  }, [plan])
+    console.log(transformedData)
+  }, [transformedData])
   
   useEffect(() => {
     timetablesRef.current = timetables;
   }, [timetables]);
   
   const lastMessageRef = useRef(null);
-  const createBlockNewRef = useRef(0)
+  const clientId = useRef(Date.now() + Math.random());
 
   useEffect(() => {
     const SERVER_URL = "https://pmserver.salmakis.online/ws-plan";
@@ -150,6 +150,9 @@ function App() {
           });
           
           client.subscribe(`/topic/plan/${id}/create/timetableplaceblock`, (message) => {
+            const msg = JSON.parse(message.body);
+            console.log(clientId)
+            if (msg.eventId === clientId.current) return;
             if (JSON.stringify(message.body) !== JSON.stringify(lastMessageRef.current)) {
               console.log("📩 수신된 메시지:", message.body);
               //alert(`시간표 블록 생성 수신: ${message.body}`);
@@ -159,37 +162,43 @@ function App() {
                 timetables: timetablesRef.current,
                 placeBlocks: [received.timetablePlaceBlockVO]
               };
+
               console.log(converted)
               const result = transformApiResponse(converted);
               console.log(result)
               
-              setSchedule(prev => {
-                const updated = { ...prev };
-                Object.keys(result).forEach(key => {
-                  const existingItems = prev[key] || [];
 
-                  // 새 항목들을 timetablePlaceBlockId로 맵 만들기
-                  const newItemsMap = new Map(result[key].map(item => [item.url, item]));
+              //if ():
+                setSchedule(prev => {
+                  const updated = { ...prev };
+                  Object.keys(result).forEach(key => {
+                    const existingItems = prev[key] || [];
 
-                  // 기존 아이템을 순회하며, 새 아이템으로 덮어쓰거나 유지
-                  const mergedItems = existingItems.map(item =>
-                    newItemsMap.has(item.url) ? newItemsMap.get(item.url) : item
-                  );
+                    // 새 항목들을 timetablePlaceBlockId로 맵 만들기
+                    const newItemsMap = new Map(result[key].map(item => [item.url, item]));
 
-                  // 새 아이템 중 기존에 없는 항목만 추가
-                  const existingIds = new Set(existingItems.map(item => item.url));
-                  const newItemsToAdd = result[key].filter(item => !existingIds.has(item.url));
+                    // 기존 아이템을 순회하며, 새 아이템으로 덮어쓰거나 유지
+                    const mergedItems = existingItems.map(item =>
+                      newItemsMap.has(item.url) ? newItemsMap.get(item.url) : item
+                    );
 
-                  updated[key] = [...mergedItems, ...newItemsToAdd];
+                    // 새 아이템 중 기존에 없는 항목만 추가
+                    const existingIds = new Set(existingItems.map(item => item.url));
+                    const newItemsToAdd = result[key].filter(item => !existingIds.has(item.url));
+
+                    updated[key] = [...mergedItems, ...newItemsToAdd];
+                  });
+                  console.log(updated)
+                  return updated;
                 });
-                console.log(updated)
-                return updated;
-              });
+              //}
             }
             lastMessageRef.current = message.body;
           });
           
           client.subscribe(`/topic/plan/${id}/update/timetableplaceblock`, (message) => {
+            const msg = JSON.parse(message.body);
+            if (msg.eventId === clientId.current) return;
             if (JSON.stringify(message.body) !== JSON.stringify(lastMessageRef.current)) {
               console.log("📩 수신된 메시지:", message.body);
               //alert(`시간표 블록 생성 수신: ${message.body}`);
@@ -230,6 +239,8 @@ function App() {
           });
           
           client.subscribe(`/topic/plan/${id}/delete/timetableplaceblock`, (message) => {
+            const msg = JSON.parse(message.body);
+            if (msg.eventId === clientId.current) return;
             if (JSON.stringify(message.body) !== JSON.stringify(lastMessageRef.current)) {
               console.log("📩 수신된 메시지:", message.body);
               //alert(`시간표 블록 생성 수신: ${message.body}`);
@@ -498,7 +509,10 @@ function App() {
           if (client && client.connected) {
             client.publish({
               destination: `/app/plan/${id}/create/timetableplaceblock`,
-              body: JSON.stringify(initialCreate),
+              body: JSON.stringify({
+                eventId : clientId.current,
+                ...initialCreate
+              }),
             });
             console.log("🚀 메시지 전송:", initialCreate);
           }
@@ -518,7 +532,7 @@ function App() {
           if (client && client.connected) {
             client.publish({
               destination: `/app/plan/${id}/delete/timetableplaceblock`,
-              body: JSON.stringify(initialDelete),
+              body: JSON.stringify({eventId : clientId.current, ...initialDelete}),
             });
             console.log("🚀 메시지 전송:", initialDelete);
           }
@@ -552,7 +566,7 @@ function App() {
           if (client && client.connected) {
             client.publish({
               destination: `/app/plan/${id}/update/timetableplaceblock`,
-              body: JSON.stringify(initialUpdate),
+              body: JSON.stringify({eventId : clientId.current, ...initialUpdate}),
             });
             console.log("🚀 메시지 전송:", initialUpdate);
           }
