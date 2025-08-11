@@ -42,7 +42,7 @@ export default function PlanList() {
   }, [isAuthenticated, get]);
 
   return (
-    <div className="bg-white w-[60rem] rounded-2xl shadow-sm border border-gray-200 flex-1 flex flex-col font-pretendard z-10">
+    <div className="bg-white w-[60rem] rounded-2xl shadow-sm border border-gray-200 flex-1 flex flex-col font-pretendard">
       <div className="border-b border-gray-200 px-6 py-5">
         <div className="flex items-center justify-between">
           <div>
@@ -58,7 +58,7 @@ export default function PlanList() {
 
       <div className="p-6 border-b border-gray-200">
         {myPlans.length > 0 ? (
-          <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2">
+          <div className="space-y-4">
             {myPlans.map((lst) => (
               <PlanListList
                 key={lst.planId}
@@ -102,9 +102,9 @@ export default function PlanList() {
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="flex-1 p-6 overflow-y-auto">
         {editablePlans.length > 0 ? (
-          <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2">
+          <div className="space-y-4">
             {editablePlans.map((lst) => (
               <PlanListList
                 key={lst.planId}
