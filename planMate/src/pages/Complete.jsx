@@ -18,6 +18,39 @@ const TravelPlannerApp = () => {
   const navigate = useNavigate();
   const BASE_URL = import.meta.env.VITE_API_URL;
 
+  useKakaoLoader();
+  
+  const [map, setMap] = useState();
+
+  const sortedSchedule = [...schedule[selectedDay]].sort((a, b) =>
+    a.timeSlot.localeCompare(b.timeSlot)
+  );
+
+  const positions = sortedSchedule.length > 0
+  ? sortedSchedule.map(item => ({
+      lat: item.ylocation,
+      lng: item.xlocation,
+    }))
+  : [
+      { lat: 37.5665, lng: 126.9780 } // 기본 좌표 (예: 서울 시청)
+    ];
+
+  console.log(schedule[selectedDay])
+
+  // useEffect를 사용하여 map 인스턴스가 생성된 후 한 번만 실행되도록 설정
+  useEffect(() => {
+    if (!map) return; // map 인스턴스가 아직 생성되지 않았다면 아무것도 하지 않음
+
+    // LatLngBounds 객체에 모든 마커의 좌표를 추가합니다.
+    const bounds = new window.kakao.maps.LatLngBounds();
+    positions.forEach((pos) => {
+      bounds.extend(new window.kakao.maps.LatLng(pos.lat, pos.lng));
+    });
+
+    // 계산된 bounds를 지도에 적용합니다.
+    map.setBounds(bounds);
+  }, [map]); // map 인스턴스가 변경될 때마다 이 useEffect를 다시 실행
+
   // 두 번째 API 응답을 첫 번째 형태로 변환하는 함수
   const transformApiResponse = (apiResponse) => {
     const { placeBlocks, timetables } = apiResponse;
@@ -581,38 +614,6 @@ const TravelPlannerApp = () => {
       }
     }
   };
-
-  useKakaoLoader();
-  const [map, setMap] = useState();
-
-  const sortedSchedule = [...schedule[selectedDay]].sort((a, b) =>
-    a.timeSlot.localeCompare(b.timeSlot)
-  );
-
-  const positions = sortedSchedule.length > 0
-  ? sortedSchedule.map(item => ({
-      lat: item.ylocation,
-      lng: item.xlocation,
-    }))
-  : [
-      { lat: 37.5665, lng: 126.9780 } // 기본 좌표 (예: 서울 시청)
-    ];
-
-  console.log(schedule[selectedDay])
-
-  // useEffect를 사용하여 map 인스턴스가 생성된 후 한 번만 실행되도록 설정
-  useEffect(() => {
-    if (!map) return; // map 인스턴스가 아직 생성되지 않았다면 아무것도 하지 않음
-
-    // LatLngBounds 객체에 모든 마커의 좌표를 추가합니다.
-    const bounds = new window.kakao.maps.LatLngBounds();
-    positions.forEach((pos) => {
-      bounds.extend(new window.kakao.maps.LatLng(pos.lat, pos.lng));
-    });
-
-    // 계산된 bounds를 지도에 적용합니다.
-    map.setBounds(bounds);
-  }, [map]); // map 인스턴스가 변경될 때마다 이 useEffect를 다시 실행
 
   return (
     <div className="min-h-screen font-pretendard">
