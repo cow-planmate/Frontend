@@ -12,6 +12,8 @@ import {
   faUtensils,
   faBed,
   faMapMarkerAlt,
+  faMars,
+  faVenus,
 } from "@fortawesome/free-solid-svg-icons";
 import { Check, X } from "lucide-react";
 
@@ -32,6 +34,15 @@ export default function ProfileText({
     restaurant: [],
   });
   const [isThemeOpen, setIsThemeOpen] = useState(false);
+
+  // 성별 아이콘 결정 함수
+  const getGenderIcon = (genderText) => {
+    return genderText === "남자" ? faMars : faVenus;
+  };
+
+  // 표시할 아이콘 결정
+  const displayIcon = title === "성별" ? getGenderIcon(naeyong) : icon;
+
   const handleThemestartOpen = () => {
     setIsThemestartOpen(true);
   };
@@ -52,14 +63,15 @@ export default function ProfileText({
     setSelectedThemeKeywords(keywords);
     setIsThemeOpen(false);
   };
+
   let categoryNames = null;
   let groupedThemes = null;
 
   if (title == "선호테마") {
     categoryNames = {
       0: "관광지",
-      1: "식당",
-      2: "숙소",
+      1: "숙소",
+      2: "식당",
     };
 
     // 카테고리 아이콘 매핑
@@ -69,7 +81,8 @@ export default function ProfileText({
       2: faBed, // 숙소
     };
 
-    groupedThemes = content.reduce((acc, theme) => {
+    // naeyong 사용 (content 대신)
+    groupedThemes = naeyong.reduce((acc, theme) => {
       const categoryId = theme.preferredThemeCategoryId;
       if (!acc[categoryId]) {
         acc[categoryId] = [];
@@ -131,7 +144,7 @@ export default function ProfileText({
             onComplete={(selectedThemes) => {
               // 선택된 테마로 업데이트
               setNaeyong(selectedThemes);
-              setIsModalOpen(false);
+              setIsThemestartOpen(false); // 수정: setIsModalOpen -> setIsThemestartOpen
             }}
           />
         )}
@@ -148,7 +161,10 @@ export default function ProfileText({
     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <FontAwesomeIcon icon={icon} className={`w-4 h-4 ${iconColor}`} />
+          <FontAwesomeIcon
+            icon={displayIcon}
+            className={`w-4 h-4 ${iconColor}`}
+          />
           <div className="flex-1">
             <span className="font-semibold text-lg text-gray-800">{title}</span>
             {title !== "비밀번호" && (
@@ -195,10 +211,11 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
   const [selected, setSelected] = useState(content);
   const { patch, isAuthenticated } = useApiClient();
   const genderGubun = { 남자: 0, 여자: 1 };
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   const apiUrl = {
-    나이: "/api/user/age",
-    성별: "/api/user/gender",
+    나이: `${BASE_URL}/api/user/age`,
+    성별: `${BASE_URL}/api/user/gender`,
   };
 
   const handleChange = (e) => {
@@ -229,8 +246,8 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
             onClick={() => setSelected("남자")}
             className={`py-3 px-4 rounded-xl border-2 font-medium transition-all duration-200 ${
               selected === "남자"
-                ? "border-blue-300 bg-blue-50 text-blue-700"
-                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                ? "bg-main text-white hover:bg-blue-800"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
             남자
@@ -239,8 +256,8 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
             onClick={() => setSelected("여자")}
             className={`py-3 px-4 rounded-xl border-2 font-medium transition-all duration-200 ${
               selected === "여자"
-                ? "border-blue-300 bg-blue-50 text-blue-700"
-                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                ? "bg-main text-white hover:bg-blue-800"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
             여자
@@ -284,7 +301,7 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
           </button>
           <button
             onClick={() => patchApi(title, selected)}
-            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
+            className="px-4 py-2.5 bg-main hover:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
           >
             확인
           </button>
@@ -315,7 +332,6 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
     hasEnglish: false,
     hasNumber: false,
     hasSpecialChar: false,
-
     hasAllRequired: false,
   });
 
@@ -357,7 +373,6 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
       hasEnglish,
       hasNumber,
       hasSpecialChar,
-
       hasAllRequired,
     };
   };
@@ -373,36 +388,43 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
   const passwordChange = async () => {
     setWrongPrev(false);
     setWrongRe(false);
+    const BASE_URL = import.meta.env.VITE_API_URL;
 
     if (isAuthenticated()) {
       if (rePassword != "" && password == rePassword) {
         if (prevPassword != "") {
           try {
-            const passwordVerified = await post("/api/auth/password/verify", {
-              password: prevPassword,
-            });
+            const passwordVerified = await post(
+              `${BASE_URL}/api/auth/password/verify`,
+              {
+                password: prevPassword,
+              }
+            );
 
             if (passwordVerified.passwordVerified) {
               try {
-                await patch("/api/auth/password", {
+                await patch(`${BASE_URL}/api/auth/password`, {
                   password: password,
                   confirmPassword: rePassword,
                 });
                 setIsPasswordOpen(false);
+                alert("비밀번호가 변경되었습니다!");
               } catch (err) {
                 console.error(
                   "비밀번호를 변경하는 과정에서 오류가 발생했습니다:",
                   err
                 );
+                alert("비밀번호를 변경하는 과정에서 오류가 발생했습니다");
               }
             } else {
               setWrongPrev(true);
             }
           } catch (err) {
             console.error(
-              "현재 비밀번호를 검증하는 과정에서 오류가 발생했습니다:",
+              "현재 비밀번호를 검증하는 과정에서 오류가 발생했습니다",
               err
             );
+            alert("비밀번호를 변경하는 과정에서 오류가 발생했습니다");
           }
         } else {
           setWrongPrev(true);
@@ -544,7 +566,7 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
           </button>
           <button
             onClick={() => passwordChange()}
-            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
+            className="px-4 py-2.5 bg-main hover:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
           >
             확인
           </button>

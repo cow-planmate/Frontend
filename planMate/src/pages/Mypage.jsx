@@ -1,4 +1,4 @@
-import Navbar from "../components/navbar.jsx";
+import Navbar from "../components/Navbar.jsx";
 import Profile from "../components/Profile.jsx";
 import PlanList from "../components/PlanList.jsx";
 import { useNavigate } from "react-router-dom";

@@ -8,18 +8,43 @@ export default function Theme({ isOpen, onClose, onComplete }) {
   const [keywordsByStep, setKeywordsByStep] = useState([]);
   const [categories, setCategories] = useState([]);
   const { get } = useApiClient();
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     if (isOpen) {
+      setCurrentStep(0);
+      setSelectedKeywords([]);
+      setAllSelectedKeywords({});
       getPreferredTheme();
     }
   }, [isOpen]);
+
+  // currentStep이 변경될 때마다 해당 step의 이전 선택사항을 복원
+  useEffect(() => {
+    if (categories.length > 0 && keywordsByStep[currentStep]) {
+      const currentCategoryId = categories[currentStep].id;
+      const previousSelections = allSelectedKeywords[currentCategoryId] || [];
+
+      // 이전에 선택된 키워드들의 인덱스를 찾아서 복원
+      const restoredIndexes = [];
+      previousSelections.forEach((selectedItem) => {
+        const index = keywordsByStep[currentStep].findIndex(
+          (item) => item.preferredThemeId === selectedItem.preferredThemeId
+        );
+        if (index !== -1) {
+          restoredIndexes.push(index);
+        }
+      });
+
+      setSelectedKeywords(restoredIndexes);
+    }
+  }, [currentStep, categories, keywordsByStep, allSelectedKeywords]);
 
   if (!isOpen) return null;
 
   const getPreferredTheme = async () => {
     try {
-      const res = await get("/api/user/preferredTheme");
+      const res = await get(`${BASE_URL}/api/user/preferredTheme`);
       console.log("API 응답:", res); // 디버깅용
 
       const themeList = res.preferredThemes || [];
@@ -88,9 +113,10 @@ export default function Theme({ isOpen, onClose, onComplete }) {
       ...prev,
       [currentCategoryId]: selected, // 객체 배열로 저장
     }));
+
     if (currentStep < categories.length - 1) {
       setCurrentStep(currentStep + 1);
-      setSelectedKeywords([]);
+      // selectedKeywords는 useEffect에서 자동으로 복원됨
     } else {
       const final = {
         ...allSelectedKeywords,
@@ -108,9 +134,10 @@ export default function Theme({ isOpen, onClose, onComplete }) {
       ...prev,
       [currentCategoryId]: [],
     }));
+
     if (currentStep < categories.length - 1) {
       setCurrentStep(currentStep + 1);
-      setSelectedKeywords([]);
+      // selectedKeywords는 useEffect에서 자동으로 복원됨
     } else {
       const final = {
         ...allSelectedKeywords,
@@ -120,13 +147,27 @@ export default function Theme({ isOpen, onClose, onComplete }) {
     }
   };
 
+  const goToPreviousStep = () => {
+    // 현재 선택사항을 저장하고 이전 단계로
+    const currentCategoryId = categories[currentStep].id;
+    const currentStepKeywords = keywordsByStep[currentStep];
+    const selected = selectedKeywords
+      .map((i) => currentStepKeywords[i])
+      .filter((item) => !!item);
+
+    setAllSelectedKeywords((prev) => ({
+      ...prev,
+      [currentCategoryId]: selected,
+    }));
+
+    setCurrentStep(currentStep - 1);
+    // selectedKeywords는 useEffect에서 자동으로 복원됨
+  };
+
   const currentKeywords = keywordsByStep[currentStep];
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60] font-pretendard"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60] font-pretendard">
       <div
         className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 max-h-[70vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
@@ -144,10 +185,10 @@ export default function Theme({ isOpen, onClose, onComplete }) {
                 <button
                   key={keyword.preferredThemeId}
                   onClick={() => toggleKeyword(index)}
-                  className={`rounded-lg px-2 py-2 text-sm text-gray-800 border border-gray-300 hover:bg-blue-100 transition-all ${
+                  className={`rounded-lg px-2 py-2 text-sm transition-all ${
                     selectedKeywords.includes(index)
-                      ? "bg-blue-200 border-blue-400"
-                      : ""
+                      ? "bg-main text-white hover:bg-blue-800"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
                   {keyword.preferredThemeName}
@@ -176,10 +217,7 @@ export default function Theme({ isOpen, onClose, onComplete }) {
           <div className="flex space-x-2">
             {currentStep > 0 && (
               <button
-                onClick={() => {
-                  setCurrentStep(currentStep - 1);
-                  setSelectedKeywords([]);
-                }}
+                onClick={goToPreviousStep}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
               >
                 이전

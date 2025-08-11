@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useApiClient } from "../assets/hooks/useApiClient";
 
 export default function Themestart({
@@ -6,16 +5,18 @@ export default function Themestart({
   onClose,
   onThemeOpen,
   selectedThemeKeywords = {},
+  onComplete,
 }) {
-  const [showThemes, setShowThemes] = useState(false);
   const { patch } = useApiClient();
   const categoryMap = {
     0: "관광지",
-    1: "식당",
-    2: "숙소",
+    1: "숙소",
+    2: "식당",
   };
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   if (!isOpen) return null;
+
   const changePreferredTheme = async () => {
     try {
       const selectedData = Object.values(selectedThemeKeywords)
@@ -33,7 +34,6 @@ export default function Themestart({
 
       // 구조 확인
       console.log("grouped:", selectedData);
-      // 예: { 0: [1,2,3], 2: [28,29], 3: [] }
 
       const finalData = Object.entries(selectedData).map(
         ([categoryId, themeIds]) => ({
@@ -45,9 +45,13 @@ export default function Themestart({
       console.log("보낼 데이터:", finalData);
 
       for (const data of finalData) {
-        await patch("/api/user/preferredThemes", data);
+        await patch(`${BASE_URL}/api/user/preferredThemes`, data);
       }
       onClose();
+      if (onComplete) {
+        const themesArray = Object.values(selectedThemeKeywords).flat();
+        onComplete(themesArray);
+      }
     } catch (err) {
       console.error("선호 테마 저장 실패:", err);
     }
@@ -75,55 +79,51 @@ export default function Themestart({
         </h1>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-[16rem]">
-            <div
-              className="relative"
-              onMouseEnter={() => setShowThemes(true)}
-              onMouseLeave={() => setShowThemes(false)}
-            >
-              <button className="text-sm text-main cursor-pointer hover:underline">
+          {Object.values(selectedThemeKeywords).some(
+            (arr) => arr.length > 0
+          ) && (
+            <div className="p-3 border bg-gray-100 border-blue-200 rounded-xl text-sm font-medium text-gray-600 shadow-sm">
+              <div className="text-sm font-bold mb-2 text-gray-800">
                 선택된 테마
-              </button>
-              {showThemes &&
+              </div>
+              <div className="space-y-1 text-sm">
+                {Object.entries(selectedThemeKeywords).map(
+                  ([categoryId, keywords]) =>
+                    keywords.length > 0 ? (
+                      <div key={categoryId} className="flex flex-wrap  gap-1">
+                        <span className="font-bold text-gray-700">
+                          {categoryMap[categoryId]}:
+                        </span>
+                        <span className="font-semibold text-gray-700">
+                          {keywords.map((k) => k.preferredThemeName).join(", ")}
+                        </span>
+                      </div>
+                    ) : null
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              onClick={onThemeOpen}
+              className={`flex-1 py-2 px-3 text-sm font-medium rounded-lg border transition-colors ${
                 Object.values(selectedThemeKeywords).some(
                   (arr) => arr.length > 0
-                ) && (
-                  <div className="absolute top-6 left-0 bg-white border rounded-lg shadow-lg p-3 whitespace-nowrap z-10">
-                    <div className="text-sm space-y-1">
-                      {Object.entries(selectedThemeKeywords).map(
-                        ([categoryId, keywords]) =>
-                          keywords.length > 0 ? (
-                            <div key={categoryId}>
-                              <strong>{categoryMap[categoryId]}:</strong>{" "}
-                              {keywords
-                                .map((k) => k.preferredThemeName)
-                                .join(", ")}
-                            </div>
-                          ) : null
-                      )}
-                    </div>
-                  </div>
-                )}
-            </div>
-
+                )
+                  ? "bg-main text-white border-main"
+                  : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+              }`}
+            >
+              {getThemeSelectionText()}
+            </button>
             <button
-              className="bg-main text-white text-sm rounded-md py-1"
               onClick={changePreferredTheme}
+              className="bg-main text-white px-4 py-2 text-sm font-medium rounded-lg hover:bg-main/90 transition-colors"
             >
               완료
             </button>
           </div>
-
-          <button
-            onClick={onThemeOpen}
-            className={`w-full py-2 px-3 text-sm font-medium rounded-lg border transition-colors ${
-              Object.values(selectedThemeKeywords).some((arr) => arr.length > 0)
-                ? "bg-main text-white border-main"
-                : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-            }`}
-          >
-            {getThemeSelectionText()}
-          </button>
         </div>
       </div>
     </div>

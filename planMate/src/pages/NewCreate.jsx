@@ -352,7 +352,7 @@ function App() {
           const [tour, lodging, restaurant] = await Promise.all([
             post(`/api/plan/${id}/tour`),
             post(`/api/plan/${id}/lodging`),
-            post(`/api/plan/${id}/restaurant`)
+            post(`/api/plan/${id}/restaurant`),
           ]);
 
           setPlaces({
@@ -415,7 +415,7 @@ function App() {
       for (const place of day) {
         const startTime = place.timeSlot;
         const endTime = addMinutes(startTime, place.duration * 15);
-        
+
         const block = {
           placeCategory: place.categoryId,
           placeName: place.name,
@@ -441,7 +441,7 @@ function App() {
   // 일정 저장
   const savePlan = async (info) => {
     const scheduleToExport = exportSchedule();
-    
+
     if (isAuthenticated()) {
       try {
         await patch(`/api/plan/${id}/save`, {
@@ -693,7 +693,7 @@ function App() {
             stompClientRef={stompClientRef}
             id={id}
           />
-          
+
           <TimeTable
             selectedDay={selectedDay}
             timetables={timetables}
@@ -714,6 +714,6 @@ function App() {
       </div>
     </div>
   );
-};
+}
 
 export default App;

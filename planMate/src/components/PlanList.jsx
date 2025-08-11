@@ -10,15 +10,26 @@ export default function PlanList() {
   const navigate = useNavigate();
   const [plan, setPlan] = useState(null);
   const { get, isAuthenticated } = useApiClient();
+  const removePlanFromState = (planId) => {
+    setPlan((prevPlans) => prevPlans.filter((p) => p.planId !== planId));
+  };
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (isAuthenticated()) {
         try {
-          const profileData = await get("/api/user/profile");
-          setPlan(profileData.planVOs);
+          const profileData = await get(`${BASE_URL}/api/user/profile`);
+
+          // MoveMypageResponse 구조에 맞게 수정
+          // myPlanVOs와 editablePlanVOs를 합쳐서 전체 계획 목록 생성
+          const myPlans = profileData.myPlanVOs || [];
+          const editablePlans = profileData.editablePlanVOs || [];
+          const allPlans = [...myPlans, ...editablePlans];
+          setPlan(allPlans);
         } catch (err) {
           console.error("프로필 정보를 가져오는데 실패했습니다:", err);
+          setPlan([]);
         }
       } else {
         setPlan(null);
@@ -30,7 +41,6 @@ export default function PlanList() {
 
   return (
     <div className="bg-white w-[60rem] rounded-2xl shadow-sm border border-gray-200 flex-1 flex flex-col font-pretendard">
-      {/* 헤더 */}
       <div className="border-b border-gray-200 px-6 py-5">
         <div className="flex items-center justify-between">
           <div>
@@ -50,7 +60,13 @@ export default function PlanList() {
         {plan && plan.length > 0 ? (
           <div className="space-y-4">
             {plan.map((lst) =>
-              lst ? <PlanListList key={lst.planId} lst={lst} /> : null
+              lst ? (
+                <PlanListList
+                  key={lst.planId}
+                  lst={lst}
+                  onPlanDeleted={removePlanFromState}
+                />
+              ) : null
             )}
           </div>
         ) : (

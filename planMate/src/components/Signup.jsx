@@ -10,6 +10,8 @@ export default function Signup({
   onLoginSuccess,
   onThemeOpen,
 }) {
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
   const { login } = useApiClient();
   const [formData, setFormData] = useState({
     email: "",
@@ -166,7 +168,7 @@ export default function Signup({
     }
     setIsEmailSending(true);
     try {
-      const response = await fetch("/api/auth/email/verification", {
+      const response = await fetch(`${BASE_URL}/api/auth/email/verification`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -183,11 +185,16 @@ export default function Signup({
 
       const data = await response.json();
       console.log("서버 응답:", data);
-      if (!data.isVerificationSent) {
+      console.log("서버 응답:", data);
+      console.log("message 값:", data.message);
+      console.log("message 타입:", typeof data.message);
+      console.log("verificationSent 값:", data.verificationSent);
+
+      if (data.verificationSent === true) {
         alert("인증번호가 이메일로 전송되었습니다!");
         setTimeLeft(300);
         setIsTimerRunning(true);
-        setShowVerification(true); // 인증번호 입력 영역 표시
+        setShowVerification(true);
       } else if (data.message === "Email already in use") {
         alert("이미 사용중인 이메일입니다.");
       } else if (data.message === "Email not found") {
@@ -199,21 +206,23 @@ export default function Signup({
       console.error("에러 발생:", error);
       alert("이메일 전송에 실패했습니다. 다시 시도해주세요");
     } finally {
-      setIsEmailSending(false); // 로딩 종료
+      setIsEmailSending(false);
     }
   };
-
   const verifyEmail = async () => {
     try {
-      const response = await fetch("/api/auth/email/verification/confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          verificationCode: formData.verificationCode,
-          purpose: "SIGN_UP",
-        }),
-      });
+      const response = await fetch(
+        `${BASE_URL}/api/auth/email/verification/confirm`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            verificationCode: formData.verificationCode,
+            purpose: "SIGN_UP",
+          }),
+        }
+      );
 
       const data = await response.json();
       console.log("서버 응답:", data);
@@ -240,13 +249,16 @@ export default function Signup({
 
   const verifyNickname = async () => {
     try {
-      const response = await fetch("/api/auth/register/nickname/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nickname: formData.nickname,
-        }),
-      });
+      const response = await fetch(
+        `${BASE_URL}/api/auth/register/nickname/verify`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nickname: formData.nickname,
+          }),
+        }
+      );
       const data = await response.json();
       console.log("서버 응답:", data);
       if (formData.nickname === "") {
@@ -275,7 +287,7 @@ export default function Signup({
         headers["Authorization"] = `Bearer ${emailVerificationToken}`;
       }
 
-      const registerResponse = await fetch("/api/auth/register", {
+      const registerResponse = await fetch(`${BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: headers,
         body: JSON.stringify({
