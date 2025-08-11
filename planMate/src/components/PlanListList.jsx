@@ -156,7 +156,7 @@ export default function PlanListList({ lst, onPlanDeleted }) {
   );
 }
 
-const TitleModal = ({ setIsTitleOpen, id }) => {
+const TitleModal = ({ setIsTitleOpen, id, title, setTitle }) => {
   const { patch, isAuthenticated } = useApiClient();
   const [newTitle, setNewTitle] = useState(title);
   const BASE_URL = import.meta.env.VITE_API_URL;
