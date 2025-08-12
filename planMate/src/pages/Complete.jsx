@@ -3,8 +3,8 @@ import Navbar from "../components/Navbar";
 import PlanInfo from "../components/PlanInfo";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
-import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk"
-import useKakaoLoader from "../hooks/useKakaoLoader"
+import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk";
+import useKakaoLoader from "../hooks/useKakaoLoader";
 
 const TravelPlannerApp = () => {
   const { get, post, patch, isAuthenticated } = useApiClient();
@@ -24,9 +24,9 @@ const TravelPlannerApp = () => {
   const [places, setPlaces] = useState({}); // places state 추가
 
   useKakaoLoader();
-  
+
   const [map, setMap] = useState();
-  const [positions, setPositions] = useState([{ lat: 37.5665, lng: 126.9780 }]); // 초기값 설정
+  const [positions, setPositions] = useState([{ lat: 37.5665, lng: 126.978 }]); // 초기값 설정
 
   // 두 번째 API 응답을 첫 번째 형태로 변환하는 함수
   const transformApiResponse = (apiResponse) => {
@@ -106,7 +106,7 @@ const TravelPlannerApp = () => {
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      if (id && isAuthenticated()) {
+      if (id) {
         try {
           const planData = await get(`${BASE_URL}/api/plan/${id}`); // BASE_URL
           setData(planData);
@@ -156,12 +156,13 @@ const TravelPlannerApp = () => {
         a.timeSlot.localeCompare(b.timeSlot)
       );
 
-      const newPositions = sortedSchedule.length > 0
-        ? sortedSchedule.map(item => ({
-            lat: item.ylocation,
-            lng: item.xlocation,
-          }))
-        : [{ lat: 37.5665, lng: 126.9780 }]; // 기본값
+      const newPositions =
+        sortedSchedule.length > 0
+          ? sortedSchedule.map((item) => ({
+              lat: item.ylocation,
+              lng: item.xlocation,
+            }))
+          : [{ lat: 37.5665, lng: 126.978 }]; // 기본값
 
       setPositions(newPositions);
     }
@@ -492,7 +493,8 @@ const TravelPlannerApp = () => {
           top: `${startIndex * 30}px`,
           height: `${height}px`,
           width: "329px",
-          backgroundImage: "linear-gradient(to bottom, transparent, #E8EDFF), linear-gradient(-45deg, #718FFF 40px, #E8EDFF 40px)"
+          backgroundImage:
+            "linear-gradient(to bottom, transparent, #E8EDFF), linear-gradient(-45deg, #718FFF 40px, #E8EDFF 40px)",
         }}
       >
         {/* 컨텐츠 */}
@@ -575,7 +577,9 @@ const TravelPlannerApp = () => {
       <Navbar />
       <div className="w-[1400px] mx-auto py-6">
         <div className={`flex items-center justify-between pb-6`}>
-          <div className="font-bold text-2xl">{data?.planFrame?.planName || '여행 계획'}</div>
+          <div className="font-bold text-2xl">
+            {data?.planFrame?.planName || "여행 계획"}
+          </div>
           <div className="space-x-3">
             <button
               onClick={() => navigate(`/create?id=${id}`)}
@@ -675,8 +679,13 @@ const TravelPlannerApp = () => {
                       lng: item.xlocation,
                     }}
                   >
-                    <div className="p-2 w-[159px]" style={{borderRadius: '4rem'}}>
-                      <p className="text-lg font-semibold truncate">{item.name}</p>
+                    <div
+                      className="p-2 w-[159px]"
+                      style={{ borderRadius: "4rem" }}
+                    >
+                      <p className="text-lg font-semibold truncate">
+                        {item.name}
+                      </p>
                       <a
                         href={item.url}
                         style={{ color: "blue" }}
@@ -688,24 +697,22 @@ const TravelPlannerApp = () => {
                       </a>
                     </div>
                   </MapMarker>
-                )
+                );
               })}
-              {positions.length > 1 && positions.slice(0, -1).map((pos, idx) => {
-                return (
-                  <Polyline
-                    key={`polyline-${idx}`}
-                    path={[
-                      pos, 
-                      positions[idx + 1],
-                    ]}
-                    strokeWeight={4} // 선의 두께 입니다
-                    strokeColor={"#1344FF"} // 선의 색깔입니다
-                    strokeOpacity={0.5} // 선의 불투명도 입니다 1에서 0 사이의 값이며 0에 가까울수록 투명합니다
-                    strokeStyle={"arrow"} // 선의 스타일입니다
-                    endArrow={true}
-                  />
-                )
-              })}
+              {positions.length > 1 &&
+                positions.slice(0, -1).map((pos, idx) => {
+                  return (
+                    <Polyline
+                      key={`polyline-${idx}`}
+                      path={[pos, positions[idx + 1]]}
+                      strokeWeight={4} // 선의 두께 입니다
+                      strokeColor={"#1344FF"} // 선의 색깔입니다
+                      strokeOpacity={0.5} // 선의 불투명도 입니다 1에서 0 사이의 값이며 0에 가까울수록 투명합니다
+                      strokeStyle={"arrow"} // 선의 스타일입니다
+                      endArrow={true}
+                    />
+                  );
+                })}
             </Map>
           </div>
         </div>
