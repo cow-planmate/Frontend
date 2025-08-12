@@ -82,17 +82,8 @@ const TravelPlannerApp = () => {
       // 해당하는 timetableId를 찾아서 데이터 추가
       // 여기서는 순서대로 배치하는 로직이 필요할 수 있습니다.
       // 예시로 첫 3개는 78, 다음 3개는 79, 마지막 4개는 80에 배치
-      const placeIndex = placeBlocks.indexOf(place);
-      let targetTimetableId;
-
-      if (placeIndex < 4) {
-        targetTimetableId = timetables[0]?.timetableId || 78;
-      } else if (placeIndex < 7) {
-        targetTimetableId = timetables[1]?.timetableId || 79;
-      } else {
-        targetTimetableId = timetables[2]?.timetableId || 80;
-      }
-
+      const targetTimetableId = place.timetableId ?? place.timeTableId;
+      
       if (result[targetTimetableId]) {
         result[targetTimetableId].push(transformedPlace);
       }
@@ -106,6 +97,7 @@ const TravelPlannerApp = () => {
       if (id) {
         try {
           const planData = await get(`${BASE_URL}/api/plan/${id}/complete`); // BASE_URL
+          console.log("초기 데이터", planData)
           setData(planData);
           // timetables 데이터 설정
           if (planData.timetables) {
@@ -443,7 +435,7 @@ const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
   const [editors, setEditors] = useState([]);
   const [receiverNickname, setreceiverNickname] = useState("");
   const [shareURL, setShareURL] = useState("");
-  const BASE_URL = import.meta.env.VITE_API_URL;
+  const BASE_URL = "" // import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     getShareLink();
