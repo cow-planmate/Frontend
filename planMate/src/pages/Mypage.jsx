@@ -2,7 +2,7 @@ import Navbar from "../components/Navbar.jsx";
 import Profile from "../components/Profile.jsx";
 import PlanList from "../components/PlanList.jsx";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 function App() {
   const navigate = useNavigate();
