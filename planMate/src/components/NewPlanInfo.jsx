@@ -38,6 +38,10 @@ export default function PlanInfo({info, id, planDispatch, schedule, selectedDay}
 
   const [mapModalOpen, setMapModalOpen] = useState(false);
 
+  const [sortedState, setSortedState] = useState({});
+
+  const [isShareOpen, setIsShareOpen] = useState(false);
+
   const spanRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -48,6 +52,23 @@ export default function PlanInfo({info, id, planDispatch, schedule, selectedDay}
       console.log(spanWidth)
     }
   }, [title]);
+
+  useEffect(() => {
+    const sade = Object.fromEntries(
+      Object.entries(schedule).map(([key, places]) => [
+        key,
+        [...places].sort((a, b) => {
+          // "HH:MM" 형식을 Date 비교로 변환
+          const timeA = a.timeSlot.split(":").map(Number);
+          const timeB = b.timeSlot.split(":").map(Number);
+          return timeA[0] - timeB[0] || timeA[1] - timeB[1];
+        })
+      ])
+    );
+
+    console.log(sade);
+    setSortedState(sade);
+  }, [schedule])
 
   /*useEffect(() => {
     const patchApi = async () => {
@@ -177,11 +198,10 @@ export default function PlanInfo({info, id, planDispatch, schedule, selectedDay}
         <button onClick={() => setMapModalOpen(true)} className="px-4 py-2 rounded-lg bg-gray-300 mr-3 hover:bg-gray-400">
           지도로 보기
         </button>
-        {//<button onClick={() => savePlan(sendCreate)} className="px-4 py-2 rounded-lg bg-gray-300 mr-3 hover:bg-gray-400">
-         // 저장
-         //</button>
-        }
-        <button onClick={() => navigate(`/complete?id=${id}`)} className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400">
+        <button onClick={() => setIsShareOpen(true)} className="px-4 py-2 rounded-lg bg-gray-300 mr-3 hover:bg-gray-400">
+          공유
+        </button>
+        <button onClick={() => navigate(`/complete?id=${id}`)} className="px-4 py-2 rounded-lg bg-main text-white">
           완료
         </button>
       </div>
@@ -218,8 +238,14 @@ export default function PlanInfo({info, id, planDispatch, schedule, selectedDay}
 
       {mapModalOpen && <MapModal
         setMapModalOpen={setMapModalOpen}
-        schedule={schedule}
+        schedule={sortedState}
         selectedDay={selectedDay}
+      />}
+
+      {isShareOpen && <ShareModal
+        isShareOpen={isShareOpen}
+        setIsShareOpen={setIsShareOpen}
+        id={id}
       />}
 
       <span
@@ -285,29 +311,38 @@ const MapModal = ({setMapModalOpen, schedule, selectedDay}) => {
           level={3} // 지도의 확대 레벨
           onCreate={setMap}
         >
-          {schedule[selectedDay].map((item) => {
+          {(schedule[selectedDay] || []).map((item, index) => {
             return (
               <MapMarker // 인포윈도우를 생성하고 지도에 표시합니다
+                key={item.placeId}
                 position={{
                   // 인포윈도우가 표시될 위치입니다
                   lat: item.ylocation,
                   lng: item.xlocation,
                 }}
               >
-                <div className="p-2 w-[159px]" style={{borderRadius: '4rem'}}>
-                  <p className="text-lg font-semibold truncate">{item.name}</p>
-                  <a
-                    href={item.url}
-                    style={{ color: "blue" }}
-                    className="text-sm"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    장소 정보 보기
-                  </a>
+                <div
+                  className="p-2 w-[159px]"
+                  style={{ borderRadius: "4rem" }}
+                >
+                  <p className="text-lg font-semibold truncate">
+                    {item.name}
+                  </p>
+                  <div className="flex items-center space-x-1">
+                    <div className="text-sm w-[22px] h-[22px] border border-main text-main font-semibold rounded-full flex items-center justify-center">{index+1}</div>
+                    <a
+                      href={item.url}
+                      style={{ color: "blue" }}
+                      className="text-sm hover:underline"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      장소 정보 보기
+                    </a>
+                  </div>
                 </div>
               </MapMarker>
-            )
+            );
           })}
           {positions.slice(0, -1).map((pos, idx) => {
             return (
@@ -337,3 +372,164 @@ const MapModal = ({setMapModalOpen, schedule, selectedDay}) => {
     </div>
   )
 }
+
+const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
+  const { patch, post, get, del } = useApiClient();
+  const [editors, setEditors] = useState([]);
+  const [receiverNickname, setreceiverNickname] = useState("");
+  const [shareURL, setShareURL] = useState("");
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    getShareLink();
+    getEditors();
+  }, [isShareOpen]);
+
+  const removeEditorAccessByOwner = async (targetUserId) => {
+    try {
+      const response = await del(
+        `${BASE_URL}/api/plan/${id}/editors/${targetUserId}`
+      );
+      console.log(response);
+      getEditors();
+    } catch (err) {
+      console.error("에디터 제거에 실패했습니다:", err);
+    }
+  };
+
+  const getEditors = async () => {
+    try {
+      const response = await get(`${BASE_URL}/api/plan/${id}/editors`);
+      console.log(response);
+      setEditors(response.simpleEditorVOs || []);
+    } catch (error) {
+      console.error("에디터 조회에 실패했습니다:", error);
+    }
+  };
+
+  const inviteUserToPlan = async () => {
+    try {
+      const response = await post(`${BASE_URL}/api/plan/${id}/invite`, {
+        receiverNickname: receiverNickname,
+      });
+      console.log(response);
+      setreceiverNickname("");
+      alert("초대를 보냈습니다!");
+    } catch (err) {
+      console.error("초대에 실패했습니다:", err);
+
+      const errorMessage =
+        err.response?.data?.message ||
+        "초대에 실패했습니다. 다시 시도해주세요.";
+      alert(errorMessage);
+    }
+  };
+
+  const getShareLink = async () => {
+    try {
+      const completeURL = `${window.location.origin}/complete?id=${id}`;
+      setShareURL(completeURL);
+    } catch (error) {
+      console.error("공유 링크 생성 실패", error);
+    }
+  };
+  //get share 함수 api버전
+  /**  const getShareLink = async () => {
+    try {
+      const response = await get(`${BASE_URL}/api/plan/${id}/share`);
+      console.log(response);
+      setShareURL(response.sharedPlanUrl || "");
+    } catch (error) {
+      console.error("공유 링크 조회 실패", error);
+    }
+  };*/
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareURL);
+    alert("링크가 복사되었습니다!");
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm cursor-default"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="relative bg-white p-6 rounded-2xl shadow-2xl w-96 border border-gray-100 max-h-[80vh] overflow-y-auto">
+        <h2 className="text-xl font-bold text-gray-800 mb-6">공유 및 초대</h2>
+        <button
+          onClick={() => setIsShareOpen(false)}
+          className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 text-xl"
+        >
+          ✕
+        </button>
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            완성본 공유 URL
+          </label>
+          <div className="flex gap-2">
+            <input
+              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"
+              value={shareURL}
+              readOnly
+            />
+            <button
+              onClick={copyToClipboard}
+              className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-all duration-200"
+            >
+              복사
+            </button>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            편집 권한이 있는 사용자
+          </label>
+          <div className="space-y-2">
+            {editors.length > 0 ? (
+              editors.map((editor) => (
+                <div
+                  key={editor.userId}
+                  className="flex items-center justify-between bg-gray-50 p-3 rounded-xl"
+                >
+                  <span className="text-gray-700">{editor.nickName}</span>
+                  <button
+                    onClick={() => removeEditorAccessByOwner(editor.userId)}
+                    className="w-6 h-6 bg-red-100 hover:bg-red-200 rounded-full flex items-center justify-center transition-colors"
+                  >
+                    <span className="text-red-500 text-sm">×</span>
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="text-gray-500 text-sm text-center py-2">
+                편집 권한을 가진 사용자가 없습니다
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            일정 편집 초대
+          </label>
+          <div className="flex gap-2">
+            <input
+              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
+              value={receiverNickname}
+              onChange={(e) => setreceiverNickname(e.target.value)}
+              placeholder="닉네임"
+            />
+            <button
+              onClick={inviteUserToPlan}
+              className="px-4 py-3 bg-main hover:bg-blue-700 text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
+              disabled={!receiverNickname.trim()}
+            >
+              초대
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
