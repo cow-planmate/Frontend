@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 function App() {
   const navigate = useNavigate();
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [refreshTrigger, setRefreshTrigger] = useState(false);
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -18,7 +18,7 @@ function App() {
   }, [navigate]);
 
   const handlePlanListRefresh = () => {
-    setRefreshTrigger((prev) => prev + 1);
+    setRefreshTrigger((prev) => !prev);
   };
   return (
     <div className="font-pretendard min-h-screen max-h-fit">
