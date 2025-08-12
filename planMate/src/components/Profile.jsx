@@ -48,7 +48,7 @@ export default function Profile() {
   const gender = { 0: "남자", 1: "여자" };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 w-[30rem]  flex flex-col">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 w-[35rem]  flex flex-col">
       {/* 프로필 헤더 */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex flex-col items-center text-black">

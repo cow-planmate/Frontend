@@ -46,7 +46,7 @@ export default function PlanList() {
 
   return (
     <div className="flex flex-col gap-6 font-pretendard">
-      <div className="bg-white w-[50rem] rounded-2xl shadow-sm border border-gray-200 flex flex-col">
+      <div className="bg-white w-[53rem] rounded-2xl shadow-sm border border-gray-200 flex flex-col">
         <div className="border-b border-gray-200 px-6 py-5 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">나의 일정</h2>
@@ -92,7 +92,7 @@ export default function PlanList() {
         </div>
       </div>
 
-      <div className="bg-white w-[50rem] rounded-2xl shadow-sm border border-gray-200 flex flex-col">
+      <div className="bg-white w-[53rem] rounded-2xl shadow-sm border border-gray-200 flex flex-col">
         <div className="border-b border-gray-200 px-6 py-5 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">우리들의 일정</h2>
