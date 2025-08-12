@@ -201,7 +201,7 @@ export default function PlanInfo({info, id, planDispatch, schedule, selectedDay}
         <button onClick={() => setIsShareOpen(true)} className="px-4 py-2 rounded-lg bg-gray-300 mr-3 hover:bg-gray-400">
           공유
         </button>
-        <button onClick={() => navigate(`/complete?id=${id}`)} className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400">
+        <button onClick={() => navigate(`/complete?id=${id}`)} className="px-4 py-2 rounded-lg bg-main">
           완료
         </button>
       </div>
