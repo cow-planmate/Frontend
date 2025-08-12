@@ -456,7 +456,7 @@ const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
   const [editors, setEditors] = useState([]);
   const [receiverNickname, setreceiverNickname] = useState("");
   const [shareURL, setShareURL] = useState("");
-  const BASE_URL = "" // import.meta.env.VITE_API_URL;
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     getShareLink();
