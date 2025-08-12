@@ -186,12 +186,15 @@ const TitleModal = ({ setIsTitleOpen, id, title, setTitle }) => {
           planName: newTitle,
         });
         console.log(response);
+
         if (response.edited === true) {
           setTitle(newTitle);
           setIsTitleOpen(false);
         } else {
-          console.warn("이미 존재하는 제목입니다");
-          alert("이미 존재하는 제목입니다");
+          const errorMessage =
+            response.message || "패치에 실패했습니다. 다시 시도해주세요.";
+          console.log(`${response.message}`);
+          alert(errorMessage);
         }
       } catch (err) {
         console.error("패치에 실패했습니다:", err);
