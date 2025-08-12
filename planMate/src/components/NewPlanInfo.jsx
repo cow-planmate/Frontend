@@ -201,7 +201,7 @@ export default function PlanInfo({info, id, planDispatch, schedule, selectedDay}
         <button onClick={() => setIsShareOpen(true)} className="px-4 py-2 rounded-lg bg-gray-300 mr-3 hover:bg-gray-400">
           공유
         </button>
-        <button onClick={() => navigate(`/complete?id=${id}`)} className="px-4 py-2 rounded-lg bg-main">
+        <button onClick={() => navigate(`/complete?id=${id}`)} className="px-4 py-2 rounded-lg bg-main text-white">
           완료
         </button>
       </div>
@@ -329,7 +329,7 @@ const MapModal = ({setMapModalOpen, schedule, selectedDay}) => {
                     {item.name}
                   </p>
                   <div className="flex items-center space-x-1">
-                    <div className="text-sm w-[22px] h-[22px] border border-black rounded-full flex items-center justify-center">{index+1}</div>
+                    <div className="text-sm w-[22px] h-[22px] border border-main text-main font-semibold rounded-full flex items-center justify-center">{index+1}</div>
                     <a
                       href={item.url}
                       style={{ color: "blue" }}
