@@ -1,22 +1,22 @@
 import { useState, useEffect, useReducer, useRef } from "react";
-import SockJS from 'sockjs-client';
-import { Client } from '@stomp/stompjs';
+import SockJS from "sockjs-client";
+import { Client } from "@stomp/stompjs";
 
-import Navbar from "../components/navbar";
+import Navbar from "../components/Navbar";
 import PlanInfo from "../components/NewPlanInfo";
 import DaySelector from "../components/Create/DaySelector";
 import TimeTable from "../components/Create/TimeTable";
 import PlaceRecommendations from "../components/Create/PlaceRecommendations";
 
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { transformApiResponse, addMinutes } from "../utils/scheduleUtils";
 
 const initialPlanState = {
-  planName: '',
-  travelName: '',
+  planName: "",
+  travelName: "",
   travelId: null,
-  departure: '',
+  departure: "",
   transportationCategoryId: 0,
   adultCount: 0,
   childCount: 0,
@@ -24,14 +24,14 @@ const initialPlanState = {
 
 function planReducer(state, action) {
   switch (action.type) {
-    case 'SET_FIELD':
+    case "SET_FIELD":
       return {
         ...state,
         [action.field]: action.value,
       };
-    case 'SET_ALL':
+    case "SET_ALL":
       return { ...action.payload };
-    case 'RESET':
+    case "RESET":
       return initialPlanState;
     default:
       return state;
@@ -40,11 +40,11 @@ function planReducer(state, action) {
 
 function timetableReducer(state, action) {
   switch (action.type) {
-    case 'create':
+    case "create":
       let newState = [...state];
 
-      action.payload.timetableVOs.forEach(newItem => {
-        const index = newState.findIndex(item => item.date === newItem.date);
+      action.payload.timetableVOs.forEach((newItem) => {
+        const index = newState.findIndex((item) => item.date === newItem.date);
         if (index !== -1) {
           // 날짜가 같고 timetableId가 다르면 교체
           if (newState[index].timetableId !== newItem.timetableId) {
@@ -58,19 +58,22 @@ function timetableReducer(state, action) {
 
       // date 기준 오름차순 정렬
       newState.sort((a, b) => new Date(a.date) - new Date(b.date));
-      console.log(newState)
+      console.log(newState);
       return newState;
-    case 'update':
-      return [ ...action.payload ];
-    case 'delete':
-      const idsToDelete = action.payload.timetableVOs.map(vo => vo.timetableId);
-      return state.filter(item => !idsToDelete.includes(item.timetableId));
+    case "update":
+      return [...action.payload];
+    case "delete":
+      const idsToDelete = action.payload.timetableVOs.map(
+        (vo) => vo.timetableId
+      );
+      return state.filter((item) => !idsToDelete.includes(item.timetableId));
     default:
       return state;
   }
 }
-      
+
 function App() {
+  const BASE_URL = "" //import.meta.env.VITE_API_URL;
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
   const stompClientRef = useRef(null);
@@ -81,6 +84,8 @@ function App() {
   const [data, setData] = useState(null);
   const [timetables, timeDispatch] = useReducer(timetableReducer, []);
   const timetablesRef = useRef(timetables);
+  const navigate = useNavigate();
+  const [noACL, setNoACL] = useState(false)
   
   // State
   const [transformedData, setTransformedData] = useState(null);
@@ -91,41 +96,45 @@ function App() {
     숙소: [],
     식당: [],
   });
-  
-  useEffect(()=>{
-    console.log(places)
-  },[places])
+
+  useEffect(() => {
+    console.log(places);
+  }, [places]);
   const { get, post, patch, isAuthenticated } = useApiClient();
-  
-  useEffect(()=>{
-    console.log(transformedData)
-  }, [transformedData])
-  
+
+  useEffect(() => {
+    console.log(transformedData);
+  }, [transformedData]);
+
   useEffect(() => {
     timetablesRef.current = timetables;
   }, [timetables]);
 
   useEffect(() => {
-    console.log(timetables)
-  }, [timetables])
-  
+    console.log(timetables);
+  }, [timetables]);
+
   const lastMessageRef = useRef(null);
   const clientId = useRef(Date.now() + Math.random());
   const noUpdate = useRef(false);
 
   function findSameById(data, checkItem) {
     // A 객체의 모든 값들을 배열로 만든 후 검색
-    return Object.values(data).flat().find(item => 
-      item.timetablePlaceBlockId === checkItem.timetablePlaceBlockId
-    );
+    return Object.values(data)
+      .flat()
+      .find(
+        (item) => item.timetablePlaceBlockId === checkItem.timetablePlaceBlockId
+      );
   }
-  
+
+  const token = localStorage.getItem('token'); // 키 이름 확인!
+
   useEffect(() => {
-    const SERVER_URL = "https://pmserver.salmakis.online/ws-plan";
-    
+    const SERVER_URL = `https://pmserver.salmakis.online/ws-plan?token=${encodeURIComponent(token ?? '')}`;
+
     const connectWebSocket = () => {
       console.log("🔄 WebSocket 연결 시도 중...", SERVER_URL);
-      
+
       // 실제 연결을 위한 코드 (라이브러리 설치 후 주석 해제)
       const socket = new SockJS(SERVER_URL);
       const client = new Client({
@@ -134,154 +143,194 @@ function App() {
           console.log("✅ WebSocket 연결 완료:", frame);
           setIsConnected(true);
           stompClientRef.current = client;
-          
+
           // 실제 구독 코드
           client.subscribe(`/topic/plan/${id}/update/plan`, (message) => {
             const received = JSON.parse(message.body);
             if (JSON.stringify(planRef.current) !== JSON.stringify(received)) {
               console.log(`플랜 업데이트 수신: ${message.body}`);
               //alert(`플랜 업데이트 수신: ${message.body}`);
-              planDispatch({ type: 'SET_ALL', payload: received });
+              planDispatch({ type: "SET_ALL", payload: received });
             }
           });
-          
+
           client.subscribe(`/topic/plan/${id}/create/timetable`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            timeDispatch({ type: 'create', payload: JSON.parse(message.body) });
+            timeDispatch({ type: "create", payload: JSON.parse(message.body) });
           });
-          
+
           client.subscribe(`/topic/plan/${id}/update/timetable`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
             const received = JSON.parse(message.body);
-            timeDispatch({ type: "update", payload: received.timetableVOs })
+            timeDispatch({ type: "update", payload: received.timetableVOs });
           });
-          
+
           client.subscribe(`/topic/plan/${id}/delete/timetable`, (message) => {
             console.log("📩 수신된 메시지:", message.body);
-            timeDispatch({ type: 'delete', payload: JSON.parse(message.body) })
+            timeDispatch({ type: "delete", payload: JSON.parse(message.body) });
           });
-          
-          client.subscribe(`/topic/plan/${id}/create/timetableplaceblock`, (message) => {
-            const msg = JSON.parse(message.body);
-            console.log(clientId)
-            if (msg.eventId === clientId.current) return;
-            if (JSON.stringify(message.body) !== JSON.stringify(lastMessageRef.current)) {
-              console.log("📩 수신된 메시지:", message.body);
-              //alert(`시간표 블록 생성 수신: ${message.body}`);
-              const received = JSON.parse(message.body);
 
-              const converted = {
-                timetables: timetablesRef.current,
-                placeBlocks: [received.timetablePlaceBlockVO]
-              };
+          client.subscribe(
+            `/topic/plan/${id}/create/timetableplaceblock`,
+            (message) => {
+              const msg = JSON.parse(message.body);
+              console.log(clientId);
+              if (msg.eventId === clientId.current) return;
+              if (
+                JSON.stringify(message.body) !==
+                JSON.stringify(lastMessageRef.current)
+              ) {
+                console.log("📩 수신된 메시지:", message.body);
+                //alert(`시간표 블록 생성 수신: ${message.body}`);
+                const received = JSON.parse(message.body);
 
-              console.log(converted)
-              const result = transformApiResponse(converted);
-              console.log(result)
-              
-              const findId = findSameById(setTransformedData, result);
-              
-              if (findId) {
-                console.log("같은 아이디가 있어 리턴함")
-                return
+                const converted = {
+                  timetables: timetablesRef.current,
+                  placeBlocks: [received.timetablePlaceBlockVO],
+                };
+
+                console.log(converted);
+                const result = transformApiResponse(converted);
+                console.log(result);
+
+                const findId = findSameById(setTransformedData, result);
+
+                if (findId) {
+                  console.log("같은 아이디가 있어 리턴함");
+                  return;
+                }
+                noUpdate.current = true;
+
+                setSchedule((prev) => {
+                  const updated = { ...prev };
+                  Object.keys(result).forEach((key) => {
+                    const existingItems = prev[key] || [];
+
+                    // 새 항목들을 timetablePlaceBlockId로 맵 만들기
+                    const newItemsMap = new Map(
+                      result[key].map((item) => [item.url, item])
+                    );
+
+                    // 기존 아이템을 순회하며, 새 아이템으로 덮어쓰거나 유지
+                    const mergedItems = existingItems.map((item) =>
+                      newItemsMap.has(item.url)
+                        ? newItemsMap.get(item.url)
+                        : item
+                    );
+
+                    // 새 아이템 중 기존에 없는 항목만 추가
+                    const existingIds = new Set(
+                      existingItems.map((item) => item.url)
+                    );
+                    const newItemsToAdd = result[key].filter(
+                      (item) => !existingIds.has(item.url)
+                    );
+
+                    updated[key] = [...mergedItems, ...newItemsToAdd];
+                  });
+                  console.log(updated);
+                  return updated;
+                });
               }
-              noUpdate.current = true;
-              
-              setSchedule(prev => {
-                const updated = { ...prev };
-                Object.keys(result).forEach(key => {
-                  const existingItems = prev[key] || [];
+              lastMessageRef.current = message.body;
+            }
+          );
 
-                  // 새 항목들을 timetablePlaceBlockId로 맵 만들기
-                  const newItemsMap = new Map(result[key].map(item => [item.url, item]));
+          client.subscribe(
+            `/topic/plan/${id}/update/timetableplaceblock`,
+            (message) => {
+              const msg = JSON.parse(message.body);
+              if (msg.eventId === clientId.current) return;
+              if (
+                JSON.stringify(message.body) !==
+                JSON.stringify(lastMessageRef.current)
+              ) {
+                console.log("📩 수신된 메시지:", message.body);
+                //alert(`시간표 블록 생성 수신: ${message.body}`);
 
-                  // 기존 아이템을 순회하며, 새 아이템으로 덮어쓰거나 유지
-                  const mergedItems = existingItems.map(item =>
-                    newItemsMap.has(item.url) ? newItemsMap.get(item.url) : item
+                const received = JSON.parse(message.body);
+
+                const converted = {
+                  timetables: timetablesRef.current,
+                  placeBlocks: [received.timetablePlaceBlockVO],
+                };
+                console.log(converted);
+                const result = transformApiResponse(converted);
+
+                setSchedule((prev) => {
+                  const updated = { ...prev };
+                  Object.keys(result).forEach((key) => {
+                    const existingItems = prev[key] || [];
+
+                    // 새 항목들을 timetablePlaceBlockId로 맵 만들기
+                    const newItemsMap = new Map(
+                      result[key].map((item) => [
+                        item.timetablePlaceBlockId,
+                        item,
+                      ])
+                    );
+
+                    // 기존 아이템을 순회하며, 새 아이템으로 덮어쓰거나 유지
+                    const mergedItems = existingItems.map((item) =>
+                      newItemsMap.has(item.timetablePlaceBlockId)
+                        ? newItemsMap.get(item.timetablePlaceBlockId)
+                        : item
+                    );
+
+                    // 새 아이템 중 기존에 없는 항목만 추가
+                    const existingIds = new Set(
+                      existingItems.map((item) => item.timetablePlaceBlockId)
+                    );
+                    const newItemsToAdd = result[key].filter(
+                      (item) => !existingIds.has(item.timetablePlaceBlockId)
+                    );
+
+                    updated[key] = [...mergedItems, ...newItemsToAdd];
+                  });
+                  return updated;
+                });
+              }
+
+              lastMessageRef.current = message.body;
+            }
+          );
+
+          client.subscribe(
+            `/topic/plan/${id}/delete/timetableplaceblock`,
+            (message) => {
+              const msg = JSON.parse(message.body);
+              if (msg.eventId === clientId.current) return;
+              if (
+                JSON.stringify(message.body) !==
+                JSON.stringify(lastMessageRef.current)
+              ) {
+                console.log("📩 수신된 메시지:", message.body);
+                //alert(`시간표 블록 생성 수신: ${message.body}`);
+
+                const received = JSON.parse(message.body).timetablePlaceBlockVO
+                  .timetablePlaceBlockId;
+
+                setSchedule((prevSchedule) => {
+                  // 모든 timetableId 키에 대해 순회하며 필터링
+                  const newSchedule = {};
+
+                  Object.entries(prevSchedule).forEach(
+                    ([timetableId, blocks]) => {
+                      newSchedule[timetableId] = blocks.filter(
+                        (block) => block.timetablePlaceBlockId !== received
+                      );
+                    }
                   );
 
-                  // 새 아이템 중 기존에 없는 항목만 추가
-                  const existingIds = new Set(existingItems.map(item => item.url));
-                  const newItemsToAdd = result[key].filter(item => !existingIds.has(item.url));
-
-                  updated[key] = [...mergedItems, ...newItemsToAdd];
+                  return newSchedule;
                 });
-                console.log(updated)
-                return updated;
-              });
+              }
+              lastMessageRef.current = message.body;
             }
-            lastMessageRef.current = message.body;
-          });
-          
-          client.subscribe(`/topic/plan/${id}/update/timetableplaceblock`, (message) => {
-            const msg = JSON.parse(message.body);
-            if (msg.eventId === clientId.current) return;
-            if (JSON.stringify(message.body) !== JSON.stringify(lastMessageRef.current)) {
-              console.log("📩 수신된 메시지:", message.body);
-              //alert(`시간표 블록 생성 수신: ${message.body}`);
-
-              const received = JSON.parse(message.body);
-
-              const converted = {
-                timetables: timetablesRef.current,
-                placeBlocks: [received.timetablePlaceBlockVO]
-              };
-              console.log(converted)
-              const result = transformApiResponse(converted);
-              
-              setSchedule(prev => {
-                const updated = { ...prev };
-                Object.keys(result).forEach(key => {
-                  const existingItems = prev[key] || [];
-
-                  // 새 항목들을 timetablePlaceBlockId로 맵 만들기
-                  const newItemsMap = new Map(result[key].map(item => [item.timetablePlaceBlockId, item]));
-
-                  // 기존 아이템을 순회하며, 새 아이템으로 덮어쓰거나 유지
-                  const mergedItems = existingItems.map(item =>
-                    newItemsMap.has(item.timetablePlaceBlockId) ? newItemsMap.get(item.timetablePlaceBlockId) : item
-                  );
-
-                  // 새 아이템 중 기존에 없는 항목만 추가
-                  const existingIds = new Set(existingItems.map(item => item.timetablePlaceBlockId));
-                  const newItemsToAdd = result[key].filter(item => !existingIds.has(item.timetablePlaceBlockId));
-
-                  updated[key] = [...mergedItems, ...newItemsToAdd];
-                });
-                return updated;
-              });
-            }
-
-            lastMessageRef.current = message.body;
-          });
-          
-          client.subscribe(`/topic/plan/${id}/delete/timetableplaceblock`, (message) => {
-            const msg = JSON.parse(message.body);
-            if (msg.eventId === clientId.current) return;
-            if (JSON.stringify(message.body) !== JSON.stringify(lastMessageRef.current)) {
-              console.log("📩 수신된 메시지:", message.body);
-              //alert(`시간표 블록 생성 수신: ${message.body}`);
-
-              const received = JSON.parse(message.body).timetablePlaceBlockVO.timetablePlaceBlockId;
-
-              setSchedule(prevSchedule => {
-                // 모든 timetableId 키에 대해 순회하며 필터링
-                const newSchedule = {};
-
-                Object.entries(prevSchedule).forEach(([timetableId, blocks]) => {
-                  newSchedule[timetableId] = blocks.filter(
-                    block => block.timetablePlaceBlockId !== received
-                  );
-                });
-
-                return newSchedule;
-              });
-            }
-            lastMessageRef.current = message.body;
-          });
+          );
         },
         onStompError: (frame) => {
-          console.error("❌ STOMP 에러:", frame.headers['message']);
+          console.error("❌ STOMP 에러:", frame.headers["message"]);
           setIsConnected(false);
           client.deactivate();
         },
@@ -289,15 +338,14 @@ function App() {
           console.log("🔌 WebSocket 연결 종료");
           setIsConnected(false);
           client.deactivate();
-        }
+        },
       });
-      
+
       client.activate();
     };
 
     connectWebSocket();
 
-    
     // 정리 함수
     return () => {
       if (stompClientRef.current) {
@@ -315,17 +363,17 @@ function App() {
     const fetchPlanData = async () => {
       if (id && isAuthenticated()) {
         try {
-          const planData = await get(`/api/plan/${id}`);
-          const planFrame = planData.planFrame
-          
+          const planData = await get(`${BASE_URL}/api/plan/${id}`);
+          const planFrame = planData.planFrame;
+
           setData(planData);
           console.log("똥", planData);
 
-          planDispatch({ type: 'SET_ALL', payload: planFrame });
-          
+          planDispatch({ type: "SET_ALL", payload: planFrame });
+
           if (planData.timetables) {
             //setTimetables(planData.timetables);
-            timeDispatch({type: "update", payload: planData.timetables})
+            timeDispatch({ type: "update", payload: planData.timetables });
             if (planData.timetables.length > 0) {
               setSelectedDay(planData.timetables[0].timetableId);
             }
@@ -333,11 +381,18 @@ function App() {
 
           const result = transformApiResponse(planData);
           setTransformedData(result);
-          
+
           firstSchedule.current = true;
         } catch (err) {
+          const errorMessage = err.response?.data?.message || err.message;
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
+          if (errorMessage.includes("요청 권한이 없습니다")) {
+            setNoACL(true);
+          }
         }
+      } else {
+        alert("로그인 후 접근해주세요.");
+        navigate("/");
       }
     };
 
@@ -350,9 +405,9 @@ function App() {
       if (id && isAuthenticated()) {
         try {
           const [tour, lodging, restaurant] = await Promise.all([
-            post(`/api/plan/${id}/tour`),
-            post(`/api/plan/${id}/lodging`),
-            post(`/api/plan/${id}/restaurant`)
+            post(`${BASE_URL}/api/plan/${id}/tour`),
+            post(`${BASE_URL}/api/plan/${id}/lodging`),
+            post(`${BASE_URL}/api/plan/${id}/restaurant`),
           ]);
 
           setPlaces({
@@ -373,8 +428,6 @@ function App() {
     planRef.current = plan;
   }, [plan]);
 
-  
-  
   // 스케줄 초기화
   useEffect(() => {
     if (firstSchedule.current) {
@@ -415,7 +468,7 @@ function App() {
       for (const place of day) {
         const startTime = place.timeSlot;
         const endTime = addMinutes(startTime, place.duration * 15);
-        
+
         const block = {
           placeCategory: place.categoryId,
           placeName: place.name,
@@ -441,10 +494,10 @@ function App() {
   // 일정 저장
   const savePlan = async (info) => {
     const scheduleToExport = exportSchedule();
-    
+
     if (isAuthenticated()) {
       try {
-        await patch(`/api/plan/${id}/save`, {
+        await patch(`${BASE_URL}/api/plan/${id}/save`, {
           departure: data.planFrame.departure,
           travel: data.planFrame.travel,
           transportationCategoryId: info.transportation,
@@ -463,9 +516,9 @@ function App() {
     const matched = timetables.find((t) => t.timetableId === id);
     return matched?.date ?? null;
   };
-  
+
   useEffect(() => {
-    if (plan) {  
+    if (plan) {
       const client = stompClientRef.current;
       if (client && client.connected) {
         const planData = plan;
@@ -476,7 +529,7 @@ function App() {
         console.log("🚀 메시지 전송:", planData);
       }
     }
-  }, [plan])
+  }, [plan]);
 
   const prevScheduleRef = useRef({});
 
@@ -486,34 +539,43 @@ function App() {
 
       const prevSchedule = prevScheduleRef.current;
       const newSchedule = schedule;
-  
-      const allKeys = new Set([...Object.keys(prevSchedule), ...Object.keys(newSchedule)]);
-  
-      allKeys.forEach(key => {
+
+      const allKeys = new Set([
+        ...Object.keys(prevSchedule),
+        ...Object.keys(newSchedule),
+      ]);
+
+      allKeys.forEach((key) => {
         const prevArr = prevSchedule[key] || [];
         const newArr = newSchedule[key] || [];
-  
+
         const added = newArr.filter(
-          newItem => !prevArr.some(prevItem => prevItem.placeId === newItem.placeId)
+          (newItem) =>
+            !prevArr.some((prevItem) => prevItem.placeId === newItem.placeId)
         );
-  
+
         const removed = prevArr.filter(
-          prevItem => !newArr.some(newItem => newItem.placeId === prevItem.placeId)
+          (prevItem) =>
+            !newArr.some((newItem) => newItem.placeId === prevItem.placeId)
         );
-  
-        const changed = newArr.filter(newItem => {
-          const prevItem = prevArr.find(prevItem => prevItem.placeId === newItem.placeId);
-          return prevItem && JSON.stringify(prevItem) !== JSON.stringify(newItem);
+
+        const changed = newArr.filter((newItem) => {
+          const prevItem = prevArr.find(
+            (prevItem) => prevItem.placeId === newItem.placeId
+          );
+          return (
+            prevItem && JSON.stringify(prevItem) !== JSON.stringify(newItem)
+          );
         });
-  
+
         if (added.length > 0) {
           console.log(`Key ${key} - Added:`, added[0]);
-          
+
           const item = added[0];
           if (!item.timetablePlaceBlockId) {
             const date = getDateById(Number(key));
             const endTime = addMinutes(item.timeSlot, item.duration * 15);
-    
+
             const initialCreate = {
               timetablePlaceBlockVO: {
                 timetableId: Number(key),
@@ -528,17 +590,17 @@ function App() {
                 startTime: `${item.timeSlot}:00`,
                 endTime: `${endTime}:00`,
                 xLocation: item.xlocation,
-                yLocation: item.ylocation
-              }
-            }
-            
+                yLocation: item.ylocation,
+              },
+            };
+
             const client = stompClientRef.current;
             if (client && client.connected) {
               client.publish({
                 destination: `/app/plan/${id}/create/timetableplaceblock`,
                 body: JSON.stringify({
-                  eventId : clientId.current,
-                  ...initialCreate
+                  eventId: clientId.current,
+                  ...initialCreate,
                 }),
               });
               console.log("🚀 메시지 전송:", initialCreate);
@@ -548,19 +610,22 @@ function App() {
         if (removed.length > 0) {
           console.log(`Key ${key} - Removed:`, removed);
           const item = removed[0];
-  
+
           const initialDelete = {
             timetablePlaceBlockVO: {
               timetablePlaceBlockId: item.timetablePlaceBlockId,
-              timetableId: Number(key)
-            }
-          }
-  
+              timetableId: Number(key),
+            },
+          };
+
           const client = stompClientRef.current;
           if (client && client.connected) {
             client.publish({
               destination: `/app/plan/${id}/delete/timetableplaceblock`,
-              body: JSON.stringify({eventId : clientId.current, ...initialDelete}),
+              body: JSON.stringify({
+                eventId: clientId.current,
+                ...initialDelete,
+              }),
             });
             console.log("🚀 메시지 전송:", initialDelete);
           }
@@ -572,7 +637,7 @@ function App() {
             const item = changed[0];
             const date = getDateById(Number(key));
             const endTime = addMinutes(item.timeSlot, item.duration * 15);
-    
+
             const initialUpdate = {
               timetablePlaceBlockVO: {
                 timetableId: Number(key),
@@ -587,15 +652,18 @@ function App() {
                 startTime: `${item.timeSlot}:00`,
                 endTime: `${endTime}:00`,
                 xLocation: item.xlocation,
-                yLocation: item.ylocation
-              }
-            }
-    
+                yLocation: item.ylocation,
+              },
+            };
+
             const client = stompClientRef.current;
             if (client && client.connected) {
               client.publish({
                 destination: `/app/plan/${id}/update/timetableplaceblock`,
-                body: JSON.stringify({eventId : clientId.current, ...initialUpdate}),
+                body: JSON.stringify({
+                  eventId: clientId.current,
+                  ...initialUpdate,
+                }),
               });
               console.log("🚀 메시지 전송:", initialUpdate);
             }
@@ -604,11 +672,10 @@ function App() {
           }
         }
       });
-  
+
       // 깊은 복사로 이전 스케줄 저장
       prevScheduleRef.current = JSON.parse(JSON.stringify(newSchedule));
     }, 50); // 0.05초 지연 후 발사
-
 
     return () => clearTimeout(timer);
   }, [schedule]);
@@ -619,7 +686,7 @@ function App() {
     for (const dayKey in schedule) {
       const arr = schedule[dayKey];
       const uniqueArr = Array.from(
-        new Map(arr.map(item => [item.placeId, item])).values()
+        new Map(arr.map((item) => [item.placeId, item])).values()
       );
       filteredSchedule[dayKey] = uniqueArr;
     }
@@ -629,6 +696,14 @@ function App() {
     }
   }, [schedule]);
 
+  const requestEdit = async () => {
+    try {
+      await post(`${BASE_URL}/api/plan/${id}/request-access`)
+      alert("편집 권한을 요청했습니다.");
+    } catch (err) {
+      console.error("요청에 실패했습니다.", err);
+    }
+  };
 
   // 로딩 상태
   if (!selectedDay || !timetables.length) {
@@ -636,9 +711,23 @@ function App() {
       <div className="min-h-screen font-pretendard">
         <Navbar />
         {data && <PlanInfo info={data.planFrame} id={id} />}
-        <div className="w-[1400px] mx-auto py-6 flex items-center justify-center">
-          <div>일정 정보를 불러오는 중...</div>
-        </div>
+        {noACL ? 
+          <div className="w-[1400px] h-[calc(100vh-125px)] mx-auto py-6 space-y-3 flex items-center justify-center flex-col">
+            <div className="text-3xl"><span className="text-main font-bold">편집 권한</span>이 없습니다.</div>
+            <div className="space-x-3">
+              <button onClick={() => navigate("/mypage")} className="font-semibold border border-gray-500 text-gray-700 hover:bg-gray-200 py-2 px-4 rounded-lg">
+                마이페이지로 가기
+              </button>
+              <button onClick={requestEdit} className="font-semibold text-white bg-main py-2 px-4 rounded-lg">
+                편집 권한 요청하기
+              </button>
+            </div>
+          </div>
+        :
+          <div className="w-[1400px] mx-auto py-6 flex items-center justify-center">
+            <div>일정 정보를 불러오는 중...</div>
+          </div>
+        }
       </div>
     );
   }
@@ -647,42 +736,42 @@ function App() {
     const client = stompClientRef.current;
     const yesi = {
       timetablePlaceBlockVO: {
-      timetableId: 16495,
-      timetablePlaceBlockId: null,
-      placeCategoryId: 2,
-      placeName: "경복궁",
-      placeTheme: "역사",
-      placeRating: 4.7,
-      placeAddress: "서울 종로구 사직로 161",
-      placeLink: "https://example.com/경복궁",
-      date: "2025-08-22",
-      startTime: "14:00:00",
-      endTime: "16:30:00",
-      xLocation: 126.9769,
-      yLocation: 37.5796
-      }
-    }
+        timetableId: 16495,
+        timetablePlaceBlockId: null,
+        placeCategoryId: 2,
+        placeName: "경복궁",
+        placeTheme: "역사",
+        placeRating: 4.7,
+        placeAddress: "서울 종로구 사직로 161",
+        placeLink: "https://example.com/경복궁",
+        date: "2025-08-22",
+        startTime: "14:00:00",
+        endTime: "16:30:00",
+        xLocation: 126.9769,
+        yLocation: 37.5796,
+      },
+    };
     client.publish({
       destination: `/app/plan/${id}/create/timetableplaceblock`,
       body: JSON.stringify(yesi),
     });
-    console.log("발사성공!")
-  }
+    console.log("발사성공!");
+  };
 
   return (
     <div className="min-h-screen font-pretendard">
       <Navbar />
-      {plan && 
-        <PlanInfo 
-          info={plan} 
-          planDispatch={planDispatch} 
-          id={id} 
+      {plan && (
+        <PlanInfo
+          info={plan}
+          planDispatch={planDispatch}
+          id={id}
           savePlan={savePlan}
           schedule={schedule}
           selectedDay={selectedDay}
         />
-      }
-      
+      )}
+
       <div className="w-[1400px] mx-auto py-6">
         <div className="flex space-x-6 flex-1">
           <DaySelector
@@ -693,7 +782,7 @@ function App() {
             stompClientRef={stompClientRef}
             id={id}
           />
-          
+
           <TimeTable
             selectedDay={selectedDay}
             timetables={timetables}
@@ -702,18 +791,17 @@ function App() {
             onScheduleUpdate={updateSchedule}
             onPlacesUpdate={updatePlaces}
           />
-          
+
           <PlaceRecommendations
             places={places}
             schedule={schedule}
             onPlacesUpdate={updatePlaces}
           />
-
         </div>
         {/* <button className="hover:bg-gray-300" onClick={() => balsa()}>테스트 버튼</button> */}
       </div>
     </div>
   );
-};
+}
 
 export default App;
