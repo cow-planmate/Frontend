@@ -108,7 +108,7 @@ const TravelPlannerApp = () => {
     const fetchUserProfile = async () => {
       if (id) {
         try {
-          const planData = await get(`${BASE_URL}/api/plan/${id}`); // BASE_URL
+          const planData = await get(`${BASE_URL}/api/plan/${id}/complete`); // BASE_URL
           setData(planData);
           // timetables 데이터 설정
           if (planData.timetables) {
@@ -130,7 +130,7 @@ const TravelPlannerApp = () => {
     };
 
     fetchUserProfile();
-  }, [id, isAuthenticated, get]);
+  }, [id, get]);
 
   useEffect(() => {
     console.log(schedule);
