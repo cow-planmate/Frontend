@@ -47,7 +47,11 @@ export default function PlanListList({
     try {
       const res = await del(`${BASE_URL}/api/plan/${lst.planId}`);
       console.log("API응답", res);
-      onPlanDeleted(lst.planId);
+      if (res.message !== "일정을 삭제할 권한이 없습니다.") {
+        onPlanDeleted(lst.planId);
+      } else {
+        alert("일정을 삭제할 권한이 없습니다.");
+      }
     } catch (err) {
       console.log("오류발생", err);
     }
