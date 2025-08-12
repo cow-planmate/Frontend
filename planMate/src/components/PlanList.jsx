@@ -6,7 +6,7 @@ import { useApiClient } from "../assets/hooks/useApiClient";
 import PlanListList from "./PlanListList";
 import { useNavigate } from "react-router-dom";
 
-export default function PlanList() {
+export default function PlanList({ refreshTrigger }) {
   const navigate = useNavigate();
   const [myPlans, setMyPlans] = useState([]);
   const [editablePlans, setEditablePlans] = useState([]);
@@ -39,7 +39,7 @@ export default function PlanList() {
     };
 
     fetchUserProfile();
-  }, [isAuthenticated, get]);
+  }, [isAuthenticated, get, refreshTrigger]);
   const removeEditablePlanFromState = (planId) => {
     setEditablePlans((prev) => prev.filter((p) => p.planId !== planId));
   };
