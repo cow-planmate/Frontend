@@ -8,7 +8,7 @@ import DaySelector from "../components/Create/DaySelector";
 import TimeTable from "../components/Create/TimeTable";
 import PlaceRecommendations from "../components/Create/PlaceRecommendations";
 
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { transformApiResponse, addMinutes } from "../utils/scheduleUtils";
 
@@ -84,7 +84,8 @@ function App() {
   const [data, setData] = useState(null);
   const [timetables, timeDispatch] = useReducer(timetableReducer, []);
   const timetablesRef = useRef(timetables);
-
+  const navigate = useNavigate();
+  
   // State
   const [transformedData, setTransformedData] = useState(null);
   const [schedule, setSchedule] = useState({});
@@ -384,6 +385,9 @@ function App() {
         } catch (err) {
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
         }
+      } else {
+        alert("로그인 후 접근해주세요.");
+        navigate("/");
       }
     };
 
