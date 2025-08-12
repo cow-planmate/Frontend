@@ -14,7 +14,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { faBell as faBellRegular } from "@fortawesome/free-regular-svg-icons";
 
-export default function Navbar() {
+export default function Navbar({ onInvitationAccept }) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isPasswordFindOpen, setIsPasswordFindOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
@@ -146,6 +146,10 @@ export default function Navbar() {
       await post(`${BASE_URL}/api/collaboration-requests/${requestId}/accept`);
       fetchInvitations();
       console.log("초대 수락 완료");
+
+      if (onInvitationAccept) {
+        onInvitationAccept();
+      }
     } catch (err) {
       console.error("초대 수락 실패:", err);
     }
