@@ -38,6 +38,8 @@ export default function PlanInfo({info, id, planDispatch, schedule, selectedDay}
 
   const [mapModalOpen, setMapModalOpen] = useState(false);
 
+  const [sortedState, setSortedState] = useState({});
+
   const spanRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -48,6 +50,23 @@ export default function PlanInfo({info, id, planDispatch, schedule, selectedDay}
       console.log(spanWidth)
     }
   }, [title]);
+
+  useEffect(() => {
+    const sade = Object.fromEntries(
+      Object.entries(schedule).map(([key, places]) => [
+        key,
+        [...places].sort((a, b) => {
+          // "HH:MM" 형식을 Date 비교로 변환
+          const timeA = a.timeSlot.split(":").map(Number);
+          const timeB = b.timeSlot.split(":").map(Number);
+          return timeA[0] - timeB[0] || timeA[1] - timeB[1];
+        })
+      ])
+    );
+
+    console.log(sade);
+    setSortedState(sade);
+  }, [schedule])
 
   /*useEffect(() => {
     const patchApi = async () => {
@@ -218,7 +237,7 @@ export default function PlanInfo({info, id, planDispatch, schedule, selectedDay}
 
       {mapModalOpen && <MapModal
         setMapModalOpen={setMapModalOpen}
-        schedule={schedule}
+        schedule={sortedState}
         selectedDay={selectedDay}
       />}
 
@@ -285,29 +304,38 @@ const MapModal = ({setMapModalOpen, schedule, selectedDay}) => {
           level={3} // 지도의 확대 레벨
           onCreate={setMap}
         >
-          {schedule[selectedDay].map((item) => {
+          {(schedule[selectedDay] || []).map((item, index) => {
             return (
               <MapMarker // 인포윈도우를 생성하고 지도에 표시합니다
+                key={item.placeId}
                 position={{
                   // 인포윈도우가 표시될 위치입니다
                   lat: item.ylocation,
                   lng: item.xlocation,
                 }}
               >
-                <div className="p-2 w-[159px]" style={{borderRadius: '4rem'}}>
-                  <p className="text-lg font-semibold truncate">{item.name}</p>
-                  <a
-                    href={item.url}
-                    style={{ color: "blue" }}
-                    className="text-sm"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    장소 정보 보기
-                  </a>
+                <div
+                  className="p-2 w-[159px]"
+                  style={{ borderRadius: "4rem" }}
+                >
+                  <p className="text-lg font-semibold truncate">
+                    {item.name}
+                  </p>
+                  <div className="flex items-center space-x-1">
+                    <div className="text-sm w-[22px] h-[22px] border border-black rounded-full flex items-center justify-center">{index+1}</div>
+                    <a
+                      href={item.url}
+                      style={{ color: "blue" }}
+                      className="text-sm hover:underline"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      장소 정보 보기
+                    </a>
+                  </div>
                 </div>
               </MapMarker>
-            )
+            );
           })}
           {positions.slice(0, -1).map((pos, idx) => {
             return (
