@@ -191,7 +191,7 @@ function App() {
       <div className=" flex flex-col items-center ">
         <img
           src={img1}
-          className=" w-[140rem] h-[40rem] object-cover bg-gradient-to-b "
+          className=" w-screen [140rem] h-[40rem] object-cover bg-gradient-to-b "
         />
         <div className="absolute top-[5rem] max-h-[40rem] inset-0 bg-gradient-to-b from-transparent to-black/60 pointer-events-none"></div>{" "}
       </div>
