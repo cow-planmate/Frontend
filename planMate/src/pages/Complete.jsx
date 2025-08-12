@@ -24,6 +24,7 @@ const TravelPlannerApp = () => {
 
   const [map, setMap] = useState();
   const [positions, setPositions] = useState([{ lat: 37.5665, lng: 126.978 }]); // 초기값 설정
+  const [sortedState, setSortedState] = useState({});
 
   // 두 번째 API 응답을 첫 번째 형태로 변환하는 함수
   const transformApiResponse = (apiResponse) => {
@@ -156,6 +157,23 @@ const TravelPlannerApp = () => {
       setPositions(newPositions);
     }
   }, [selectedDay, schedule]);
+
+  useEffect(() => {
+    const sade = Object.fromEntries(
+      Object.entries(schedule).map(([key, places]) => [
+        key,
+        [...places].sort((a, b) => {
+          // "HH:MM" 형식을 Date 비교로 변환
+          const timeA = a.timeSlot.split(":").map(Number);
+          const timeB = b.timeSlot.split(":").map(Number);
+          return timeA[0] - timeB[0] || timeA[1] - timeB[1];
+        })
+      ])
+    );
+
+    console.log(sade);
+    setSortedState(sade);
+  }, [schedule])
 
   // useEffect를 사용하여 map 인스턴스가 생성된 후 한 번만 실행되도록 설정
   useEffect(() => {
@@ -371,7 +389,7 @@ const TravelPlannerApp = () => {
               level={3} // 지도의 확대 레벨
               onCreate={setMap}
             >
-              {(schedule[selectedDay] || []).map((item) => {
+              {(sortedState[selectedDay] || []).map((item, index) => {
                 return (
                   <MapMarker // 인포윈도우를 생성하고 지도에 표시합니다
                     key={item.placeId}
@@ -388,15 +406,18 @@ const TravelPlannerApp = () => {
                       <p className="text-lg font-semibold truncate">
                         {item.name}
                       </p>
-                      <a
-                        href={item.url}
-                        style={{ color: "blue" }}
-                        className="text-sm"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        장소 정보 보기
-                      </a>
+                      <div className="flex items-center space-x-1">
+                        <div className="text-sm w-[22px] h-[22px] border border-black rounded-full flex items-center justify-center">{index+1}</div>
+                        <a
+                          href={item.url}
+                          style={{ color: "blue" }}
+                          className="text-sm hover:underline"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          장소 정보 보기
+                        </a>
+                      </div>
                     </div>
                   </MapMarker>
                 );
