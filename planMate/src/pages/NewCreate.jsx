@@ -125,8 +125,10 @@ function App() {
       );
   }
 
+  const token = localStorage.getItem('token'); // 키 이름 확인!
+
   useEffect(() => {
-    const SERVER_URL = `${BASE_URL}/ws-plan`;
+    const SERVER_URL = `https://pmserver.salmakis.online/ws-plan?token=${encodeURIComponent(token ?? '')}`;
 
     const connectWebSocket = () => {
       console.log("🔄 WebSocket 연결 시도 중...", SERVER_URL);

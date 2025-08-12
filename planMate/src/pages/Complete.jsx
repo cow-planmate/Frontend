@@ -7,7 +7,7 @@ import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk";
 import useKakaoLoader from "../hooks/useKakaoLoader";
 
 const TravelPlannerApp = () => {
-  const { get, post, patch, isAuthenticated } = useApiClient();
+  const { get } = useApiClient();
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
   const [data, setData] = useState(null);
@@ -18,10 +18,8 @@ const TravelPlannerApp = () => {
   const navigate = useNavigate();
   const BASE_URL = import.meta.env.VITE_API_URL;
   const [selectedDay, setSelectedDay] = useState(null); // 초기값을 null로 변경
-  const [selectedTab, setSelectedTab] = useState("관광지");
-  const [draggedItem, setDraggedItem] = useState(null);
-  const [draggedFromSchedule, setDraggedFromSchedule] = useState(null);
-  const [places, setPlaces] = useState({}); // places state 추가
+  const [isShareOpen, setIsShareOpen] = useState(false);
+
 
   useKakaoLoader();
 
@@ -234,249 +232,6 @@ const TravelPlannerApp = () => {
     const index = timetables.findIndex((t) => t.timetableId === timetableId);
     return index + 1;
   };
-
-  // 시간 겹침 체크 함수
-  const checkTimeOverlap = (newItem, excludeId = null) => {
-    const daySchedule = schedule[selectedDay] || [];
-    const newStartIndex = getTimeSlotIndex(newItem.timeSlot);
-    const newEndIndex = newStartIndex + newItem.duration - 1;
-
-    return daySchedule.some((item) => {
-      if (excludeId && item.placeId === excludeId) return false;
-
-      const existingStartIndex = getTimeSlotIndex(item.timeSlot);
-      const existingEndIndex = existingStartIndex + item.duration - 1;
-
-      return !(
-        newEndIndex < existingStartIndex || newStartIndex > existingEndIndex
-      );
-    });
-  };
-
-  // 가장 가까운 빈 시간대 찾기
-  const findNearestAvailableTime = (preferredTimeSlot, duration) => {
-    const preferredIndex = getTimeSlotIndex(preferredTimeSlot);
-
-    // 선호 시간부터 시작해서 아래로 검색
-    for (let i = preferredIndex; i <= timeSlots.length - duration; i++) {
-      const testItem = { timeSlot: timeSlots[i], duration };
-      if (!checkTimeOverlap(testItem)) {
-        return timeSlots[i];
-      }
-    }
-
-    // 위로 검색
-    for (let i = preferredIndex - 1; i >= 0; i--) {
-      if (i + duration > timeSlots.length) continue;
-      const testItem = { timeSlot: timeSlots[i], duration };
-      if (!checkTimeOverlap(testItem)) {
-        return timeSlots[i];
-      }
-    }
-
-    return null;
-  };
-
-  // 삭제 함수
-  const handleDeleteItem = (item) => {
-    const newSchedule = { ...schedule };
-    newSchedule[selectedDay] = newSchedule[selectedDay].filter(
-      (scheduleItem) => scheduleItem.placeId !== item.placeId
-    );
-    setSchedule(newSchedule);
-
-    // 추천 탭에 다시 추가
-    const newPlaces = { ...places };
-    const originalItem = { ...item };
-    delete originalItem.timeSlot;
-    delete originalItem.duration;
-
-    // 원래 카테고리가 있으면 그것을 사용, 없으면 iconUrl로 판단
-    let category = originalItem.originalCategory;
-
-    if (!category) {
-      // iconUrl을 기반으로 카테고리 결정 (아님)
-      const getCategory = (categoryId) => {
-        if (categoryId == 0) {
-          return "관광지";
-        } else if (categoryId == 1) {
-          return "숙소";
-        } else {
-          return "식당";
-        }
-      };
-      category = getCategory(originalItem.categoryId);
-    }
-
-    delete originalItem.originalCategory; // 원래 카테고리 정보 제거
-    if (!newPlaces[category]) {
-      newPlaces[category] = [];
-    }
-    newPlaces[category].push(originalItem);
-
-    setPlaces(newPlaces);
-  };
-
-  const handleDragStart = (e, item, fromSchedule = false) => {
-    setDraggedItem(item);
-    setDraggedFromSchedule(fromSchedule);
-    e.dataTransfer.effectAllowed = "move";
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  };
-
-  const handleDrop = (e, timeSlot) => {
-    e.preventDefault();
-    if (!draggedItem) return;
-
-    const newSchedule = { ...schedule };
-
-    if (draggedFromSchedule) {
-      // 스케줄 내에서 이동
-      const originalItem = newSchedule[selectedDay].find(
-        (item) => item.placeId === draggedItem.placeId
-      );
-      if (!originalItem) return;
-
-      const testItem = { ...originalItem, timeSlot };
-
-      // 겹침 체크 (자기 자신은 제외)
-      if (checkTimeOverlap(testItem, draggedItem.placeId)) {
-        // 겹치면 가장 가까운 빈 시간대로 이동
-        const availableTime = findNearestAvailableTime(
-          timeSlot,
-          originalItem.duration
-        );
-        if (availableTime) {
-          testItem.timeSlot = availableTime;
-        } else {
-          // 빈 시간대가 없으면 원래 위치 유지
-          setDraggedItem(null);
-          setDraggedFromSchedule(null);
-          return;
-        }
-      }
-
-      newSchedule[selectedDay] = newSchedule[selectedDay].filter(
-        (item) => item.placeId !== draggedItem.placeId
-      );
-      newSchedule[selectedDay].push(testItem);
-    } else {
-      // 추천 탭에서 스케줄로 이동
-      const newPlaces = { ...places };
-      const category = Object.keys(newPlaces).find((key) =>
-        newPlaces[key].some((place) => place.placeId === draggedItem.placeId)
-      );
-
-      if (category) {
-        const newItem = {
-          ...draggedItem,
-          timeSlot,
-          duration: 4, // 기본 1시간 (15분 * 4)
-        };
-
-        // 겹침 체크
-        if (checkTimeOverlap(newItem)) {
-          // 겹치면 가장 가까운 빈 시간대로 이동
-          const availableTime = findNearestAvailableTime(
-            timeSlot,
-            newItem.duration
-          );
-          if (availableTime) {
-            newItem.timeSlot = availableTime;
-          } else {
-            // 빈 시간대가 없으면 추가하지 않음
-            setDraggedItem(null);
-            setDraggedFromSchedule(null);
-            return;
-          }
-        }
-
-        newPlaces[category] = newPlaces[category].filter(
-          (place) => place.placeId !== draggedItem.placeId
-        );
-        setPlaces(newPlaces);
-        newSchedule[selectedDay].push(newItem);
-      }
-    }
-
-    setSchedule(newSchedule);
-    setDraggedItem(null);
-    setDraggedFromSchedule(null);
-  };
-
-  const handleResizeStart = (e, item, direction) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    const startY = e.clientY;
-    const originalItem = { ...item };
-    const originalTimeIndex = getTimeSlotIndex(originalItem.timeSlot);
-
-    const handleMouseMove = (moveEvent) => {
-      const deltaY = moveEvent.clientY - startY;
-      const deltaSlots = Math.round(deltaY / 30);
-
-      const newSchedule = { ...schedule };
-      const itemIndex = newSchedule[selectedDay].findIndex(
-        (scheduleItem) => scheduleItem.placeId === item.placeId
-      );
-
-      if (itemIndex !== -1) {
-        let testItem = { ...originalItem };
-
-        if (direction === "top") {
-          // 위쪽 리사이징: 시작 시간 변경, 길이 조절
-          const newStartIndex = Math.max(
-            0,
-            Math.min(
-              originalTimeIndex + deltaSlots,
-              originalTimeIndex + originalItem.duration - 1
-            )
-          );
-          const newDuration =
-            originalItem.duration - (newStartIndex - originalTimeIndex);
-
-          if (newDuration >= 1 && newStartIndex < timeSlots.length) {
-            testItem = {
-              ...originalItem,
-              timeSlot: timeSlots[newStartIndex],
-              duration: newDuration,
-            };
-          }
-        } else {
-          // 아래쪽 리사이징: 길이만 변경
-          const newDuration = Math.max(1, originalItem.duration + deltaSlots);
-          const endIndex = originalTimeIndex + newDuration - 1;
-
-          if (endIndex < timeSlots.length) {
-            testItem = {
-              ...originalItem,
-              duration: newDuration,
-            };
-          }
-        }
-
-        // 겹침 체크 (자기 자신은 제외)
-        if (!checkTimeOverlap(testItem, item.placeId)) {
-          newSchedule[selectedDay][itemIndex] = testItem;
-          setSchedule(newSchedule);
-        }
-      }
-    };
-
-    const handleMouseUp = () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  };
-
   const getTimeSlotIndex = (timeSlot) => {
     return timeSlots.indexOf(timeSlot);
   };
@@ -525,53 +280,6 @@ const TravelPlannerApp = () => {
     );
   }
 
-  const addMinutes = (time, minsToAdd) => {
-    const [hour, min] = time.split(":").map(Number);
-    const date = new Date(0, 0, 0, hour, min + minsToAdd);
-    return date.toTimeString().slice(0, 5); // "HH:MM"
-  };
-
-  const getDateById = (id) => {
-    const matched = data?.timetables?.find((t) => t.timetableId === id);
-    return matched?.date ?? null;
-  };
-
-  const exportSchedule = () => {
-    const grouped = {}; // { date: [block1, block2, ...] }
-
-    Object.entries(schedule).forEach(([timetableIdStr, day]) => {
-      if (!Array.isArray(day) || day.length === 0) return;
-
-      const timetableId = parseInt(timetableIdStr, 10);
-      const date = getDateById(timetableId);
-
-      for (const place of day) {
-        const startTime = place.timeSlot;
-        const endTime = addMinutes(startTime, place.duration * 15);
-
-        const block = {
-          placeCategory: place.categoryId,
-          placeName: place.name,
-          placeAddress: place.formatted_address,
-          placeRating: place.rating,
-          startTime: `${startTime}:00`,
-          endTime: `${endTime}:00`,
-          date: date,
-          xLocation: place.xlocation,
-          yLocation: place.ylocation,
-          placeLink: place.url,
-          placeTheme: "역사",
-        };
-
-        if (!grouped[date]) grouped[date] = [];
-        grouped[date].push(block);
-      }
-    });
-
-    // 2차원 배열 형태로 반환
-    return Object.values(grouped);
-  };
-
   return (
     <div className="min-h-screen font-pretendard">
       <Navbar />
@@ -587,7 +295,10 @@ const TravelPlannerApp = () => {
             >
               수정
             </button>
-            <button className="px-3 py-1.5 rounded-lg bg-sub border border-main">
+            <button
+              onClick={() => setIsShareOpen(true)}
+              className="px-3 py-1.5 rounded-lg bg-sub border border-main"
+            >
               공유
             </button>
             <button
@@ -717,8 +428,192 @@ const TravelPlannerApp = () => {
           </div>
         </div>
       </div>
+      {isShareOpen && 
+        <ShareModal
+          isShareOpen={isShareOpen}
+          setIsShareOpen={setIsShareOpen}
+          id={id}
+        />
+      }
     </div>
   );
 };
 
+const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
+  const { patch, post, get, del } = useApiClient();
+  const [editors, setEditors] = useState([]);
+  const [receiverNickname, setreceiverNickname] = useState("");
+  const [shareURL, setShareURL] = useState("");
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    getShareLink();
+    getEditors();
+  }, [isShareOpen]);
+
+  const removeEditorAccessByOwner = async (targetUserId) => {
+    try {
+      const response = await del(
+        `${BASE_URL}/api/plan/${id}/editors/${targetUserId}`
+      );
+      console.log(response);
+      getEditors();
+    } catch (err) {
+      console.error("에디터 제거에 실패했습니다:", err);
+    }
+  };
+
+  const getEditors = async () => {
+    try {
+      const response = await get(`${BASE_URL}/api/plan/${id}/editors`);
+      console.log(response);
+      setEditors(response.simpleEditorVOs || []);
+    } catch (error) {
+      console.error("에디터 조회에 실패했습니다:", error);
+    }
+  };
+
+  const inviteUserToPlan = async () => {
+    try {
+      const response = await post(`${BASE_URL}/api/plan/${id}/invite`, {
+        receiverNickname: receiverNickname,
+      });
+      console.log(response);
+      setreceiverNickname("");
+      alert("초대를 보냈습니다!");
+    } catch (err) {
+      console.error("초대에 실패했습니다:", err);
+
+      const errorMessage = err.response?.data?.message || err.message;
+
+      if (errorMessage.includes("해당 닉네임의 유저가 존재하지 않습니다")) {
+        alert("존재하지 않는 닉네임입니다. 다시 확인해주세요.");
+      } else if (errorMessage.includes("이미 편집 권한이 있는 유저입니다")) {
+        alert("이미 편집 권한이 있는 유저입니다.");
+      } else if (errorMessage.includes("이미 초대한 유저입니다")) {
+        alert("이미 초대를 보낸 유저입니다.");
+      } else if (errorMessage.includes("자신에게는 초대를 보낼 수 없습니다")) {
+        alert("자신에게는 초대를 보낼 수 없습니다.");
+      } else if (errorMessage.includes("보낸 유저가 존재하지 않습니다")) {
+        alert("사용자 인증에 실패했습니다. 다시 로그인해주세요.");
+      } else if (err.response?.status === 403) {
+        alert("해당 플랜에 대한 권한이 없습니다.");
+      } else if (err.response?.status === 404) {
+        alert("존재하지 않는 플랜입니다.");
+      } else if (err.response?.status === 500) {
+        alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      } else {
+        alert("초대에 실패했습니다. 다시 시도해주세요.");
+      }
+    }
+  };
+
+  const getShareLink = async () => {
+    try {
+      const completeURL = `${window.location.origin}/complete?id=${id}`;
+      setShareURL(completeURL);
+    } catch (error) {
+      console.error("공유 링크 생성 실패", error);
+    }
+  };
+  //get share 함수 api버전
+  /**  const getShareLink = async () => {
+    try {
+      const response = await get(`${BASE_URL}/api/plan/${id}/share`);
+      console.log(response);
+      setShareURL(response.sharedPlanUrl || "");
+    } catch (error) {
+      console.error("공유 링크 조회 실패", error);
+    }
+  };*/
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareURL);
+    alert("링크가 복사되었습니다!");
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm cursor-default"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="relative bg-white p-6 rounded-2xl shadow-2xl w-96 border border-gray-100 max-h-[80vh] overflow-y-auto">
+        <h2 className="text-xl font-bold text-gray-800 mb-6">공유 및 초대</h2>
+        <button
+          onClick={() => setIsShareOpen(false)}
+          className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 text-xl"
+        >
+          ✕
+        </button>
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            완성본 공유 URL
+          </label>
+          <div className="flex gap-2">
+            <input
+              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"
+              value={shareURL}
+              readOnly
+            />
+            <button
+              onClick={copyToClipboard}
+              className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-all duration-200"
+            >
+              복사
+            </button>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            편집 권한이 있는 사용자
+          </label>
+          <div className="space-y-2">
+            {editors.length > 0 ? (
+              editors.map((editor) => (
+                <div
+                  key={editor.userId}
+                  className="flex items-center justify-between bg-gray-50 p-3 rounded-xl"
+                >
+                  <span className="text-gray-700">{editor.nickName}</span>
+                  <button
+                    onClick={() => removeEditorAccessByOwner(editor.userId)}
+                    className="w-6 h-6 bg-red-100 hover:bg-red-200 rounded-full flex items-center justify-center transition-colors"
+                  >
+                    <span className="text-red-500 text-sm">×</span>
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="text-gray-500 text-sm text-center py-2">
+                편집 권한을 가진 사용자가 없습니다
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            일정 편집 초대
+          </label>
+          <div className="flex gap-2">
+            <input
+              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
+              value={receiverNickname}
+              onChange={(e) => setreceiverNickname(e.target.value)}
+              placeholder="닉네임"
+            />
+            <button
+              onClick={inviteUserToPlan}
+              className="px-4 py-3 bg-main hover:bg-blue-700 text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
+              disabled={!receiverNickname.trim()}
+            >
+              초대
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 export default TravelPlannerApp;
