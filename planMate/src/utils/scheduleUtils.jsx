@@ -12,7 +12,12 @@ export const transformApiResponse = (apiResponse) => {
   placeBlocks.forEach((place) => {
     // startTime과 endTime으로부터 duration 계산 (15분 단위)
     const startTime = new Date(`2000-01-01T${place.startTime}`);
-    const endTime = new Date(`2000-01-01T${place.endTime}`);
+    let endTime;
+    if (place.endTime === "23:59:59") {
+      endTime = new Date(`2000-01-01T24:00:00`);
+    } else {
+      endTime = new Date(`2000-01-01T${place.endTime}`);
+    }
     const durationMinutes = (endTime - startTime) / (1000 * 60);
     const duration = Math.round(durationMinutes / 15);
 
