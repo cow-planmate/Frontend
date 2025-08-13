@@ -252,13 +252,11 @@ const TravelPlannerApp = () => {
     return (
       <div
         key={item.placeId}
-        className="absolute left-16 p-2 font-hand text-sm shadow-lg border border-[#718FFF] rounded-lg z-10 group"
+        className="absolute left-16 p-2 text-sm shadow-lg border border-[#718FFF] bg-sub rounded-lg z-10 group cursor-move"
         style={{
           top: `${startIndex * 30}px`,
           height: `${height}px`,
           width: "329px",
-          backgroundImage:
-            "linear-gradient(to bottom, transparent, #E8EDFF), linear-gradient(-45deg, #718FFF 40px, #E8EDFF 40px)",
         }}
       >
         {/* 컨텐츠 */}
