@@ -22,6 +22,8 @@ const PlaceRecommendations = ({
   // API 클라이언트
   const { post } = useApiClient();
 
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
   // ✅ places 중복 제거 (placeId 기준)
   useEffect(() => {
     if (!places) return;
@@ -68,7 +70,7 @@ const PlaceRecommendations = ({
     try {
       setSearchLoading(true);
       // 백엔드 규격: POST /api/plan/{id}/place  body: { "query": "서울역" }
-      const res = await post(`/api/plan/${id}/place`, { query: q });
+      const res = await post(`${BASE_URL}/api/plan/${id}/place`, { query: q });
       const newSearchList = Array.isArray(res?.places) ? res.places : [];
 
       // places.검색만 덮어쓰기
