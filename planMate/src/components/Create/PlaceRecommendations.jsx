@@ -113,7 +113,7 @@ const PlaceRecommendations = ({
           <div className="flex items-center space-x-2">
             <input
               type="text"
-              placeholder="장소를 입력하세요 (예: 서울역)"
+              placeholder="장소를 입력하세요"
               className="flex-1 border rounded-md px-3 py-2"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
