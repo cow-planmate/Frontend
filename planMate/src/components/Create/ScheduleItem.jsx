@@ -10,7 +10,7 @@ const ScheduleItem = ({
   onPlacesUpdate,
   onDragStart
 }) => {
-  const tripCategory = { 0: "관광지", 1: "숙소", 2: "식당" };
+  const tripCategory = { 0: "관광지", 1: "숙소", 2: "식당", 4: "검색" };
 
   const {
     getTimeSlotIndex,

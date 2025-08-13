@@ -46,14 +46,22 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
         </button>
       </div>
       {isModalOpen && createPortal(
-        <Modal setIsModalOpen={setIsModalOpen} timetables={timetables} timeDispatch={timeDispatch} stompClientRef={stompClientRef} id={id} />,
+        <Modal 
+          setIsModalOpen={setIsModalOpen} 
+          timetables={timetables} 
+          timeDispatch={timeDispatch} 
+          stompClientRef={stompClientRef} 
+          id={id} 
+          onDaySelect={onDaySelect} 
+          selectedDay={selectedDay} 
+        />,
         document.body
       )}
     </>
   );
 };
 
-const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id }) => {
+const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id, selectedDay, onDaySelect }) => {
   const [newTime, setNewTime] = useState(timetables);
 
   const [create, setCreate] = useState({"timetableVOs": []});
@@ -210,6 +218,9 @@ const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id })
       }
       
       timeDispatch({type: "update", payload: newTime});
+
+      // if (selectedDay)
+
       setIsModalOpen(false);
     }
   }
