@@ -680,7 +680,7 @@ export default function Signup({
                       : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                   }`}
                 >
-                  녀
+                  여
                 </button>
               </div>
             </div>
