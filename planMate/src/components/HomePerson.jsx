@@ -57,7 +57,7 @@ export default function PersonCountModal({
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 text-xl"
           >
-            ×
+            ✕
           </button>
         </div>
 

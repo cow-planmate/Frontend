@@ -12,8 +12,9 @@ import {
   faRightFromBracket,
   faHouseUser,
 } from "@fortawesome/free-solid-svg-icons";
+import { faBell as faBellRegular } from "@fortawesome/free-regular-svg-icons";
 
-export default function Navbar() {
+export default function Navbar({ onInvitationAccept }) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isPasswordFindOpen, setIsPasswordFindOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
@@ -25,18 +26,22 @@ export default function Navbar() {
     restaurant: [],
   });
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isInvitationOpen, setisInvitationOpen] = useState(false);
+  const [invitations, setInvitations] = useState([]);
 
   // 사용자 프로필 상태 추가
   const [userProfile, setUserProfile] = useState(null);
 
-  const { get, isLoading, error, isAuthenticated, logout } = useApiClient();
+  const { get, post, isLoading, error, isAuthenticated, logout } =
+    useApiClient();
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   // 기존 코드 그대로...
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (isAuthenticated()) {
         try {
-          const profileData = await get("/api/user/profile");
+          const profileData = await get(`${BASE_URL}/api/user/profile`);
           setUserProfile(profileData);
         } catch (err) {
           console.error("프로필 정보를 가져오는데 실패했습니다:", err);
@@ -57,8 +62,8 @@ export default function Navbar() {
   const handleLogout = () => {
     logout();
     setUserProfile(null);
-    // 필요한 경우 홈페이지로 리다이렉트
-    // window.location.href = '/';
+
+    window.location.href = "/";
   };
 
   const handleLoginOpen = () => {
@@ -113,7 +118,7 @@ export default function Navbar() {
   const refreshUserProfile = async () => {
     if (isAuthenticated()) {
       try {
-        const profileData = await get("/api/user/profile");
+        const profileData = await get(`${BASE_URL}/api/user/profile`);
         setUserProfile(profileData);
       } catch (err) {
         console.error("프로필 정보 새로고침 실패:", err);
@@ -136,8 +141,47 @@ export default function Navbar() {
     };
   }, []);
 
+  const acceptRequest = async (requestId) => {
+    try {
+      await post(`${BASE_URL}/api/collaboration-requests/${requestId}/accept`);
+      fetchInvitations();
+      console.log("초대 수락 완료");
+
+      if (onInvitationAccept) {
+        onInvitationAccept();
+      }
+    } catch (err) {
+      console.error("초대 수락 실패:", err);
+    }
+  };
+  const rejectRequest = async (requestId) => {
+    try {
+      await post(`${BASE_URL}/api/collaboration-requests/${requestId}/reject`);
+      fetchInvitations();
+      console.log("초대 거절 완료");
+    } catch (err) {
+      console.error("초대 거절 실패:", err);
+    }
+  };
+  const fetchInvitations = async () => {
+    if (isAuthenticated()) {
+      try {
+        const response = await get(
+          `${BASE_URL}/api/collaboration-requests/pending`
+        );
+        console.log(response);
+        setInvitations(response.pendingRequests || []);
+      } catch (err) {
+        console.error("초대 목록을 가져오는데 실패했습니다:", err);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchInvitations();
+  }, [userProfile]);
   return (
-    <div className="border-b border-gray-200">
+    <div className="border-b border-gray-200 ">
       <div className="mx-auto w-[1400px] bg-white flex justify-between py-4 items-center">
         <div>
           <Link to="/">
@@ -145,53 +189,136 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {isAuthenticated() && userProfile ? (
-          <div className="relative" ref={wrapperRef}>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsProfileOpen((prev) => !prev);
-              }}
-            >
-              <div className="flex items-center h-[42px]">
-                <div className="w-8 h-8 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full mr-3"></div>
-                <span>
-                  {userProfile.nickname || userProfile.name || "사용자"}님
-                </span>
-              </div>
-            </button>
-
-            {isProfileOpen && (
-              <div className="absolute right-0 top-full w-36 p-2 bg-white border rounded-lg shadow-md z-50">
-                <Link to="/mypage">
-                  <div className="w-full flex items-center p-3 hover:bg-gray-100 cursor-pointer">
-                    <FontAwesomeIcon className="mr-3 w-4" icon={faHouseUser} />
-                    마이페이지
-                  </div>
-                </Link>
+        <div className="flex items-center gap-4">
+          {isAuthenticated() && userProfile ? (
+            <div className="relative" ref={wrapperRef}>
+              <div className="flex items-center gap-5">
                 <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center p-3 hover:bg-gray-100 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsProfileOpen((prev) => !prev);
+                  }}
+                >
+                  <div className="flex items-center h-[42px]">
+                    <div className="w-8 h-8 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full mr-3"></div>
+                    <span>
+                      {userProfile.nickname || userProfile.name || "사용자"}님
+                    </span>
+                  </div>
+                </button>
+
+                <button
+                  className="relative flex items-center"
+                  onClick={() => setisInvitationOpen((prev) => !prev)}
                 >
                   <FontAwesomeIcon
-                    className="mr-3 w-4"
-                    icon={faRightFromBracket}
+                    icon={faBellRegular}
+                    className="text-gray-500 text-[20px] align-middle hover:text-gray-400"
                   />
-                  로그아웃
+                  {invitations.length > 0 && (
+                    <span className="absolute -bottom-1 left-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                  )}
                 </button>
               </div>
-            )}
-          </div>
-        ) : (
-          <div className="h-[44px]">
-            <button
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100"
-              onClick={handleLoginOpen}
-            >
-              로그인/회원가입
-            </button>
-          </div>
-        )}
+              {isProfileOpen && (
+                <div className="absolute right-8 top-full w-36 p-2 bg-white border rounded-lg shadow-md z-50">
+                  <Link to="/mypage">
+                    <div className="w-full flex items-center p-3 hover:bg-gray-100 cursor-pointer">
+                      <FontAwesomeIcon
+                        className="mr-3 w-4"
+                        icon={faHouseUser}
+                      />
+                      마이페이지
+                    </div>
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center p-3 hover:bg-gray-100 cursor-pointer"
+                  >
+                    <FontAwesomeIcon
+                      className="mr-3 w-4"
+                      icon={faRightFromBracket}
+                    />
+                    로그아웃
+                  </button>
+                </div>
+              )}
+
+              {isInvitationOpen && (
+                <div className="absolute right-0 top-full w-80 bg-white border rounded-lg shadow-lg z-50">
+                  <div className="p-4">
+                    <div
+                      className="flex justify-between items-center mb-4"
+                      style={{
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none",
+                      }}
+                    >
+                      <h3 className="text-lg font-semibold">초대 알림</h3>
+                      <button
+                        onClick={() => setisInvitationOpen(false)}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                      {invitations.length > 0 ? (
+                        invitations.map((invitation) => (
+                          <div
+                            key={invitation.requestId}
+                            className="border border-gray-200 rounded-lg p-3"
+                          >
+                            <div className="text-sm text-gray-600 mb-2">
+                              '
+                              <span className="font-medium">
+                                {invitation.senderNickname}
+                              </span>
+                              ' 님께서 '{invitation.planName}' 협업 초대를
+                              보냈습니다
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() =>
+                                  acceptRequest(invitation.requestId)
+                                }
+                                className="flex-1 bg-main text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-600"
+                              >
+                                수락
+                              </button>
+                              <button
+                                onClick={() =>
+                                  rejectRequest(invitation.requestId)
+                                }
+                                className="flex-1 bg-gray-300 text-gray-700 py-2 px-3 rounded-lg text-sm font-medium hover:bg-gray-400"
+                              >
+                                거절
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-gray-500">
+                          받은 초대가 없습니다
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="h-[44px]">
+              <button
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100"
+                onClick={handleLoginOpen}
+              >
+                로그인/회원가입
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 모든 모달들을 Navbar에서 관리 */}

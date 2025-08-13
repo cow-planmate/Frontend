@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import img1 from "../assets/imgs/img1.jpg";
 import { useApiClient } from "../assets/hooks/useApiClient";
-import Navbar from "../components/navbar";
+import Navbar from "../components/Navbar";
 import DateRangeModal from "../components/HomeCal";
 import PersonCountModal from "../components/HomePerson";
 import TransportModal from "../components/TransportModal";
@@ -165,10 +165,11 @@ function App() {
         childCount: Number(personCount.children),
         transportation: getTransportText() === "대중교통" ? 0 : 1,
       };
+      const BASE_URL = import.meta.env.VITE_API_URL;
 
       console.log("보내는 데이터:", requestData);
 
-      const data = await post("/api/plan", requestData);
+      const data = await post(`${BASE_URL}/api/plan`, requestData);
 
       console.log("서버 응답:", data);
 
@@ -190,9 +191,9 @@ function App() {
       <div className=" flex flex-col items-center ">
         <img
           src={img1}
-          className=" w-[140rem] h-[38rem] object-cover bg-gradient-to-b "
+          className=" w-screen [140rem] h-[40rem] object-cover bg-gradient-to-b "
         />
-        <div className="absolute top-[5rem] max-h-[38rem] inset-0 bg-gradient-to-b from-transparent to-black/60 pointer-events-none"></div>{" "}
+        <div className="absolute top-[5rem] max-h-[40rem] inset-0 bg-gradient-to-b from-transparent to-black/60 pointer-events-none"></div>{" "}
       </div>
 
       <div className="absolute bottom-[5rem] left-0 right-0 px-8">

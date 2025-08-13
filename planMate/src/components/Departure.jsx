@@ -24,6 +24,7 @@ const DepartureModal = ({
 
   // API 클라이언트 훅 사용
   const { isLoading, error } = useApiClient();
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   // 모달이 열릴 때 input에 포커스
   useEffect(() => {
@@ -40,7 +41,7 @@ const DepartureModal = ({
     }
 
     try {
-      const response = await fetch("/api/departure", {
+      const response = await fetch(`${BASE_URL}/api/departure`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -129,9 +130,9 @@ const DepartureModal = ({
           </h2>
           <button
             onClick={handleClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 text-xl"
           >
-            <FontAwesomeIcon icon={faTimes} className="text-gray-500" />
+            ✕
           </button>
         </div>
 

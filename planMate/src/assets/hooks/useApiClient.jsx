@@ -8,12 +8,11 @@ import { useState, useCallback } from "react";
 export const useApiClient = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-
   // 1. 토큰 관련 유틸리티 함수들
   const getToken = useCallback(() => {
     return localStorage.getItem("token");
   }, []);
-
+  const BASE_URL = import.meta.env.VITE_API_URL;
   const setToken = useCallback((token) => {
     if (token) {
       localStorage.setItem("token", token);
@@ -146,7 +145,10 @@ export const useApiClient = () => {
     async (email, password) => {
       try {
         // 로그인 API 호출
-        const response = await post("/api/auth/login", { email, password });
+        const response = await post(`${BASE_URL}/api/auth/login`, {
+          email,
+          password,
+        });
 
         // [수정된 부분] 실패 조건을 먼저 확인 (가드 클로즈)
         // 서버 응답에 따라 'loginSuccess' 또는 'token' 필드명을 적절히 사용

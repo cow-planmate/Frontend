@@ -16,7 +16,7 @@ const TravelPlannerApp = () => {
   const [transformedData, setTransformedData] = useState(null);
   const [schedule, setSchedule] = useState({});
   const navigate = useNavigate();
-  const BASE_URL = "" //import.meta.env.VITE_API_URL;
+  const BASE_URL = import.meta.env.VITE_API_URL;
   const [selectedDay, setSelectedDay] = useState(null); // 초기값을 null로 변경
   const [isShareOpen, setIsShareOpen] = useState(false);
 
@@ -252,7 +252,7 @@ const TravelPlannerApp = () => {
     return (
       <div
         key={item.placeId}
-        className="absolute left-16 p-2 font-hand text-sm shadow-lg border border-[#718FFF] rounded-lg z-10 group"
+        className="absolute left-16 p-2 text-sm shadow-lg border border-[#718FFF] bg-sub rounded-lg z-10 group cursor-move"
         style={{
           top: `${startIndex * 30}px`,
           height: `${height}px`,
@@ -407,7 +407,7 @@ const TravelPlannerApp = () => {
                         {item.name}
                       </p>
                       <div className="flex items-center space-x-1">
-                        <div className="text-sm w-[22px] h-[22px] border border-black rounded-full flex items-center justify-center">{index+1}</div>
+                        <div className="text-sm w-[22px] h-[22px] border border-main text-main font-semibold rounded-full flex items-center justify-center">{index+1}</div>
                         <a
                           href={item.url}
                           style={{ color: "blue" }}
@@ -456,7 +456,7 @@ const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
   const [editors, setEditors] = useState([]);
   const [receiverNickname, setreceiverNickname] = useState("");
   const [shareURL, setShareURL] = useState("");
-  const BASE_URL = "" // import.meta.env.VITE_API_URL;
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     getShareLink();

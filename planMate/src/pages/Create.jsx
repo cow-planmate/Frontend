@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Navbar from "../components/navbar";
+import Navbar from "../components/Navbar";
 import PlanInfo from "../components/PlanInfo";
 import { useSearchParams } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
@@ -13,6 +13,7 @@ const TravelPlannerApp = () => {
   const tripCategory = { 0: "관광지", 1: "숙소", 2: "식당" };
   const [transformedData, setTransformedData] = useState(null);
   const [schedule, setSchedule] = useState({});
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   // 두 번째 API 응답을 첫 번째 형태로 변환하는 함수
   const transformApiResponse = (apiResponse) => {
@@ -94,7 +95,7 @@ const TravelPlannerApp = () => {
     const fetchUserProfile = async () => {
       if (id && isAuthenticated()) {
         try {
-          const planData = await get(`/api/plan/${id}`);
+          const planData = await get(`${BASE_URL}/api/plan/${id}`);
           setData(planData);
           // timetables 데이터 설정
           if (planData.timetables) {
@@ -151,9 +152,11 @@ const TravelPlannerApp = () => {
     const fetchUserProfile = async () => {
       if (id && isAuthenticated()) {
         try {
-          const tour = await post(`/api/plan/${id}/tour`);
-          const lodging = await post(`/api/plan/${id}/lodging`);
-          const restaurant = await post(`/api/plan/${id}/restaurant`);
+          const tour = await post(`${BASE_URL}/api/plan/${id}/tour`);
+          const lodging = await post(`${BASE_URL}/api/plan/${id}/lodging`);
+          const restaurant = await post(
+            `${BASE_URL}/api/plan/${id}/restaurant`
+          );
 
           setPlaces({
             관광지: tour.places,
@@ -500,7 +503,8 @@ const TravelPlannerApp = () => {
           top: `${startIndex * 30}px`,
           height: `${height}px`,
           width: "329px",
-          backgroundImage: "linear-gradient(to bottom, transparent, #E8EDFF), linear-gradient(-45deg, #718FFF 40px, #E8EDFF 40px)"
+          backgroundImage:
+            "linear-gradient(to bottom, transparent, #E8EDFF), linear-gradient(-45deg, #718FFF 40px, #E8EDFF 40px)",
         }}
         draggable
         onDragStart={(e) => {
@@ -595,7 +599,7 @@ const TravelPlannerApp = () => {
       for (const place of day) {
         const startTime = place.timeSlot;
         const endTime = addMinutes(startTime, place.duration * 15);
-        console.log(place)
+        console.log(place);
         const block = {
           placeCategoryId: place.categoryId,
           placeName: place.name,
@@ -625,7 +629,7 @@ const TravelPlannerApp = () => {
 
     if (isAuthenticated()) {
       try {
-        await patch(`/api/plan/${id}/save`, {
+        await patch(`${BASE_URL}/api/plan/${id}/save`, {
           departure: data.planFrame.departure,
           travel: data.planFrame.travel,
           transportationCategoryId: info.transportation,

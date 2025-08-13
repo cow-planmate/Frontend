@@ -9,6 +9,7 @@ export default function PasswordFind({ isOpen, onClose }) {
   const [showVerification, setShowVerification] = useState(false);
   const [emailVerificationToken, setEmailVerificationToken] = useState("");
   const [isEmailSending, setIsEmailSending] = useState(false);
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   //킬때마다 초기화
   useEffect(() => {
@@ -63,7 +64,7 @@ export default function PasswordFind({ isOpen, onClose }) {
     }
     setIsEmailSending(true);
     try {
-      const response = await fetch("/api/auth/email/verification", {
+      const response = await fetch(`${BASE_URL}/api/auth/email/verification`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,7 +81,7 @@ export default function PasswordFind({ isOpen, onClose }) {
 
       const data = await response.json();
       console.log("서버 응답:", data);
-      if (!data.isVerificationSent) {
+      if (data.verificationSent) {
         alert("인증번호가 전송되었습니다.");
         setTimeLeft(300);
         setShowVerification(true); // 인증번호 입력 영역 표시
@@ -99,15 +100,18 @@ export default function PasswordFind({ isOpen, onClose }) {
 
   const verifyEmail = async () => {
     try {
-      const response = await fetch("/api/auth/email/verification/confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          verificationCode: formData.verificationCode,
-          purpose: "RESET_PASSWORD",
-        }),
-      });
+      const response = await fetch(
+        `${BASE_URL}/api/auth/email/verification/confirm`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            verificationCode: formData.verificationCode,
+            purpose: "RESET_PASSWORD",
+          }),
+        }
+      );
 
       const data = await response.json();
       console.log("서버 응답:", data);
@@ -149,7 +153,7 @@ export default function PasswordFind({ isOpen, onClose }) {
         headers["Authorization"] = `Bearer ${emailVerificationToken}`;
       }
 
-      const response = await fetch("/api/auth/password/email", {
+      const response = await fetch(`${BASE_URL}/api/auth/password/email`, {
         method: "POST",
         headers: headers,
       });
@@ -206,7 +210,7 @@ export default function PasswordFind({ isOpen, onClose }) {
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
         >
-          ×
+          ✕
         </button>
         <h1 className="text-2xl font-bold text-gray-900 mb-8">비밀번호 찾기</h1>
         <div className="space-y-6">
@@ -217,7 +221,6 @@ export default function PasswordFind({ isOpen, onClose }) {
             <div className="flex gap-2">
               <input
                 type="email"
-                placeholder="honggildong@planmate.com"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 className={`flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${

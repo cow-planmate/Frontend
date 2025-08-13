@@ -23,12 +23,13 @@ export default function Profile() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const { get, isAuthenticated } = useApiClient();
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (isAuthenticated()) {
         try {
-          const profileData = await get("/api/user/profile");
+          const profileData = await get(`${BASE_URL}/api/user/profile`);
           setUserProfile(profileData);
         } catch (err) {
           console.error("프로필 정보를 가져오는데 실패했습니다:", err);
@@ -47,7 +48,7 @@ export default function Profile() {
   const gender = { 0: "남자", 1: "여자" };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 w-[30rem]  flex flex-col">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 w-[35rem]  flex flex-col">
       {/* 프로필 헤더 */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex flex-col items-center text-black">
@@ -124,15 +125,17 @@ export default function Profile() {
 const DeleteModal = ({ setIsDeleteOpen }) => {
   const { del, isAuthenticated } = useApiClient();
   const navigate = useNavigate();
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   const handleDelete = async () => {
     if (isAuthenticated()) {
       try {
-        await del("/api/user/account");
+        await del(`${BASE_URL}/api/user/account`);
         localStorage.removeItem("token");
         localStorage.removeItem("userId");
         navigate("/");
         setIsDeleteOpen(false);
+        alert("탈퇴되었습니다");
       } catch (err) {
         console.error("탈퇴 과정에서 오류가 발생했습니다:", err);
       }
