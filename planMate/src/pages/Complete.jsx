@@ -265,13 +265,13 @@ const TravelPlannerApp = () => {
   const renderScheduleItem = (item) => {
     const startIndex = getTimeSlotIndex(item.timeSlot);
     const height = item.duration * 30; // 15분당 30px
-    const tripColor1 = { 0: "lime-50", 1: "orange-50", 2: "blue-50", 4: "gray-50" };
-    const tripColor2 = { 0: "lime-100", 1: "orange-100", 2: "blue-100", 4: "gray-100" };
+    const tripColor1 = { 0: "bg-lime-50", 1: "bg-orange-50", 2: "bg-blue-50", 4: "bg-gray-50" };
+  const tripColor2 = { 0: "border-lime-100", 1: "border-orange-100", 2: "border-blue-100", 4: "border-gray-100" };
 
     return (
       <div
         key={item.placeId}
-        className={`absolute left-16 p-2 text-sm shadow-xl border bg-${tripColor1[item.categoryId]} border-${tripColor2[item.categoryId]} rounded-lg z-10 group cursor-move`}
+        className={`absolute left-16 p-2 text-sm shadow-xl border ${tripColor1[item.categoryId]} ${tripColor2[item.categoryId]} rounded-lg z-10 group cursor-move`}
         style={{
           top: `${startIndex * 30}px`,
           height: `${height}px`,
