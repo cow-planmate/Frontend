@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import TimeTable from "./TimeTable";
 
-const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stompClientRef, id }) => {
+const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stompClientRef, id, schedule }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // 날짜 포맷팅 함수
@@ -53,7 +53,8 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
           stompClientRef={stompClientRef} 
           id={id} 
           onDaySelect={onDaySelect} 
-          selectedDay={selectedDay} 
+          selectedDay={selectedDay}
+          schedule={schedule}
         />,
         document.body
       )}
@@ -61,8 +62,9 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
   );
 };
 
-const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id, selectedDay, onDaySelect }) => {
+const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id, selectedDay, onDaySelect, schedule }) => {
   const [newTime, setNewTime] = useState(timetables);
+  console.log(schedule)
 
   const [create, setCreate] = useState({"timetableVOs": []});
   const [update, setUpdate] = useState({"timetableVOs": []});
@@ -98,7 +100,7 @@ const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id, s
     }
   };
 
-  const updateTime = (e, index, se) => {
+  const updateTime = (e, index, timetableId, se) => {
     const baseTime = e.target.value;
     let updatedTimes = null;
 
@@ -114,10 +116,19 @@ const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id, s
 
     setNewTime(updatedTimes);
 
-    setUpdate(prev => ({
-      ...prev,
-      timetableVOs: updatedTimes
-    }));
+    if (timetableId < 1 && timetableId >= 0) {
+      setCreate((prev) => ({
+        ...prev, // 기존 객체 속성 유지
+        timetableVOs: prev.timetableVOs.map((item) =>
+          item.timetableId === timetableId ? updatedTimes[index] : item
+        )
+      }));
+    } else {
+      setUpdate(prev => ({
+        ...prev,
+        timetableVOs: updatedTimes
+      }));
+    }
   }
 
   const addDay = () => {
@@ -125,9 +136,10 @@ const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id, s
     const lastDate = new Date(lastDateStr);
     lastDate.setDate(lastDate.getDate() + 1);
     const newDate = lastDate.toISOString().split('T')[0];
+    const newId = Math.random()
 
     const timetableVO = {
-      timetableId: Math.random(),
+      timetableId: newId,
       date: newDate,
       startTime: "09:00:00",
       endTime: "20:00:00",
@@ -182,11 +194,37 @@ const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id, s
     });
   }
 
+  const hasOutOfRange = (schedule, newTime) => {
+    const toMinutes = (timeStr) => {
+      const [h, m] = timeStr.split(":").map(Number);
+      return h * 60 + m;
+    };
+
+    return newTime.some(({ timetableId, startTime, endTime }) => {
+      const places = schedule[timetableId];
+      if (!places || places.length === 0) return false;
+
+      const startMin = toMinutes(startTime);
+      const endMin = toMinutes(endTime);
+
+      return places.some((place) => {
+        const placeStartMin = toMinutes(place.timeSlot);
+        const placeEndMin = placeStartMin + place.duration * 15;
+        return placeStartMin < startMin || placeEndMin > endMin;
+      });
+    });
+  }
+
   const handleComfirm = () => {
     const isInvalid = newTime.some(item => item.startTime >= item.endTime);
     
     if (isInvalid) {
       alert("시작 시간이 종료 시간과 같거나 큰 항목이 있습니다.");
+      return;
+    }
+
+    if (hasOutOfRange(schedule, newTime)) {
+      alert("변경하려는 시간이 블록과 충돌합니다.");
       return;
     }
 
@@ -218,8 +256,11 @@ const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id, s
       }
       
       timeDispatch({type: "update", payload: newTime});
-
-      // if (selectedDay)
+      
+      const dateId = newTime.map((t) => t.timetableId)
+      if (!dateId.includes(selectedDay)) {
+        onDaySelect(dateId[dateId.length - 1]);
+      }
 
       setIsModalOpen(false);
     }
@@ -256,7 +297,7 @@ const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id, s
                     />
                     <select
                       value={timetable.startTime}
-                      onChange={(e) => updateTime(e, index, "start")}
+                      onChange={(e) => updateTime(e, index, timetable.timetableId, "start")}
                       className="border rounded-lg px-2 h-11"
                     >
                       {times.map((t) => (
@@ -267,7 +308,7 @@ const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id, s
                     </select>
                     <select
                       value={timetable.endTime}
-                      onChange={(e) => updateTime(e, index, "end")}
+                      onChange={(e) => updateTime(e, index, timetable.timetableId, "end")}
                       className="border rounded-lg px-2 h-11"
                     >
                       {times.map((t) => (
@@ -288,7 +329,7 @@ const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id, s
                     <div>{timetable.date}</div>
                     <select
                       value={timetable.startTime}
-                      onChange={(e) => updateTime(e, index, "start")}
+                      onChange={(e) => updateTime(e, index, timetable.timetableId, "start")}
                       className="border rounded-lg px-2 h-11"
                     >
                       {times.map((t) => (
@@ -299,7 +340,7 @@ const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id, s
                     </select>
                     <select
                       value={timetable.endTime}
-                      onChange={(e) => updateTime(e, index, "end")}
+                      onChange={(e) => updateTime(e, index, timetable.timetableId, "end")}
                       className="border rounded-lg px-2 h-11"
                     >
                       {times.map((t) => (

@@ -11,6 +11,10 @@ const ScheduleItem = ({
   onDragStart
 }) => {
   const tripCategory = { 0: "관광지", 1: "숙소", 2: "식당", 4: "검색" };
+  const tripColor1 = { 0: "lime-50", 1: "orange-50", 2: "blue-50", 4: "gray-50" };
+  const tripColor2 = { 0: "lime-100", 1: "orange-100", 2: "blue-100", 4: "gray-100" };
+  const tripColor3 = { 0: "lime-700", 1: "orange-700", 2: "blue-700", 4: "gray-700" };
+  const tripColor4 = { 0: "lime-200", 1: "orange-200", 2: "blue-200", 4: "gray-200" };
 
   const {
     getTimeSlotIndex,
@@ -30,7 +34,7 @@ const ScheduleItem = ({
 
   return (
     <div
-      className="absolute left-16 p-2 text-sm shadow-lg border border-[#718FFF] bg-sub rounded-lg z-10 group cursor-move"
+      className={`absolute left-16 p-2 text-sm shadow-xl border bg-${tripColor1[item.categoryId]} border-${tripColor2[item.categoryId]} rounded-lg z-10 group cursor-move`}
       style={{
         top: `${startIndex * 30}px`,
         height: `${height}px`,
@@ -44,14 +48,14 @@ const ScheduleItem = ({
     >
       {/* 위쪽 리사이즈 핸들 */}
       <div
-        className="absolute top-0 left-0 right-0 h-3 cursor-ns-resize bg-[#718FFF] opacity-0 group-hover:opacity-70 transition-opacity rounded-t-md flex items-center justify-center"
+        className={`absolute top-0 left-0 right-0 h-3 cursor-ns-resize bg-${tripColor4[item.categoryId]} opacity-0 group-hover:opacity-70 transition-opacity rounded-t-md flex items-center justify-center`}
         onMouseDown={(e) => {
           e.stopPropagation();
           handleResizeStart(e, item, "top");
         }}
         draggable={false}
       >
-        <div className="w-8 h-0.5 bg-main rounded"></div>
+        <div className={`w-8 h-0.5 bg-${tripColor3[item.categoryId]} rounded`}></div>
       </div>
 
       {/* 컨텐츠 */}
@@ -80,14 +84,14 @@ const ScheduleItem = ({
 
       {/* 아래쪽 리사이즈 핸들 */}
       <div
-        className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize bg-[#718FFF] opacity-0 group-hover:opacity-70 transition-opacity rounded-b-md flex items-center justify-center"
+        className={`absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize bg-${tripColor4[item.categoryId]} opacity-0 group-hover:opacity-70 transition-opacity rounded-b-md flex items-center justify-center`}
         onMouseDown={(e) => {
           e.stopPropagation();
           handleResizeStart(e, item, "bottom");
         }}
         draggable={false}
       >
-        <div className="w-8 h-0.5 bg-main rounded"></div>
+        <div className={`w-8 h-0.5 bg-${tripColor3[item.categoryId]} rounded`}></div>
       </div>
     </div>
   );

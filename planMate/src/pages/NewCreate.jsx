@@ -780,6 +780,7 @@ function App() {
             onDaySelect={setSelectedDay}
             stompClientRef={stompClientRef}
             id={id}
+            schedule={schedule}
           />
 
           <TimeTable

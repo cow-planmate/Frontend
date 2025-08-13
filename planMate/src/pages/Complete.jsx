@@ -126,16 +126,33 @@ const TravelPlannerApp = () => {
     console.log(schedule);
   }, [schedule]);
 
+  const cleanSchedule = () => {
+    setSchedule(prevSchedule => {
+      const newSchedule = {};
+      for (const key in prevSchedule) {
+        const seen = new Set();
+        newSchedule[key] = prevSchedule[key].filter(item => {
+          if (seen.has(item.placeId)) return false;
+          seen.add(item.placeId);
+          return true;
+        });
+      }
+      return newSchedule;
+    });
+  }
+
   // timetables 변경 시 schedule 초기화
   useEffect(() => {
     if (transformedData) {
       setSchedule(transformedData);
+      cleanSchedule()
     } else if (timetables.length > 0) {
       const initialSchedule = {};
       timetables.forEach((timetable) => {
         initialSchedule[timetable.timetableId] = [];
       });
       setSchedule(initialSchedule);
+      cleanSchedule()
     }
   }, [timetables, transformedData]);
 
@@ -248,11 +265,13 @@ const TravelPlannerApp = () => {
   const renderScheduleItem = (item) => {
     const startIndex = getTimeSlotIndex(item.timeSlot);
     const height = item.duration * 30; // 15분당 30px
+    const tripColor1 = { 0: "lime-50", 1: "orange-50", 2: "blue-50", 4: "gray-50" };
+    const tripColor2 = { 0: "lime-100", 1: "orange-100", 2: "blue-100", 4: "gray-100" };
 
     return (
       <div
         key={item.placeId}
-        className="absolute left-16 p-2 text-sm shadow-lg border border-[#718FFF] bg-sub rounded-lg z-10 group cursor-move"
+        className={`absolute left-16 p-2 text-sm shadow-xl border bg-${tripColor1[item.categoryId]} border-${tripColor2[item.categoryId]} rounded-lg z-10 group cursor-move`}
         style={{
           top: `${startIndex * 30}px`,
           height: `${height}px`,

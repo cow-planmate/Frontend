@@ -89,6 +89,8 @@ const PlaceRecommendations = ({
 
   const currentList = Array.isArray(places?.[selectedTab]) ? places[selectedTab] : [];
 
+  const tripColor3 = { 관광지: "lime-700", 숙소: "orange-700", 식당: "blue-700", 검색: "gray-700" };
+
   return (
     <div className="flex-1">
       <div className="flex space-x-1">
@@ -97,7 +99,7 @@ const PlaceRecommendations = ({
             key={tab}
             className={`px-4 py-2 rounded-t-lg ${
               selectedTab === tab
-                ? "bg-main text-white"
+                ? `bg-${tripColor3[selectedTab]} text-white`
                 : "bg-gray-200 text-gray-700"
             }`}
             onClick={() => setSelectedTab(tab)}
@@ -106,39 +108,40 @@ const PlaceRecommendations = ({
           </button>
         ))}
       </div>
-
-      {/* 🔎 검색 탭 전용 입력 UI */}
-      {selectedTab === "검색" && (
-        <div className="border border-gray-300 border-b-0 px-3 py-2 rounded-tl-none rounded-tr-lg">
-          <div className="flex items-center space-x-2">
-            <input
-              type="text"
-              placeholder="장소를 입력하세요"
-              className="flex-1 border rounded-md px-3 py-2"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") doSearch();
-              }}
-            />
-            <button
-              className="px-4 py-2 rounded-md bg-main text-white font-semibold disabled:opacity-60"
-              onClick={doSearch}
-              disabled={searchLoading}
-            >
-              {searchLoading ? "검색 중..." : "검색"}
-            </button>
+      <div className="h-[calc(100vh-229px)] border border-gray-300 rounded-lg rounded-tl-none divide-y divide-gray-300">
+        {/* 🔎 검색 탭 전용 입력 UI */}
+        {selectedTab === "검색" && (
+          <div className="px-3 py-2">
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                placeholder="장소를 입력하세요"
+                className="flex-1 border rounded-md px-3 py-2"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") doSearch();
+                }}
+              />
+              <button
+                className="px-4 py-2 rounded-md bg-main text-white font-semibold disabled:opacity-60"
+                onClick={doSearch}
+                disabled={searchLoading}
+              >
+                {searchLoading ? "검색 중..." : "검색"}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="border border-gray-300 rounded-lg rounded-tl-none h-[calc(100vh-229px)] overflow-y-auto">
-        {(currentList ?? []).map((place) => (
-          <PlaceItem
-            key={place.placeId}
-            place={place}
-          />
-        ))}
+        <div className={`overflow-y-auto ${selectedTab === "검색" ? "h-[calc(100vh-287px)]" : "h-full"}`}>
+          {(currentList ?? []).map((place) => (
+            <PlaceItem
+              key={place.placeId}
+              place={place}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
