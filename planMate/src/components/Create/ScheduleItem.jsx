@@ -84,14 +84,14 @@ const ScheduleItem = ({
 
       {/* 아래쪽 리사이즈 핸들 */}
       <div
-        className={`absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize bg-${tripColor4[item.categoryId]} opacity-0 group-hover:opacity-70 transition-opacity rounded-b-md flex items-center justify-center`}
+        className={`absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize ${tripColor4[item.categoryId]} opacity-0 group-hover:opacity-70 transition-opacity rounded-b-md flex items-center justify-center`}
         onMouseDown={(e) => {
           e.stopPropagation();
           handleResizeStart(e, item, "bottom");
         }}
         draggable={false}
       >
-        <div className={`w-8 h-0.5 bg-${tripColor3[item.categoryId]} rounded`}></div>
+        <div className={`w-8 h-0.5 ${tripColor3[item.categoryId]} rounded`}></div>
       </div>
     </div>
   );
