@@ -10,7 +10,7 @@ const TravelPlannerApp = () => {
   const id = searchParams.get("id");
   const [data, setData] = useState(null);
   const [timetables, setTimetables] = useState([]);
-  const tripCategory = { 0: "관광지", 1: "숙소", 2: "식당" };
+  const tripCategory = { 0: "관광지", 1: "숙소", 2: "식당", 4: "검색" };
   const [transformedData, setTransformedData] = useState(null);
   const [schedule, setSchedule] = useState({});
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -146,6 +146,7 @@ const TravelPlannerApp = () => {
     관광지: [],
     숙소: [],
     식당: [],
+    검색: [],
   });
 
   useEffect(() => {
@@ -162,6 +163,7 @@ const TravelPlannerApp = () => {
             관광지: tour.places,
             숙소: lodging.places,
             식당: restaurant.places,
+            검색: search.places,
           });
         } catch (err) {
           console.error("추천 장소를 가져오는데 실패했습니다:", err);
@@ -291,8 +293,10 @@ const TravelPlannerApp = () => {
           return "관광지";
         } else if (categoryId == 1) {
           return "숙소";
-        } else {
+        } else if (categoryId == 2) {
           return "식당";
+        } else {
+          return "검색";
         }
       };
       category = getCategory(originalItem.categoryId);
@@ -711,7 +715,7 @@ const TravelPlannerApp = () => {
           {/* 장소 추천 탭 */}
           <div className="flex-1">
             <div className="flex space-x-1">
-              {["관광지", "숙소", "식당"].map((tab) => (
+              {["관광지", "숙소", "식당", "검색"].map((tab) => (
                 <button
                   key={tab}
                   className={`px-4 py-2 rounded-t-lg ${

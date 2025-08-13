@@ -12,7 +12,7 @@ const TravelPlannerApp = () => {
   const id = searchParams.get("id");
   const [data, setData] = useState(null);
   const [timetables, setTimetables] = useState([]);
-  const tripCategory = { 0: "관광지", 1: "숙소", 2: "식당" };
+  const tripCategory = { 0: "관광지", 1: "숙소", 2: "식당", 4: "검색" };
   const [transformedData, setTransformedData] = useState(null);
   const [schedule, setSchedule] = useState({});
   const navigate = useNavigate();

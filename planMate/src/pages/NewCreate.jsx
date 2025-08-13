@@ -95,6 +95,7 @@ function App() {
     관광지: [],
     숙소: [],
     식당: [],
+    검색: [],
   });
 
   useEffect(() => {
@@ -402,7 +403,7 @@ function App() {
     const fetchPlaces = async () => {
       if (id && isAuthenticated()) {
         try {
-          const [tour, lodging, restaurant] = await Promise.all([
+          const [tour, lodging, restaurant, search] = await Promise.all([
             post(`${BASE_URL}/api/plan/${id}/tour`),
             post(`${BASE_URL}/api/plan/${id}/lodging`),
             post(`${BASE_URL}/api/plan/${id}/restaurant`),
