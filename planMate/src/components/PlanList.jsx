@@ -1,6 +1,6 @@
 // PlanList.jsx
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCalendarPlus } from "@fortawesome/free-solid-svg-icons";
+import { faCalendar, faCalendarPlus } from "@fortawesome/free-solid-svg-icons";
 import { useState, useRef, useEffect } from "react";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import PlanListList from "./PlanListList";
@@ -53,7 +53,7 @@ export default function PlanList({ refreshTrigger }) {
             <p className="text-gray-600 mt-1">직접 생성한 일정을 관리하세요</p>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <FontAwesomeIcon icon={faCalendarPlus} className="w-4 h-4" />
+            <FontAwesomeIcon icon={faCalendar} className="w-4 h-4" />
             <span>{myPlans.length}개의 계획</span>
           </div>
         </div>
@@ -101,6 +101,7 @@ export default function PlanList({ refreshTrigger }) {
             </p>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500">
+            <FontAwesomeIcon icon={faCalendar} className="w-4 h-4" />
             <span>{editablePlans.length}개의 계획</span>
           </div>
         </div>
