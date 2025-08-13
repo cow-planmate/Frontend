@@ -444,7 +444,6 @@ export default function Signup({
             <div className="flex gap-2">
               <input
                 type="email"
-                placeholder="honggildong@planmate.com"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 className={`flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -610,7 +609,6 @@ export default function Signup({
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="홍길동"
                 value={formData.nickname}
                 onChange={(e) => handleInputChange("nickname", e.target.value)}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -638,7 +636,6 @@ export default function Signup({
               </label>
               <input
                 type="text"
-                placeholder="20"
                 value={formData.age}
                 onChange={(e) => {
                   const value = e.target.value;
