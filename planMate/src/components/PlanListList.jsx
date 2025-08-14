@@ -122,16 +122,12 @@ export default function PlanListList({
           <button
             onClick={(e) => {
               e.stopPropagation();
+              deletePlan();
             }}
             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left border-t border-gray-100"
           >
             <FontAwesomeIcon icon={faTrash} className="w-4 h-4 text-red-500" />
-            <span
-              className="text-sm font-medium text-red-600"
-              onClick={deletePlan}
-            >
-              삭제하기
-            </span>
+            <span className="text-sm font-medium text-red-600">삭제하기</span>
           </button>
           <button
             onClick={(e) => {
