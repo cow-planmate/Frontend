@@ -117,6 +117,7 @@ function App() {
   const lastMessageRef = useRef(null);
   const clientId = useRef(Date.now() + Math.random());
   const noUpdate = useRef(false);
+  const token = localStorage.getItem('token');
 
   function findSameById(data, checkItem) {
     // A 객체의 모든 값들을 배열로 만든 후 검색
@@ -128,7 +129,7 @@ function App() {
   }
 
   useEffect(() => {
-    const SERVER_URL = 'https://pmserver.salmakis.online/ws-plan';
+    const SERVER_URL = `http://localhost:8080/ws-plan?token=${encodeURIComponent(token ?? '')}`;
 
     const connectWebSocket = () => {
       console.log("🔄 WebSocket 연결 시도 중...", SERVER_URL);
