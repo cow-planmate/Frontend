@@ -13,6 +13,7 @@ import {
   faUtensils,
   faBed,
   faMapMarkerAlt,
+  faPen,
 } from "@fortawesome/free-solid-svg-icons";
 import ProfileText from "./ProfileText";
 import { useApiClient } from "../assets/hooks/useApiClient";
@@ -66,6 +67,13 @@ export default function Profile() {
       <div className="flex-1 p-6 space-y-4 bg-gray-50/30">
         {userProfile && (
           <>
+            <ProfileText
+              icon={faPen} // 또는 faUser
+              title="닉네임"
+              content={userProfile.nickname}
+              change={true}
+              iconColor="text-gray-700"
+            />
             <ProfileText
               icon={faEnvelope}
               title="이메일"

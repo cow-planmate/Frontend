@@ -14,6 +14,7 @@ import {
   faMapMarkerAlt,
   faMars,
   faVenus,
+  faPen,
 } from "@fortawesome/free-solid-svg-icons";
 import { Check, X } from "lucide-react";
 
@@ -34,6 +35,7 @@ export default function ProfileText({
     restaurant: [],
   });
   const [isThemeOpen, setIsThemeOpen] = useState(false);
+  const [isNicknameOpen, setIsNicknameOpen] = useState(false);
 
   // 성별 아이콘 결정 함수
   const getGenderIcon = (genderText) => {
@@ -148,6 +150,13 @@ export default function ProfileText({
             }}
           />
         )}
+        {isNicknameOpen && (
+          <NicknameModal
+            setIsNicknameOpen={setIsNicknameOpen}
+            currentNickname={naeyong}
+            setNaeyong={setNaeyong}
+          />
+        )}
         <Theme
           isOpen={isThemeOpen}
           onClose={handleThemeClose}
@@ -178,6 +187,13 @@ export default function ProfileText({
             className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
           >
             변경하기
+          </button>
+        ) : title === "닉네임" ? (
+          <button
+            onClick={() => setIsNicknameOpen(true)}
+            className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
+          >
+            <FontAwesomeIcon icon={faPen} className="w-4 h-4" />
           </button>
         ) : (
           change && (
