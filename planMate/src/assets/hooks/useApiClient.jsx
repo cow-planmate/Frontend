@@ -152,7 +152,7 @@ export const useApiClient = () => {
 
         // [수정된 부분] 실패 조건을 먼저 확인 (가드 클로즈)
         // 서버 응답에 따라 'loginSuccess' 또는 'token' 필드명을 적절히 사용
-        if (!response.token) {
+        if (!response.accessToken) {
           throw new Error(
             response.message ||
               "로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요."
@@ -160,7 +160,7 @@ export const useApiClient = () => {
         }
 
         // 성공 로직
-        setToken(response.token);
+        setToken(response.accessToken);
         if (response.userId) {
           localStorage.setItem("userId", response.userId.toString());
         }
