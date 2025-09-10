@@ -85,13 +85,6 @@ export default function Profile() {
         {userProfile && (
           <>
             <ProfileText
-              icon={faPen} // 또는 faUser
-              title="닉네임"
-              content={userProfile.nickname}
-              change={true}
-              iconColor="text-gray-700"
-            />
-            <ProfileText
               icon={faEnvelope}
               title="이메일"
               content={userProfile.email}
