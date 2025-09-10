@@ -14,11 +14,18 @@ export default function NicknameModal({
   const handleNicknameChange = async () => {
     if (isAuthenticated()) {
       try {
-        await patch(`${BASE_URL}/api/user/nickname`, { nickname });
+        const response = await patch(`${BASE_URL}/api/user/nickname`, {
+          nickname,
+        });
         onNicknameUpdate(nickname);
         setIsNicknameModalOpen(false);
+        alert(response.message);
       } catch (err) {
         console.error("닉네임 변경에 실패했습니다:", err);
+
+        if (err.message) {
+          alert(err.message);
+        }
       }
     }
   };
