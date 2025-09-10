@@ -18,6 +18,7 @@ import {
 import ProfileText from "./ProfileText";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { useNavigate } from "react-router-dom";
+import NicknameModal from "../components/NicknameChange";
 
 export default function Profile() {
   const [userProfile, setUserProfile] = useState(null);
