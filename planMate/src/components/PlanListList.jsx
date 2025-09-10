@@ -16,6 +16,9 @@ export default function PlanListList({
   onPlanDeleted,
   isOwner = true,
   onResignEditorSuccess,
+  isMultiSelectMode = false,
+  isSelected = false,
+  onPlanSelect,
 }) {
   const { del } = useApiClient();
   const navigate = useNavigate();
@@ -57,13 +60,31 @@ export default function PlanListList({
     }
   };
 
+  const handleCheckboxChange = (e) => {
+    e.stopPropagation();
+    onPlanSelect?.(lst.planId, e.target.checked);
+  };
   return (
     <div
-      className="relative bg-gray-50 hover:bg-blue-50 rounded-xl p-4 transition-all duration-200 cursor-pointer border border-gray hover:border-blue-200"
-      onClick={() => navigate(`/complete?id=${lst.planId}`)}
+      className={`relative bg-gray-50 hover:bg-blue-50 rounded-xl p-4 transition-all duration-200 cursor-pointer border ${
+        isSelected
+          ? "border-blue-400 bg-blue-50"
+          : "border-gray hover:border-blue-200"
+      }`}
+      onClick={() =>
+        !isMultiSelectMode && navigate(`/complete?id=${lst.planId}`)
+      }
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
+          {isMultiSelectMode && (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={handleCheckboxChange}
+              className="w-4 h-4 text-blue-600 rounded"
+            />
+          )}
           <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
             <FontAwesomeIcon
               icon={faCalendarAlt}

@@ -10,6 +10,8 @@ export default function PlanList({ refreshTrigger }) {
   const navigate = useNavigate();
   const [myPlans, setMyPlans] = useState([]);
   const [editablePlans, setEditablePlans] = useState([]);
+  const [selectedPlans, setSelectedPlans] = useState([]);
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
 
   const { get, isAuthenticated } = useApiClient();
   const removePlanFromState = (planId) => {
@@ -44,6 +46,57 @@ export default function PlanList({ refreshTrigger }) {
     setEditablePlans((prev) => prev.filter((p) => p.planId !== planId));
   };
 
+  const handlePlanSelect = (planId, isSelected) => {
+    if (isSelected) {
+      setSelectedPlans((prev) => [...prev, planId]);
+    } else {
+      setSelectedPlans((prev) => prev.filter((id) => id !== planId));
+    }
+  };
+
+  // 전체 선택/해제
+  const handleSelectAll = () => {
+    if (selectedPlans.length === myPlans.length) {
+      setSelectedPlans([]);
+    } else {
+      setSelectedPlans(myPlans.map((plan) => plan.planId));
+    }
+  };
+
+  // 일괄삭제 함수
+  const handleMultipleDelete = async () => {
+    if (selectedPlans.length === 0) return;
+
+    if (
+      confirm(`선택한 ${selectedPlans.length}개의 일정을 삭제하시겠습니까?`)
+    ) {
+      try {
+        const response = await fetch(`${BASE_URL}/api/plan`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            // 인증 헤더 필요시 추가
+          },
+          body: JSON.stringify({
+            planIds: selectedPlans,
+          }),
+        });
+
+        if (response.ok) {
+          // 삭제된 플랜들을 상태에서 제거
+          selectedPlans.forEach((planId) => {
+            removePlanFromState(planId);
+          });
+          setSelectedPlans([]);
+          setIsMultiSelectMode(false);
+          alert("선택한 일정들이 삭제되었습니다.");
+        }
+      } catch (err) {
+        console.error("일괄삭제 실패:", err);
+        alert("삭제 중 오류가 발생했습니다.");
+      }
+    }
+  };
   return (
     <div className="flex flex-col gap-6 font-pretendard">
       <div className="bg-white w-[53rem] rounded-2xl shadow-sm border border-gray-200 flex flex-col">
@@ -52,13 +105,60 @@ export default function PlanList({ refreshTrigger }) {
             <h2 className="text-2xl font-bold text-gray-900">나의 일정</h2>
             <p className="text-gray-600 mt-1">직접 생성한 일정을 관리하세요</p>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <FontAwesomeIcon icon={faCalendar} className="w-4 h-4" />
-            <span>{myPlans.length}개의 계획</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <FontAwesomeIcon icon={faCalendar} className="w-4 h-4" />
+              <span>{myPlans.length}개의 계획</span>
+            </div>
+            {myPlans.length > 0 && (
+              <button
+                onClick={() => {
+                  setIsMultiSelectMode(!isMultiSelectMode);
+                  setSelectedPlans([]);
+                }}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  isMultiSelectMode
+                    ? "bg-gray-200 text-gray-700"
+                    : "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                }`}
+              >
+                {isMultiSelectMode ? "취소" : "편집"}
+              </button>
+            )}
           </div>
         </div>
 
         <div className="p-6">
+          {isMultiSelectMode && myPlans.length > 0 && (
+            <div className="mb-4 flex items-center justify-between bg-blue-50 p-4 rounded-xl">
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={
+                      selectedPlans.length === myPlans.length &&
+                      myPlans.length > 0
+                    }
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    전체 선택
+                  </span>
+                </label>
+                <span className="text-sm text-gray-600">
+                  {selectedPlans.length}개 선택됨
+                </span>
+              </div>
+              <button
+                onClick={handleMultipleDelete}
+                disabled={selectedPlans.length === 0}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                선택 삭제 ({selectedPlans.length})
+              </button>
+            </div>
+          )}
           {myPlans.length > 0 ? (
             <div className="space-y-4">
               {myPlans.map((lst) => (
@@ -68,6 +168,9 @@ export default function PlanList({ refreshTrigger }) {
                   onPlanDeleted={removePlanFromState}
                   isOwner={true}
                   onResignEditorSuccess={removeEditablePlanFromState}
+                  isMultiSelectMode={isMultiSelectMode}
+                  isSelected={selectedPlans.includes(lst.planId)}
+                  onPlanSelect={handlePlanSelect}
                 />
               ))}
             </div>
