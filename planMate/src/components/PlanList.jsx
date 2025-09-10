@@ -122,7 +122,7 @@ export default function PlanList({ refreshTrigger }) {
                     : "bg-blue-100 text-blue-600 hover:bg-blue-200"
                 }`}
               >
-                {isMultiSelectMode ? "취소" : "편집"}
+                {isMultiSelectMode ? "취소" : "일괄삭제"}
               </button>
             )}
           </div>
