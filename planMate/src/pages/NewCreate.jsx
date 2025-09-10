@@ -127,9 +127,10 @@ function App() {
         (item) => item.timetablePlaceBlockId === checkItem.timetablePlaceBlockId
       );
   }
-
+  
   useEffect(() => {
-    const SERVER_URL = `${BASE_URL}/ws-plan`;
+    const token = localStorage.getItem('token');
+     const SERVER_URL = `${BASE_URL}/ws-plan?token=${encodeURIComponent(token)}`;
 
     const connectWebSocket = () => {
       console.log("🔄 WebSocket 연결 시도 중...", SERVER_URL);
