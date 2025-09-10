@@ -22,7 +22,7 @@ import { useNavigate } from "react-router-dom";
 export default function Profile() {
   const [userProfile, setUserProfile] = useState(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-
+  const [isNicknameModalOpen, setIsNicknameModalOpen] = useState(false);
   const { get, isAuthenticated } = useApiClient();
   const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -56,9 +56,26 @@ export default function Profile() {
           <div className="w-20 h-20 bg-contain bg-[url('./assets/imgs/default.png')] rounded-full"></div>
           {userProfile && (
             <div className="text-center mt-4">
-              <h2 className="text-2xl font-bold text-gray-800">
-                {userProfile.nickname}
-              </h2>
+              <div className="flex items-center justify-center gap-2">
+                <h2 className="text-2xl font-bold text-gray-800">
+                  {userProfile.nickname}
+                </h2>
+                <button
+                  onClick={() => setIsNicknameModalOpen(true)}
+                  className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                >
+                  <FontAwesomeIcon icon={faPen} className="w-4 h-4" />
+                </button>
+                {isNicknameModalOpen && (
+                  <NicknameModal
+                    setIsNicknameModalOpen={setIsNicknameModalOpen}
+                    currentNickname={userProfile.nickname}
+                    onNicknameUpdate={(newNickname) => {
+                      setUserProfile({ ...userProfile, nickname: newNickname });
+                    }}
+                  />
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -111,6 +128,7 @@ export default function Profile() {
             />
           </>
         )}
+
         {/* 탈퇴 버튼 */}
         <div className="pt-2">
           <button
