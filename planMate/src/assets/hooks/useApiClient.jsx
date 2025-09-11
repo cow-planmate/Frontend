@@ -8,27 +8,63 @@ import { useState, useCallback } from "react";
 export const useApiClient = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  // 1. 토큰 관련 유틸리티 함수들
-  const getToken = useCallback(() => {
-    return localStorage.getItem("token");
-  }, []);
+
   const BASE_URL = import.meta.env.VITE_API_URL;
-  const setToken = useCallback((token) => {
-    if (token) {
-      localStorage.setItem("token", token);
-    } else {
-      localStorage.removeItem("token");
+
+  // 1. 토큰 관련 유틸리티 함수들
+  const getAccessToken = useCallback(() => {
+    return localStorage.getItem("accessToken");
+  }, []);
+
+  const getRefreshToken = useCallback(() => {
+    return localStorage.getItem("refreshToken");
+  }, []);
+
+  const setTokens = useCallback((accessToken, refreshToken) => {
+    if (accessToken && refreshToken) {
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
     }
   }, []);
 
   const clearAuth = useCallback(() => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("userId");
   }, []);
 
-  // 2. 인증 헤더 생성 함수
+  // 2. 토큰 갱신 함수
+  const refreshTokens = useCallback(async () => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+      throw new Error("리프레시 토큰이 없습니다.");
+    }
+
+    try {
+      const response = await fetch(`${BASE_URL}/api/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${refreshToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("토큰 갱신 실패");
+      }
+
+      const data = await response.json();
+      setTokens(data.accessToken, data.refreshToken);
+      return data.accessToken;
+    } catch (error) {
+      clearAuth();
+      throw error;
+    }
+  }, [getRefreshToken, setTokens, clearAuth, BASE_URL]);
+
+  // 3. 인증 헤더 생성 함수
   const getAuthHeaders = useCallback(() => {
-    const token = getToken();
+    const token = getAccessToken();
     const headers = {
       "Content-Type": "application/json; charset=utf-8",
       Accept: "application/json; charset=utf-8",
@@ -39,9 +75,9 @@ export const useApiClient = () => {
     }
 
     return headers;
-  }, [getToken]);
+  }, [getAccessToken]);
 
-  // 3. API 요청 함수 (토큰 자동 포함)
+  // 4. API 요청 함수 (토큰 자동 포함)
   const apiRequest = useCallback(
     async (url, options = {}) => {
       setIsLoading(true);
@@ -58,10 +94,31 @@ export const useApiClient = () => {
 
         const response = await fetch(url, config);
 
-        // 4. 인증 에러 처리
+        // 인증 에러 처리
         if (response.status === 401) {
-          clearAuth();
-          throw new Error("인증이 만료되었습니다. 다시 로그인해주세요.");
+          try {
+            // 토큰 갱신 시도
+            await refreshTokens();
+
+            // 갱신된 토큰으로 원래 요청 재시도
+            const retryConfig = {
+              ...options,
+              headers: {
+                ...getAuthHeaders(),
+                ...options.headers,
+              },
+            };
+
+            const retryResponse = await fetch(url, retryConfig);
+            if (retryResponse.ok) {
+              return await retryResponse.json();
+            } else {
+              throw new Error("토큰 갱신 후에도 요청이 실패했습니다.");
+            }
+          } catch (refreshError) {
+            clearAuth();
+            throw new Error("인증이 만료되었습니다. 다시 로그인해주세요.");
+          }
         }
 
         if (response.status === 403) {
@@ -87,7 +144,7 @@ export const useApiClient = () => {
         setIsLoading(false);
       }
     },
-    [getAuthHeaders, getToken, clearAuth]
+    [getAuthHeaders, refreshTokens, clearAuth]
   );
 
   // 5. 편의 메서드들
@@ -122,7 +179,7 @@ export const useApiClient = () => {
   // 6. FormData 전송을 위한 별도 메서드 (파일 업로드용)
   const postFormData = useCallback(
     (url, formData) => {
-      const token = getToken();
+      const token = getAccessToken();
       const headers = {};
 
       if (token) {
@@ -137,7 +194,7 @@ export const useApiClient = () => {
         body: formData,
       });
     },
-    [apiRequest, getToken]
+    [apiRequest, getAccessToken]
   );
 
   // 7. 인증 관련 함수들
@@ -150,17 +207,16 @@ export const useApiClient = () => {
           password,
         });
 
-        // [수정된 부분] 실패 조건을 먼저 확인 (가드 클로즈)
-        // 서버 응답에 따라 'loginSuccess' 또는 'token' 필드명을 적절히 사용
-        if (!response.accessToken) {
+        // 실패 조건을 먼저 확인 (가드 클로즈)
+        if (!response.accessToken || !response.refreshToken) {
           throw new Error(
             response.message ||
               "로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요."
           );
         }
 
-        // 성공 로직
-        setToken(response.accessToken);
+        // 성공 로직 - 두 토큰 모두 저장
+        setTokens(response.accessToken, response.refreshToken);
         if (response.userId) {
           localStorage.setItem("userId", response.userId.toString());
         }
@@ -173,18 +229,31 @@ export const useApiClient = () => {
         throw err;
       }
     },
-    [post, setToken]
+    [post, setTokens, BASE_URL]
   );
 
-  const logout = useCallback(() => {
-    clearAuth();
-    // 필요하다면, 로그아웃 후 로그인 페이지로 이동하는 로직을 추가할 수 있습니다.
-    // window.location.href = '/login';
-  }, [clearAuth]);
+  const logout = useCallback(async () => {
+    try {
+      const refreshToken = getRefreshToken();
 
-  const isAuthenticated = useCallback(() => {
-    return !!getToken();
-  }, []);
+      // 서버에 로그아웃 요청 (refreshToken이 있을 때만)
+      if (refreshToken) {
+        await fetch(`${BASE_URL}/api/auth/logout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            refreshToken: refreshToken,
+          }),
+        });
+      }
+    } catch (error) {
+      console.error("로그아웃 API 호출 실패:", error);
+    } finally {
+      clearAuth();
+    }
+  }, [clearAuth, getRefreshToken, BASE_URL]);
 
   return {
     // 상태
@@ -200,12 +269,16 @@ export const useApiClient = () => {
     postFormData,
     apiRequest, // 커스텀 요청용
 
+    // 토큰 관리
+    getAccessToken,
+    getRefreshToken,
+    setTokens,
+    refreshTokens,
+    clearAuth,
+
     // 인증 관련
     login,
     logout,
     isAuthenticated,
-    getToken,
-    setToken,
-    clearAuth,
   };
 };
