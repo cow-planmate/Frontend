@@ -2,10 +2,12 @@
 import Navbar from "../components/Navbar";
 
 function App() {
+  
+
   return (
     <div className="font-pretendard">
       <Navbar />
-      <div className="w-full px-8">
+      <div className="w-[1400px] mx-auto py-6">
         안녕하세용
       </div>
     </div>
