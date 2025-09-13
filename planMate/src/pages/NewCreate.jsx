@@ -129,7 +129,7 @@ function App() {
   }
   
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     const SERVER_URL = `${BASE_URL}/ws-plan?token=${encodeURIComponent(token)}`;
 
     const connectWebSocket = () => {
