@@ -155,16 +155,29 @@ function App() {
       const requestData = {
         departure: departureLocation.name,
         travelId: destinationLocation.id,
-        dates: formattedDates, // <-- ✅ 전체 날짜 배열 전송
+        dates: formattedDates,
         adultCount: Number(personCount.adults),
         childCount: Number(personCount.children),
         transportation: getTransportText() === "대중교통" ? 0 : 1,
       };
+
       const BASE_URL = import.meta.env.VITE_API_URL;
 
       console.log("보내는 데이터:", requestData);
 
-      const data = await post(`${BASE_URL}/api/plan`, requestData);
+      const response = await fetch(`${BASE_URL}/api/plan`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
 
       console.log("서버 응답:", data);
 
