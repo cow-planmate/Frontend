@@ -22,7 +22,7 @@ export default function LocationModal({
         const upperRegions = {};
         if (res && res.travels) {
           res.travels.forEach((item) => {
-            const categoryName = item.travelCategory.travelCategoryName;
+            const categoryName = item.travelCategoryName;
             const travelName = item.travelName;
             const travelId = item.travelId;
 
