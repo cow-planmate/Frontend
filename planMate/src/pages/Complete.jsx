@@ -7,9 +7,10 @@ import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk";
 import useKakaoLoader from "../hooks/useKakaoLoader";
 
 const TravelPlannerApp = () => {
-  const { get } = useApiClient();
+  const { get, isAuthenticated } = useApiClient();
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
+  const token = searchParams.get("token");
   const [data, setData] = useState(null);
   const [timetables, setTimetables] = useState([]);
   const tripCategory = { 0: "관광지", 1: "숙소", 2: "식당", 4: "검색" };
@@ -95,7 +96,7 @@ const TravelPlannerApp = () => {
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      if (id) {
+      if (id && isAuthenticated()) {
         try {
           const planData = await get(`${BASE_URL}/api/plan/${id}/complete`); // BASE_URL
           console.log("초기 데이터", planData)
@@ -114,8 +115,30 @@ const TravelPlannerApp = () => {
         } catch (err) {
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
         }
+      } else if (token) {
+        try {
+          const planData = await get(`${BASE_URL}/api/plan/${id}/complete?token=${token}`); // BASE_URL
+          console.log("초기 데이터", planData)
+          setData(planData);
+          // timetables 데이터 설정
+          if (planData.timetables) {
+            setTimetables(planData.timetables);
+            // 첫 번째 날을 기본 선택일로 설정
+            if (planData.timetables.length > 0) {
+              setSelectedDay(planData.timetables[0].timetableId);
+            }
+          }
+
+          const result = transformApiResponse(planData);
+          setTransformedData(result);
+        } catch (err) {
+          console.error("일정 정보를 가져오는데 실패했습니다:", err);
+          alert("잘못된 접근입니다.");
+          navigate("/");
+        }
       } else {
-        setData(null);
+        alert("잘못된 접근입니다.");
+        navigate("/");
       }
     };
 
