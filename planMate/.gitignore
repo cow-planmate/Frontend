@@ -26,3 +26,4 @@ api.http
 *.njsproj
 *.sln
 *.sw?
+*.env
