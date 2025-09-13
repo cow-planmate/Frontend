@@ -155,24 +155,36 @@ function App() {
       const requestData = {
         departure: departureLocation.name,
         travelId: destinationLocation.id,
-        dates: formattedDates, // <-- ✅ 전체 날짜 배열 전송
+        dates: formattedDates,
         adultCount: Number(personCount.adults),
         childCount: Number(personCount.children),
         transportation: getTransportText() === "대중교통" ? 0 : 1,
       };
-      const BASE_URL = import.meta.env.VITE_API_URL;
 
-      console.log("보내는 데이터:", requestData);
+      if (isAuthenticated()) {
+        const BASE_URL = import.meta.env.VITE_API_URL;
+        console.log("보내는 데이터:", requestData);
 
-      const data = await post(`${BASE_URL}/api/plan`, requestData);
+        const data = await post(`${BASE_URL}/api/plan`, requestData);
+        console.log("서버 응답:", data);
 
-      console.log("서버 응답:", data);
+        if (data && data.planId) {
+          navigate(`/create?id=${data.planId}`);
+        }
+      } else {
+        const queryParams = new URLSearchParams({
+          departure: requestData.departure,
+          travelId: requestData.travelId.toString(),
+          dates: JSON.stringify(requestData.dates),
+          adultCount: requestData.adultCount.toString(),
+          childCount: requestData.childCount.toString(),
+          transportation: requestData.transportation.toString(),
+        });
 
-      if (data && data.planId) {
-        navigate(`/create?id=${data.planId}`);
+        navigate(`/create?${queryParams.toString()}`);
       }
     } catch (err) {
-      console.error("에러 , 다시시도해주세요", err);
+      console.error("에러, 다시시도해주세요", err);
       alert("에러, 다시시도 해주세요");
     }
   };
