@@ -13,7 +13,7 @@ export default function PlanList({ refreshTrigger }) {
   const [selectedPlans, setSelectedPlans] = useState([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
 
-  const { get, isAuthenticated } = useApiClient();
+  const { get, isAuthenticated, apiRequest } = useApiClient();
   const removePlanFromState = (planId) => {
     setMyPlans((prevPlans) => prevPlans.filter((p) => p.planId !== planId));
     setEditablePlans((prevPlans) =>
@@ -63,7 +63,6 @@ export default function PlanList({ refreshTrigger }) {
     }
   };
 
-  // 일괄삭제 함수
   const handleMultipleDelete = async () => {
     if (selectedPlans.length === 0) return;
 
@@ -71,26 +70,19 @@ export default function PlanList({ refreshTrigger }) {
       confirm(`선택한 ${selectedPlans.length}개의 일정을 삭제하시겠습니까?`)
     ) {
       try {
-        const response = await fetch(`${BASE_URL}/api/plan`, {
+        const response = await apiRequest(`${BASE_URL}/api/plan`, {
           method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            // 인증 헤더 필요시 추가
-          },
           body: JSON.stringify({
             planIds: selectedPlans,
           }),
         });
-
-        if (response.ok) {
-          // 삭제된 플랜들을 상태에서 제거
-          selectedPlans.forEach((planId) => {
-            removePlanFromState(planId);
-          });
-          setSelectedPlans([]);
-          setIsMultiSelectMode(false);
-          alert("선택한 일정들이 삭제되었습니다.");
-        }
+        console.log("서버응답", response);
+        selectedPlans.forEach((planId) => {
+          removePlanFromState(planId);
+        });
+        setSelectedPlans([]);
+        setIsMultiSelectMode(false);
+        alert("선택한 일정들이 삭제되었습니다.");
       } catch (err) {
         console.error("일괄삭제 실패:", err);
         alert("삭제 중 오류가 발생했습니다.");
