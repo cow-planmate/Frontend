@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
-import PlanInfo from "../components/PlanInfo";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk";

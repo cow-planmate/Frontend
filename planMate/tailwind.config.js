@@ -12,6 +12,7 @@ export default {
       colors: {
         main: "#1344FF",
         sub: "#E8EDFF",
+        mainDark: "oklch(0.42 0.27 264.75)"
       },
     },
   },

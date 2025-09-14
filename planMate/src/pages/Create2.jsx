@@ -3,14 +3,21 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
 
+import usePlanStore from "../store/Plan";
+
 import Navbar from "../components/Navbar";
+import PlanInfo from "../components/Create2/PlanInfo";
 
 function App() {
   const BASE_URL = import.meta.env.VITE_API_URL;
-  const id = useSearchParams()[0].get("id");
+
+  const [searchParams] = useSearchParams();
+  const id = searchParams.get("id");
+
   const navigate = useNavigate();
   const { get, post, patch, isAuthenticated } = useApiClient();
 
+  const { setAll } = usePlanStore();
   const [noACL, setNoACL] = useState(false);
 
   // 초기 데이터 로딩
@@ -19,6 +26,10 @@ function App() {
       if (id && isAuthenticated()) {
         try {
           const planData = await get(`${BASE_URL}/api/plan/${id}`);
+          console.log(planData);
+
+          // 초기 데이터들 각 state로 분산 배치
+          setAll(planData.planFrame);
 
           const [tour, lodging, restaurant] = await Promise.all([
             post(`${BASE_URL}/api/plan/${id}/tour`),
@@ -47,11 +58,13 @@ function App() {
         }
       }
     }
-  }, [])
+    fetchPlanData();
+  }, []);
 
   return (
     <div className="font-pretendard">
-      <Navbar />
+      {/* <Navbar /> */}
+      <PlanInfo />
       {noACL 
       ?
         <div className="w-[1400px] h-[calc(100vh-125px)] mx-auto py-6 space-y-3 flex items-center justify-center flex-col">
@@ -66,7 +79,7 @@ function App() {
           </div>
         </div>
       :
-        <div className="w-[1400px] mx-auto py-6">
+        <div className="min-[1440px]:w-[1400px] min-[1440px]:px-0 md:px-8 mx-auto py-6">
           안녕하세용
         </div>
       }
