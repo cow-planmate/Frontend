@@ -17,7 +17,7 @@ function App() {
   const navigate = useNavigate();
   const { get, post, patch, isAuthenticated } = useApiClient();
 
-  const { setAll } = usePlanStore();
+  const { setPlanAll } = usePlanStore();
   const [noACL, setNoACL] = useState(false);
 
   // 초기 데이터 로딩
@@ -29,7 +29,7 @@ function App() {
           console.log(planData);
 
           // 초기 데이터들 각 state로 분산 배치
-          setAll(planData.planFrame);
+          setPlanAll(planData.planFrame);
 
           const [tour, lodging, restaurant] = await Promise.all([
             post(`${BASE_URL}/api/plan/${id}/tour`),
@@ -79,7 +79,7 @@ function App() {
           </div>
         </div>
       :
-        <div className="min-[1440px]:w-[1400px] min-[1440px]:px-0 md:px-8 mx-auto py-6">
+        <div className="min-[1464px]:w-[1400px] min-[1464px]:px-0 md:px-8 md:py-6 px-5 py-3 mx-auto">
           안녕하세용
         </div>
       }

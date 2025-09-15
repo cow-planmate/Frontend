@@ -10,13 +10,13 @@ const usePlanStore = create((set) => ({
   adultCount: 0,
   childCount: 0,
 
-  setField: (field, value) =>
+  setPlanField: (field, value) =>
     set((state) => ({
       ...state,
       [field]: value,
     })),
 
-  setAll: (payload) =>
+  setPlanAll: (payload) =>
     set(() => ({
       ...payload,
     })),

@@ -1,5 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import usePlanStore from "../../store/Plan";
+
+import PlanInfoModal from "./PlanInfoModal";
 
 export default function PlanInfo() {
   const { 
@@ -11,7 +13,7 @@ export default function PlanInfo() {
     transportationCategoryId, 
     adultCount, 
     childCount,
-    setField
+    setPlanField
   } = usePlanStore();
 
   const flexCenter = "flex items-center";
@@ -20,6 +22,8 @@ export default function PlanInfo() {
 
   const spanRef = useRef(null);
   const inputRef = useRef(null);
+  
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   useEffect(() => {
     if (spanRef.current && inputRef.current) {
@@ -29,63 +33,71 @@ export default function PlanInfo() {
   }, [planName]);
 
   return (
-    <div className={`mx-auto min-[1440px]:w-[1416px] min-[1440px]:px-0 md:px-6 pt-6 ${flexCenter} justify-between`}>
-      <div className={`${flexCenter} lg:space-x-6 md:space-x-3`}>
+    <div className={`mx-auto min-[1464px]:w-[1416px] min-[1464px]:px-0 md:px-6 md:pt-6 p-4 ${flexCenter} justify-between`}>
+      <div className={`${flexCenter} min-[1464px]:space-x-6 md:space-x-3`}>
         <div>
           <input
             ref={inputRef}
             type="text"
-            className={`${infoButton} mr-3 text-lg font-semibold`}
-            onChange={(e) => setField("planName", e.target.value)}
-            style={{ minWidth: "1ch", maxWidth: "220px" }}
+            className={`${infoButton} min-[1464px]:mr-3 min-[1464px]:max-w-48 md:mr-1.5 md:max-w-36 text-lg font-semibold`}
+            onChange={(e) => setPlanField("planName", e.target.value)}
+            style={{ minWidth: "1ch" }}
             value={planName}
           />
         </div>
-        <button
-          className={infoButton}
-        >
-          <div className={`${flexCenter}`}>
-            <p className="text-gray-500 mr-3">인원 수</p>
+        <div className="hidden min-[1464px]:space-x-6 min-[1260px]:space-x-3 min-[1260px]:block">
+          <button
+            className={infoButton}
+          >
+            <div className={`${flexCenter}`}>
+              <p className="text-gray-500 mr-3">인원 수</p>
 
-            <p className="px-2 py-1 bg-gray-200 text-gray-700 rounded-md text-sm mr-2">
-              성인
-            </p>
-            <p className="text-lg mr-4">{adultCount}명</p>
+              <p className="px-2 py-1 bg-gray-200 text-gray-700 rounded-md text-sm mr-2">
+                성인
+              </p>
+              <p className="text-lg mr-4">{adultCount}명</p>
 
-            <p className="px-2 py-1 bg-gray-200 text-gray-700 rounded-md text-sm mr-2">
-              어린이
-            </p>
-            <p className="text-lg">{childCount}명</p>
-          </div>
-        </button>
-        <button
-          className={infoButton}
+              <p className="px-2 py-1 bg-gray-200 text-gray-700 rounded-md text-sm mr-2">
+                어린이
+              </p>
+              <p className="text-lg">{childCount}명</p>
+            </div>
+          </button>
+          <button
+            className={infoButton}
+          >
+            <div className={`${flexCenter}`}>
+              <p className="text-gray-500 mr-3">출발지</p>
+              <p className="text-lg truncate min-[1464px]:max-w-36 md:max-w-24">{departure}</p>
+            </div>
+          </button>
+          <button
+            className={infoButton}
+          >
+            <div className={`${flexCenter}`}>
+              <p className="text-gray-500 mr-3">여행지</p>
+              <p className="text-lg">{travelName}</p>
+            </div>
+          </button>
+          <button
+            className={infoButton}
+          >
+            <div className={flexCenter}>
+              <p className="text-gray-500 mr-3">이동수단</p>
+              <p className="text-lg">{transInfo[transportationCategoryId]}</p>
+            </div>
+          </button>
+        </div>
+        <button 
+          className="block min-[1260px]:hidden rounded-full bg-gray-300 hover:bg-gray-400 py-2 px-4"
+          onClick={() => setIsInfoOpen(true)}
         >
-          <div className={`${flexCenter}`}>
-            <p className="text-gray-500 mr-3">출발지</p>
-            <p className="text-lg truncate max-w-56">{departure}</p>
-          </div>
-        </button>
-        <button
-          className={infoButton}
-        >
-          <div className={`${flexCenter}`}>
-            <p className="text-gray-500 mr-3">여행지</p>
-            <p className="text-lg">{travelName}</p>
-          </div>
-        </button>
-        <button
-          className={infoButton}
-        >
-          <div className={flexCenter}>
-            <p className="text-gray-500 mr-3">이동수단</p>
-            <p className="text-lg">{transInfo[transportationCategoryId]}</p>
-          </div>
+          자세히 보기
         </button>
       </div>
       <div className={`${flexCenter} mr-2`}>
         <button 
-          className="px-4 py-2 rounded-lg border border-gray-300 mr-3 hover:bg-gray-100"
+          className="px-4 py-2 rounded-lg border border-gray-500 mr-3 hover:bg-gray-100"
         >
           지도로 보기
         </button>
@@ -107,6 +119,8 @@ export default function PlanInfo() {
       >
         {planName || " "}
       </span>
+
+      {isInfoOpen ? <PlanInfoModal setIsInfoOpen={setIsInfoOpen}/> : <></>}
     </div>
   )
 }
