@@ -586,6 +586,7 @@ function App() {
                 placeRating: item.rating,
                 placeAddress: item.formatted_address,
                 placeLink: item.url,
+                placeId: item.placeId,
                 date: date,
                 startTime: `${item.timeSlot}:00`,
                 endTime: `${endTime}:00`,
