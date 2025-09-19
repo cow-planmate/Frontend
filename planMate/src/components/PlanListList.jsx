@@ -304,8 +304,7 @@ const ShareModal = ({ isShareOpen, setIsShareOpen, id }) => {
 
   const getShareLink = async () => {
     try {
-      const response = await get(`${BASE_URL}/api/plan/${id}/share`);
-      console.log(response);
+      const response = await post(`${BASE_URL}/api/plan/${id}/share`);
       setShareURL(response.sharedPlanUrl || "");
     } catch (error) {
       console.error("공유 링크 조회 실패", error);
@@ -410,10 +409,10 @@ const EditorShareModal = ({ setIsShareOpen, id, onResignEditorSuccess }) => {
   useEffect(() => {
     const getShareLink = async () => {
       try {
-        const response = await get(`${BASE_URL}/api/plan/${id}/share`);
+        const response = await post(`${BASE_URL}/api/plan/${id}/share`);
         setShareURL(response.sharedPlanUrl || "");
       } catch (error) {
-        console.error("공유 링크 생성 실패", error);
+        console.error("공유 링크 조회 실패", error);
       }
     };
     getShareLink();
