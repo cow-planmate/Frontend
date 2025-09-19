@@ -1,5 +1,5 @@
 import Logo from "../assets/imgs/logo.svg?react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Login from "../components/Login";
 import PasswordFind from "../components/PasswordFind";
 import Signup from "../components/Signup";
@@ -28,6 +28,17 @@ export default function Navbar({ onInvitationAccept }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isInvitationOpen, setisInvitationOpen] = useState(false);
   const [invitations, setInvitations] = useState([]);
+
+  const location = useLocation();
+  const navigate = useNavigate()
+
+  const handleMypage = () => {
+    if (location.pathname === "/mypage") {
+      window.location.reload();
+    } else {
+      navigate("mypage")
+    }
+  }
 
   // 사용자 프로필 상태 추가
   const [userProfile, setUserProfile] = useState(null);
@@ -222,15 +233,16 @@ export default function Navbar({ onInvitationAccept }) {
               </div>
               {isProfileOpen && (
                 <div className="absolute right-8 top-full w-36 p-2 bg-white border rounded-lg shadow-md z-50">
-                  <Link to="/mypage">
-                    <div className="w-full flex items-center p-3 hover:bg-gray-100 cursor-pointer">
-                      <FontAwesomeIcon
-                        className="mr-3 w-4"
-                        icon={faHouseUser}
-                      />
-                      마이페이지
-                    </div>
-                  </Link>
+                  <button 
+                    className="w-full flex items-center p-3 hover:bg-gray-100 cursor-pointer"
+                    onClick={handleMypage}
+                  >
+                    <FontAwesomeIcon
+                      className="mr-3 w-4"
+                      icon={faHouseUser}
+                    />
+                    마이페이지
+                  </button>
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center p-3 hover:bg-gray-100 cursor-pointer"
