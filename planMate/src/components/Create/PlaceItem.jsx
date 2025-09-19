@@ -1,8 +1,15 @@
+import defaultImg from "../../assets/imgs/default.png";
+
 const PlaceItem = ({ place }) => {
   const handleDragStart = (e) => {
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("application/json", JSON.stringify(place));
   };
+
+  // Build image URL from backend: GET /image/place/{placeId}
+  const placeId = place?.placeId || place?.place_id || place?.id;
+  const BASE_URL = import.meta.env.VITE_API_URL;
+  const imageUrl = placeId ? `${BASE_URL}/image/place/${encodeURIComponent(placeId)}` : place?.iconUrl;
 
   return (
     <div
@@ -12,8 +19,13 @@ const PlaceItem = ({ place }) => {
     >
       <div className="w-12 h-12 bg-gray-300 rounded-lg mr-4 flex items-center justify-center">
         <img
-          src={place.iconUrl}
+          src={imageUrl || defaultImg}
           alt={place.name}
+          loading="lazy"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = place?.iconUrl || defaultImg;
+          }}
           className="w-full h-full object-cover rounded-lg"
         />
       </div>

@@ -3,14 +3,15 @@ import Profile from "../components/Profile.jsx";
 import PlanList from "../components/PlanList.jsx";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useApiClient } from "../assets/hooks/useApiClient";
 
 function App() {
   const navigate = useNavigate();
   const [refreshTrigger, setRefreshTrigger] = useState(false);
+  const { isAuthenticated } = useApiClient();
+  
   useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
+    if (!isAuthenticated()) {
       alert("로그인 시에만 접근 가능한 페이지입니다.");
       navigate("/");
       return;
