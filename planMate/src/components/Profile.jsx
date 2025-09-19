@@ -20,32 +20,9 @@ import { useApiClient } from "../assets/hooks/useApiClient";
 import { useNavigate } from "react-router-dom";
 import NicknameModal from "../components/NicknameChange";
 
-export default function Profile() {
-  const [userProfile, setUserProfile] = useState(null);
+export default function Profile({ userProfile, setUserProfile }) {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isNicknameModalOpen, setIsNicknameModalOpen] = useState(false);
-  const { get, isAuthenticated } = useApiClient();
-  const BASE_URL = import.meta.env.VITE_API_URL;
-
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (isAuthenticated()) {
-        try {
-          const profileData = await get(`${BASE_URL}/api/user/profile`);
-          setUserProfile(profileData);
-        } catch (err) {
-          console.error("프로필 정보를 가져오는데 실패했습니다:", err);
-          if (err.message.includes("인증이 만료")) {
-            handleLogout();
-          }
-        }
-      } else {
-        setUserProfile(null);
-      }
-    };
-
-    fetchUserProfile();
-  }, [isAuthenticated, get]);
 
   const gender = { 0: "남자", 1: "여자" };
 

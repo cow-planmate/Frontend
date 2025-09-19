@@ -6,14 +6,12 @@ import { useApiClient } from "../assets/hooks/useApiClient";
 import PlanListList from "./PlanListList";
 import { useNavigate } from "react-router-dom";
 
-export default function PlanList({ refreshTrigger }) {
+export default function PlanList({ myPlans, setMyPlans, editablePlans, setEditablePlans }) {
   const navigate = useNavigate();
-  const [myPlans, setMyPlans] = useState([]);
-  const [editablePlans, setEditablePlans] = useState([]);
   const [selectedPlans, setSelectedPlans] = useState([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
 
-  const { get, isAuthenticated, apiRequest } = useApiClient();
+  const { apiRequest } = useApiClient();
   const removePlanFromState = (planId) => {
     setMyPlans((prevPlans) => prevPlans.filter((p) => p.planId !== planId));
     setEditablePlans((prevPlans) =>
@@ -22,26 +20,6 @@ export default function PlanList({ refreshTrigger }) {
   };
   const BASE_URL = import.meta.env.VITE_API_URL;
 
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (isAuthenticated()) {
-        try {
-          const profileData = await get(`${BASE_URL}/api/user/profile`);
-          setMyPlans(profileData.myPlanVOs || []);
-          setEditablePlans(profileData.editablePlanVOs || []);
-        } catch (err) {
-          console.error("프로필 정보를 가져오는데 실패했습니다:", err);
-          setMyPlans([]);
-          setEditablePlans([]);
-        }
-      } else {
-        setMyPlans([]);
-        setEditablePlans([]);
-      }
-    };
-
-    fetchUserProfile();
-  }, [isAuthenticated, get, refreshTrigger]);
   const removeEditablePlanFromState = (planId) => {
     setEditablePlans((prev) => prev.filter((p) => p.planId !== planId));
   };
