@@ -57,6 +57,7 @@ export const useApiClient = () => {
       setTokens(data.accessToken, data.refreshToken);
       return data.accessToken;
     } catch (error) {
+      console.error("토큰 갱신 실패:", error.message); // 이 줄 추가
       clearAuth();
       throw error;
     }
