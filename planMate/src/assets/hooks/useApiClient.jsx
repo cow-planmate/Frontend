@@ -31,6 +31,7 @@ export const useApiClient = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userId");
+    localStorage.removeItem("nickname");
   }, []);
 
   // 2. 토큰 갱신 함수
