@@ -186,28 +186,22 @@ export const useApiClient = () => {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      // FormData 요청 시 Content-Type을 명시적으로 설정하지 않음
-      // 브라우저가 자동으로 multipart/form-data와 boundary를 설정
       return apiRequest(url, {
         method: "POST",
-        headers, // 이미 Content-Type이 없는 상태
+        headers,
         body: formData,
       });
     },
     [apiRequest, getAccessToken]
   );
-
-  // 7. 인증 관련 함수들
   const login = useCallback(
     async (email, password) => {
       try {
-        // 로그인 API 호출
         const response = await post(`${BASE_URL}/api/auth/login`, {
           email,
           password,
         });
 
-        // 실패 조건을 먼저 확인 (가드 클로즈)
         if (!response.accessToken || !response.refreshToken) {
           throw new Error(
             response.message ||
@@ -215,17 +209,18 @@ export const useApiClient = () => {
           );
         }
 
-        // 성공 로직 - 두 토큰 모두 저장
         setTokens(response.accessToken, response.refreshToken);
+
         if (response.userId) {
           localStorage.setItem("userId", response.userId.toString());
         }
+        if (response.nickname) {
+          localStorage.setItem("nickname", response.nickname);
+        }
 
-        return response; // 성공 응답 반환
+        return response;
       } catch (err) {
-        // post 요청 자체에서 발생한 에러 또는 위에서 throw한 에러가 여기서 잡힘
         console.error("로그인 프로세스 에러:", err.message);
-        // 에러를 다시 던져서 이 함수를 호출한 컴포넌트(UI)에서 처리할 수 있도록 함
         throw err;
       }
     },
