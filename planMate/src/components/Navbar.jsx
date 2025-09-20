@@ -43,31 +43,19 @@ export default function Navbar({ onInvitationAccept }) {
   // 사용자 프로필 상태 추가
   const [userProfile, setUserProfile] = useState(null);
 
-  const { get, post, isLoading, error, isAuthenticated, logout } =
-    useApiClient();
-  const BASE_URL = import.meta.env.VITE_API_URL;
+  const importNickname = () => {
+    const nickname = localStorage.getItem("nickname");
+    if (nickname) {
+      setUserProfile(nickname);
+    }
+  }
 
-  // 기존 코드 그대로...
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (isAuthenticated()) {
-        try {
-          const profileData = await get(`${BASE_URL}/api/user/profile`);
-          setUserProfile(profileData);
-        } catch (err) {
-          console.error("프로필 정보를 가져오는데 실패했습니다:", err);
-          // 토큰이 유효하지 않은 경우 로그아웃 처리
-          if (err.message.includes("인증이 만료")) {
-            handleLogout();
-          }
-        }
-      } else {
-        setUserProfile(null);
-      }
-    };
+    importNickname();
+  }, [])
 
-    fetchUserProfile();
-  }, [isAuthenticated, get]);
+  const { get, post, isAuthenticated, logout } = useApiClient();
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   // 로그아웃 처리 함수
   const handleLogout = () => {
@@ -128,12 +116,7 @@ export default function Navbar({ onInvitationAccept }) {
   // 로그인 성공 후 프로필 정보 새로고침을 위한 함수
   const refreshUserProfile = async () => {
     if (isAuthenticated()) {
-      try {
-        const profileData = await get(`${BASE_URL}/api/user/profile`);
-        setUserProfile(profileData);
-      } catch (err) {
-        console.error("프로필 정보 새로고침 실패:", err);
-      }
+      importNickname();
     }
   };
 
@@ -213,7 +196,7 @@ export default function Navbar({ onInvitationAccept }) {
                   <div className="flex items-center h-[42px]">
                     <div className="w-8 h-8 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full mr-3"></div>
                     <span>
-                      {userProfile.nickname || userProfile.name || "사용자"}님
+                      {userProfile}님
                     </span>
                   </div>
                 </button>
