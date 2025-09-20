@@ -68,7 +68,7 @@ export default function PlanInfo() {
           >
             <div className={`${flexCenter}`}>
               <p className="text-gray-500 mr-3">출발지</p>
-              <p className="text-lg truncate min-[1464px]:max-w-36 md:max-w-24">{departure}</p>
+              <p className="text-lg truncate min-[1464px]:max-w-36 md:max-w-24" title={departure}>{departure}</p>
             </div>
           </button>
           <button
