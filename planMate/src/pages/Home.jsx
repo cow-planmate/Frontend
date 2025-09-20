@@ -16,7 +16,7 @@ import {
   faBus,
 } from "@fortawesome/free-solid-svg-icons";
 import { Link, useNavigate } from "react-router-dom";
-
+import usePlanStore from "../store/Plan";
 function App() {
   const navigate = useNavigate();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -35,6 +35,9 @@ function App() {
       key: "selection",
     },
   ]);
+
+  const { setPlanField, setPlanAll } = usePlanStore();
+
   const { post, isAuthenticated } = useApiClient();
 
   const handleDateChange = (item) => {
@@ -58,10 +61,13 @@ function App() {
   const handleDepartureLocationSelect = (location) => {
     console.log("선택된 출발지:", location); // 디버깅용
     setDepartureLocation(location);
+    setPlanField("departure", location.name);
   };
 
   const handleDestinationLocationSelect = (location) => {
     setDestinationLocation(location);
+    setPlanField("travelName", location.name);
+    setPlanField("travelId", location.id);
   };
 
   const handleDestinationOpen = () => {
@@ -90,6 +96,8 @@ function App() {
 
   const handlePersonCountChange = (count) => {
     setPersonCount(count);
+    setPlanField("adultCount", count.adults);
+    setPlanField("childCount", count.children);
   };
 
   const formatPersonCount = () => {
@@ -108,6 +116,7 @@ function App() {
 
   const handleTransportChange = (transport) => {
     setSelectedTransport(transport);
+    setPlanField("transportationCategoryId", transportId);
   };
 
   const getTransportIcon = () => {
@@ -152,16 +161,28 @@ function App() {
       );
       const formattedDates = allDates.map((date) => formatDateForApi(date));
 
-      const requestData = {
-        departure: departureLocation.name,
+      // 전역 상태에 모든 데이터 저장
+      setPlanAll({
+        planName: "", // 필요시 기본값 설정
+        travelCategoryName: destinationLocation.categoryName || "",
+        travelName: destinationLocation.name,
         travelId: destinationLocation.id,
-        dates: formattedDates,
+        departure: departureLocation.name,
+        transportationCategoryId: selectedTransport === "car" ? 1 : 0,
         adultCount: Number(personCount.adults),
         childCount: Number(personCount.children),
-        transportation: getTransportText() === "대중교통" ? 0 : 1,
-      };
+      });
 
       if (isAuthenticated()) {
+        const requestData = {
+          departure: departureLocation.name,
+          travelId: destinationLocation.id,
+          dates: formattedDates,
+          adultCount: Number(personCount.adults),
+          childCount: Number(personCount.children),
+          transportation: selectedTransport === "car" ? 1 : 0,
+        };
+
         const BASE_URL = import.meta.env.VITE_API_URL;
         console.log("보내는 데이터:", requestData);
 
@@ -172,23 +193,13 @@ function App() {
           navigate(`/create?id=${data.planId}`);
         }
       } else {
-        const queryParams = new URLSearchParams({
-          departure: requestData.departure,
-          travelId: requestData.travelId.toString(),
-          dates: JSON.stringify(requestData.dates),
-          adultCount: requestData.adultCount.toString(),
-          childCount: requestData.childCount.toString(),
-          transportation: requestData.transportation.toString(),
-        });
-
-        navigate(`/create?${queryParams.toString()}`);
+        navigate(`/create`);
       }
     } catch (err) {
       console.error("에러, 다시시도해주세요", err);
       alert("에러, 다시시도 해주세요");
     }
   };
-
   return (
     <div className="relative pr-0 pl-0 right-0 left-0">
       <div className="text-center h-auto font-pretendard">
