@@ -41,14 +41,13 @@ export const useApiClient = () => {
     }
 
     try {
-      const response = await fetch(`${BASE_URL}/api/auth/refresh`, {
-        method: "POST",
+      const response = await fetch(`${BASE_URL}/api/auth/token`, {
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${refreshToken}`,
         },
       });
-
       if (!response.ok) {
         throw new Error("토큰 갱신 실패");
       }
