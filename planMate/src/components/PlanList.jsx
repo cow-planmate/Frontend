@@ -6,7 +6,12 @@ import { useApiClient } from "../assets/hooks/useApiClient";
 import PlanListList from "./PlanListList";
 import { useNavigate } from "react-router-dom";
 
-export default function PlanList({ myPlans, setMyPlans, editablePlans, setEditablePlans }) {
+export default function PlanList({
+  myPlans,
+  setMyPlans,
+  editablePlans,
+  setEditablePlans,
+}) {
   const navigate = useNavigate();
   const [selectedPlans, setSelectedPlans] = useState([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
@@ -67,10 +72,12 @@ export default function PlanList({ myPlans, setMyPlans, editablePlans, setEditab
       }
     }
   };
+
   return (
     <div className="flex flex-col gap-6 font-pretendard">
-      <div className="bg-white w-[53rem] rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-        <div className="border-b border-gray-200 px-6 py-5 flex items-center justify-between">
+      {/* 나의 일정 섹션 */}
+      <div className="bg-white w-[53rem] rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[28rem]">
+        <div className="border-b border-gray-200 px-6 py-5 flex items-center justify-between flex-shrink-0">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">나의 일정</h2>
             <p className="text-gray-600 mt-1">직접 생성한 일정을 관리하세요</p>
@@ -98,9 +105,9 @@ export default function PlanList({ myPlans, setMyPlans, editablePlans, setEditab
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="flex-1 overflow-hidden flex flex-col">
           {isMultiSelectMode && myPlans.length > 0 && (
-            <div className="mb-4 flex items-center justify-between bg-blue-50 p-4 rounded-xl">
+            <div className="flex-shrink-0 mx-6 mt-6 mb-4 flex items-center justify-between bg-blue-50 p-4 rounded-xl">
               <div className="flex items-center gap-3">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -129,44 +136,48 @@ export default function PlanList({ myPlans, setMyPlans, editablePlans, setEditab
               </button>
             </div>
           )}
-          {myPlans.length > 0 ? (
-            <div className="space-y-4">
-              {myPlans.map((lst) => (
-                <PlanListList
-                  key={lst.planId}
-                  lst={lst}
-                  onPlanDeleted={removePlanFromState}
-                  isOwner={true}
-                  onResignEditorSuccess={removeEditablePlanFromState}
-                  isMultiSelectMode={isMultiSelectMode}
-                  isSelected={selectedPlans.includes(lst.planId)}
-                  onPlanSelect={handlePlanSelect}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <FontAwesomeIcon
-                  icon={faCalendarPlus}
-                  className="w-6 h-6 text-gray-400"
-                />
+
+          <div className="flex-1 overflow-y-auto px-6 pb-6">
+            {myPlans.length > 0 ? (
+              <div className="space-y-4">
+                {myPlans.map((lst) => (
+                  <PlanListList
+                    key={lst.planId}
+                    lst={lst}
+                    onPlanDeleted={removePlanFromState}
+                    isOwner={true}
+                    onResignEditorSuccess={removeEditablePlanFromState}
+                    isMultiSelectMode={isMultiSelectMode}
+                    isSelected={selectedPlans.includes(lst.planId)}
+                    onPlanSelect={handlePlanSelect}
+                  />
+                ))}
               </div>
-              <p className="text-gray-500 mb-4">생성한 일정이 없습니다</p>
-              <button
-                onClick={() => navigate("/")}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-main hover:bg-blue-900 text-white font-medium rounded-lg transition-colors"
-              >
-                <FontAwesomeIcon icon={faCalendarPlus} className="w-4 h-4" />
-                여행 계획 만들기
-              </button>
-            </div>
-          )}
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <FontAwesomeIcon
+                    icon={faCalendarPlus}
+                    className="w-6 h-6 text-gray-400"
+                  />
+                </div>
+                <p className="text-gray-500 mb-4">생성한 일정이 없습니다</p>
+                <button
+                  onClick={() => navigate("/")}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-main hover:bg-blue-900 text-white font-medium rounded-lg transition-colors"
+                >
+                  <FontAwesomeIcon icon={faCalendarPlus} className="w-4 h-4" />
+                  여행 계획 만들기
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="bg-white w-[53rem] rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-        <div className="border-b border-gray-200 px-6 py-5 flex items-center justify-between">
+      {/* 우리들의 일정 섹션 */}
+      <div className="bg-white w-[53rem] rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[28rem]">
+        <div className="border-b border-gray-200 px-6 py-5 flex items-center justify-between flex-shrink-0">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">우리들의 일정</h2>
             <p className="text-gray-600 mt-1">
@@ -179,7 +190,7 @@ export default function PlanList({ myPlans, setMyPlans, editablePlans, setEditab
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto px-6 py-6">
           {editablePlans.length > 0 ? (
             <div className="space-y-4">
               {editablePlans.map((lst) => (
