@@ -149,7 +149,7 @@ export default function PlanListList({
 
       {toggleModal && (
         <div
-          className="absoulte w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-[9999] overflow-hidden"
+          className="fixed w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-[9999] overflow-hidden"
           ref={modalRef}
           style={{
             top: buttonRef.current
