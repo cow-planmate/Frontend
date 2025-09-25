@@ -20,7 +20,7 @@ const PlaceRecommendations = ({
   const id = searchParams.get("id");
 
   // API 클라이언트
-  const { post } = useApiClient();
+  const { get } = useApiClient();
 
   const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -69,8 +69,8 @@ const PlaceRecommendations = ({
     if (!q || !id) return;
     try {
       setSearchLoading(true);
-      // 백엔드 규격: POST /api/plan/{id}/place  body: { "query": "서울역" }
-      const res = await post(`${BASE_URL}/api/plan/${id}/place`, { query: q });
+      // 백엔드 규격: GET /api/plan/{id}/place/query
+      const res = await get(`${BASE_URL}/api/plan/${id}/place/${encodeURIComponent(q)}`);
       const newSearchList = Array.isArray(res?.places) ? res.places : [];
 
       // places.검색만 덮어쓰기
