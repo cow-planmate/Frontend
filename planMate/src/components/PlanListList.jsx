@@ -27,15 +27,18 @@ export default function PlanListList({
   const [toggleModal, setToggleModal] = useState(false);
   const [title, setTitle] = useState(lst.planName);
   const modalRef = useRef(null);
+  const buttonRef = useRef(null);
   const BASE_URL = import.meta.env.VITE_API_URL;
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [modalPosition, setModalPosition] = useState({ top: 0, right: 0 });
 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (
         toggleModal &&
         modalRef.current &&
-        !modalRef.current.contains(e.target)
+        !modalRef.current.contains(e.target) &&
+        !buttonRef.current.contains(e.target)
       ) {
         setToggleModal(false);
       }
@@ -45,6 +48,34 @@ export default function PlanListList({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
+  }, [toggleModal]);
+
+  // 모달 위치 계산
+  useEffect(() => {
+    if (toggleModal && buttonRef.current) {
+      const buttonRect = buttonRef.current.getBoundingClientRect();
+      const modalWidth = 176; // 모달의 width (w-44 = 176px)
+      const modalHeight = 200; // 대략적인 모달 높이
+
+      // 화면 경계 확인
+      const rightSpace = window.innerWidth - buttonRect.right;
+      const bottomSpace = window.innerHeight - buttonRect.bottom;
+
+      let top = 16; // 기본값 (top-16 = 64px)
+      let right = 16; // 기본값 (right-4 = 16px)
+
+      // 오른쪽 공간이 부족하면 왼쪽으로
+      if (rightSpace < modalWidth) {
+        right = -(modalWidth - 32); // 버튼 왼쪽으로 이동
+      }
+
+      // 아래쪽 공간이 부족하면 위쪽으로
+      if (bottomSpace < modalHeight) {
+        top = -(modalHeight - 32); // 버튼 위쪽으로 이동
+      }
+
+      setModalPosition({ top, right });
+    }
   }, [toggleModal]);
 
   const deletePlan = async () => {
@@ -65,6 +96,7 @@ export default function PlanListList({
     e.stopPropagation();
     onPlanSelect?.(lst.planId, e.target.checked);
   };
+
   return (
     <div
       className={`relative bg-gray-50 hover:bg-blue-50 rounded-xl p-4 transition-all duration-200 cursor-pointer border ${
@@ -101,6 +133,7 @@ export default function PlanListList({
         </div>
 
         <button
+          ref={buttonRef}
           onClick={(e) => {
             e.stopPropagation();
             setToggleModal((prev) => !prev);
@@ -116,13 +149,25 @@ export default function PlanListList({
 
       {toggleModal && (
         <div
-          className="absolute right-4 top-16 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden"
+          className="fixed w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-[9999] overflow-hidden"
           ref={modalRef}
+          style={{
+            top: buttonRef.current
+              ? buttonRef.current.getBoundingClientRect().bottom +
+                modalPosition.top
+              : 0,
+            left: buttonRef.current
+              ? buttonRef.current.getBoundingClientRect().right -
+                176 +
+                modalPosition.right
+              : 0,
+          }}
         >
           <button
             onClick={(e) => {
               e.stopPropagation();
               setIsTitleOpen(true);
+              setToggleModal(false);
             }}
             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
           >
@@ -145,6 +190,7 @@ export default function PlanListList({
             onClick={(e) => {
               e.stopPropagation();
               deletePlan();
+              setToggleModal(false);
             }}
             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left border-t border-gray-100"
           >
@@ -155,6 +201,7 @@ export default function PlanListList({
             onClick={(e) => {
               e.stopPropagation();
               setIsShareOpen(true);
+              setToggleModal(false);
             }}
             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
           >
@@ -165,6 +212,7 @@ export default function PlanListList({
           </button>
         </div>
       )}
+
       {isTitleOpen && (
         <TitleModal
           setIsTitleOpen={setIsTitleOpen}
@@ -173,13 +221,13 @@ export default function PlanListList({
           setTitle={setTitle}
         />
       )}
-      {isShareOpen &&
+      {isShareOpen && (
         <ShareModal
           setIsShareOpen={setIsShareOpen}
           id={lst.planId}
           isOwner={isOwner}
         />
-      }
+      )}
     </div>
   );
 }
@@ -211,6 +259,7 @@ const TitleModal = ({ setIsTitleOpen, id, title, setTitle }) => {
       }
     }
   };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm cursor-default"
