@@ -405,9 +405,9 @@ function App() {
       if (id && isAuthenticated()) {
         try {
           const [tour, lodging, restaurant] = await Promise.all([
-            post(`${BASE_URL}/api/plan/${id}/tour`),
-            post(`${BASE_URL}/api/plan/${id}/lodging`),
-            post(`${BASE_URL}/api/plan/${id}/restaurant`),
+            get(`${BASE_URL}/api/plan/${id}/tour`),
+            get(`${BASE_URL}/api/plan/${id}/lodging`),
+            get(`${BASE_URL}/api/plan/${id}/restaurant`),
           ]);
 
           setPlaces({
