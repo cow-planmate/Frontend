@@ -36,7 +36,7 @@ export default function Navbar({ onInvitationAccept }) {
     if (location.pathname === "/mypage") {
       window.location.reload();
     } else {
-      navigate("mypage")
+      navigate("/mypage")
     }
   }
 

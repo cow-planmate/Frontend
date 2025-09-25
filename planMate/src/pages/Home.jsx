@@ -193,7 +193,7 @@ function App() {
           navigate(`/create?id=${data.planId}`);
         }
       } else {
-        navigate(`/create`);
+        navigate(`/create2`);
       }
     } catch (err) {
       console.error("에러, 다시시도해주세요", err);

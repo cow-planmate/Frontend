@@ -48,13 +48,12 @@ function App() {
         try {
           const [tour, lodging, restaurant] = await Promise.all([
             post(`${BASE_URL}/api/plan/tour`, {
-
             }),
             post(`${BASE_URL}/api/plan/lodging`),
             post(`${BASE_URL}/api/plan/restaurant`),
           ]);
         } catch {
-          
+          console.log("dd")
         }
       }
     }
