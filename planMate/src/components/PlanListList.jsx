@@ -131,88 +131,82 @@ export default function PlanListList({
             <p className="text-sm text-gray-500">클릭하여 상세보기</p>
           </div>
         </div>
-
-        <button
-          ref={buttonRef}
-          onClick={(e) => {
-            e.stopPropagation();
-            setToggleModal((prev) => !prev);
-          }}
-          className="w-8 h-8 rounded-lg hover:bg-white/80 flex items-center justify-center transition-colors"
-        >
-          <FontAwesomeIcon
-            className="text-gray-500 hover:text-gray-700"
-            icon={faEllipsisVertical}
-          />
-        </button>
-      </div>
-
-      {toggleModal && (
-        <div
-          className="fixed w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-[9999] overflow-hidden"
-          ref={modalRef}
-          style={{
-            top: buttonRef.current
-              ? buttonRef.current.getBoundingClientRect().bottom +
-                modalPosition.top
-              : 0,
-            left: buttonRef.current
-              ? buttonRef.current.getBoundingClientRect().right -
-                176 +
-                modalPosition.right
-              : 0,
-          }}
-        >
+        <div className="relative">
           <button
+            ref={buttonRef}
             onClick={(e) => {
               e.stopPropagation();
-              setIsTitleOpen(true);
-              setToggleModal(false);
+              setToggleModal((prev) => !prev);
             }}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+            className="w-8 h-8 rounded-lg hover:bg-white/80 flex items-center justify-center transition-colors"
           >
-            <TitleIcon className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">
-              제목 바꾸기
-            </span>
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/create?id=${lst.planId}`);
-            }}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
-          >
-            <FontAwesomeIcon icon={faPen} className="w-4 h-4 text-black" />
-            <span className="text-sm font-medium text-gray-700">수정하기</span>
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              deletePlan();
-              setToggleModal(false);
-            }}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left border-t border-gray-100"
-          >
-            <FontAwesomeIcon icon={faTrash} className="w-4 h-4 text-red-500" />
-            <span className="text-sm font-medium text-red-600">삭제하기</span>
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsShareOpen(true);
-              setToggleModal(false);
-            }}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
-          >
-            <FontAwesomeIcon icon={faShare} className="w-4 h-4 text-black" />
-            <span className="text-sm font-medium text-gray-700">
-              공유 및 초대
-            </span>
+            <FontAwesomeIcon
+              className="text-gray-500 hover:text-gray-700"
+              icon={faEllipsisVertical}
+            />
           </button>
         </div>
-      )}
 
+        {toggleModal && (
+          <div
+            className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-50"
+            ref={modalRef}
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsTitleOpen(true);
+                setToggleModal(false);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+            >
+              <TitleIcon className="w-4 h-4 text-gray-500" />
+              <span className="text-sm font-medium text-gray-700">
+                제목 바꾸기
+              </span>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/create?id=${lst.planId}`);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+            >
+              <FontAwesomeIcon icon={faPen} className="w-4 h-4 text-black" />
+              <span className="text-sm font-medium text-gray-700">
+                수정하기
+              </span>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                deletePlan();
+                setToggleModal(false);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left border-t border-gray-100"
+            >
+              <FontAwesomeIcon
+                icon={faTrash}
+                className="w-4 h-4 text-red-500"
+              />
+              <span className="text-sm font-medium text-red-600">삭제하기</span>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsShareOpen(true);
+                setToggleModal(false);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+            >
+              <FontAwesomeIcon icon={faShare} className="w-4 h-4 text-black" />
+              <span className="text-sm font-medium text-gray-700">
+                공유 및 초대
+              </span>
+            </button>
+          </div>
+        )}
+      </div>
       {isTitleOpen && (
         <TitleModal
           setIsTitleOpen={setIsTitleOpen}
