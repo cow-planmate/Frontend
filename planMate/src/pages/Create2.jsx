@@ -48,13 +48,12 @@ function App() {
         try {
           const [tour, lodging, restaurant] = await Promise.all([
             post(`${BASE_URL}/api/plan/tour`, {
-
             }),
             post(`${BASE_URL}/api/plan/lodging`),
             post(`${BASE_URL}/api/plan/restaurant`),
           ]);
         } catch {
-          
+          console.log("dd")
         }
       }
     }
@@ -79,7 +78,7 @@ function App() {
           </div>
         </div>
       :
-        <div className="min-[1464px]:w-[1400px] min-[1464px]:px-0 md:px-8 md:py-6 px-5 py-3 mx-auto">
+        <div className="min-[1464px]:w-[1400px] min-[1464px]:px-0 md:px-8 md:py-6 px-6 py-3 mx-auto">
           안녕하세용
         </div>
       }

@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import usePlanStore from "../../store/Plan";
 
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCheck, faUser, faUserPlus } from "@fortawesome/free-solid-svg-icons";
+import { faMap } from "@fortawesome/free-regular-svg-icons";
+
 import PlanInfoModal from "./PlanInfoModal";
 
 export default function PlanInfo() {
@@ -25,23 +29,40 @@ export default function PlanInfo() {
   
   const [isInfoOpen, setIsInfoOpen] = useState(false);
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    // 초기 실행
+    handleResize();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   useEffect(() => {
     if (spanRef.current && inputRef.current) {
-      const spanWidth = spanRef.current.offsetWidth;
-      inputRef.current.style.width = `${spanWidth + 2}px`;
+      const spanWidth = spanRef.current.getBoundingClientRect().width;
+      inputRef.current.style.width = `${spanWidth}px`;
     }
-  }, [planName]);
+  }, [planName, isMobile]);
 
   return (
     <div className={`mx-auto min-[1464px]:w-[1416px] min-[1464px]:px-0 md:px-6 md:pt-6 p-4 ${flexCenter} justify-between`}>
-      <div className={`${flexCenter} min-[1464px]:space-x-6 md:space-x-3`}>
+      <div className={`${flexCenter} min-[1464px]:space-x-6 sm:space-x-3 space-x`}>
         <div>
           <input
             ref={inputRef}
             type="text"
-            className={`${infoButton} min-[1464px]:mr-3 min-[1464px]:max-w-48 md:mr-1.5 md:max-w-36 text-lg font-semibold`}
+            className={`${infoButton} box-content min-[1464px]:mr-3 min-[1464px]:max-w-48 mr-1.5 max-w-36 text-base md:text-lg font-semibold`}
             onChange={(e) => setPlanField("planName", e.target.value)}
-            style={{ minWidth: "1ch" }}
+            style={{ minWidth: '1ch' }}
             value={planName}
           />
         </div>
@@ -89,35 +110,38 @@ export default function PlanInfo() {
           </button>
         </div>
         <button 
-          className="block min-[1260px]:hidden rounded-full bg-gray-300 hover:bg-gray-400 py-2 px-4"
+          className="block min-[1260px]:hidden text-sm sm:text-base rounded-full bg-gray-300 hover:bg-gray-400 py-2 px-4"
           onClick={() => setIsInfoOpen(true)}
         >
           자세히 보기
         </button>
       </div>
-      <div className={`${flexCenter} mr-2`}>
+      <div className={`${flexCenter} mr-2 space-x-2 sm:space-x-3`}>
         <button 
-          className="px-4 py-2 rounded-lg border border-gray-500 mr-3 hover:bg-gray-100"
+          className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg border border-gray-500 hover:bg-gray-100"
         >
-          지도로 보기
+          <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faMap} /></div>
+          <div className="hidden sm:block">지도로 보기</div>
         </button>
         <button 
-          className="px-4 py-2 rounded-lg bg-gray-300 mr-3 hover:bg-gray-400"
+          className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-gray-300 hover:bg-gray-400"
         >
-          공유
+          <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faUserPlus} /></div>
+          <div className="hidden sm:block">공유</div>
         </button>
         <button
-          className="px-4 py-2 rounded-lg bg-main hover:bg-mainDark text-white"
+          className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-main hover:bg-mainDark text-white"
         >
-          완료
+          <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faCheck} /></div>
+          <div className="hidden sm:block">완료</div>
         </button>
       </div>
 
       <span
         ref={spanRef}
-        className="invisible absolute whitespace-pre text-lg font-semibold px-2"
+        className="invisible absolute whitespace-pre text-base md:text-lg"
       >
-        {planName || " "}
+        {planName}
       </span>
 
       {isInfoOpen ? <PlanInfoModal setIsInfoOpen={setIsInfoOpen}/> : <></>}

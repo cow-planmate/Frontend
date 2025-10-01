@@ -4,7 +4,6 @@ import usePlanStore from "../../store/Plan";
 
 export default function PlanInfoModal({setIsInfoOpen}) {
   const { 
-    planName, 
     travelName, 
     travelCategoryName, 
     travelId,
