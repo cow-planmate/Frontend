@@ -34,7 +34,6 @@ export const useApiClient = () => {
     localStorage.removeItem("nickname");
   }, []);
 
-  // 2. 토큰 갱신 함수
   const refreshTokens = useCallback(async () => {
     const refreshToken = getRefreshToken();
     if (!refreshToken) {
@@ -42,22 +41,27 @@ export const useApiClient = () => {
     }
 
     try {
-      const response = await fetch(`${BASE_URL}/api/auth/token`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${refreshToken}`,
-        },
-      });
+      const response = await fetch(
+        `${BASE_URL}/api/auth/token?refreshToken=${refreshToken}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
       if (!response.ok) {
         throw new Error("토큰 갱신 실패");
       }
 
       const data = await response.json();
-      setTokens(data.accessToken, data.refreshToken);
+
+      setTokens(data.accessToken, refreshToken);
+
       return data.accessToken;
     } catch (error) {
-      console.error("토큰 갱신 실패:", error.message); // 이 줄 추가
+      console.error("토큰 갱신 실패:", error.message);
       clearAuth();
       throw error;
     }
