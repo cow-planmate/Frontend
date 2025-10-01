@@ -149,8 +149,14 @@ export default function PlanListList({
 
         {toggleModal && (
           <div
-            className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-50"
+            className="fixed w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-50"
             ref={modalRef}
+            style={{
+              top: `${buttonRef.current?.getBoundingClientRect().bottom + 8}px`,
+              left: `${
+                buttonRef.current?.getBoundingClientRect().right - 176
+              }px`,
+            }}
           >
             <button
               onClick={(e) => {
