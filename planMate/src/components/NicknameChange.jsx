@@ -17,6 +17,7 @@ export default function NicknameModal({
         const response = await patch(`${BASE_URL}/api/user/nickname`, {
           nickname,
         });
+        localStorage.setItem("nickname", nickname);
         onNicknameUpdate(nickname);
         setIsNicknameModalOpen(false);
         alert(response.message);
