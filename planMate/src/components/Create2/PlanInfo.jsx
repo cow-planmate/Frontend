@@ -55,7 +55,7 @@ export default function PlanInfo() {
 
   return (
     <div className={`mx-auto min-[1464px]:w-[1416px] min-[1464px]:px-0 md:px-6 md:pt-6 p-4 ${flexCenter} justify-between`}>
-      <div className={`${flexCenter} min-[1464px]:space-x-6 sm:space-x-3 space-x-1.5`}>
+      <div className={`${flexCenter} min-[1464px]:space-x-6 sm:space-x-3 space-x`}>
         <div>
           <input
             ref={inputRef}
