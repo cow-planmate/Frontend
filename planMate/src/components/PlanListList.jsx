@@ -44,9 +44,18 @@ export default function PlanListList({
       }
     };
 
+    const handleScroll = () => {
+      if (toggleModal) {
+        setToggleModal(false);
+      }
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScroll, true);
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
     };
   }, [toggleModal]);
 
@@ -54,27 +63,12 @@ export default function PlanListList({
   useEffect(() => {
     if (toggleModal && buttonRef.current) {
       const buttonRect = buttonRef.current.getBoundingClientRect();
-      const modalWidth = 176; // 모달의 width (w-44 = 176px)
-      const modalHeight = 200; // 대략적인 모달 높이
+      const modalWidth = 176;
 
-      // 화면 경계 확인
-      const rightSpace = window.innerWidth - buttonRect.right;
-      const bottomSpace = window.innerHeight - buttonRect.bottom;
-
-      let top = 16; // 기본값 (top-16 = 64px)
-      let right = 16; // 기본값 (right-4 = 16px)
-
-      // 오른쪽 공간이 부족하면 왼쪽으로
-      if (rightSpace < modalWidth) {
-        right = -(modalWidth - 32); // 버튼 왼쪽으로 이동
-      }
-
-      // 아래쪽 공간이 부족하면 위쪽으로
-      if (bottomSpace < modalHeight) {
-        top = -(modalHeight - 32); // 버튼 위쪽으로 이동
-      }
-
-      setModalPosition({ top, right });
+      setModalPosition({
+        top: buttonRect.bottom + 8,
+        left: buttonRect.right - modalWidth,
+      });
     }
   }, [toggleModal]);
 
@@ -152,10 +146,8 @@ export default function PlanListList({
             className="fixed w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-50"
             ref={modalRef}
             style={{
-              top: `${buttonRef.current?.getBoundingClientRect().bottom + 8}px`,
-              left: `${
-                buttonRef.current?.getBoundingClientRect().right - 176
-              }px`,
+              top: `${modalPosition.top}px`,
+              left: `${modalPosition.left}px`,
             }}
           >
             <button
