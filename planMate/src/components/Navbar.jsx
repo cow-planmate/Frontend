@@ -13,6 +13,7 @@ import {
   faHouseUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { faBell as faBellRegular } from "@fortawesome/free-regular-svg-icons";
+import useNicknameStore from "../store/Nickname";
 
 export default function Navbar({ onInvitationAccept }) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -28,6 +29,8 @@ export default function Navbar({ onInvitationAccept }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isInvitationOpen, setisInvitationOpen] = useState(false);
   const [invitations, setInvitations] = useState([]);
+  
+  const { nickname } = useNicknameStore();
 
   const location = useLocation();
   const navigate = useNavigate()
@@ -40,27 +43,12 @@ export default function Navbar({ onInvitationAccept }) {
     }
   }
 
-  // 사용자 프로필 상태 추가
-  const [userProfile, setUserProfile] = useState(null);
-
-  const importNickname = () => {
-    const nickname = localStorage.getItem("nickname");
-    if (nickname) {
-      setUserProfile(nickname);
-    }
-  }
-
-  useEffect(() => {
-    importNickname();
-  }, [])
-
   const { get, post, isAuthenticated, logout } = useApiClient();
   const BASE_URL = import.meta.env.VITE_API_URL;
 
   // 로그아웃 처리 함수
   const handleLogout = () => {
     logout();
-    setUserProfile(null);
 
     window.location.href = "/";
   };
@@ -115,9 +103,10 @@ export default function Navbar({ onInvitationAccept }) {
 
   // 로그인 성공 후 프로필 정보 새로고침을 위한 함수
   const refreshUserProfile = async () => {
-    if (isAuthenticated()) {
-      importNickname();
-    }
+    // if (isAuthenticated()) {
+    //   importNickname();
+    // }
+    console.log("이거 뭐하는 거임?"); // <- 용도를 모르겠어서 함수 내용들 다 지우고 넣었는데 저렇게 냅둬도 잘 굴러감.
   };
 
   const wrapperRef = useRef(null);
@@ -173,7 +162,8 @@ export default function Navbar({ onInvitationAccept }) {
 
   useEffect(() => {
     fetchInvitations();
-  }, [userProfile]);
+  }, [nickname]);
+
   return (
     <div className="border-b border-gray-200 ">
       <div className="mx-auto w-[1400px] bg-white flex justify-between py-4 items-center">
@@ -184,7 +174,7 @@ export default function Navbar({ onInvitationAccept }) {
         </div>
 
         <div className="flex items-center gap-4">
-          {isAuthenticated() && userProfile ? (
+          {isAuthenticated() ? (
             <div className="relative" ref={wrapperRef}>
               <div className="flex items-center gap-5">
                 <button
@@ -196,7 +186,7 @@ export default function Navbar({ onInvitationAccept }) {
                   <div className="flex items-center h-[42px]">
                     <div className="w-8 h-8 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full mr-3"></div>
                     <span>
-                      {userProfile}님
+                      {nickname}님
                     </span>
                   </div>
                 </button>

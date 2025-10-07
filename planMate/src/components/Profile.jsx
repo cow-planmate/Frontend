@@ -14,6 +14,7 @@ import {
   faBed,
   faMapMarkerAlt,
   faPen,
+  faTriangleExclamation
 } from "@fortawesome/free-solid-svg-icons";
 import ProfileText from "./ProfileText";
 import { useApiClient } from "../assets/hooks/useApiClient";
@@ -120,22 +121,25 @@ export default function Profile({ userProfile, setUserProfile }) {
 }
 
 const DeleteModal = ({ setIsDeleteOpen }) => {
-  const { del, isAuthenticated } = useApiClient();
+  const { del, isAuthenticated, logout } = useApiClient();
   const navigate = useNavigate();
   const BASE_URL = import.meta.env.VITE_API_URL;
+  const [realDelete, setRealDelete] = useState(false);
+  const [warnMsg, setWarnMsg] = useState(false);
 
   const handleDelete = async () => {
-    if (isAuthenticated()) {
+    if (isAuthenticated() && realDelete) {
       try {
         await del(`${BASE_URL}/api/user/account`);
-        localStorage.removeItem("token");
-        localStorage.removeItem("userId");
-        navigate("/");
+        logout();
         setIsDeleteOpen(false);
-        alert("탈퇴되었습니다");
+        navigate("/");
+        alert("탈퇴되었습니다.");
       } catch (err) {
         console.error("탈퇴 과정에서 오류가 발생했습니다:", err);
       }
+    } else {
+      setWarnMsg(true);
     }
   };
 
@@ -143,7 +147,7 @@ const DeleteModal = ({ setIsDeleteOpen }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white p-6 rounded-lg shadow-lg w-80">
         <h2 className="text-xl font-bold">탈퇴하기</h2>
-        <ul className="my-4 list-disc ml-5">
+        <ul className="mt-4 list-disc ml-5">
           <li>확인 버튼을 누를 시 탈퇴 처리됩니다.</li>
           <li>
             탈퇴 처리는{" "}
@@ -153,6 +157,18 @@ const DeleteModal = ({ setIsDeleteOpen }) => {
           </li>
           <li className="font-semibold">정말로 탈퇴하시겠습니까?</li>
         </ul>
+        <div className="my-4">
+          <div className="space-x-2">
+            <input 
+              type="checkbox"
+              onClick={() => setRealDelete((prev) => !prev)}
+            />
+            <span className="font-semibold">위 내용을 확인했습니다.</span>
+          </div>
+          {warnMsg ?
+          <p className="text-sm text-red-500"><FontAwesomeIcon icon={faTriangleExclamation} /> 체크박스에 체크하셔야 탈퇴가 진행됩니다!</p>
+          :<></>}
+        </div>
         <div className="flex justify-between gap-2">
           <button
             onClick={() => setIsDeleteOpen(false)}

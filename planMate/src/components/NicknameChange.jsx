@@ -1,6 +1,7 @@
 // components/NicknameModal.jsx
 import { useState } from "react";
 import { useApiClient } from "../assets/hooks/useApiClient";
+import useNicknameStore from "../store/Nickname";
 
 export default function NicknameModal({
   setIsNicknameModalOpen,
@@ -10,6 +11,7 @@ export default function NicknameModal({
   const [nickname, setNickname] = useState(currentNickname);
   const { patch, isAuthenticated } = useApiClient();
   const BASE_URL = import.meta.env.VITE_API_URL;
+  const setGlobalNickname = useNicknameStore((state) => state.setNickname);
 
   const handleNicknameChange = async () => {
     if (isAuthenticated()) {
@@ -17,7 +19,7 @@ export default function NicknameModal({
         const response = await patch(`${BASE_URL}/api/user/nickname`, {
           nickname,
         });
-        localStorage.setItem("nickname", nickname);
+        setGlobalNickname(nickname);
         onNicknameUpdate(nickname);
         setIsNicknameModalOpen(false);
         alert(response.message);

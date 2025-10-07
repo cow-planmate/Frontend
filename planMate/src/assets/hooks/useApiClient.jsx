@@ -1,11 +1,14 @@
 // hooks/useApiClient.js
 import { useState, useCallback } from "react";
+import useNicknameStore from "../../store/Nickname";
 
 /**
  * API 클라이언트 훅
  * 토큰 인증이 포함된 fetch 요청을 쉽게 사용할 수 있도록 도와주는 커스텀 훅
  */
 export const useApiClient = () => {
+  const { setNickname } = useNicknameStore();
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -220,7 +223,7 @@ export const useApiClient = () => {
           localStorage.setItem("userId", response.userId.toString());
         }
         if (response.nickname) {
-          localStorage.setItem("nickname", response.nickname);
+          setNickname(response.nickname);
         }
 
         return response;
