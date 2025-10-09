@@ -432,13 +432,7 @@ function App() {
             </div>
           </div>
         </Section>
-        <Section>
-          <div className="bg-white w-full min-h-screen">
-            <div className="flex items-center justify-center h-screen text-main text-7xl font-bold font-mediumpaperlogy">
-              P L A N M A T E
-            </div>
-          </div>
-        </Section>
+
         <Section>
           <div className="bg-white w-full min-h-screen flex">
             <div className="w-1/2 flex flex-col justify-center pl-[10rem] pr-[4rem]">
@@ -667,7 +661,13 @@ function App() {
             </div>
           </div>
         </Section>
-        <Section></Section>
+        <Section>
+          <div className="bg-white w-full min-h-screen">
+            <div className="flex items-center justify-center h-screen text-main text-7xl font-bold font-mediumpaperlogy">
+              P L A N M A T E
+            </div>
+          </div>
+        </Section>
       </SectionsContainer>
       <Signup
         isOpen={isSignupOpen}
