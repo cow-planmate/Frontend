@@ -48,7 +48,7 @@ function App() {
   const { post, isAuthenticated } = useApiClient();
 
   const settings = {
-    dots: false,
+    dots: true,
     infinite: true,
     speed: 1000,
     slidesToShow: 1,
@@ -56,6 +56,7 @@ function App() {
     autoplay: true,
     autoplaySpeed: 4000,
     fade: true,
+    arrows: true,
   };
 
   const handleDateChange = (item) => {
@@ -248,7 +249,6 @@ function App() {
           </div>
         </Slider>
 
-        {/* 어두운 오버레이 */}
         <div className="absolute top-[5rem] max-h-[40rem] inset-0 bg-gradient-to-b from-transparent to-black/60 pointer-events-none"></div>
       </div>
 
