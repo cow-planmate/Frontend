@@ -4,6 +4,9 @@ import { useNavigate } from "react-router-dom";
 import schedule from "../assets/imgs/schedule.png";
 import bg1 from "../assets/imgs/bg1.jpg";
 import bg2 from "../assets/imgs/bg2.jpg";
+import land1 from "../assets/imgs/land1.png";
+import land2 from "../assets/imgs/land2.png";
+import land3 from "../assets/imgs/land3.png";
 import { gsap } from "gsap";
 import { useState } from "react";
 import Signup from "../components/Signup";
@@ -52,7 +55,7 @@ function App() {
   };
   const options = {
     activeClass: "active",
-    anchors: ["One", "Two", "Three", "Four"],
+    anchors: ["One", "Two", "Three", "Four", "Five", "Six"],
     arrowNavigation: true,
     rollingSpeed: 1000,
     navigation: true,
@@ -433,6 +436,130 @@ function App() {
           <div className="bg-white w-full min-h-screen">
             <div className="flex items-center justify-center h-screen text-main text-7xl font-bold font-mediumpaperlogy">
               P L A N M A T E
+            </div>
+          </div>
+        </Section>
+        <Section>
+          <div className="bg-white w-full min-h-screen flex">
+            <div className="w-1/2 flex flex-col justify-center pl-[10rem] pr-[4rem]">
+              <h1 className="text-6xl font-bold text-black mb-8 leading-tight font-mediumpaperlogy">
+                <span>손쉽게 드래그앤 드롭으로</span>
+                <br />
+                <span>일정생성하기!</span>
+              </h1>
+
+              <p className="text-lg text-gray-600 mb-12 leading-relaxed">
+                <span className="font-mediumpaperlogy">
+                  직관적인 인터페이스로 여행 장소를 선택하고
+                </span>
+                <br />
+                <span className="font-mediumpaperlogy">
+                  드래그만으로 일정을 완성하세요
+                </span>
+              </p>
+
+              <div className="flex space-x-4">
+                <button
+                  className="bg-main text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-mediumpaperlogy"
+                  onClick={() => {
+                    navigate("/");
+                  }}
+                >
+                  일정 만들기 시작→
+                </button>
+              </div>
+            </div>
+
+            <div className="w-1/2 flex items-center justify-center">
+              <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-8 w-full max-w-2xl">
+                <div className="relative">
+                  <img
+                    src={land3}
+                    alt="드래그앤드롭 인터페이스"
+                    className="w-full h-auto rounded-lg shadow-md"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </Section>
+        <Section>
+          <div className="bg-white w-full min-h-screen flex">
+            <div className="w-1/2 flex flex-col justify-center pl-[10rem] pr-[4rem]">
+              <h1 className="text-6xl font-bold text-black mb-8 leading-tight font-mediumpaperlogy">
+                <span>친구들을 초대에 함께</span>
+                <br />
+                <span>만들어가는 우리들의 일정!</span>
+              </h1>
+
+              <p className="text-lg text-gray-600 mb-12 leading-relaxed">
+                <span className="font-mediumpaperlogy">
+                  실시간으로 친구들과 협업하며
+                </span>
+                <br />
+                <span className="font-mediumpaperlogy">
+                  완벽한 여행 계획을 함께 만들어보세요
+                </span>
+              </p>
+
+              <div className="flex space-x-4">
+                <button
+                  className="bg-main text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-mediumpaperlogy"
+                  onClick={() => {
+                    navigate("/");
+                  }}
+                >
+                  협업 기능 사용하기→
+                </button>
+              </div>
+            </div>
+
+            <div className="w-1/2 flex items-center justify-center">
+              <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-8 w-full max-w-2xl relative">
+                <div className="relative">
+                  <img
+                    src={land1}
+                    alt="협업 인터페이스"
+                    className="w-full h-auto rounded-lg shadow-md"
+                  />
+                </div>
+
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 614 390"
+                  height="390"
+                  width="614"
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                  style={{ width: "100%", height: "100%" }}
+                >
+                  <g
+                    id="cursor1-page5"
+                    className="cursor-pointer animate-[cursor1_6s_ease_infinite_alternate] origin-center"
+                    style={{ transformBox: "fill-box" }}
+                  >
+                    <polygon
+                      points="448,317 453.383,343 459.745,333.5 471,331"
+                      fill="#2563EB"
+                      stroke="white"
+                      strokeWidth="2"
+                    />
+                  </g>
+
+                  <g
+                    id="cursor2-page5"
+                    className="cursor-pointer animate-[cursor2_7s_ease_infinite_alternate] origin-center"
+                    style={{ transformBox: "fill-box" }}
+                  >
+                    <polygon
+                      points="200,200 205.383,226 211.745,216.5 223,214"
+                      fill="#10b981"
+                      stroke="white"
+                      strokeWidth="2"
+                    />
+                  </g>
+                </svg>
+              </div>
             </div>
           </div>
         </Section>
