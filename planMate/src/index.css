@@ -66,3 +66,40 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+.slick-dots {
+  bottom: 25px !important;
+  z-index: 10;
+}
+
+.slick-dots li button:before {
+  font-size: 12px !important;
+  color: white !important;
+  opacity: 0.5 !important;
+}
+
+.slick-dots li.slick-active button:before {
+  opacity: 1 !important;
+  color: white !important;
+}
+
+.slick-prev,
+.slick-next {
+  z-index: 10 !important;
+  width: 50px !important;
+  height: 50px !important;
+}
+
+.slick-prev {
+  left: 25px !important;
+}
+
+.slick-next {
+  right: 25px !important;
+}
+
+.slick-prev:before,
+.slick-next:before {
+  font-size: 40px !important;
+  opacity: 0.75 !important;
+  color: white !important;
+}
