@@ -471,7 +471,7 @@ function App() {
             </div>
 
             <div className="w-1/2 flex items-center justify-center">
-              <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-8 w-full max-w-2xl">
+              <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-8 w-full max-w-2xl relative">
                 <div className="relative">
                   <img
                     src={land3}
@@ -479,6 +479,102 @@ function App() {
                     className="w-full h-auto rounded-lg shadow-md"
                   />
                 </div>
+
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 614 390"
+                  height="390"
+                  width="614"
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                  style={{ width: "100%", height: "100%" }}
+                >
+                  <rect
+                    x="150"
+                    y="150"
+                    width="80"
+                    height="60"
+                    fill="white"
+                    fillOpacity="0.3"
+                    rx="4"
+                    className="animate-[dragBlock_4s_ease_infinite]"
+                  />
+
+                  <g
+                    id="cursor-drag"
+                    className="cursor-pointer animate-[cursorDrag_4s_ease_infinite] origin-center"
+                    style={{ transformBox: "fill-box" }}
+                  >
+                    <polygon
+                      points="200,180 205.383,206 211.745,196.5 223,194"
+                      fill="#2563EB"
+                      stroke="white"
+                      strokeWidth="2"
+                    />
+                  </g>
+                </svg>
+
+                <style jsx>{`
+                  @keyframes dragBlock {
+                    0% {
+                      transform: translate(0, 0);
+                      opacity: 0;
+                    }
+                    10% {
+                      opacity: 1;
+                    }
+                    50% {
+                      transform: translate(200px, 50px);
+                      opacity: 1;
+                    }
+                    90% {
+                      opacity: 1;
+                    }
+                    100% {
+                      transform: translate(0, 0);
+                      opacity: 0;
+                    }
+                  }
+
+                  @keyframes cursorDrag {
+                    0% {
+                      opacity: 0;
+                      transform: translate3d(-50px, -30px, 0) scale(1);
+                    }
+                    10% {
+                      opacity: 1;
+                      transform: translate3d(0, 0, 0) scale(1);
+                    }
+                    15% {
+                      opacity: 1;
+                      transform: translate3d(0, 0, 0) scale(0.9);
+                    }
+                    20% {
+                      opacity: 1;
+                      transform: translate3d(0, 0, 0) scale(1);
+                    }
+                    50% {
+                      opacity: 1;
+                      transform: translate3d(200px, 50px, 0) scale(1);
+                    }
+                    55% {
+                      opacity: 1;
+                      transform: translate3d(200px, 50px, 0) scale(0.9);
+                    }
+                    60% {
+                      opacity: 1;
+                      transform: translate3d(200px, 50px, 0) scale(1);
+                    }
+                    90% {
+                      opacity: 1;
+                      transform: translate3d(0, 0, 0) scale(1);
+                    }
+                    100% {
+                      opacity: 0;
+                      transform: translate3d(-50px, -30px, 0) scale(1);
+                    }
+                  }
+                `}</style>
               </div>
             </div>
           </div>
@@ -515,50 +611,58 @@ function App() {
             </div>
 
             <div className="w-1/2 flex items-center justify-center">
-              <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-8 w-full max-w-2xl relative">
-                <div className="relative">
+              <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-8 w-full max-w-2xl">
+                <div className="relative mb-6">
                   <img
-                    src={land1}
+                    src={land3}
                     alt="협업 인터페이스"
                     className="w-full h-auto rounded-lg shadow-md"
                   />
+
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 614 390"
+                    height="390"
+                    width="614"
+                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                    style={{ width: "100%", height: "100%" }}
+                  >
+                    <g
+                      id="cursor1-page5"
+                      className="cursor-pointer animate-[cursor1_6s_ease_infinite_alternate] origin-center"
+                      style={{ transformBox: "fill-box" }}
+                    >
+                      <polygon
+                        points="448,317 453.383,343 459.745,333.5 471,331"
+                        fill="#2563EB"
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+                    </g>
+
+                    <g
+                      id="cursor2-page5"
+                      className="cursor-pointer animate-[cursor2_7s_ease_infinite_alternate] origin-center"
+                      style={{ transformBox: "fill-box" }}
+                    >
+                      <polygon
+                        points="200,200 205.383,226 211.745,216.5 223,214"
+                        fill="#10b981"
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+                    </g>
+                  </svg>
                 </div>
 
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 614 390"
-                  height="390"
-                  width="614"
-                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                  style={{ width: "100%", height: "100%" }}
-                >
-                  <g
-                    id="cursor1-page5"
-                    className="cursor-pointer animate-[cursor1_6s_ease_infinite_alternate] origin-center"
-                    style={{ transformBox: "fill-box" }}
-                  >
-                    <polygon
-                      points="448,317 453.383,343 459.745,333.5 471,331"
-                      fill="#2563EB"
-                      stroke="white"
-                      strokeWidth="2"
-                    />
-                  </g>
-
-                  <g
-                    id="cursor2-page5"
-                    className="cursor-pointer animate-[cursor2_7s_ease_infinite_alternate] origin-center"
-                    style={{ transformBox: "fill-box" }}
-                  >
-                    <polygon
-                      points="200,200 205.383,226 211.745,216.5 223,214"
-                      fill="#10b981"
-                      stroke="white"
-                      strokeWidth="2"
-                    />
-                  </g>
-                </svg>
+                <div className="relative">
+                  <img
+                    src={land1}
+                    alt="일정 관리"
+                    className="w-full h-auto rounded-lg shadow-md"
+                  />
+                </div>
               </div>
             </div>
           </div>
