@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import img1 from "../assets/imgs/img1.jpg";
+
 import { useApiClient } from "../assets/hooks/useApiClient";
 import Navbar from "../components/Navbar";
 import DateRangeModal from "../components/HomeCal";
@@ -17,6 +17,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Link, useNavigate } from "react-router-dom";
 import usePlanStore from "../store/Plan";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+
+import Slider from "react-slick";
+import img1 from "../assets/imgs/img1.jpg";
+import img2 from "../assets/imgs/img2.jpg";
+import img3 from "../assets/imgs/img3.jpg";
 function App() {
   const navigate = useNavigate();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -39,6 +46,17 @@ function App() {
   const { setPlanField, setPlanAll } = usePlanStore();
 
   const { post, isAuthenticated } = useApiClient();
+
+  const settings = {
+    dots: false,
+    infinite: true,
+    speed: 1000,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 4000,
+    fade: true,
+  };
 
   const handleDateChange = (item) => {
     setDateRange([item.selection]);
@@ -205,13 +223,33 @@ function App() {
       <div className="text-center h-auto font-pretendard">
         <Navbar isLogin={false} />
       </div>
+      <div className="flex flex-col items-center">
+        <Slider {...settings} className="w-screen h-[40rem]">
+          <div>
+            <img
+              src={img1}
+              className="w-screen h-[40rem] object-cover"
+              alt="slide1"
+            />
+          </div>
+          <div>
+            <img
+              src={img2}
+              className="w-screen h-[40rem] object-cover"
+              alt="slide2"
+            />
+          </div>
+          <div>
+            <img
+              src={img3}
+              className="w-screen h-[40rem] object-cover"
+              alt="slide3"
+            />
+          </div>
+        </Slider>
 
-      <div className=" flex flex-col items-center ">
-        <img
-          src={img1}
-          className=" w-screen [140rem] h-[40rem] object-cover bg-gradient-to-b "
-        />
-        <div className="absolute top-[5rem] max-h-[40rem] inset-0 bg-gradient-to-b from-transparent to-black/60 pointer-events-none"></div>{" "}
+        {/* 어두운 오버레이 */}
+        <div className="absolute top-[5rem] max-h-[40rem] inset-0 bg-gradient-to-b from-transparent to-black/60 pointer-events-none"></div>
       </div>
 
       <div className="absolute bottom-[5rem] left-0 right-0 px-8">
