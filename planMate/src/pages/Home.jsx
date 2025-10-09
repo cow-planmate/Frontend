@@ -224,34 +224,33 @@ function App() {
       <div className="text-center h-auto font-pretendard">
         <Navbar isLogin={false} />
       </div>
-      <div className="relative w-screen h-[40rem] overflow-hidden">
-        <Slider {...settings}>
+      <div className="flex flex-col items-center">
+        <Slider {...settings} className="w-screen h-[40rem]">
           <div>
             <img
               src={img1}
-              className="w-full h-[40rem] object-cover"
+              className="w-screen h-[40rem] object-cover"
               alt="slide1"
             />
           </div>
           <div>
             <img
               src={img2}
-              className="w-full h-[40rem] object-cover"
+              className="w-screen h-[40rem] object-cover"
               alt="slide2"
             />
           </div>
           <div>
             <img
               src={img3}
-              className="w-full h-[40rem] object-cover"
+              className="w-screen h-[40rem] object-cover"
               alt="slide3"
             />
           </div>
         </Slider>
 
-        <div className="absolute top-0 inset-0 bg-gradient-to-b from-transparent to-black/60 pointer-events-none z-[5]"></div>
+        <div className="absolute top-[5rem] max-h-[40rem] inset-0 bg-gradient-to-b from-transparent to-black/60 pointer-events-none"></div>
       </div>
-
       <div className="absolute bottom-[5rem] left-0 right-0 px-8">
         <div className="w-full max-w-7xl min-w-[1000px] mx-auto">
           <div className="font-pretendard text-white text-5xl font-bold text-left ">
