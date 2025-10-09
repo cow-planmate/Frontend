@@ -495,7 +495,7 @@ function App() {
                     width="80"
                     height="60"
                     fill="white"
-                    fillOpacity="0.3"
+                    fillOpacity="0.8"
                     rx="4"
                     className="animate-[dragBlock_4s_ease_infinite]"
                   />
