@@ -1,16 +1,17 @@
-import { useState, useEffect, useReducer, useRef } from "react";
-import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
+import { useEffect, useReducer, useRef, useState } from "react";
+import SockJS from "sockjs-client";
 
+import ChatBot from "../components/ChatBot";
+import DaySelector from "../components/Create/DaySelector";
+import PlaceRecommendations from "../components/Create/PlaceRecommendations";
+import TimeTable from "../components/Create/TimeTable";
 import Navbar from "../components/Navbar";
 import PlanInfo from "../components/NewPlanInfo";
-import DaySelector from "../components/Create/DaySelector";
-import TimeTable from "../components/Create/TimeTable";
-import PlaceRecommendations from "../components/Create/PlaceRecommendations";
 
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
-import { transformApiResponse, addMinutes } from "../utils/scheduleUtils";
+import { addMinutes, transformApiResponse } from "../utils/scheduleUtils";
 
 const initialPlanState = {
   planName: "",
@@ -802,6 +803,9 @@ function App() {
         </div>
         {/* <button className="hover:bg-gray-300" onClick={() => balsa()}>테스트 버튼</button> */}
       </div>
+      
+      {/* 챗봇 */}
+      <ChatBot />
     </div>
   );
 }
