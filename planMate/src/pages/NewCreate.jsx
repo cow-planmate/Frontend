@@ -416,6 +416,8 @@ function App() {
             숙소: lodging.places,
             식당: restaurant.places,
           });
+
+          console.log("되는지여부 확인");
         } catch (err) {
           console.error("추천 장소를 가져오는데 실패했습니다:", err);
         }

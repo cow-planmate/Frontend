@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
+import { initStompClient } from "../websocket/client";
 
 import usePlanStore from "../store/Plan";
 
@@ -27,8 +28,7 @@ function App() {
         try {
           const planData = await get(`${BASE_URL}/api/plan/${id}`);
           console.log(planData);
-
-          // 초기 데이터들 각 state로 분산 배치
+          
           setPlanAll(planData.planFrame);
 
           const [tour, lodging, restaurant] = await Promise.all([
@@ -59,6 +59,10 @@ function App() {
     }
     fetchPlanData();
   }, []);
+
+  useEffect(() => {
+    initStompClient(id);
+  }, [id])
 
   return (
     <div className="font-pretendard">
