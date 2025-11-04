@@ -10,6 +10,10 @@ const usePlanStore = create((set) => ({
   adultCount: 0,
   childCount: 0,
 
+  // --- 아래 두 줄 추가 ---
+  startDate: "", // "YYYY-MM-DD" 형식
+  period: 0,     // 숫자 (여행 기간)
+
   setPlanField: (field, value) =>
     set((state) => ({
       ...state,
