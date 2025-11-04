@@ -193,18 +193,6 @@ export default function Navbar({ onInvitationAccept }) {
 
         {/* --- MODIFIED BLOCK START --- */}
         <div className="flex items-center gap-4">
-          {/* --- NEW BUTTON STYLED --- */}
-          {/* h-[44px] 래퍼와 버튼 클래스를 로그인 버튼과 동일하게 적용 */}
-          <div className="h-[44px]">
-            <button
-              onClick={() => navigate("/weather-recommendation")}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 h-full"
-            >
-              날씨별 AI 옷차림 추천
-            </button>
-          </div>
-          {/* --- END OF NEW BUTTON --- */}
-
           {isAuthenticated() && userProfile ? (
             <div className="relative" ref={wrapperRef}>
               <div className="flex items-center gap-5">
