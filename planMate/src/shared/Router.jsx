@@ -25,11 +25,6 @@ const Router = () => {
         <Route path="passwordfindtest" element={<Passwordfindtest />} />
         <Route path="landingpage" element={<Landingpage />} />
         <Route path="create2" element={<Create2 />} />
-        {/* --- 날씨별 ai 옷차림 추천 경로 추가 --- */}
-        <Route
-          path="weather-recommendation"
-          element={<WeatherReco />}
-        />
       </Routes>
     </BrowserRouter>
   );
