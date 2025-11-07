@@ -19,9 +19,12 @@ export const initStompClient = (id) => {
       console.log("✅ WebSocket 연결 완료:", frame);
 
       client.subscribe(`/topic/plan/${id}/update/plan`, (message) => {
-        console.log("📩 수신된 메시지:", message.body);
         const body = JSON.parse(message.body);
-        usePlanStore.getState().setPlanAll(body);
+        const planEventId = usePlanStore.getState().eventId;
+        if (planEventId !== body.eventId) {
+          console.log("📩 수신된 메시지:", message.body);
+          usePlanStore.getState().setPlanAll({...body, eventId: planEventId});
+        }
       });
 
       client.subscribe(`/topic/plan/${id}/create/timetable`, (message) => {
@@ -71,12 +74,13 @@ export const initStompClient = (id) => {
   client.activate();
 
   usePlanStore.subscribe((state, prevState) => {
-    if (state.message !== prevState.message) {
+    if (JSON.stringify(state) !== JSON.stringify(prevState)) {
       console.log(state);
+      
       if (client.connected) {
         client.publish({
           destination: `/app/plan/${id}/update/plan`,
-          body: JSON.stringify({ state }),
+          body: JSON.stringify(state),
         });
       }
     }

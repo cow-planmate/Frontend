@@ -6,6 +6,7 @@ import { initStompClient } from "../websocket/client";
 
 import usePlanStore from "../store/Plan";
 
+import Loading from "../assets/imgs/tube-spinner.svg?react"
 import Navbar from "../components/Navbar";
 import PlanInfo from "../components/Create2/PlanInfo";
 
@@ -18,7 +19,7 @@ function App() {
   const navigate = useNavigate();
   const { get, post, patch, isAuthenticated } = useApiClient();
 
-  const { setPlanAll } = usePlanStore();
+  const { planId, setPlanAll } = usePlanStore();
   const [noACL, setNoACL] = useState(false);
 
   // 초기 데이터 로딩
@@ -61,13 +62,23 @@ function App() {
   }, []);
 
   useEffect(() => {
-    initStompClient(id);
+    if (id && isAuthenticated()) {
+      initStompClient(id);
+    }
   }, [id])
+
+  if (!planId) {
+    return (
+      <div className="flex items-center justify-center h-[100vh]">
+        <Loading className="w-20"/>
+      </div>
+    )
+  }
 
   return (
     <div className="font-pretendard">
       {/* <Navbar /> */}
-      <PlanInfo />
+      <PlanInfo id={id}/>
       {noACL 
       ?
         <div className="w-[1400px] h-[calc(100vh-125px)] mx-auto py-6 space-y-3 flex items-center justify-center flex-col">

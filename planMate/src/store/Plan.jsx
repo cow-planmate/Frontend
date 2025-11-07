@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 const usePlanStore = create((set) => ({
+  eventId: String(Date.now() + Math.random()),
   planName: "",
   travelCategoryName: "",
   travelName: "",

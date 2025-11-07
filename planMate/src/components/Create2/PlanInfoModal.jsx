@@ -20,7 +20,7 @@ export default function PlanInfoModal({setIsInfoOpen}) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm font-pretendard">
-      <div className="relative bg-white p-4 rounded-2xl shadow-2xl w-[80vw] border border-gray-100 max-h-[80vh] overflow-y-auto space-y-2">
+      <div className="relative bg-white p-4 rounded-2xl shadow-2xl w-[90vw] border border-gray-100 max-h-[90vh] overflow-y-auto space-y-2">
         <div className="flex justify-between items-center px-2 pt-2">
           <div className="font-bold text-lg">
             일정 정보
