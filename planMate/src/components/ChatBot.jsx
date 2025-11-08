@@ -48,15 +48,24 @@ const ChatBot = () => {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
     setInputMessage("");
     setIsLoading(true);
 
     try {
+      const historyPayload = nextMessages
+        .slice(-12)
+        .map((msg) => ({
+          role: msg.isBot ? "assistant" : "user",
+          content: msg.text,
+        }));
+
       const response = await post(`${BASE_URL}/api/chatbot/chat`, {
-        message: inputMessage,
+        message: userMessage.text,
         userId: "travel_user", // 실제로는 로그인한 사용자 ID를 사용
         planId: id ? parseInt(id) : null, // URL에서 추출한 계획 ID
+        history: historyPayload,
       });
 
       if (response.success) {
