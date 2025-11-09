@@ -12,6 +12,7 @@ import PlanInfo from "../components/NewPlanInfo";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { addMinutes, transformApiResponse } from "../utils/scheduleUtils";
+import usePlanStore from "../store/Plan.jsx";
 
 const initialPlanState = {
   planName: "",
@@ -87,6 +88,8 @@ function App() {
   const timetablesRef = useRef(timetables);
   const navigate = useNavigate();
   const [noACL, setNoACL] = useState(false)
+  // 2. Zustand 스토어의 setPlanAll 액션을 가져옵니다.
+  const setPlanAll = usePlanStore((state) => state.setPlanAll);
   
   // State
   const [transformedData, setTransformedData] = useState(null);
@@ -366,11 +369,27 @@ function App() {
         try {
           const planData = await get(`${BASE_URL}/api/plan/${id}`);
           const planFrame = planData.planFrame;
+          const timetables = planData.timetables || []; // timetables가 없을 경우 빈 배열로 초기화
 
           setData(planData);
           console.log("똥", planData);
 
+          // 로컬 Reducer 상태 업데이트
           planDispatch({ type: "SET_ALL", payload: planFrame });
+
+          // --- [수정된 부분] ---
+          // 3. 전역 Zustand 스토어에 필요한 데이터를 조합하여 업데이트합니다.
+          // 날씨 정보에 필요한 startDate와 period를 timetables에서 추출합니다.
+          const startDate = timetables.length > 0 ? timetables[0].date : "";
+          const period = timetables.length;
+
+          // planFrame과 날짜 정보를 합쳐 전역 스토어를 업데이트합니다.
+          setPlanAll({
+            ...planFrame,
+            startDate: startDate,
+            period: period,
+          });
+          // --- [수정 완료] ---
 
           if (planData.timetables) {
             //setTimetables(planData.timetables);
