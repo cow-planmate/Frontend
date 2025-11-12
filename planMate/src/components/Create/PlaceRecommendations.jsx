@@ -1,9 +1,9 @@
-import axios from 'axios';
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useApiClient } from "../../assets/hooks/useApiClient";
-import usePlanStore from "../../store/Plan";
 import PlaceItem from "./PlaceItem";
+import { useApiClient } from "../../assets/hooks/useApiClient";
+import axios from 'axios';
+import usePlanStore from "../../store/Plan";
 
 // AI 서버 URL 및 날짜 계산 함수 (원본 유지) (여기 .env에 VITE_AI_API_URL=http://localhost:8010 이렇게 파이썬 localhost:8010으로 통신하게 한거에요!)
 const AI_API_URL = import.meta.env.VITE_AI_API_URL;
@@ -96,7 +96,7 @@ const PlaceRecommendations = ({
         }
         
         const response = await axios.post(
-          `${AI_API_URL}/recommendations`,
+          `${AI_API_URL}/api/v1/recommendations`,
           {
             city: travelCategoryName,
             start_date: startDate,
