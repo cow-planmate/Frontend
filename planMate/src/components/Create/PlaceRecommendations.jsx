@@ -1,9 +1,9 @@
-import { useEffect, useState, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
-import PlaceItem from "./PlaceItem";
-import { useApiClient } from "../../assets/hooks/useApiClient";
 import axios from 'axios';
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useApiClient } from "../../assets/hooks/useApiClient";
 import usePlanStore from "../../store/Plan";
+import PlaceItem from "./PlaceItem";
 
 // AI 서버 URL 및 날짜 계산 함수 (원본 유지) (여기 .env에 VITE_AI_API_URL=http://localhost:8010 이렇게 파이썬 localhost:8010으로 통신하게 한거에요!)
 const AI_API_URL = import.meta.env.VITE_AI_API_URL;
@@ -35,6 +35,10 @@ const PlaceRecommendations = ({
   const [weatherData, setWeatherData] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState(null);
+
+  // --- [수정] AI 옷차림 추천 펼치기/접기 상태 ---
+  const [isRecommendationExpanded, setIsRecommendationExpanded] = useState(false);
+  // --- [수정] ---
 
   // plan id, API 클라이언트 등 (원본 유지)
   const [searchParams] = useSearchParams();
@@ -96,7 +100,7 @@ const PlaceRecommendations = ({
         }
         
         const response = await axios.post(
-          `${AI_API_URL}/api/v1/recommendations`,
+          `${AI_API_URL}/recommendations`,
           {
             city: travelCategoryName,
             start_date: startDate,
@@ -192,14 +196,30 @@ const PlaceRecommendations = ({
               )}
             </div>
           </div>
+
+          {/* --- [수정] AI 옷차림 추천 섹션 (펼치기/접기) --- */}
           <div>
-            <h3 className="text-xl font-semibold mb-3 text-gray-800">
-              AI 옷차림 추천
-            </h3>
-            <div className="p-4 border rounded-lg bg-gray-50 whitespace-pre-line text-gray-700 leading-relaxed">
-              {weatherData.recommendation || '옷차림 추천 정보가 없습니다.'}
-            </div>
+            <button
+              onClick={() => setIsRecommendationExpanded(!isRecommendationExpanded)}
+              className="w-full flex justify-between items-center text-left mb-3 cursor-pointer"
+            >
+              <h3 className="text-xl font-semibold text-gray-800">
+                AI 옷차림 추천
+              </h3>
+              <span className="text-lg font-medium text-main">
+                {isRecommendationExpanded ? '▲ 접기' : '▼ 펼치기'}
+              </span>
+            </button>
+            
+            {/* 조건부 렌더링 */}
+            {isRecommendationExpanded && (
+              <div className="p-4 border rounded-lg bg-gray-50 whitespace-pre-line text-gray-700 leading-relaxed">
+                {weatherData.recommendation || '옷차림 추천 정보가 없습니다.'}
+              </div>
+            )}
           </div>
+          {/* --- [수정] --- */}
+
         </div>
       );
     }
@@ -275,4 +295,3 @@ const PlaceRecommendations = ({
 };
 
 export default PlaceRecommendations;
-
