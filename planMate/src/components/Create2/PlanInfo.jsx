@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import usePlanStore from "../../store/Plan";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faUserPlus } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faUserPlus, faInfo } from "@fortawesome/free-solid-svg-icons";
 import { faMap } from "@fortawesome/free-regular-svg-icons";
 
 import PlanInfoModal from "./PlanInfoModal";
@@ -61,6 +61,10 @@ export default function PlanInfo({id}) {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
+    setLocalName(planName);
+  }, [planName]);
+
+  useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };
@@ -83,13 +87,13 @@ export default function PlanInfo({id}) {
   }, [localName, isMobile]);
 
   return (
-    <div className={`mx-auto min-[1464px]:w-[1416px] min-[1464px]:px-0 md:px-6 md:pt-6 p-4 ${flexCenter} justify-between`}>
-      <div className={`${flexCenter} min-[1464px]:space-x-6 sm:space-x-3 space-x`}>
-        <div>
+    <div className={`mx-auto min-[1464px]:w-[1416px] min-[1464px]:px-0 md:px-6 md:pt-6 p-4 ${flexCenter} justify-between w-full`}>
+      <div className={`${flexCenter} min-[1464px]:space-x-6 sm:space-x-3 space-x max-[360px]:w-[calc(100vh-210px)] flex-1`}>
+        <div className="">
           <input
             ref={inputRef}
             type="text"
-            className={`${infoButton} box-content min-[1464px]:mr-3 min-[1464px]:max-w-48 mr-1.5 max-w-36 text-base md:text-lg font-semibold`}
+            className={`${infoButton} box-content min-[1464px]:mr-3 min-[1464px]:max-w-48 mr-1.5 min-[360px]:max-w-32 text-base md:text-lg font-semibold`}
             onChange={(e) => setLocalName(e.target.value)}
             onBlur={() => setPlanField("planName", localName)}
             style={{ minWidth: '1ch' }}
@@ -144,33 +148,36 @@ export default function PlanInfo({id}) {
           </button>
         </div>
         <button 
-          className="block min-[1260px]:hidden text-sm sm:text-base rounded-full bg-gray-300 hover:bg-gray-400 py-2 px-4"
+          className="block min-[1260px]:hidden text-sm sm:text-base rounded-full bg-gray-300 hover:bg-gray-400 p-2 sm:px-4 sm:w-auto w-9"
           onClick={() => setIsInfoOpen(true)}
         >
-          자세히 보기
+          <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faInfo} /></div>
+          <div className="hidden sm:block">자세히 보기</div>
         </button>
       </div>
-      <div className={`${flexCenter} mr-2 space-x-2 sm:space-x-3`}>
-        <button 
-          className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg border border-gray-500 hover:bg-gray-100"
-        >
-          <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faMap} /></div>
-          <div className="hidden sm:block">지도로 보기</div>
-        </button>
-        <button 
-          onClick={() => setIsShareOpen(true)}
-          className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-gray-300 hover:bg-gray-400"
-        >
-          <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faUserPlus} /></div>
-          <div className="hidden sm:block">공유</div>
-        </button>
-        <button
-          onClick={() => navigate(`/complete?id=${id}`)}
-          className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-main hover:bg-mainDark text-white"
-        >
-          <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faCheck} /></div>
-          <div className="hidden sm:block">완료</div>
-        </button>
+      <div className={`${flexCenter} mx-2 sm:w-auto`}>
+        <div className={`space-x-2 sm:space-x-3 ${flexCenter}`}>
+          <button 
+            className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg border border-gray-500 hover:bg-gray-100"
+          >
+            <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faMap} /></div>
+            <div className="hidden sm:block">지도로 보기</div>
+          </button>
+          <button 
+            onClick={() => setIsShareOpen(true)}
+            className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-gray-300 hover:bg-gray-400"
+          >
+            <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faUserPlus} /></div>
+            <div className="hidden sm:block">공유</div>
+          </button>
+          <button
+            onClick={() => navigate(`/complete?id=${id}`)}
+            className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-main hover:bg-mainDark text-white"
+          >
+            <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faCheck} /></div>
+            <div className="hidden sm:block">완료</div>
+          </button>
+        </div>
       </div>
 
       <span

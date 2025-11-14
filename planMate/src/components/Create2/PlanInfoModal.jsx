@@ -1,12 +1,16 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleInfo } from "@fortawesome/free-solid-svg-icons";
 import usePlanStore from "../../store/Plan";
+import { useState } from "react";
+
+import TransportModal from "./TransportModal";
+import PersonCountModal from "../HomePerson";
+import DepartureModal from "../Departure";
+import LocationModal from "../HomeDestination";
 
 export default function PlanInfoModal({setIsInfoOpen}) {
   const { 
-    travelName, 
-    travelCategoryName, 
-    travelId,
+    travelName,
     departure, 
     transportationCategoryId,
     adultCount, 
@@ -18,8 +22,29 @@ export default function PlanInfoModal({setIsInfoOpen}) {
   const flexCenter = "flex items-center";
   const transInfo = {0: "대중교통", 1: "자동차"};
 
+  const [isPersonCountOpen, setIsPersonCountOpen] = useState(false);
+  const [isDepartureOpen, setIsDepartureOpen] = useState(false);
+  const [isDestinationOpen, setIsDestinationOpen] = useState(false);
+  const [isTransportOpen, setIsTransportOpen] = useState(false); 
+
+  const handlePersonCountClose = () => setIsPersonCountOpen(false);
+  const handleDepartureClose = () => setIsDepartureOpen(false);
+  const handleDestinationClose = () => setIsDestinationOpen(false);
+
+  const handlePersonCountChange = (count) => {
+    setPlanField("adultCount", count.adults);
+    setPlanField("childCount", count.children);
+  };
+
+  const handleDepartureLocationSelect = (location) => setPlanField("departure", location.name);
+
+  const handleDestinationLocationSelect = (location) => {
+    setPlanField("travelId", location.id);
+    setPlanField("travelName", location.name.split(" ").pop());
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm font-pretendard">
+    <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/50 backdrop-blur-sm font-pretendard">
       <div className="relative bg-white p-4 rounded-2xl shadow-2xl w-[90vw] border border-gray-100 max-h-[90vh] overflow-y-auto space-y-2">
         <div className="flex justify-between items-center px-2 pt-2">
           <div className="font-bold text-lg">
@@ -34,6 +59,7 @@ export default function PlanInfoModal({setIsInfoOpen}) {
         </div>
         <p className="text-sm px-2 pb-2 text-main break-keep"><FontAwesomeIcon className="mr-1" icon={faCircleInfo}/> 각 영역을 클릭하면 정보를 수정할 수 있어요.</p>
         <button
+          onClick={() => setIsPersonCountOpen(true)}
           className={infoButton}
         >
           <div className="space-y-1.5">
@@ -53,6 +79,7 @@ export default function PlanInfoModal({setIsInfoOpen}) {
           </div>
         </button>
         <button
+          onClick={() => setIsDepartureOpen(true)}
           className={infoButton}
         >
           <div className="space-y-1.5">
@@ -61,6 +88,7 @@ export default function PlanInfoModal({setIsInfoOpen}) {
           </div>
         </button>
         <button
+          onClick={() => setIsDestinationOpen(true)}
           className={infoButton}
         >
           <div className="space-y-1.5">
@@ -69,6 +97,7 @@ export default function PlanInfoModal({setIsInfoOpen}) {
           </div>
         </button>
         <button
+          onClick={() => setIsTransportOpen(true)}
           className={infoButton}
         >
           <div className="space-y-1.5">
@@ -77,6 +106,34 @@ export default function PlanInfoModal({setIsInfoOpen}) {
           </div>
         </button>
       </div>
+      
+      <PersonCountModal
+        isOpen={isPersonCountOpen}
+        onClose={handlePersonCountClose}
+        personCount={{adults: adultCount, children: childCount}}
+        onPersonCountChange={handlePersonCountChange}
+      />
+
+      <DepartureModal
+        isOpen={isDepartureOpen}
+        onClose={handleDepartureClose}
+        onLocationSelect={handleDepartureLocationSelect}
+        title="출발지 검색"
+        placeholder="출발지를 입력해주세요"
+      />
+
+      <LocationModal
+        isOpen={isDestinationOpen}
+        onClose={handleDestinationClose}
+        onLocationSelect={handleDestinationLocationSelect}
+        title="여행지 검색"
+        placeholder="여행지를 입력해주세요"
+      />
+      
+      {isTransportOpen && <TransportModal
+        setIsTransportOpen={setIsTransportOpen}
+      />}
+
     </div>
   )
 }
