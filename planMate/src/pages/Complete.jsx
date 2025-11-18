@@ -5,6 +5,35 @@ import { useApiClient } from "../assets/hooks/useApiClient";
 import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk";
 import useKakaoLoader from "../hooks/useKakaoLoader";
 import ShareModal from "../components/ShareModal";
+import axios from 'axios'; // axios 추가
+
+// AI 서버 URL
+const AI_API_URL = import.meta.env.VITE_AI_API_URL;
+
+// 날씨 설명(텍스트)을 기반으로 아이콘 반환 (DaySelector와 동일)
+const getWeatherIcon = (description) => {
+  if (!description) return '❓';
+  const desc = description.toLowerCase();
+  
+  if (desc.includes('맑음')) return '☀️';
+  if (desc.includes('구름') || desc.includes('흐림')) {
+    if (desc.includes('조금') || desc.includes('약간') || desc.includes('부분')) {
+      return '🌤️';
+    }
+    return '☁️';
+  }
+  if (desc.includes('비') || desc.includes('소나기')) {
+     if (desc.includes('약한') || desc.includes('가벼운')) {
+      return '🌦️';
+    }
+    return '🌧️';
+  }
+  if (desc.includes('눈')) return '❄️';
+  if (desc.includes('안개')) return '🌫️';
+  if (desc.includes('뇌우')) return '⛈️';
+  
+  return '🌤️';
+};
 
 const TravelPlannerApp = () => {
   const { get, isAuthenticated } = useApiClient();
@@ -18,55 +47,42 @@ const TravelPlannerApp = () => {
   const [schedule, setSchedule] = useState({});
   const navigate = useNavigate();
   const BASE_URL = import.meta.env.VITE_API_URL;
-  const [selectedDay, setSelectedDay] = useState(null); // 초기값을 null로 변경
+  const [selectedDay, setSelectedDay] = useState(null);
   const [isShareOpen, setIsShareOpen] = useState(false);
+
+  // --- 날씨 State 추가 ---
+  const [weatherData, setWeatherData] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
 
   useKakaoLoader();
 
   const [map, setMap] = useState();
-  const [positions, setPositions] = useState([{ lat: 37.5665, lng: 126.978 }]); // 초기값 설정
+  const [positions, setPositions] = useState([{ lat: 37.5665, lng: 126.978 }]);
   const [sortedState, setSortedState] = useState({});
 
-  // 두 번째 API 응답을 첫 번째 형태로 변환하는 함수
+  // ... (transformApiResponse 함수는 기존과 동일하여 생략) ...
   const transformApiResponse = (apiResponse) => {
     const { placeBlocks, timetables } = apiResponse;
-    // timetableId를 키로 하는 객체 생성
     const result = {};
-
-    // 각 timetable에 대해 빈 배열 초기화
     timetables.forEach((timetable) => {
       result[timetable.timetableId] = [];
     });
-
-    // placeBlocks를 순회하면서 데이터 변환
     placeBlocks.forEach((place) => {
-      // startTime과 endTime으로부터 duration 계산 (15분 단위)
       const startTime = new Date(`2000-01-01T${place.startTime}`);
       const endTime = new Date(`2000-01-01T${place.endTime}`);
-      const durationMinutes = (endTime - startTime) / (1000 * 60); // 분 단위
-      const duration = Math.round(durationMinutes / 15); // 15분 단위로 변환
-
-      // timeSlot을 HH:MM 형태로 변환
+      const durationMinutes = (endTime - startTime) / (1000 * 60);
+      const duration = Math.round(durationMinutes / 15);
       const timeSlot = place.startTime.substring(0, 5);
-
-      // Google Maps URL에서 placeId 추출
       const urlMatch = place.placeLink.match(/place_id:([^&]+)/);
       const placeId = urlMatch ? urlMatch[1] : "";
-
-      // categoryId에 따른 iconUrl 설정
       let iconUrl;
       if (place.placeCategory === 0) {
-        iconUrl =
-          "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png";
+        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png";
       } else if (place.placeCategory === 1) {
-        iconUrl =
-          "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/lodging-71.png";
+        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/lodging-71.png";
       } else {
-        iconUrl =
-          "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png";
+        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png";
       }
-
-      // 변환된 객체 생성
       const transformedPlace = {
         placeId: placeId,
         url: place.placeLink,
@@ -75,125 +91,146 @@ const TravelPlannerApp = () => {
         rating: place.placeRating,
         iconUrl: iconUrl,
         categoryId: place.placeCategory,
-        xlocation: place.xlocation || 0, // 원본 데이터에서 0.0으로 되어있음
+        xlocation: place.xlocation || 0,
         ylocation: place.ylocation || 0,
         timeSlot: timeSlot,
         duration: duration,
       };
-
-      // 해당하는 timetableId를 찾아서 데이터 추가
-      // 여기서는 순서대로 배치하는 로직이 필요할 수 있습니다.
-      // 예시로 첫 3개는 78, 다음 3개는 79, 마지막 4개는 80에 배치
       const targetTimetableId = place.timetableId ?? place.timeTableId;
-      
       if (result[targetTimetableId]) {
         result[targetTimetableId].push(transformedPlace);
       }
     });
-
     return result;
   };
 
   useEffect(() => {
     const fetchUserProfile = async () => {
+      let planData = null;
       if (id && isAuthenticated()) {
         try {
-          const planData = await get(`${BASE_URL}/api/plan/${id}/complete`); // BASE_URL
-          console.log("초기 데이터", planData)
-          setData(planData);
-          // timetables 데이터 설정
-          if (planData.timetables) {
-            setTimetables(planData.timetables);
-            // 첫 번째 날을 기본 선택일로 설정
-            if (planData.timetables.length > 0) {
-              setSelectedDay(planData.timetables[0].timetableId);
-            }
-          }
-
-          const result = transformApiResponse(planData);
-          setTransformedData(result);
+          planData = await get(`${BASE_URL}/api/plan/${id}/complete`);
         } catch (err) {
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
         }
       } else if (token) {
         try {
-          const planData = await get(`${BASE_URL}/api/plan/${id}/complete?token=${token}`); // BASE_URL
-          console.log("초기 데이터", planData)
-          setData(planData);
-          // timetables 데이터 설정
-          if (planData.timetables) {
-            setTimetables(planData.timetables);
-            // 첫 번째 날을 기본 선택일로 설정
-            if (planData.timetables.length > 0) {
-              setSelectedDay(planData.timetables[0].timetableId);
-            }
-          }
-
-          const result = transformApiResponse(planData);
-          setTransformedData(result);
+          planData = await get(`${BASE_URL}/api/plan/${id}/complete?token=${token}`);
         } catch (err) {
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
           alert("잘못된 접근입니다.");
           navigate("/");
+          return;
         }
       } else {
         alert("잘못된 접근입니다.");
         navigate("/");
+        return;
+      }
+
+      if (planData) {
+        console.log("초기 데이터", planData);
+        setData(planData);
+        if (planData.timetables) {
+          setTimetables(planData.timetables);
+          if (planData.timetables.length > 0) {
+            setSelectedDay(planData.timetables[0].timetableId);
+          }
+        }
+        const result = transformApiResponse(planData);
+        setTransformedData(result);
       }
     };
 
     fetchUserProfile();
   }, [id, get]);
 
+// --- [수정됨] 날씨 정보 호출 useEffect ---
   useEffect(() => {
-    console.log(schedule);
-  }, [schedule]);
+    if (!data?.planFrame || !timetables.length || weatherData || weatherLoading) {
+      return;
+    }
 
-  const cleanSchedule = () => {
-    setSchedule(prevSchedule => {
-      const newSchedule = {};
-      for (const key in prevSchedule) {
-        const seen = new Set();
-        newSchedule[key] = prevSchedule[key].filter(item => {
-          if (seen.has(item.placeId)) return false;
-          seen.add(item.placeId);
-          return true;
-        });
+    const fetchWeather = async () => {
+      setWeatherLoading(true);
+      try {
+        // [수정] data.planFrame.province -> data.planFrame.travelCategoryName
+        // PlanFrameVO에는 province 필드가 없고 travelCategoryName이 지역명(예: 경기도, 강원특별자치도)을 담고 있습니다.
+        const city = data.planFrame.travelCategoryName; 
+        
+        // timetables에서 정확한 시작/종료 날짜 추출
+        const startDate = timetables[0].date;
+        const endDate = timetables[timetables.length - 1].date;
+
+        // city 값이 유효한지 확인 (없으면 요청 보내지 않음)
+        if (!city) {
+            console.warn("지역 정보(travelCategoryName)가 없어 날씨를 조회할 수 없습니다.");
+            setWeatherLoading(false);
+            return;
+        }
+
+        const response = await axios.post(
+          `${AI_API_URL}/recommendations`,
+          {
+            city: city,
+            start_date: startDate,
+            end_date: endDate,
+          }
+        );
+        setWeatherData(response.data);
+      } catch (err) {
+        console.error('날씨 정보 호출 실패 (Complete):', err);
+        // 422 등 에러 발생 시 로딩 상태 해제
+      } finally {
+        setWeatherLoading(false);
       }
-      return newSchedule;
-    });
-  }
+    };
 
-  // timetables 변경 시 schedule 초기화
+    fetchWeather();
+  }, [data, timetables, weatherData, weatherLoading]);
+  // --- 날씨 로직 끝 ---
+
   useEffect(() => {
     if (transformedData) {
       setSchedule(transformedData);
-      cleanSchedule()
+      cleanSchedule();
     } else if (timetables.length > 0) {
       const initialSchedule = {};
       timetables.forEach((timetable) => {
         initialSchedule[timetable.timetableId] = [];
       });
       setSchedule(initialSchedule);
-      cleanSchedule()
+      cleanSchedule();
     }
   }, [timetables, transformedData]);
 
-  // positions 업데이트를 위한 별도 useEffect
+  const cleanSchedule = () => {
+     setSchedule(prevSchedule => {
+       const newSchedule = {};
+       for (const key in prevSchedule) {
+         const seen = new Set();
+         newSchedule[key] = prevSchedule[key].filter(item => {
+           if (seen.has(item.placeId)) return false;
+           seen.add(item.placeId);
+           return true;
+         });
+       }
+       return newSchedule;
+     });
+  }
+
   useEffect(() => {
     if (selectedDay && schedule[selectedDay]) {
       const sortedSchedule = [...(schedule[selectedDay] || [])].sort((a, b) =>
         a.timeSlot.localeCompare(b.timeSlot)
       );
-
       const newPositions =
         sortedSchedule.length > 0
           ? sortedSchedule.map((item) => ({
               lat: item.ylocation,
               lng: item.xlocation,
             }))
-          : [{ lat: 37.5665, lng: 126.978 }]; // 기본값
-
+          : [{ lat: 37.5665, lng: 126.978 }];
       setPositions(newPositions);
     }
   }, [selectedDay, schedule]);
@@ -203,51 +240,37 @@ const TravelPlannerApp = () => {
       Object.entries(schedule).map(([key, places]) => [
         key,
         [...places].sort((a, b) => {
-          // "HH:MM" 형식을 Date 비교로 변환
           const timeA = a.timeSlot.split(":").map(Number);
           const timeB = b.timeSlot.split(":").map(Number);
           return timeA[0] - timeB[0] || timeA[1] - timeB[1];
         })
       ])
     );
-
-    console.log(sade);
     setSortedState(sade);
-  }, [schedule])
+  }, [schedule]);
 
-  // useEffect를 사용하여 map 인스턴스가 생성된 후 한 번만 실행되도록 설정
   useEffect(() => {
-    if (!map || !positions.length) return; // map 인스턴스가 아직 생성되지 않았다면 아무것도 하지 않음
-
-    // LatLngBounds 객체에 모든 마커의 좌표를 추가합니다.
+    if (!map || !positions.length) return;
     const bounds = new window.kakao.maps.LatLngBounds();
     positions.forEach((pos) => {
       bounds.extend(new window.kakao.maps.LatLng(pos.lat, pos.lng));
     });
-
-    // 계산된 bounds를 지도에 적용합니다.
     map.setBounds(bounds);
-  }, [map, positions]); // positions도 dependency에 추가
+  }, [map, positions]);
 
-  // 현재 선택된 날의 시간 슬롯 계산
   const getCurrentTimeSlots = () => {
     if (!selectedDay || !timetables.length) return [];
-
     const currentTimetable = timetables.find(
       (t) => t.timetableId === selectedDay
     );
     if (!currentTimetable) return [];
-
     const startHour = parseInt(currentTimetable.startTime.split(":")[0]);
     const endHour = parseInt(currentTimetable.endTime.split(":")[0]);
-
     const timeSlots = [];
     for (let hour = startHour; hour < endHour; hour++) {
       for (let minute = 0; minute < 60; minute += 15) {
         timeSlots.push(
-          `${hour.toString().padStart(2, "0")}:${minute
-            .toString()
-            .padStart(2, "0")}`
+          `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`
         );
       }
     }
@@ -256,19 +279,14 @@ const TravelPlannerApp = () => {
 
   const timeSlots = getCurrentTimeSlots();
 
-  // 현재 선택된 날의 종료 시간 가져오기
   const getCurrentEndTime = () => {
     if (!selectedDay || !timetables.length) return "20:00";
-
     const currentTimetable = timetables.find(
       (t) => t.timetableId === selectedDay
     );
-    return currentTimetable
-      ? currentTimetable.endTime.substring(0, 5)
-      : "20:00";
+    return currentTimetable ? currentTimetable.endTime.substring(0, 5) : "20:00";
   };
 
-  // 날짜 포맷팅 함수
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -276,20 +294,20 @@ const TravelPlannerApp = () => {
     return `${month}.${day}.`;
   };
 
-  // 일차 번호 계산 함수
   const getDayNumber = (timetableId) => {
     const index = timetables.findIndex((t) => t.timetableId === timetableId);
     return index + 1;
   };
+
   const getTimeSlotIndex = (timeSlot) => {
     return timeSlots.indexOf(timeSlot);
   };
 
   const renderScheduleItem = (item) => {
     const startIndex = getTimeSlotIndex(item.timeSlot);
-    const height = item.duration * 30; // 15분당 30px
+    const height = item.duration * 30;
     const tripColor1 = { 0: "bg-lime-50", 1: "bg-orange-50", 2: "bg-blue-50", 4: "bg-gray-50" };
-  const tripColor2 = { 0: "border-lime-100", 1: "border-orange-100", 2: "border-blue-100", 4: "border-gray-100" };
+    const tripColor2 = { 0: "border-lime-100", 1: "border-orange-100", 2: "border-blue-100", 4: "border-gray-100" };
 
     return (
       <div
@@ -301,7 +319,6 @@ const TravelPlannerApp = () => {
           width: "329px",
         }}
       >
-        {/* 컨텐츠 */}
         <div
           className="p-3 h-full flex items-center justify-between"
           style={{ paddingTop: "12px", paddingBottom: "12px" }}
@@ -317,7 +334,6 @@ const TravelPlannerApp = () => {
     );
   };
 
-  // 선택된 날이 없거나 timetables가 로딩되지 않은 경우 로딩 표시
   if (!selectedDay || !timetables.length) {
     return (
       <div className="min-h-screen font-pretendard">
@@ -359,24 +375,70 @@ const TravelPlannerApp = () => {
           </div>
         </div>
         <div className="flex space-x-6 flex-1">
-          {/* 일차 선택 */}
+          {/* 일차 선택 (수정됨) */}
           <div className="flex flex-col space-y-4">
-            {timetables.map((timetable) => (
-              <button
-                key={timetable.timetableId}
-                className={`px-4 py-4 rounded-lg ${
-                  selectedDay === timetable.timetableId
-                    ? "bg-main text-white"
-                    : "bg-white text-gray-700 border border-gray-300"
-                }`}
-                onClick={() => setSelectedDay(timetable.timetableId)}
-              >
-                <div className="text-xl font-semibold">
-                  {getDayNumber(timetable.timetableId)}일차
-                </div>
-                <div className="text-sm">{formatDate(timetable.date)}</div>
-              </button>
-            ))}
+            {timetables.map((timetable, index) => {
+              // 해당 날짜의 날씨 정보 찾기
+              const dayWeather = weatherData?.weather?.[index];
+
+              return (
+                <button
+                  key={timetable.timetableId}
+                  // [UI 수정] flex, items-center, space-x-3 추가
+                  className={`px-4 py-4 rounded-lg flex items-center space-x-3 text-left ${
+                    selectedDay === timetable.timetableId
+                      ? "bg-main text-white"
+                      : "bg-white text-gray-700 border border-gray-300"
+                  }`}
+                  onClick={() => setSelectedDay(timetable.timetableId)}
+                >
+                  {/* === 날씨 정보 표시 UI 추가 === */}
+                  <div className={`flex flex-col items-center justify-center w-14 h-14 rounded-lg ${
+                      selectedDay === timetable.timetableId ? "bg-white bg-opacity-30" : "bg-gray-100"
+                  }`}>
+                    {weatherLoading ? (
+                      <span className="text-xs">...</span>
+                    ) : dayWeather ? (
+                      <>
+                        <span className="text-3xl" title={dayWeather.description}>
+                          {getWeatherIcon(dayWeather.description)}
+                        </span>
+                        <span
+                          className={`text-xs font-semibold ${
+                            selectedDay === timetable.timetableId
+                              ? "text-white"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          {Math.round(dayWeather.temp_min)}°/
+                          {Math.round(dayWeather.temp_max)}°
+                        </span>
+                      </>
+                    ) : (
+                      // 날씨 정보가 없거나 로드 실패 시
+                      <span className={`text-2xl ${
+                         selectedDay === timetable.timetableId ? "text-white" : "text-gray-400"
+                      }`}>
+                        {getWeatherIcon(null)}
+                      </span>
+                    )}
+                  </div>
+                  {/* === 날씨 UI 끝 === */}
+
+                  {/* [UI 수정] 텍스트 정보 wrapper */}
+                  <div className="flex-1">
+                    <div className="text-xl font-semibold">
+                      {getDayNumber(timetable.timetableId)}일차
+                    </div>
+                    <div className={`text-sm ${
+                      selectedDay === timetable.timetableId ? "text-gray-200" : "text-gray-500"
+                    }`}>
+                      {formatDate(timetable.date)}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
           {/* 시간표 */}
@@ -413,28 +475,24 @@ const TravelPlannerApp = () => {
 
           {/* 지도 */}
           <div className="flex-1 border border-gray-300 rounded-lg h-[calc(100vh-189px)] overflow-y-auto">
-            <Map // 지도를 표시할 Container
+            <Map
               id="map"
-              //className="rounded-2xl"
               center={{
-                // 지도의 중심좌표
                 lat: 33.452278,
                 lng: 126.567803,
               }}
               style={{
-                // 지도의 크기
                 width: "100%",
                 height: "100%",
               }}
-              level={3} // 지도의 확대 레벨
+              level={3}
               onCreate={setMap}
             >
               {(sortedState[selectedDay] || []).map((item, index) => {
                 return (
-                  <MapMarker // 인포윈도우를 생성하고 지도에 표시합니다
+                  <MapMarker
                     key={item.placeId}
                     position={{
-                      // 인포윈도우가 표시될 위치입니다
                       lat: item.ylocation,
                       lng: item.xlocation,
                     }}
@@ -468,10 +526,10 @@ const TravelPlannerApp = () => {
                     <Polyline
                       key={`polyline-${idx}`}
                       path={[pos, positions[idx + 1]]}
-                      strokeWeight={4} // 선의 두께 입니다
-                      strokeColor={"#1344FF"} // 선의 색깔입니다
-                      strokeOpacity={0.5} // 선의 불투명도 입니다 1에서 0 사이의 값이며 0에 가까울수록 투명합니다
-                      strokeStyle={"arrow"} // 선의 스타일입니다
+                      strokeWeight={4}
+                      strokeColor={"#1344FF"}
+                      strokeOpacity={0.5}
+                      strokeStyle={"arrow"}
                       endArrow={true}
                     />
                   );
