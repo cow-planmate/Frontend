@@ -88,12 +88,12 @@ export default function PlanInfo({id}) {
 
   return (
     <div className={`mx-auto min-[1464px]:w-[1416px] min-[1464px]:px-0 md:px-6 md:pt-6 p-4 ${flexCenter} justify-between w-full`}>
-      <div className={`${flexCenter} min-[1464px]:space-x-6 sm:space-x-3 space-x max-[360px]:w-[calc(100vh-210px)] flex-1`}>
+      <div className={`${flexCenter} min-[1464px]:space-x-6 sm:space-x-3 space-x`}>
         <div className="">
           <input
             ref={inputRef}
             type="text"
-            className={`${infoButton} box-content min-[1464px]:mr-3 min-[1464px]:max-w-48 mr-1.5 min-[360px]:max-w-32 text-base md:text-lg font-semibold`}
+            className={`${infoButton} box-content min-[1464px]:mr-3 min-[1464px]:max-w-48 mr-1.5 min-[360px]:max-w-32 max-w-20 text-base md:text-lg font-semibold`}
             onChange={(e) => setLocalName(e.target.value)}
             onBlur={() => setPlanField("planName", localName)}
             style={{ minWidth: '1ch' }}
