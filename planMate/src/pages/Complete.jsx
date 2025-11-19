@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react"; // useRef 추가
 import Navbar from "../components/Navbar";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk";
 import useKakaoLoader from "../hooks/useKakaoLoader";
 import ShareModal from "../components/ShareModal";
-import axios from 'axios'; // axios 추가
+import axios from 'axios';
 
 // AI 서버 URL
 const AI_API_URL = import.meta.env.VITE_AI_API_URL;
@@ -50,9 +50,11 @@ const TravelPlannerApp = () => {
   const [selectedDay, setSelectedDay] = useState(null);
   const [isShareOpen, setIsShareOpen] = useState(false);
 
-  // --- 날씨 State 추가 ---
+  // --- 날씨 State ---
   const [weatherData, setWeatherData] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
+  // [수정] 날씨 중복 호출 방지용 Ref
+  const lastWeatherFetchParams = useRef(null);
 
   useKakaoLoader();
 
@@ -60,7 +62,7 @@ const TravelPlannerApp = () => {
   const [positions, setPositions] = useState([{ lat: 37.5665, lng: 126.978 }]);
   const [sortedState, setSortedState] = useState({});
 
-  // ... (transformApiResponse 함수는 기존과 동일하여 생략) ...
+  // transformApiResponse 함수 (원본 전체 유지)
   const transformApiResponse = (apiResponse) => {
     const { placeBlocks, timetables } = apiResponse;
     const result = {};
@@ -147,28 +149,34 @@ const TravelPlannerApp = () => {
 
 // --- [수정됨] 날씨 정보 호출 useEffect ---
   useEffect(() => {
-    if (!data?.planFrame || !timetables.length || weatherData || weatherLoading) {
+    // 1. 데이터가 아직 로드되지 않았으면 중단
+    if (!data?.planFrame || !timetables.length) {
+      return;
+    }
+
+    const city = data.planFrame.travelCategoryName; 
+    const startDate = timetables[0].date;
+    const endDate = timetables[timetables.length - 1].date;
+
+    // 2. 요청 파라미터 식별자 생성
+    const currentParams = JSON.stringify({ city, startDate, endDate });
+
+    // 3. [핵심 수정] 이미 시도한 파라미터라면 중단 (성공/실패 여부 무관)
+    if (lastWeatherFetchParams.current === currentParams) {
       return;
     }
 
     const fetchWeather = async () => {
+      if (!city) {
+        console.warn("지역 정보(travelCategoryName)가 없어 날씨를 조회할 수 없습니다.");
+        lastWeatherFetchParams.current = currentParams; // 다시 시도하지 않도록 설정
+        return;
+      }
+
       setWeatherLoading(true);
+      lastWeatherFetchParams.current = currentParams; // 요청 시작 시점에 기록
+
       try {
-        // [수정] data.planFrame.province -> data.planFrame.travelCategoryName
-        // PlanFrameVO에는 province 필드가 없고 travelCategoryName이 지역명(예: 경기도, 강원특별자치도)을 담고 있습니다.
-        const city = data.planFrame.travelCategoryName; 
-        
-        // timetables에서 정확한 시작/종료 날짜 추출
-        const startDate = timetables[0].date;
-        const endDate = timetables[timetables.length - 1].date;
-
-        // city 값이 유효한지 확인 (없으면 요청 보내지 않음)
-        if (!city) {
-            console.warn("지역 정보(travelCategoryName)가 없어 날씨를 조회할 수 없습니다.");
-            setWeatherLoading(false);
-            return;
-        }
-
         const response = await axios.post(
           `${AI_API_URL}/recommendations`,
           {
@@ -180,14 +188,17 @@ const TravelPlannerApp = () => {
         setWeatherData(response.data);
       } catch (err) {
         console.error('날씨 정보 호출 실패 (Complete):', err);
-        // 422 등 에러 발생 시 로딩 상태 해제
+        // 에러가 발생해도 lastWeatherFetchParams가 설정되어 있으므로 무한 재시도 안 함
       } finally {
         setWeatherLoading(false);
       }
     };
 
     fetchWeather();
-  }, [data, timetables, weatherData, weatherLoading]);
+
+  // [수정] 의존성 배열에서 weatherData, weatherLoading 제거.
+  // data와 timetables가 변경될 때만(즉, 페이지 로드 시) 실행됨.
+  }, [data, timetables]); 
   // --- 날씨 로직 끝 ---
 
   useEffect(() => {
@@ -375,7 +386,7 @@ const TravelPlannerApp = () => {
           </div>
         </div>
         <div className="flex space-x-6 flex-1">
-          {/* 일차 선택 (수정됨) */}
+          {/* 일차 선택 */}
           <div className="flex flex-col space-y-4">
             {timetables.map((timetable, index) => {
               // 해당 날짜의 날씨 정보 찾기
@@ -384,7 +395,6 @@ const TravelPlannerApp = () => {
               return (
                 <button
                   key={timetable.timetableId}
-                  // [UI 수정] flex, items-center, space-x-3 추가
                   className={`px-4 py-4 rounded-lg flex items-center space-x-3 text-left ${
                     selectedDay === timetable.timetableId
                       ? "bg-main text-white"
@@ -392,7 +402,7 @@ const TravelPlannerApp = () => {
                   }`}
                   onClick={() => setSelectedDay(timetable.timetableId)}
                 >
-                  {/* === 날씨 정보 표시 UI 추가 === */}
+                  {/* === 날씨 정보 표시 UI === */}
                   <div className={`flex flex-col items-center justify-center w-14 h-14 rounded-lg ${
                       selectedDay === timetable.timetableId ? "bg-white bg-opacity-30" : "bg-gray-100"
                   }`}>
@@ -417,7 +427,7 @@ const TravelPlannerApp = () => {
                     ) : (
                       // 날씨 정보가 없거나 로드 실패 시
                       <span className={`text-2xl ${
-                         selectedDay === timetable.timetableId ? "text-white" : "text-gray-400"
+                          selectedDay === timetable.timetableId ? "text-white" : "text-gray-400"
                       }`}>
                         {getWeatherIcon(null)}
                       </span>
@@ -425,7 +435,6 @@ const TravelPlannerApp = () => {
                   </div>
                   {/* === 날씨 UI 끝 === */}
 
-                  {/* [UI 수정] 텍스트 정보 wrapper */}
                   <div className="flex-1">
                     <div className="text-xl font-semibold">
                       {getDayNumber(timetable.timetableId)}일차
