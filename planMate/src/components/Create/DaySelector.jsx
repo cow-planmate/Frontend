@@ -1,6 +1,6 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarDays, faCircleInfo } from "@fortawesome/free-solid-svg-icons";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react"; // useRef 추가
 import { createPortal } from "react-dom";
 import TimeTable from "./TimeTable";
 
@@ -54,7 +54,7 @@ const getWeatherIcon = (description) => {
 const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stompClientRef, id, schedule }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 날짜 포맷팅 함수 (원본 유지)
+  // 날짜 포맷팅 함수
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -66,10 +66,13 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
     console.log(timetables);
   }, [timetables])
 
-  // --- 날씨 정보 로딩 로직 추가 ---
+  // --- 날씨 정보 로딩 로직 ---
   const [weatherData, setWeatherData] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
-  const [weatherError, setWeatherError] = useState(null); // (에러 표시는 UI에 미포함)
+  const [weatherError, setWeatherError] = useState(null);
+
+  // [수정] 무한 루프 방지를 위한 Ref 추가
+  const lastFetchParams = useRef(null);
 
   // Zustand 스토어에서 날씨 API에 필요한 정보 가져오기
   const travelCategoryName = usePlanStore((state) => state.travelCategoryName);
@@ -77,18 +80,27 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
   const period = usePlanStore((state) => state.period);
 
   useEffect(() => {
-    if (weatherData || weatherLoading) {
+    // 1. 현재 요청할 파라미터 생성
+    const currentParams = JSON.stringify({ travelCategoryName, startDate, period });
+
+    // 2. [핵심 수정] 이전에 시도한 파라미터와 같으면(성공/실패 무관) 중단
+    if (lastFetchParams.current === currentParams) {
       return;
     }
 
     const fetchWeather = async () => {
       if (!travelCategoryName || !startDate || !period) {
+        // 정보 부족 시에도 중복 경고 방지를 위해 파라미터 기록
+        lastFetchParams.current = currentParams;
         console.warn('DaySelector: 날씨 정보를 가져오기 위한 정보(여행지, 날짜, 기간)가 부족합니다.');
         return;
       }
 
       setWeatherLoading(true);
       setWeatherError(null);
+      
+      // 요청 시작 시점에 파라미터 기록 (중복 호출 차단)
+      lastFetchParams.current = currentParams;
 
       try {
         const calculatedEndDate = getEndDate(startDate, period);
@@ -108,6 +120,7 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
       } catch (err) {
         console.error('날씨 정보 호출 실패 (DaySelector):', err);
         setWeatherError(`날씨 정보를 불러오는 데 실패했습니다.`);
+        // 에러가 발생해도 lastFetchParams가 설정되어 있으므로 무한 재시도 안 함
       } finally {
         setWeatherLoading(false);
       }
@@ -115,7 +128,8 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
 
     fetchWeather();
 
-  }, [travelCategoryName, startDate, period, weatherData, weatherLoading]);
+  // [수정] 의존성 배열에서 weatherData, weatherLoading 제거
+  }, [travelCategoryName, startDate, period]);
   // --- 날씨 로직 끝 ---
 
   return (
@@ -128,7 +142,6 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
           return (
             <button
               key={timetable.timetableId}
-              // --- [UI 수정] ---
               // flex-col 제거, flex, items-center, space-x-3 추가
               className={`px-4 py-4 rounded-lg flex items-center space-x-3 text-left ${
                 selectedDay === timetable.timetableId
@@ -137,7 +150,7 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
               }`}
               onClick={() => onDaySelect(timetable.timetableId)}
             >
-              {/* === 날씨 정보 표시 UI 추가 === */}
+              {/* === 날씨 정보 표시 UI === */}
               <div className={`flex flex-col items-center justify-center w-14 h-14 rounded-lg ${
                   selectedDay === timetable.timetableId ? "bg-white bg-opacity-30" : "bg-gray-100"
               }`}>
@@ -162,7 +175,7 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
                 ) : (
                   // 날씨 정보가 없거나 로드 실패 시
                   <span className={`text-2xl ${
-                     selectedDay === timetable.timetableId ? "text-white" : "text-gray-400"
+                      selectedDay === timetable.timetableId ? "text-white" : "text-gray-400"
                   }`}>
                     {getWeatherIcon(null)}
                   </span>
@@ -170,7 +183,7 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
               </div>
               {/* === 날씨 UI 끝 === */}
 
-              {/* [UI 수정] 원본 날짜/일차 정보를 div로 묶음 */}
+              {/* 날짜/일차 정보를 div로 묶음 */}
               <div className="flex-1">
                 <div className="text-xl font-semibold">
                   {index+1}일차
@@ -186,7 +199,7 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
             </button>
           )
         })}
-        {/* 원본 모달 버튼 (수정 없음) */}
+        {/* 원본 모달 버튼 */}
         <button 
           className="text-2xl text-gray-500 hover:text-gray-700"
           onClick={() => setIsModalOpen(true)}
@@ -194,7 +207,7 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
           <FontAwesomeIcon icon={faCalendarDays} />
         </button>
       </div>
-      {/* 원본 모달 로직 (수정 없음) */}
+      {/* 원본 모달 로직 */}
       {isModalOpen && createPortal(
         <Modal 
           setIsModalOpen={setIsModalOpen} 
@@ -213,7 +226,7 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
 };
 
 // 
-// --- 원본 Modal 컴포넌트 (수정 없음) ---
+// --- 원본 Modal 컴포넌트 ---
 //
 const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id, selectedDay, onDaySelect, schedule }) => {
   const [newTime, setNewTime] = useState(timetables);

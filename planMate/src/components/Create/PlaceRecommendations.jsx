@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useApiClient } from "../../assets/hooks/useApiClient";
 import usePlanStore from "../../store/Plan";
 import PlaceItem from "./PlaceItem";
 
-// AI 서버 URL 및 날짜 계산 함수 (원본 유지) (여기 .env에 VITE_AI_API_URL=http://localhost:8010 이렇게 파이썬 localhost:8010으로 통신하게 한거에요!)
+// AI 서버 URL 및 날짜 계산 함수
 const AI_API_URL = import.meta.env.VITE_AI_API_URL;
 const getEndDate = (startDate, period) => {
   if (!startDate || !period) return '';
@@ -27,32 +27,34 @@ const PlaceRecommendations = ({
 }) => {
   const [selectedTab, setSelectedTab] = useState("관광지");
 
-  // 검색 탭용 상태 (원본 유지)
+  // 검색 탭용 상태
   const [searchText, setSearchText] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
 
-  // 날씨 탭 전용 상태 추가 (원본 유지)
+  // 날씨 탭 전용 상태
   const [weatherData, setWeatherData] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState(null);
 
-  // --- [수정] AI 옷차림 추천 펼치기/접기 상태 ---
-  const [isRecommendationExpanded, setIsRecommendationExpanded] = useState(false);
-  // --- [수정] ---
+  // [수정] 무한 루프 방지를 위한 Ref
+  const lastFetchParams = useRef(null);
 
-  // plan id, API 클라이언트 등 (원본 유지)
+  // AI 옷차림 추천 펼치기/접기 상태
+  const [isRecommendationExpanded, setIsRecommendationExpanded] = useState(false);
+
+  // plan id, API 클라이언트 등
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
   const { get } = useApiClient();
   const BASE_URL = import.meta.env.VITE_API_URL;
 
-  // Zustand 스토어 구독 방식 (수정된 방식 유지)
+  // Zustand 스토어 구독
   const travelCategoryName = usePlanStore((state) => state.travelCategoryName);
   const startDate = usePlanStore((state) => state.startDate);
   const period = usePlanStore((state) => state.period);
 
   
-  // 🔎 검색 실행 (원본 유지)
+  // 🔎 검색 실행
   const doSearch = async () => {
     const q = searchText.trim();
     if (!q || !id) return;
@@ -72,26 +74,33 @@ const PlaceRecommendations = ({
     }
   };
 
-  // 🌤️ 날씨 정보 호출 (의존성 배열 수정)
+  // 🌤️ 날씨 정보 호출
   useEffect(() => {
-    // 1. 날씨 탭이 아니면 아무것도 안 함
+    // 1. 날씨 탭이 아니면 중단
     if (selectedTab !== '날씨') {
       return;
     }
-    
-    // 2. 이미 데이터가 있거나 로딩 중이면 API 호출 방지
-    if (weatherData || weatherLoading) {
+
+    // 2. 현재 요청할 파라미터 생성
+    const currentParams = JSON.stringify({ travelCategoryName, startDate, period });
+
+    // 3. 이전에 시도한 파라미터와 같으면 중단 (무한 루프 방지 핵심)
+    if (lastFetchParams.current === currentParams) {
       return;
     }
 
     const fetchWeather = async () => {
       if (!travelCategoryName || !startDate || !period) {
         setWeatherError('여행지, 시작 날짜, 여행 기간 정보가 필요합니다. (Home 페이지에서 입력 확인)');
+        lastFetchParams.current = currentParams;
         return;
       }
 
       setWeatherLoading(true);
       setWeatherError(null);
+      
+      // 요청 시작 시점에 파라미터 기록
+      lastFetchParams.current = currentParams;
 
       try {
         const calculatedEndDate = getEndDate(startDate, period);
@@ -118,13 +127,10 @@ const PlaceRecommendations = ({
 
     fetchWeather();
 
-  // --- [무한 루프 수정] ---
-  // 의존성 배열에서 weatherData와 weatherLoading을 제거합니다.
-  // 이 useEffect는 "입력값" (탭, 여행지, 날짜)이 바뀔 때만 실행되어야 합니다.
-  }, [selectedTab, travelCategoryName, startDate, period]); // weatherData, weatherLoading 제거
+  }, [selectedTab, travelCategoryName, startDate, period]);
 
   
-  // 렌더링할 리스트를 useMemo로 계산 (원본 유지)
+  // 렌더링할 리스트를 useMemo로 계산
   const currentList = useMemo(() => {
     if (!places || !schedule) return [];
 
@@ -144,7 +150,7 @@ const PlaceRecommendations = ({
   }, [places, schedule, selectedTab]);
 
   
-  // 탭 색상 객체 (원본 유지)
+  // 탭 색상 객체
   const tripColor3 = { 
     관광지: "lime-700", 
     숙소: "orange-700", 
@@ -153,7 +159,7 @@ const PlaceRecommendations = ({
     검색: "gray-700" 
   };
 
-  // 날씨 탭 UI 렌더링 함수 (원본 유지)
+  // 날씨 탭 UI 렌더링 함수
   const renderWeatherTab = () => {
     if (weatherLoading) {
       return <p className="text-center p-4">날씨 및 옷차림 추천을 불러오는 중...</p>;
@@ -197,7 +203,7 @@ const PlaceRecommendations = ({
             </div>
           </div>
 
-          {/* --- [수정] AI 옷차림 추천 섹션 (펼치기/접기) --- */}
+          {/* AI 옷차림 추천 섹션 */}
           <div>
             <button
               onClick={() => setIsRecommendationExpanded(!isRecommendationExpanded)}
@@ -211,14 +217,12 @@ const PlaceRecommendations = ({
               </span>
             </button>
             
-            {/* 조건부 렌더링 */}
             {isRecommendationExpanded && (
               <div className="p-4 border rounded-lg bg-gray-50 whitespace-pre-line text-gray-700 leading-relaxed">
                 {weatherData.recommendation || '옷차림 추천 정보가 없습니다.'}
               </div>
             )}
           </div>
-          {/* --- [수정] --- */}
 
         </div>
       );
@@ -226,12 +230,12 @@ const PlaceRecommendations = ({
     return null;
   };
 
-  // Tailwind JIT 컴파일러용 더미 클래스 (원본 유지)
+  // Tailwind JIT 컴파일러용 더미 클래스 (이 주석이 있어야 동적 클래스가 생성됩니다)
   // bg-lime-700 bg-orange-700 bg-blue-700 bg-cyan-700 bg-gray-700
   
   return (
     <div className="flex-1">
-      {/* 탭 버튼 배열 (원본 유지) */}
+      {/* 탭 버튼 배열 */}
       <div className="flex space-x-1">
         {["관광지", "숙소", "식당", "날씨", "검색"].map((tab) => (
           <button
@@ -248,7 +252,7 @@ const PlaceRecommendations = ({
         ))}
       </div>
       <div className="h-[calc(100vh-229px)] border border-gray-300 rounded-lg rounded-tl-none divide-y divide-gray-300">
-        {/* 검색 탭 전용 입력 UI (원본 유지) */}
+        {/* 검색 탭 전용 입력 UI */}
         {selectedTab === "검색" && (
           <div className="px-3 py-2">
             <div className="flex items-center space-x-2">
@@ -273,14 +277,13 @@ const PlaceRecommendations = ({
           </div>
         )}
 
-        {/* 탭에 따라 날씨 UI 또는 장소 목록 렌더링 (원본 유지) */}
+        {/* 탭에 따라 날씨 UI 또는 장소 목록 렌더링 */}
         {selectedTab === "날씨" ? (
           <div className="h-full overflow-y-auto"> 
             {renderWeatherTab()}
           </div>
         ) : (
           <div className={`overflow-y-auto ${selectedTab === "검색" ? "h-[calc(100vh-287px)]" : "h-full"}`}>
-            {/* 렌더링 시 useMemo로 계산된 currentList 사용 */}
             {currentList.map((place) => ( 
               <PlaceItem
                 key={place.placeId}
