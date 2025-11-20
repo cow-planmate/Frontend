@@ -9,7 +9,6 @@ import Logintest from "../pages/Logintest";
 import Themetest from "../pages/Themetest";
 import Landingpage from "../pages/Landingpage";
 import Create2 from "../pages/Create2";
-import WeatherReco from "../pages/WeatherReco"; // <-- 신규 임포트
 
 const Router = () => {
   return (
@@ -25,11 +24,6 @@ const Router = () => {
         <Route path="passwordfindtest" element={<Passwordfindtest />} />
         <Route path="landingpage" element={<Landingpage />} />
         <Route path="create2" element={<Create2 />} />
-        {/* --- 날씨별 ai 옷차림 추천 경로 추가 --- */}
-        <Route
-          path="weather-recommendation"
-          element={<WeatherReco />}
-        />
       </Routes>
     </BrowserRouter>
   );

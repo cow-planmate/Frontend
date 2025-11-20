@@ -4,10 +4,57 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import TimeTable from "./TimeTable";
 
+// 날씨 기능에 필요한 모듈 추가
+import axios from 'axios';
+import usePlanStore from "../../store/Plan"; // Zustand 스토어 import (경로 수정)
+
+// AI 서버 URL
+const AI_API_URL = import.meta.env.VITE_AI_API_URL;
+
+// 종료 날짜 계산
+const getEndDate = (startDate, period) => {
+  if (!startDate || !period) return '';
+  try {
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + period - 1);
+    return date.toISOString().split('T')[0];
+  } catch (error) {
+    console.error('날짜 계산 오류:', error);
+    return '';
+  }
+};
+
+// 날씨 설명(텍스트)을 기반으로 아이콘 반환
+const getWeatherIcon = (description) => {
+  if (!description) return '❓'; // 알 수 없음
+  const desc = description.toLowerCase();
+  
+  if (desc.includes('맑음')) return '☀️';
+  if (desc.includes('구름') || desc.includes('흐림')) {
+    if (desc.includes('조금') || desc.includes('약간') || desc.includes('부분')) {
+      return '🌤️'; // 구름 조금
+    }
+    return '☁️'; // 흐림
+  }
+  if (desc.includes('비') || desc.includes('소나기')) {
+     if (desc.includes('약한') || desc.includes('가벼운')) {
+      return '🌦️'; // 가벼운 비
+    }
+    return '🌧️'; // 비
+  }
+  if (desc.includes('눈')) return '❄️';
+  if (desc.includes('안개')) return '🌫️';
+  if (desc.includes('뇌우')) return '⛈️';
+  
+  return '🌤️'; // 기타 (대체로 맑음 등)
+};
+// --- 날씨 헬퍼 함수 끝 ---
+
+
 const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stompClientRef, id, schedule }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 날짜 포맷팅 함수
+  // 날짜 포맷팅 함수 (원본 유지)
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -19,25 +66,127 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
     console.log(timetables);
   }, [timetables])
 
+  // --- 날씨 정보 로딩 로직 추가 ---
+  const [weatherData, setWeatherData] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState(null); // (에러 표시는 UI에 미포함)
+
+  // Zustand 스토어에서 날씨 API에 필요한 정보 가져오기
+  const travelCategoryName = usePlanStore((state) => state.travelCategoryName);
+  const startDate = usePlanStore((state) => state.startDate);
+  const period = usePlanStore((state) => state.period);
+
+  useEffect(() => {
+    if (weatherData || weatherLoading) {
+      return;
+    }
+
+    const fetchWeather = async () => {
+      if (!travelCategoryName || !startDate || !period) {
+        console.warn('DaySelector: 날씨 정보를 가져오기 위한 정보(여행지, 날짜, 기간)가 부족합니다.');
+        return;
+      }
+
+      setWeatherLoading(true);
+      setWeatherError(null);
+
+      try {
+        const calculatedEndDate = getEndDate(startDate, period);
+        if (!calculatedEndDate) {
+          throw new Error('종료 날짜 계산에 실패했습니다.');
+        }
+        
+        const response = await axios.post(
+          `${AI_API_URL}/recommendations`,
+          {
+            city: travelCategoryName,
+            start_date: startDate,
+            end_date: calculatedEndDate,
+          }
+        );
+        setWeatherData(response.data);
+      } catch (err) {
+        console.error('날씨 정보 호출 실패 (DaySelector):', err);
+        setWeatherError(`날씨 정보를 불러오는 데 실패했습니다.`);
+      } finally {
+        setWeatherLoading(false);
+      }
+    };
+
+    fetchWeather();
+
+  }, [travelCategoryName, startDate, period, weatherData, weatherLoading]);
+  // --- 날씨 로직 끝 ---
+
   return (
     <>
       <div className="flex flex-col space-y-4">
-        {timetables.map((timetable, index) => (
-          <button
-            key={timetable.timetableId}
-            className={`px-4 py-4 rounded-lg ${
-              selectedDay === timetable.timetableId
-                ? "bg-main text-white"
-                : "bg-white text-gray-700 border border-gray-300"
-            }`}
-            onClick={() => onDaySelect(timetable.timetableId)}
-          >
-            <div className="text-xl font-semibold">
-              {index+1}일차
-            </div>
-            <div className="text-sm">{formatDate(timetable.date)}</div>
-          </button>
-        ))}
+        {timetables.map((timetable, index) => {
+          // 해당 날짜의 날씨 정보 찾기
+          const dayWeather = weatherData?.weather?.[index];
+          
+          return (
+            <button
+              key={timetable.timetableId}
+              // --- [UI 수정] ---
+              // flex-col 제거, flex, items-center, space-x-3 추가
+              className={`px-4 py-4 rounded-lg flex items-center space-x-3 text-left ${
+                selectedDay === timetable.timetableId
+                  ? "bg-main text-white"
+                  : "bg-white text-gray-700 border border-gray-300"
+              }`}
+              onClick={() => onDaySelect(timetable.timetableId)}
+            >
+              {/* === 날씨 정보 표시 UI 추가 === */}
+              <div className={`flex flex-col items-center justify-center w-14 h-14 rounded-lg ${
+                  selectedDay === timetable.timetableId ? "bg-white bg-opacity-30" : "bg-gray-100"
+              }`}>
+                {weatherLoading ? (
+                  <span className="text-xs">...</span>
+                ) : dayWeather ? (
+                  <>
+                    <span className="text-3xl" title={dayWeather.description}>
+                      {getWeatherIcon(dayWeather.description)}
+                    </span>
+                    <span
+                      className={`text-xs font-semibold ${
+                        selectedDay === timetable.timetableId
+                          ? "text-white"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      {Math.round(dayWeather.temp_min)}°/
+                      {Math.round(dayWeather.temp_max)}°
+                    </span>
+                  </>
+                ) : (
+                  // 날씨 정보가 없거나 로드 실패 시
+                  <span className={`text-2xl ${
+                     selectedDay === timetable.timetableId ? "text-white" : "text-gray-400"
+                  }`}>
+                    {getWeatherIcon(null)}
+                  </span>
+                )}
+              </div>
+              {/* === 날씨 UI 끝 === */}
+
+              {/* [UI 수정] 원본 날짜/일차 정보를 div로 묶음 */}
+              <div className="flex-1">
+                <div className="text-xl font-semibold">
+                  {index+1}일차
+                </div>
+                <div className={`text-sm ${
+                    selectedDay === timetable.timetableId
+                      ? "text-gray-200"
+                      : "text-gray-500"
+                  }`}>
+                  {formatDate(timetable.date)}
+                </div>
+              </div>
+            </button>
+          )
+        })}
+        {/* 원본 모달 버튼 (수정 없음) */}
         <button 
           className="text-2xl text-gray-500 hover:text-gray-700"
           onClick={() => setIsModalOpen(true)}
@@ -45,6 +194,7 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
           <FontAwesomeIcon icon={faCalendarDays} />
         </button>
       </div>
+      {/* 원본 모달 로직 (수정 없음) */}
       {isModalOpen && createPortal(
         <Modal 
           setIsModalOpen={setIsModalOpen} 
@@ -62,6 +212,9 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
   );
 };
 
+// 
+// --- 원본 Modal 컴포넌트 (수정 없음) ---
+//
 const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id, selectedDay, onDaySelect, schedule }) => {
   const [newTime, setNewTime] = useState(timetables);
   console.log(schedule)
@@ -377,6 +530,5 @@ const Modal = ({ setIsModalOpen, timetables, timeDispatch, stompClientRef, id, s
     </div>
   );
 };
-
 
 export default DaySelector;

@@ -87,6 +87,9 @@ function App() {
     setDestinationLocation(location);
     setPlanField("travelName", location.name);
     setPlanField("travelId", location.id);
+    // --- [수정 1] ---
+    // 날씨 탭에 필요한 "상위 지역"으로 location.name (여행지 이름)을 사용합니다.
+    setPlanField("travelCategoryName", location.name || "");
   };
 
   const handleDestinationOpen = () => {
@@ -135,7 +138,8 @@ function App() {
 
   const handleTransportChange = (transport) => {
     setSelectedTransport(transport);
-    setPlanField("transportationCategoryId", transportId);
+    // transportId를 설정하는 로직이 원본에 없었지만, setPlanAll에서 사용하므로 유지합니다.
+    // setPlanField("transportationCategoryId", transportId); // transportId 변수가 없어 주석 처리
   };
 
   const getTransportIcon = () => {
@@ -180,16 +184,25 @@ function App() {
       );
       const formattedDates = allDates.map((date) => formatDateForApi(date));
 
-      // 전역 상태에 모든 데이터 저장
+      // 날씨 탭에 필요한 startDate와 period를 계산합니다.
+      const apiStartDate = formatDateForApi(dateRange[0].startDate);
+      const apiPeriod = allDates.length;
+
+      // setPlanAll 호출을 if (isAuthenticated) 블록 *밖으로* 이동시켰습니다.
+      // 이렇게 하면 로그인 여부와 관계없이 항상 스토어에 정보가 저장됩니다.
       setPlanAll({
         planName: "", // 필요시 기본값 설정
-        travelCategoryName: destinationLocation.categoryName || "",
+        // --- [수정 2] ---
+        // "상위 지역"으로 destinationLocation.name (여행지 이름)을 사용합니다.
+        travelCategoryName: destinationLocation.name || "",
         travelName: destinationLocation.name,
         travelId: destinationLocation.id,
         departure: departureLocation.name,
         transportationCategoryId: selectedTransport === "car" ? 1 : 0,
         adultCount: Number(personCount.adults),
         childCount: Number(personCount.children),
+        startDate: apiStartDate, // "날씨" 탭을 위해 시작 날짜 저장
+        period: apiPeriod,       // "날씨" 탭을 위해 여행 기간 저장
       });
 
       if (isAuthenticated()) {
@@ -375,7 +388,7 @@ function App() {
             <div className="block min-w-[160px]">
               <button
                 className="cursor-pointer transition-all bg-[#1344FF] text-white px-4 py-3 rounded-lg
-            border-[#1344FF] active:translate-y-[2px] hover:bg-blue-600 shadow-lg w-full font-pretendard whitespace-nowrap"
+                border-[#1344FF] active:translate-y-[2px] hover:bg-blue-600 shadow-lg w-full font-pretendard whitespace-nowrap"
                 onClick={makePlan}
               >
                 일정생성
@@ -426,3 +439,5 @@ function App() {
 }
 
 export default App;
+
+

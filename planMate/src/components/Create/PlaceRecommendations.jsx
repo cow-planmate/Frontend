@@ -1,8 +1,24 @@
-import { useEffect, useState } from "react";
+import axios from 'axios';
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import PlaceItem from "./PlaceItem";
-// 네 프로젝트 경로 기준으로 조정 (Create/ 아래면 ../../)
 import { useApiClient } from "../../assets/hooks/useApiClient";
+import usePlanStore from "../../store/Plan";
+import PlaceItem from "./PlaceItem";
+
+// AI 서버 URL 및 날짜 계산 함수 (원본 유지) (여기 .env에 VITE_AI_API_URL=http://localhost:8010 이렇게 파이썬 localhost:8010으로 통신하게 한거에요!)
+const AI_API_URL = import.meta.env.VITE_AI_API_URL;
+const getEndDate = (startDate, period) => {
+  if (!startDate || !period) return '';
+  try {
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + period - 1);
+    return date.toISOString().split('T')[0];
+  } catch (error) {
+    console.error('날짜 계산 오류:', error);
+    return '';
+  }
+};
+
 
 const PlaceRecommendations = ({ 
   places,
@@ -11,95 +27,218 @@ const PlaceRecommendations = ({
 }) => {
   const [selectedTab, setSelectedTab] = useState("관광지");
 
-  // 🔎 검색 탭용 상태
+  // 검색 탭용 상태 (원본 유지)
   const [searchText, setSearchText] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
 
-  // plan id 가져오기 (?id=60 형태)
+  // 날씨 탭 전용 상태 추가 (원본 유지)
+  const [weatherData, setWeatherData] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState(null);
+
+  // --- [수정] AI 옷차림 추천 펼치기/접기 상태 ---
+  const [isRecommendationExpanded, setIsRecommendationExpanded] = useState(false);
+  // --- [수정] ---
+
+  // plan id, API 클라이언트 등 (원본 유지)
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
-
-  // API 클라이언트
   const { get } = useApiClient();
-
   const BASE_URL = import.meta.env.VITE_API_URL;
 
-  // ✅ places 중복 제거 (placeId 기준)
-  useEffect(() => {
-    if (!places) return;
-    const filtered = {};
-    let changed = false;
+  // Zustand 스토어 구독 방식 (수정된 방식 유지)
+  const travelCategoryName = usePlanStore((state) => state.travelCategoryName);
+  const startDate = usePlanStore((state) => state.startDate);
+  const period = usePlanStore((state) => state.period);
 
-    for (const key in places) {
-      const arr = Array.isArray(places[key]) ? places[key] : [];
-      const uniqueArr = Array.from(new Map(arr.map(item => [item.placeId, item])).values());
-      filtered[key] = uniqueArr;
-      if (uniqueArr.length !== arr.length) changed = true;
-    }
-
-    if (changed) onPlacesUpdate(filtered);
-  }, [places, onPlacesUpdate]);
-
-  // ✅ schedule에 포함된 placeId는 추천에서 제거
-  useEffect(() => {
-    if (!schedule || !places) return;
-
-    const scheduledPlaceIds = Object.values(schedule)
-      .flat()
-      .map(item => item?.placeId)
-      .filter(v => v != null);
-
-    if (scheduledPlaceIds.length === 0) return;
-
-    const updatedPlaces = Object.fromEntries(
-      Object.entries(places).map(([category, placeList]) => [
-        category,
-        (placeList ?? []).filter(place => !scheduledPlaceIds.includes(place?.placeId))
-      ])
-    );
-
-    if (JSON.stringify(updatedPlaces) !== JSON.stringify(places)) {
-      onPlacesUpdate(updatedPlaces);
-    }
-  }, [schedule]); // 의존성 최소화
-
-  // 🔎 검색 실행 (App.jsx 수정 없이 여기서 직접 호출)
+  
+  // 🔎 검색 실행 (원본 유지)
   const doSearch = async () => {
     const q = searchText.trim();
     if (!q || !id) return;
     try {
       setSearchLoading(true);
-      // 백엔드 규격: GET /api/plan/{id}/place/query
       const res = await get(`${BASE_URL}/api/plan/${id}/place/${encodeURIComponent(q)}`);
       const newSearchList = Array.isArray(res?.places) ? res.places : [];
 
-      // places.검색만 덮어쓰기
       onPlacesUpdate({
         ...places,
         검색: newSearchList,
       });
     } catch (err) {
       console.error("검색 실패:", err);
-      // 실패 시 검색 결과를 비우고 싶다면 아래 주석 해제
-      // onPlacesUpdate({ ...places, 검색: [] });
     } finally {
       setSearchLoading(false);
     }
   };
 
-  const currentList = Array.isArray(places?.[selectedTab]) ? places[selectedTab] : [];
+  // 🌤️ 날씨 정보 호출 (의존성 배열 수정)
+  useEffect(() => {
+    // 1. 날씨 탭이 아니면 아무것도 안 함
+    if (selectedTab !== '날씨') {
+      return;
+    }
+    
+    // 2. 이미 데이터가 있거나 로딩 중이면 API 호출 방지
+    if (weatherData || weatherLoading) {
+      return;
+    }
 
-  const tripColor3 = { 관광지: "lime-700", 숙소: "orange-700", 식당: "blue-700", 검색: "gray-700" };
+    const fetchWeather = async () => {
+      if (!travelCategoryName || !startDate || !period) {
+        setWeatherError('여행지, 시작 날짜, 여행 기간 정보가 필요합니다. (Home 페이지에서 입력 확인)');
+        return;
+      }
 
+      setWeatherLoading(true);
+      setWeatherError(null);
+
+      try {
+        const calculatedEndDate = getEndDate(startDate, period);
+        if (!calculatedEndDate) {
+          throw new Error('종료 날짜 계산에 실패했습니다.');
+        }
+        
+        const response = await axios.post(
+          `${AI_API_URL}/recommendations`,
+          {
+            city: travelCategoryName,
+            start_date: startDate,
+            end_date: calculatedEndDate,
+          }
+        );
+        setWeatherData(response.data);
+      } catch (err) {
+        console.error('날씨 정보 호출 실패:', err);
+        setWeatherError(`날씨 정보를 불러오는 데 실패했습니다. (AI 서버: ${AI_API_URL})`);
+      } finally {
+        setWeatherLoading(false);
+      }
+    };
+
+    fetchWeather();
+
+  // --- [무한 루프 수정] ---
+  // 의존성 배열에서 weatherData와 weatherLoading을 제거합니다.
+  // 이 useEffect는 "입력값" (탭, 여행지, 날짜)이 바뀔 때만 실행되어야 합니다.
+  }, [selectedTab, travelCategoryName, startDate, period]); // weatherData, weatherLoading 제거
+
+  
+  // 렌더링할 리스트를 useMemo로 계산 (원본 유지)
+  const currentList = useMemo(() => {
+    if (!places || !schedule) return [];
+
+    const list = Array.isArray(places?.[selectedTab]) ? places[selectedTab] : [];
+
+    const scheduledPlaceIds = new Set(
+      Object.values(schedule)
+        .flat()
+        .map(item => item?.placeId)
+        .filter(v => v != null)
+    );
+
+    const filteredList = list.filter(place => !scheduledPlaceIds.has(place?.placeId));
+
+    return Array.from(new Map(filteredList.map(item => [item.placeId, item])).values());
+
+  }, [places, schedule, selectedTab]);
+
+  
+  // 탭 색상 객체 (원본 유지)
+  const tripColor3 = { 
+    관광지: "lime-700", 
+    숙소: "orange-700", 
+    식당: "blue-700", 
+    날씨: "cyan-700",
+    검색: "gray-700" 
+  };
+
+  // 날씨 탭 UI 렌더링 함수 (원본 유지)
+  const renderWeatherTab = () => {
+    if (weatherLoading) {
+      return <p className="text-center p-4">날씨 및 옷차림 추천을 불러오는 중...</p>;
+    }
+    if (weatherError) {
+      return <p className="text-center p-4 text-red-500">{weatherError}</p>;
+    }
+    if (weatherData) {
+      const calculatedEndDate = getEndDate(startDate, period);
+      return (
+        <div className="p-4 space-y-6 overflow-y-auto h-full">
+          <div>
+            <h3 className="text-xl font-semibold mb-3 text-gray-800">
+              {travelCategoryName} 날씨 예보
+              <span className="text-base font-medium text-gray-600 ml-2">
+                ({startDate} ~ {calculatedEndDate})
+              </span>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {weatherData.weather && weatherData.weather.length > 0 ? (
+                weatherData.weather.map((day, index) => (
+                  <div
+                    key={index}
+                    className="p-4 border rounded-lg shadow-sm bg-white"
+                  >
+                    <p className="font-bold text-lg text-blue-600">{day.date}</p>
+                    <p className="text-gray-700 capitalize">
+                      {day.description || '날씨 정보 없음'}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      기온: {day.temp_min}°C / {day.temp_max}°C
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      체감 온도: {day.feels_like}°C
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p>날씨 예보 정보가 없습니다.</p>
+              )}
+            </div>
+          </div>
+
+          {/* --- [수정] AI 옷차림 추천 섹션 (펼치기/접기) --- */}
+          <div>
+            <button
+              onClick={() => setIsRecommendationExpanded(!isRecommendationExpanded)}
+              className="w-full flex justify-between items-center text-left mb-3 cursor-pointer"
+            >
+              <h3 className="text-xl font-semibold text-gray-800">
+                AI 옷차림 추천
+              </h3>
+              <span className="text-lg font-medium text-main">
+                {isRecommendationExpanded ? '▲ 접기' : '▼ 펼치기'}
+              </span>
+            </button>
+            
+            {/* 조건부 렌더링 */}
+            {isRecommendationExpanded && (
+              <div className="p-4 border rounded-lg bg-gray-50 whitespace-pre-line text-gray-700 leading-relaxed">
+                {weatherData.recommendation || '옷차림 추천 정보가 없습니다.'}
+              </div>
+            )}
+          </div>
+          {/* --- [수정] --- */}
+
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Tailwind JIT 컴파일러용 더미 클래스 (원본 유지)
+  // bg-lime-700 bg-orange-700 bg-blue-700 bg-cyan-700 bg-gray-700
+  
   return (
     <div className="flex-1">
+      {/* 탭 버튼 배열 (원본 유지) */}
       <div className="flex space-x-1">
-        {["관광지", "숙소", "식당", "검색"].map((tab) => (
+        {["관광지", "숙소", "식당", "날씨", "검색"].map((tab) => (
           <button
             key={tab}
             className={`px-4 py-2 rounded-t-lg ${
               selectedTab === tab
-                ? `bg-${tripColor3[selectedTab]} text-white`
+                ? `bg-${tripColor3[tab]} text-white`
                 : "bg-gray-200 text-gray-700"
             }`}
             onClick={() => setSelectedTab(tab)}
@@ -109,7 +248,7 @@ const PlaceRecommendations = ({
         ))}
       </div>
       <div className="h-[calc(100vh-229px)] border border-gray-300 rounded-lg rounded-tl-none divide-y divide-gray-300">
-        {/* 🔎 검색 탭 전용 입력 UI */}
+        {/* 검색 탭 전용 입력 UI (원본 유지) */}
         {selectedTab === "검색" && (
           <div className="px-3 py-2">
             <div className="flex items-center space-x-2">
@@ -134,14 +273,22 @@ const PlaceRecommendations = ({
           </div>
         )}
 
-        <div className={`overflow-y-auto ${selectedTab === "검색" ? "h-[calc(100vh-287px)]" : "h-full"}`}>
-          {(currentList ?? []).map((place) => (
-            <PlaceItem
-              key={place.placeId}
-              place={place}
-            />
-          ))}
-        </div>
+        {/* 탭에 따라 날씨 UI 또는 장소 목록 렌더링 (원본 유지) */}
+        {selectedTab === "날씨" ? (
+          <div className="h-full overflow-y-auto"> 
+            {renderWeatherTab()}
+          </div>
+        ) : (
+          <div className={`overflow-y-auto ${selectedTab === "검색" ? "h-[calc(100vh-287px)]" : "h-full"}`}>
+            {/* 렌더링 시 useMemo로 계산된 currentList 사용 */}
+            {currentList.map((place) => ( 
+              <PlaceItem
+                key={place.placeId}
+                place={place}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
