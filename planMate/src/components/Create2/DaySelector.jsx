@@ -10,7 +10,7 @@ export default function DaySelector() {
   };
 
   return (
-    <div className="flex md:space-y-4 md:space-x-0 md:flex-col space-x-4">
+    <div className="flex md:space-y-4 md:space-x-0 md:flex-col space-x-3">
       {timetables.map((timetable, index) => {
         return (
           <button

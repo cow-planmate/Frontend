@@ -6,6 +6,7 @@ import { initStompClient } from "../websocket/client";
 
 import usePlanStore from "../store/Plan";
 import useTimetableStore from "../store/Timetables";
+import useUserStore from "../store/UserDayIndexes";
 
 import Loading from "../assets/imgs/tube-spinner.svg?react"
 import Navbar from "../components/Navbar";
@@ -23,6 +24,7 @@ function App() {
 
   const { planId, setPlanAll } = usePlanStore();
   const { setTimetableAll } = useTimetableStore();
+  const { setUserAll } = useUserStore();
   const [noACL, setNoACL] = useState(false);
 
   // 초기 데이터 로딩
@@ -41,6 +43,7 @@ function App() {
           
           setPlanAll(planData.planFrame);
           setTimetableAll(planData.timetables);
+          setUserAll(planData.userDayIndexes);
         } catch(err) {
           const errorMessage = err.response?.data?.message || err.message;
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
@@ -69,7 +72,7 @@ function App() {
     if (id && isAuthenticated()) {
       initStompClient(id);
     }
-  }, [id])
+  }, [])
 
   if (!planId) {
     return (
@@ -98,7 +101,7 @@ function App() {
         </div>
       :
         <div className="min-[1464px]:w-[1400px] min-[1464px]:px-0 md:px-8 md:py-6 px-6 py-3 mx-auto">
-          <div className="flex md:space-x-6 flex-1 md:flex-row flex-col">
+          <div className="flex md:space-x-6 md:space-y-0 space-y-4 flex-1 md:flex-row flex-col">
             <DaySelector />
             <div>안녕하세요</div>
           </div>

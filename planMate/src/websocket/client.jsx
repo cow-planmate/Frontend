@@ -1,6 +1,9 @@
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import usePlanStore from "../store/Plan";
+import useUserStore from "../store/UserDayIndexes";
+import useTimetableStore from "../store/Timetables";
+import useNicknameStore from "../store/Nickname";
 
 let client;
 
@@ -27,35 +30,61 @@ export const initStompClient = (id) => {
         }
       });
 
-      client.subscribe(`/topic/plan/${id}/create/timetable`, (message) => {
-        //
-      });
+      // client.subscribe(`/topic/plan/${id}/create/timetable`, (message) => {
+      //   //
+      // });
 
-      client.subscribe(`/topic/plan/${id}/update/timetable`, (message) => {
-        //
-      });
+      // client.subscribe(`/topic/plan/${id}/update/timetable`, (message) => {
+      //   //
+      // });
 
-      client.subscribe(`/topic/plan/${id}/delete/timetable`, (message) => {
-        //  
-      });
+      // client.subscribe(`/topic/plan/${id}/delete/timetable`, (message) => {
+      //   //  
+      // });
+
+      // client.subscribe(
+      //   `/topic/plan/${id}/create/timetableplaceblock`,
+      //   (message) => {
+      //   }
+      // );
+
+      // client.subscribe(
+      //   `/topic/plan/${id}/update/timetableplaceblock`,
+      //   (message) => {
+          
+      //   }
+      // );
+
+      // client.subscribe(
+      //   `/topic/plan/${id}/delete/timetableplaceblock`,
+      //   (message) => {
+          
+      //   }
+      // );
 
       client.subscribe(
-        `/topic/plan/${id}/create/timetableplaceblock`,
-        (message) => {
+        `/topic/plan/${id}/delete/presence`, (message) => {
+          const body = JSON.parse(message.body);
+          console.log("📩 수신된 메시지:", message.body);
+          useUserStore.getState().setUserDelete(body);
         }
       );
 
       client.subscribe(
-        `/topic/plan/${id}/update/timetableplaceblock`,
+        `/topic/plan/${id}/update/presence`,
         (message) => {
-          
+          const body = JSON.parse(message.body);
+          console.log("📩 수신된 메시지:", message.body);
+          useUserStore.getState().setUserDelete(body);
         }
       );
 
       client.subscribe(
-        `/topic/plan/${id}/delete/timetableplaceblock`,
+        `/topic/plan/${id}/create/presence`,
         (message) => {
-          
+          const body = JSON.parse(message.body);
+          console.log("📩 수신된 메시지:", message.body);
+          useUserStore.getState().setUserDelete(body);
         }
       );
     },
@@ -81,6 +110,27 @@ export const initStompClient = (id) => {
         client.publish({
           destination: `/app/plan/${id}/update/plan`,
           body: JSON.stringify(state),
+        });
+      }
+    }
+  });
+  
+  useTimetableStore.subscribe((next, prev) => {
+    if (next.selectedDay !== prev.selectedDay) {
+      const msg = {
+        "userDayIndexVOs": {
+          "userDayIndexVO": {
+            "nickname": useNicknameStore.getState().nickname,
+            "dayIndex": next.selectedDay
+          }
+        }
+      }
+
+      if (client.connected) {
+        console.log("웹소켓을 전송합니다.", msg)
+        client.publish({
+          destination: `/app/plan/${id}/update/presence`,
+          body: JSON.stringify(msg),
         });
       }
     }

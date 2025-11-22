@@ -20,6 +20,7 @@ import ProfileText from "./ProfileText";
 import { useApiClient } from "../assets/hooks/useApiClient";
 import { useNavigate } from "react-router-dom";
 import NicknameModal from "../components/NicknameChange";
+import gravatarUrl from "../utils/gravatarUrl";
 
 export default function Profile({ userProfile, setUserProfile }) {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -32,30 +33,35 @@ export default function Profile({ userProfile, setUserProfile }) {
       {/* 프로필 헤더 */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex flex-col items-center text-black">
-          <div className="w-20 h-20 bg-contain bg-[url('./assets/imgs/default.png')] rounded-full"></div>
           {userProfile && (
-            <div className="text-center mt-4">
-              <div className="flex items-center justify-center gap-2">
-                <h2 className="text-2xl font-bold text-gray-800">
-                  {userProfile.nickname}
-                </h2>
-                <button
-                  onClick={() => setIsNicknameModalOpen(true)}
-                  className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
-                >
-                  <FontAwesomeIcon icon={faPen} className="w-4 h-4" />
-                </button>
-                {isNicknameModalOpen && (
-                  <NicknameModal
-                    setIsNicknameModalOpen={setIsNicknameModalOpen}
-                    currentNickname={userProfile.nickname}
-                    onNicknameUpdate={(newNickname) => {
-                      setUserProfile({ ...userProfile, nickname: newNickname });
-                    }}
-                  />
-                )}
+            <>
+              <div 
+                className={`w-20 h-20 bg-contain bg-no-repeat rounded-full`}
+                style={{backgroundImage: `url('${gravatarUrl(userProfile.email)}')`}}
+              ></div>
+              <div className="text-center mt-4">
+                <div className="flex items-center justify-center gap-2">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    {userProfile.nickname}
+                  </h2>
+                  <button
+                    onClick={() => setIsNicknameModalOpen(true)}
+                    className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                  >
+                    <FontAwesomeIcon icon={faPen} className="w-4 h-4" />
+                  </button>
+                  {isNicknameModalOpen && (
+                    <NicknameModal
+                      setIsNicknameModalOpen={setIsNicknameModalOpen}
+                      currentNickname={userProfile.nickname}
+                      onNicknameUpdate={(newNickname) => {
+                        setUserProfile({ ...userProfile, nickname: newNickname });
+                      }}
+                    />
+                  )}
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>
