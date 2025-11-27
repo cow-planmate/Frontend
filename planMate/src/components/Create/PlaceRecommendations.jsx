@@ -31,10 +31,7 @@ const PlaceRecommendations = ({
   const [searchText, setSearchText] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
 
-  // 날씨 탭 전용 상태 추가 (원본 유지)
-  const [weatherData, setWeatherData] = useState(null);
-  const [weatherLoading, setWeatherLoading] = useState(false);
-  const [weatherError, setWeatherError] = useState(null);
+  
 
   // --- [수정] AI 옷차림 추천 펼치기/접기 상태 ---
   const [isRecommendationExpanded, setIsRecommendationExpanded] = useState(false);
@@ -46,10 +43,7 @@ const PlaceRecommendations = ({
   const { get } = useApiClient();
   const BASE_URL = import.meta.env.VITE_API_URL;
 
-  // Zustand 스토어 구독 방식 (수정된 방식 유지)
-  const travelCategoryName = usePlanStore((state) => state.travelCategoryName);
-  const startDate = usePlanStore((state) => state.startDate);
-  const period = usePlanStore((state) => state.period);
+  
 
   
   // 🔎 검색 실행 (원본 유지)
@@ -71,6 +65,35 @@ const PlaceRecommendations = ({
       setSearchLoading(false);
     }
   };
+
+  // 렌더링할 리스트를 useMemo로 계산 (원본 유지)
+  const currentList = useMemo(() => {
+    if (!places || !schedule) return [];
+
+    const list = Array.isArray(places?.[selectedTab]) ? places[selectedTab] : [];
+
+    const scheduledPlaceIds = new Set(
+      Object.values(schedule)
+        .flat()
+        .map(item => item?.placeId)
+        .filter(v => v != null)
+    );
+
+    const filteredList = list.filter(place => !scheduledPlaceIds.has(place?.placeId));
+
+    return Array.from(new Map(filteredList.map(item => [item.placeId, item])).values());
+
+  }, [places, schedule, selectedTab]);
+
+  // 날씨 탭 전용 상태 추가 (원본 유지)
+  const [weatherData, setWeatherData] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState(null);
+
+  // Zustand 스토어 구독 방식 (수정된 방식 유지)
+  const travelCategoryName = usePlanStore((state) => state.travelCategoryName);
+  const startDate = usePlanStore((state) => state.startDate);
+  const period = usePlanStore((state) => state.period);
 
   // 🌤️ 날씨 정보 호출 (의존성 배열 수정)
   useEffect(() => {
@@ -123,25 +146,68 @@ const PlaceRecommendations = ({
   // 이 useEffect는 "입력값" (탭, 여행지, 날짜)이 바뀔 때만 실행되어야 합니다.
   }, [selectedTab, travelCategoryName, startDate, period]); // weatherData, weatherLoading 제거
 
+
+
   
-  // 렌더링할 리스트를 useMemo로 계산 (원본 유지)
-  const currentList = useMemo(() => {
-    if (!places || !schedule) return [];
+  const [priceData, setPriceData] = useState(null);
+  const [priceLoading, setPriceLoading] = useState(false);
 
-    const list = Array.isArray(places?.[selectedTab]) ? places[selectedTab] : [];
+  const placeBlocks = usePlanStore((state) => state.placeBlocks);
+  const timeTables = usePlanStore((state) => state.timeTables);
+  const headcount = usePlanStore((state) => state.adultCount + state.childCount);
 
-    const scheduledPlaceIds = new Set(
-      Object.values(schedule)
-        .flat()
-        .map(item => item?.placeId)
-        .filter(v => v != null)
-    );
+  // 가격 예측 탭 관련 상태 및 useEffect
+  useEffect(() => {
+    // 1. '가격' 탭이 아니면 실행 안 함
+    if (selectedTab !== '가격') {
+      return;
+    }
 
-    const filteredList = list.filter(place => !scheduledPlaceIds.has(place?.placeId));
+    // 2. 이미 데이터가 있거나 로딩 중이면 API 호출 방지
+    if (priceData || priceLoading) {
+      return;
+    }
 
-    return Array.from(new Map(filteredList.map(item => [item.placeId, item])).values());
+    const fetchPrice = async () => {
+      if (!placeBlocks || placeBlocks.length === 0 || !timeTables) {
+        console.warn("가격 예측을 위한 일정 데이터가 부족합니다.");
+        return;
+      }
 
-  }, [places, schedule, selectedTab]);
+      setPriceLoading(true);
+      setPriceError(null);
+
+      try {
+        // [수정됨] 가격 예측 API 호출 (/price)
+        // 백엔드 PricePredictionRequest 구조에 맞춰 데이터 전송
+        const response = await axios.post(
+          `${AI_API_URL}/price`, 
+          {
+            headcount: headcount, 
+            placeBlocks: placeBlocks,
+            timeTables: timeTables
+          }
+        );
+        
+        // [수정됨] 응답 데이터를 priceData에 저장
+        console.log("가격 예측 성공:", response.data);
+        setPriceData(response.data);
+
+      } catch (err) {
+        console.error('가격 정보 호출 실패:', err);
+        setPriceError(`가격 정보를 불러오는 데 실패했습니다. (AI 서버: ${AI_API_URL})`);
+      } finally {
+        setPriceLoading(false);
+      }
+    };
+
+    fetchPrice();
+
+  // [의존성 배열 수정]
+  // 데이터가 변경되거나 탭이 변경될 때만 재실행
+  }, [selectedTab, placeBlocks, timeTables]);
+
+  
 
   
   // 탭 색상 객체 (원본 유지)
@@ -150,6 +216,7 @@ const PlaceRecommendations = ({
     숙소: "orange-700", 
     식당: "blue-700", 
     날씨: "cyan-700",
+    가격: "yellow-700",
     검색: "gray-700" 
   };
 
