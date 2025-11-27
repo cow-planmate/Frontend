@@ -10,8 +10,8 @@ import useUserStore from "../store/UserDayIndexes";
 
 import Loading from "../assets/imgs/tube-spinner.svg?react"
 import Navbar from "../components/Navbar";
-import PlanInfo from "../components/Create2/PlanInfo";
-import DaySelector from "../components/Create2/DaySelector";
+import PlanInfo from "../components/Create2/PlanInfo/PlanInfo";
+import DaySelector from "../components/Create2/DaySelector/DaySelector";
 
 function App() {
   const BASE_URL = import.meta.env.VITE_API_URL;

@@ -1,12 +1,12 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleInfo } from "@fortawesome/free-solid-svg-icons";
-import usePlanStore from "../../store/Plan";
+import usePlanStore from "../../../store/Plan";
 import { useState } from "react";
 
 import TransportModal from "./TransportModal";
-import PersonCountModal from "../HomePerson";
-import DepartureModal from "../Departure";
-import LocationModal from "../HomeDestination";
+import PersonCountModal from "../../HomePerson";
+import DepartureModal from "../../Departure";
+import LocationModal from "../../HomeDestination";
 
 export default function PlanInfoModal({setIsInfoOpen}) {
   const { 

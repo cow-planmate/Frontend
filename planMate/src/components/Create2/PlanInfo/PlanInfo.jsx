@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import usePlanStore from "../../store/Plan";
-import useUserStore from "../../store/UserDayIndexes";
-import useTimetableStore from "../../store/Timetables";
+import usePlanStore from "../../../store/Plan";
+import useUserStore from "../../../store/UserDayIndexes";
+import useTimetableStore from "../../../store/Timetables";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faUserPlus, faInfo } from "@fortawesome/free-solid-svg-icons";
 import { faMap } from "@fortawesome/free-regular-svg-icons";
 
 import PlanInfoModal from "./PlanInfoModal";
-import ShareModal from "../ShareModal";
+import ShareModal from "../../ShareModal";
 
 export default function PlanInfo({id}) {
   const { 

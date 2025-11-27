@@ -7,6 +7,7 @@ import useNicknameStore from "../store/Nickname";
 
 let client;
 
+export const getClient = () => client;
 export const initStompClient = (id) => {
   const token = localStorage.getItem('accessToken');
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -75,7 +76,7 @@ export const initStompClient = (id) => {
         (message) => {
           const body = JSON.parse(message.body);
           console.log("📩 수신된 메시지:", message.body);
-          useUserStore.getState().setUserDelete(body);
+          useUserStore.getState().setUserUpdate(body);
         }
       );
 
@@ -84,7 +85,7 @@ export const initStompClient = (id) => {
         (message) => {
           const body = JSON.parse(message.body);
           console.log("📩 수신된 메시지:", message.body);
-          useUserStore.getState().setUserDelete(body);
+          useUserStore.getState().setUserCreate(body);
         }
       );
     },
