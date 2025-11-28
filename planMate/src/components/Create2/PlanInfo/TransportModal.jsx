@@ -1,6 +1,6 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCar, faBus } from "@fortawesome/free-solid-svg-icons";
-import usePlanStore from "../../store/Plan";
+import usePlanStore from "../../../store/Plan";
 
 const TransportModal = ({
   setIsTransportOpen,

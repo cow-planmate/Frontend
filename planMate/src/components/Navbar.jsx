@@ -1,18 +1,19 @@
-import { faBell as faBellRegular } from "@fortawesome/free-regular-svg-icons";
-import {
-  faHouseUser,
-  faRightFromBracket,
-} from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // useNavigate 임포트 추가
-import { useApiClient } from "../assets/hooks/useApiClient";
 import Logo from "../assets/imgs/logo.svg?react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Login from "../components/Login";
 import PasswordFind from "../components/PasswordFind";
 import Signup from "../components/Signup";
 import Theme from "../components/Theme";
 import Themestart from "../components/Themestart"; // 추가된 import
+import { useState, useEffect, useRef } from "react";
+import { useApiClient } from "../assets/hooks/useApiClient";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faRightFromBracket,
+  faHouseUser,
+} from "@fortawesome/free-solid-svg-icons";
+import { faBell as faBellRegular } from "@fortawesome/free-regular-svg-icons";
+import useNicknameStore from "../store/Nickname";
 
 export default function Navbar({ onInvitationAccept }) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -28,42 +29,26 @@ export default function Navbar({ onInvitationAccept }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isInvitationOpen, setisInvitationOpen] = useState(false);
   const [invitations, setInvitations] = useState([]);
+  
+  const { nickname } = useNicknameStore();
 
-  // 사용자 프로필 상태 추가
-  const [userProfile, setUserProfile] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate()
 
-  const { get, post, isLoading, error, isAuthenticated, logout } =
-    useApiClient();
+  const handleMypage = () => {
+    if (location.pathname === "/mypage") {
+      window.location.reload();
+    } else {
+      navigate("/mypage")
+    }
+  }
+
+  const { get, post, isAuthenticated, logout } = useApiClient();
   const BASE_URL = import.meta.env.VITE_API_URL;
-
-  const navigate = useNavigate(); // navigate 초기화 추가
-
-  // 기존 코드 그대로...
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (isAuthenticated()) {
-        try {
-          const profileData = await get(`${BASE_URL}/api/user/profile`);
-          setUserProfile(profileData);
-        } catch (err) {
-          console.error("프로필 정보를 가져오는데 실패했습니다:", err);
-          // 토큰이 유효하지 않은 경우 로그아웃 처리
-          if (err.message.includes("인증이 만료")) {
-            handleLogout();
-          }
-        }
-      } else {
-        setUserProfile(null);
-      }
-    };
-
-    fetchUserProfile();
-  }, [isAuthenticated, get]);
 
   // 로그아웃 처리 함수
   const handleLogout = () => {
     logout();
-    setUserProfile(null);
 
     window.location.href = "/";
   };
@@ -118,14 +103,10 @@ export default function Navbar({ onInvitationAccept }) {
 
   // 로그인 성공 후 프로필 정보 새로고침을 위한 함수
   const refreshUserProfile = async () => {
-    if (isAuthenticated()) {
-      try {
-        const profileData = await get(`${BASE_URL}/api/user/profile`);
-        setUserProfile(profileData);
-      } catch (err) {
-        console.error("프로필 정보 새로고침 실패:", err);
-      }
-    }
+    // if (isAuthenticated()) {
+    //   importNickname();
+    // }
+    console.log("이거 뭐하는 거임?"); // <- 용도를 모르겠어서 함수 내용들 다 지우고 넣었는데 저렇게 냅둬도 잘 굴러감.
   };
 
   const wrapperRef = useRef(null);
@@ -181,7 +162,8 @@ export default function Navbar({ onInvitationAccept }) {
 
   useEffect(() => {
     fetchInvitations();
-  }, [userProfile]);
+  }, [nickname]);
+
   return (
     <div className="border-b border-gray-200 ">
       <div className="mx-auto w-[1400px] bg-white flex justify-between py-4 items-center">
@@ -191,9 +173,8 @@ export default function Navbar({ onInvitationAccept }) {
           </Link>
         </div>
 
-        {/* --- MODIFIED BLOCK START --- */}
         <div className="flex items-center gap-4">
-          {isAuthenticated() && userProfile ? (
+          {isAuthenticated() ? (
             <div className="relative" ref={wrapperRef}>
               <div className="flex items-center gap-5">
                 <button
@@ -205,7 +186,7 @@ export default function Navbar({ onInvitationAccept }) {
                   <div className="flex items-center h-[42px]">
                     <div className="w-8 h-8 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full mr-3"></div>
                     <span>
-                      {userProfile.nickname || userProfile.name || "사용자"}님
+                      {nickname}님
                     </span>
                   </div>
                 </button>
@@ -225,15 +206,16 @@ export default function Navbar({ onInvitationAccept }) {
               </div>
               {isProfileOpen && (
                 <div className="absolute right-8 top-full w-36 p-2 bg-white border rounded-lg shadow-md z-50">
-                  <Link to="/mypage">
-                    <div className="w-full flex items-center p-3 hover:bg-gray-100 cursor-pointer">
-                      <FontAwesomeIcon
-                        className="mr-3 w-4"
-                        icon={faHouseUser}
-                      />
-                      마이페이지
-                    </div>
-                  </Link>
+                  <button 
+                    className="w-full flex items-center p-3 hover:bg-gray-100 cursor-pointer"
+                    onClick={handleMypage}
+                  >
+                    <FontAwesomeIcon
+                      className="mr-3 w-4"
+                      icon={faHouseUser}
+                    />
+                    마이페이지
+                  </button>
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center p-3 hover:bg-gray-100 cursor-pointer"
@@ -314,7 +296,7 @@ export default function Navbar({ onInvitationAccept }) {
           ) : (
             <div className="h-[44px]">
               <button
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 h-full"
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100"
                 onClick={handleLoginOpen}
               >
                 로그인/회원가입
@@ -322,7 +304,6 @@ export default function Navbar({ onInvitationAccept }) {
             </div>
           )}
         </div>
-        {/* --- MODIFIED BLOCK END --- */}
       </div>
 
       {/* 모든 모달들을 Navbar에서 관리 */}
