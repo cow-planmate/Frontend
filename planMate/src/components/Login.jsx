@@ -83,7 +83,7 @@ export default function Login({
   };
 
   const handleSNSLogin = (provider) => {
-    window.location.href = `/api/oauth/${provider}/login`;
+    window.location.href = `/api/oauth/${provider}`;
   };
 
   if (!isOpen) return null;
