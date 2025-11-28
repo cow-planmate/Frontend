@@ -31,17 +31,26 @@ export const initStompClient = (id) => {
         }
       });
 
-      // client.subscribe(`/topic/plan/${id}/create/timetable`, (message) => {
-      //   //
-      // });
+      client.subscribe(`/topic/plan/${id}/create/timetable`, (message) => {
+        const body = JSON.parse(message.body);
+        body.map((item) => {
+          useTimetableStore.getState().setTimetableCreate(item);
+        })
+      });
 
-      // client.subscribe(`/topic/plan/${id}/update/timetable`, (message) => {
-      //   //
-      // });
+      client.subscribe(`/topic/plan/${id}/update/timetable`, (message) => {
+        const body = JSON.parse(message.body);
+        body.map((item) => {
+          useTimetableStore.getState().setTimetableUpdate(item);
+        })
+      });
 
-      // client.subscribe(`/topic/plan/${id}/delete/timetable`, (message) => {
-      //   //  
-      // });
+      client.subscribe(`/topic/plan/${id}/delete/timetable`, (message) => {
+        const body = JSON.parse(message.body);
+        body.map((item) => {
+          useTimetableStore.getState().setTimetableDelete(item);
+        })
+      });
 
       // client.subscribe(
       //   `/topic/plan/${id}/create/timetableplaceblock`,
@@ -123,7 +132,7 @@ export const initStompClient = (id) => {
           "userDayIndexVO": {
             "nickname": useNicknameStore.getState().nickname,
             "dayIndex": next.selectedDay
-          }
+           }
         }
       }
 

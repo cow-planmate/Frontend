@@ -8,7 +8,7 @@ import usePlanStore from "../store/Plan";
 import useTimetableStore from "../store/Timetables";
 import useUserStore from "../store/UserDayIndexes";
 
-import Loading from "../assets/imgs/tube-spinner.svg?react"
+import Loading from "../components/Loading";
 import Navbar from "../components/Navbar";
 import PlanInfo from "../components/Create2/PlanInfo/PlanInfo";
 import DaySelector from "../components/Create2/DaySelector/DaySelector";
@@ -42,7 +42,7 @@ function App() {
           console.log(planData)
           
           setPlanAll(planData.planFrame);
-          setTimetableAll(planData.timetables);
+          setTimetableAll(planData.timetables.slice().sort((a, b) => new Date(a.date) - new Date(b.date)));
           setUserAll(planData.userDayIndexes);
         } catch(err) {
           const errorMessage = err.response?.data?.message || err.message;
@@ -76,9 +76,7 @@ function App() {
 
   if (!planId) {
     return (
-      <div className="flex items-center justify-center h-[100vh]">
-        <Loading className="w-20"/>
-      </div>
+      <Loading />
     )
   }
 

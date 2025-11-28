@@ -9,6 +9,7 @@ const usePlanStore = create((set) => ({
   transportationCategoryId: 0,
   adultCount: 0,
   childCount: 0,
+  planId: 0,
 
   setPlanField: (field, value) =>
     set((state) => ({

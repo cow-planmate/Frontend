@@ -2,42 +2,16 @@ import useTimetableStore from "../../../store/Timetables";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarDays } from "@fortawesome/free-solid-svg-icons";
 import DaySelectorModal from "./DaySelectorModal";
-import { useEffect, useState } from "react";
-import axios from "axios";
-import usePlanStore from "../../../store/Plan";
+import { useState } from "react";
 
 export default function DaySelector() {
-  const AI_API_URL = import.meta.env.VITE_AI_API_URL;
   const { timetables, selectedDay, setSelectedDay } = useTimetableStore();
-  const { travelCategoryName } = usePlanStore();
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const day = date.getDate().toString().padStart(2, "0");
     return `${month}.${day}.`;
   };
-  const [weatherData, setWeatherData] = useState(null);
-
-  useEffect(() => {
-    const fetchWeather = async() => {
-      try {
-        const response = await axios.post(
-          `${AI_API_URL}/recommendations`,
-          {
-            city: travelCategoryName,
-            start_date: timetables[0].date,
-            end_date: timetables[timetables.length - 1].date,
-          }
-        );
-
-        console.log(response.data)
-        setWeatherData(response.data);
-      } catch (err) {
-        console.error('날씨 정보 호출 실패 (DaySelector):', err);
-      }
-    }
-    fetchWeather();
-  }, [])
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
