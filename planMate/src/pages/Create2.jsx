@@ -5,10 +5,13 @@ import { useApiClient } from "../assets/hooks/useApiClient";
 import { initStompClient } from "../websocket/client";
 
 import usePlanStore from "../store/Plan";
+import useTimetableStore from "../store/Timetables";
+import useUserStore from "../store/UserDayIndexes";
 
-import Loading from "../assets/imgs/tube-spinner.svg?react"
+import Loading from "../components/Loading";
 import Navbar from "../components/Navbar";
-import PlanInfo from "../components/Create2/PlanInfo";
+import PlanInfo from "../components/Create2/PlanInfo/PlanInfo";
+import DaySelector from "../components/Create2/DaySelector/DaySelector";
 
 function App() {
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -20,6 +23,8 @@ function App() {
   const { get, post, patch, isAuthenticated } = useApiClient();
 
   const { planId, setPlanAll } = usePlanStore();
+  const { setTimetableAll } = useTimetableStore();
+  const { setUserAll } = useUserStore();
   const [noACL, setNoACL] = useState(false);
 
   // 초기 데이터 로딩
@@ -27,16 +32,18 @@ function App() {
     const fetchPlanData = async () => {
       if (id && isAuthenticated()) {
         try {
-          const planData = await get(`${BASE_URL}/api/plan/${id}`);
-          console.log(planData);
+          const [planData, tour, lodging, restaurant] = await Promise.all([
+            get(`${BASE_URL}/api/plan/${id}`),
+            get(`${BASE_URL}/api/plan/${id}/tour`),
+            get(`${BASE_URL}/api/plan/${id}/lodging`),
+            get(`${BASE_URL}/api/plan/${id}/restaurant`),
+          ]);
+
+          console.log(planData)
           
           setPlanAll(planData.planFrame);
-
-          const [tour, lodging, restaurant] = await Promise.all([
-            post(`${BASE_URL}/api/plan/${id}/tour`),
-            post(`${BASE_URL}/api/plan/${id}/lodging`),
-            post(`${BASE_URL}/api/plan/${id}/restaurant`),
-          ]);
+          setTimetableAll(planData.timetables.slice().sort((a, b) => new Date(a.date) - new Date(b.date)));
+          setUserAll(planData.userDayIndexes);
         } catch(err) {
           const errorMessage = err.response?.data?.message || err.message;
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
@@ -65,13 +72,11 @@ function App() {
     if (id && isAuthenticated()) {
       initStompClient(id);
     }
-  }, [id])
+  }, [])
 
   if (!planId) {
     return (
-      <div className="flex items-center justify-center h-[100vh]">
-        <Loading className="w-20"/>
-      </div>
+      <Loading />
     )
   }
 
@@ -94,7 +99,10 @@ function App() {
         </div>
       :
         <div className="min-[1464px]:w-[1400px] min-[1464px]:px-0 md:px-8 md:py-6 px-6 py-3 mx-auto">
-          안녕하세용
+          <div className="flex md:space-x-6 md:space-y-0 space-y-4 flex-1 md:flex-row flex-col">
+            <DaySelector />
+            <div>안녕하세요</div>
+          </div>
         </div>
       }
     </div>

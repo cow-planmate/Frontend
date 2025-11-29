@@ -1,12 +1,12 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleInfo } from "@fortawesome/free-solid-svg-icons";
-import usePlanStore from "../../store/Plan";
+import usePlanStore from "../../../store/Plan";
 import { useState } from "react";
 
 import TransportModal from "./TransportModal";
-import PersonCountModal from "../HomePerson";
-import DepartureModal from "../Departure";
-import LocationModal from "../HomeDestination";
+import PersonCountModal from "../../HomePerson";
+import DepartureModal from "../../Departure";
+import LocationModal from "../../HomeDestination";
 
 export default function PlanInfoModal({setIsInfoOpen}) {
   const { 
@@ -45,7 +45,7 @@ export default function PlanInfoModal({setIsInfoOpen}) {
 
   return (
     <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/50 backdrop-blur-sm font-pretendard">
-      <div className="relative bg-white p-4 rounded-2xl shadow-2xl w-[90vw] border border-gray-100 max-h-[90vh] overflow-y-auto space-y-2">
+      <div className="relative bg-white p-4 rounded-2xl shadow-2xl sm:w-[580px] w-[90vw] border border-gray-100 max-h-[90vh] overflow-y-auto space-y-2">
         <div className="flex justify-between items-center px-2 pt-2">
           <div className="font-bold text-lg">
             일정 정보

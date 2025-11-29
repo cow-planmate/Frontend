@@ -82,6 +82,10 @@ export default function Login({
     }
   };
 
+  const handleSNSLogin = (provider) => {
+    window.location.href = `/api/oauth/${provider}`;
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -141,7 +145,39 @@ export default function Login({
               className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
+          <div className="flex justify-center gap-4 py-2">
+            <button
+              onClick={() => handleSNSLogin("kakao")}
+              disabled={isLoading}
+              className="w-14 h-14 rounded-full bg-yellow-400 hover:bg-yellow-500 flex items-center justify-center transition-colors disabled:opacity-50"
+              title="카카오 로그인"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 3C6.48 3 2 6.58 2 11C2 13.82 3.77 16.28 6.44 17.64L5.56 20.97C5.5 21.18 5.66 21.39 5.88 21.39C5.96 21.39 6.04 21.36 6.1 21.3L10.14 18.45C10.75 18.58 11.37 18.65 12 18.65C17.52 18.65 22 15.07 22 10.65C22 6.23 17.52 3 12 3Z"
+                  fill="#3C1E1E"
+                />
+              </svg>
+            </button>
 
+            <button
+              onClick={() => handleSNSLogin("naver")}
+              disabled={isLoading}
+              className="w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center transition-colors disabled:opacity-50"
+              title="네이버 로그인"
+            >
+              <span className="text-white font-bold text-2xl">N</span>
+            </button>
+
+            <button
+              onClick={() => handleSNSLogin("google")}
+              disabled={isLoading}
+              className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors disabled:opacity-50"
+              title="구글 로그인"
+            >
+              <span className="text-white font-bold text-2xl">G</span>
+            </button>
+          </div>
           <div className="flex flex-col items-center">
             <button
               onClick={handleLogin}
