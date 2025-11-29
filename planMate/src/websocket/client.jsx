@@ -33,21 +33,24 @@ export const initStompClient = (id) => {
 
       client.subscribe(`/topic/plan/${id}/create/timetable`, (message) => {
         const body = JSON.parse(message.body);
-        body.map((item) => {
+        console.log("📩 수신된 메시지:", message.body);
+        body.timetableVOs.map((item) => {
           useTimetableStore.getState().setTimetableCreate(item);
         })
       });
 
       client.subscribe(`/topic/plan/${id}/update/timetable`, (message) => {
         const body = JSON.parse(message.body);
-        body.map((item) => {
+        console.log("📩 수신된 메시지:", message.body);
+        body.timetableVOs.map((item) => {
           useTimetableStore.getState().setTimetableUpdate(item);
         })
       });
 
       client.subscribe(`/topic/plan/${id}/delete/timetable`, (message) => {
         const body = JSON.parse(message.body);
-        body.map((item) => {
+        console.log("📩 수신된 메시지:", message.body);
+        body.timetableVOs.map((item) => {
           useTimetableStore.getState().setTimetableDelete(item);
         })
       });
@@ -114,6 +117,7 @@ export const initStompClient = (id) => {
 
   usePlanStore.subscribe((state, prevState) => {
     if (JSON.stringify(state) !== JSON.stringify(prevState)) {
+
       console.log(state);
       
       if (client.connected) {
