@@ -272,23 +272,25 @@ const PlaceRecommendations = ({ places, schedule, onPlacesUpdate }) => {
         {selectedTab === '날씨' ? (
           <div className="h-full overflow-y-auto">{renderWeatherTab()}</div>
         ) : selectedTab === '요약' ? (
-          <div className="p-4">
-            {priceLoading && <p>요약 정보를 불러오는 중...</p>}
-            {priceError && <p className="text-red-500">{priceError}</p>}
+          <div className="p-4 h-full">
+            <div className="h-full overflow-y-auto">
+              {priceLoading && <p>요약 정보를 불러오는 중...</p>}
+              {priceError && <p className="text-red-500">{priceError}</p>}
 
-            {priceData ? (
-              // Prefer server-rendered HTML when available
-              priceData.renderHtml ? (
-                <div className="prose max-w-full" dangerouslySetInnerHTML={{ __html: priceData.renderHtml }} />
+              {priceData ? (
+                // Prefer server-rendered HTML when available
+                priceData.renderHtml ? (
+                  <div className="prose max-w-full" dangerouslySetInnerHTML={{ __html: priceData.renderHtml }} />
+                ) : (
+                  <div>
+                    <h4 className="font-semibold mb-2">요약 예측 결과</h4>
+                    <pre className="whitespace-pre-wrap text-sm bg-white p-3 rounded border">{JSON.stringify(priceData, null, 2)}</pre>
+                  </div>
+                )
               ) : (
-                <div>
-                  <h4 className="font-semibold mb-2">요약 예측 결과</h4>
-                  <pre className="whitespace-pre-wrap text-sm bg-white p-3 rounded border">{JSON.stringify(priceData, null, 2)}</pre>
-                </div>
-              )
-            ) : (
-              !priceLoading && <p className="text-sm text-gray-600">일정 데이터를 불러오면 요약 예측을 시도합니다.</p>
-            )}
+                !priceLoading && <p className="text-sm text-gray-600">일정 데이터를 불러오면 요약 예측을 시도합니다.</p>
+              )}
+            </div>
           </div>
         ) : (
           <div className={`overflow-y-auto ${selectedTab === "검색" ? "h-[calc(100vh-287px)]" : "h-full"}`}>
