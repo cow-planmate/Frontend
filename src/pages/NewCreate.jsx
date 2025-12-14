@@ -6,7 +6,7 @@ import ChatBot from "../components/Create/ChatBot";
 import DaySelector from "../components/Create/DaySelector";
 import PlaceRecommendations from "../components/Create/PlaceRecommendations";
 import TimeTable from "../components/Create/TimeTable";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/common/Navbar";
 import PlanInfo from "../components/Create/NewPlanInfo";
 
 import { useNavigate, useSearchParams } from "react-router-dom";

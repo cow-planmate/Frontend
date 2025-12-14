@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"; // useRef 추가
-import Navbar from "../components/Navbar";
+import Navbar from "../components/common/Navbar";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useApiClient } from "../hooks/useApiClient";
 import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk";

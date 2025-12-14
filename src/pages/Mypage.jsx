@@ -1,4 +1,4 @@
-import Navbar from "../components/Navbar";
+import Navbar from "../components/common/Navbar";
 import Profile from "../components/Mypage/Profile";
 import PlanList from "../components/Mypage/PlanList";
 import { useNavigate } from "react-router-dom";

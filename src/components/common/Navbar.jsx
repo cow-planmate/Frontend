@@ -1,19 +1,19 @@
-import Logo from "../assets/imgs/logo.svg?react";
+import Logo from "../../assets/imgs/logo.svg?react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import Login from "../components/auth/Login";
-import PasswordFind from "../components/auth/PasswordFind";
-import Signup from "../components/auth/Signup";
-import Theme from "./auth/Theme";
-import Themestart from "./auth/Themestart"; // 추가된 import
+import Login from "../auth/Login";
+import PasswordFind from "../auth/PasswordFind";
+import Signup from "../auth/Signup";
+import Theme from "../auth/Theme";
+import Themestart from "../auth/Themestart"; // 추가된 import
 import { useState, useEffect, useRef } from "react";
-import { useApiClient } from "../hooks/useApiClient";
+import { useApiClient } from "../../hooks/useApiClient";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faRightFromBracket,
   faHouseUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { faBell as faBellRegular } from "@fortawesome/free-regular-svg-icons";
-import useNicknameStore from "../store/Nickname";
+import useNicknameStore from "../../store/Nickname";
 
 export default function Navbar({ onInvitationAccept }) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);

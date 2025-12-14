@@ -9,7 +9,7 @@ import useTimetableStore from "../store/Timetables";
 import useUserStore from "../store/UserDayIndexes";
 
 import Loading from "../components/common/Loading";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/common/Navbar";
 import PlanInfo from "../components/Create2/PlanInfo/PlanInfo";
 import DaySelector from "../components/Create2/DaySelector/DaySelector";
 

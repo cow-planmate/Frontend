@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import { useApiClient } from "../hooks/useApiClient";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/common/Navbar";
 import DateRangeModal from "../components/Home/HomeCal";
 import PersonCountModal from "../components/common/PersonCountModal";
 import TransportModal from "../components/common/TransportModal";
