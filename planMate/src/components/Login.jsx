@@ -14,6 +14,7 @@ export default function Login({
     password: "",
   });
   const [formError, setFormError] = useState("");
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   // API 클라이언트 훅 사용
   const { login, isLoading, error } = useApiClient();
@@ -83,7 +84,7 @@ export default function Login({
   };
 
   const handleSNSLogin = (provider) => {
-    window.location.href = `/api/oauth/${provider}`;
+    window.location.href = `${API_BASE_URL}/api/oauth/${provider}`;
   };
 
   if (!isOpen) return null;

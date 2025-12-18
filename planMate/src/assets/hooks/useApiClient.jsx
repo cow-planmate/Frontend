@@ -23,12 +23,14 @@ export const useApiClient = () => {
     return localStorage.getItem("refreshToken");
   }, []);
 
+
   const setTokens = useCallback((accessToken, refreshToken) => {
     if (accessToken && refreshToken) {
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
     }
   }, []);
+  
 
   const clearAuth = useCallback(() => {
     localStorage.removeItem("accessToken");
