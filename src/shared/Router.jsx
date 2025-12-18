@@ -9,6 +9,8 @@ import Logintest from "../pages/Logintest";
 import Themetest from "../pages/Themetest";
 import Landingpage from "../pages/Landingpage";
 import Create2 from "../pages/Create2";
+import OAuthCallback from "../pages/OAuthCallback";
+import OAuthAdditionalInfo from "../pages/OAuthAdditionalInfo";
 
 const Router = () => {
   return (
@@ -24,6 +26,9 @@ const Router = () => {
         <Route path="passwordfindtest" element={<Passwordfindtest />} />
         <Route path="landingpage" element={<Landingpage />} />
         <Route path="create2" element={<Create2 />} />
+
+        <Route path="oauth/callback" element={<OAuthCallback />} />
+        <Route path="oauth/additional-info" element={<OAuthAdditionalInfo />} />
       </Routes>
     </BrowserRouter>
   );
