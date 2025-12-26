@@ -45,7 +45,7 @@ export default function PlanInfo({id}) {
   }, [localName]);
 
   return (
-    <div className={`mx-auto min-[1464px]:w-[1416px] min-[1464px]:px-0 md:px-6 md:pt-6 p-4 ${flexCenter} justify-between w-full`}>
+    <div className={`mx-auto min-[1464px]:w-[1416px] min-[1464px]:px-0 md:px-6 md:pt-6 p-4 pb-0 ${flexCenter} justify-between w-full`}>
       <div className={`${flexCenter} space-x-3`}>
         <div>
           <input

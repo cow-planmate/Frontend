@@ -1,5 +1,10 @@
 import { create } from "zustand";
 
+const sortByDate = (list) =>
+  [...list].sort(
+    (a, b) => new Date(a.date) - new Date(b.date)
+  );
+
 const useTimetableStore = create((set) => ({
   timetables: [],
   selectedDay: 0,
@@ -24,7 +29,7 @@ const useTimetableStore = create((set) => ({
       );
 
       return {
-        timetables: [...filtered, newTimetable],
+        timetables: sortByDate([...filtered, newTimetable]),
       };
     }),
 
@@ -35,15 +40,17 @@ const useTimetableStore = create((set) => ({
         (item) => item.timetableId !== updatedTimetable.timetableId
       );
       return {
-        timetables: [...filtered, updatedTimetable],
+        timetables: sortByDate([...filtered, updatedTimetable]),
       };
     }),
 
   // DELETE
   setTimetableDelete: (timetableId) =>
     set((state) => ({
-      timetables: state.timetables.filter(
-        (item) => item.timetableId !== timetableId
+      timetables: sortByDate(
+        state.timetables.filter(
+          (item) => item.timetableId !== timetableId
+        )
       ),
     })),
 

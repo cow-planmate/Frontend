@@ -62,6 +62,7 @@ const PlaceRecommendations = ({
       setSearchLoading(true);
       const res = await get(`${BASE_URL}/api/plan/${id}/place/${encodeURIComponent(q)}`);
       const newSearchList = Array.isArray(res?.places) ? res.places : [];
+      console.log(newSearchList)
 
       onPlacesUpdate({
         ...places,
