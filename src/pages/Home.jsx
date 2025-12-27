@@ -53,7 +53,7 @@ function App() {
   const { setPlanField, setPlanAll } = usePlanStore();
   const { post, isAuthenticated } = useApiClient();
 
-  const heroHeightClass = "h-[18rem] sm:h-[26rem] lg:h-screen";
+  const sliderHeightClass = "h-[18rem] sm:h-[26rem] lg:h-[45rem]";
 
   const settings = {
     dots: true,
@@ -198,26 +198,27 @@ function App() {
         <Navbar isLogin={false} />
       </div>
 
-      <div className={`relative w-full ${heroHeightClass}`}>
-        <Slider {...settings} className={`w-full ${heroHeightClass}`}>
+      {/* Hero Slider */}
+      <div className="relative flex flex-col items-center">
+        <Slider {...settings} className={`w-full ${sliderHeightClass}`}>
           <div>
             <img
               src={img1}
-              className={`w-full ${heroHeightClass} object-cover`}
+              className={`w-full ${sliderHeightClass} object-cover`}
               alt="slide1"
             />
           </div>
           <div>
             <img
               src={img2}
-              className={`w-full ${heroHeightClass} object-cover`}
+              className={`w-full ${sliderHeightClass} object-cover`}
               alt="slide2"
             />
           </div>
           <div>
             <img
               src={img3}
-              className={`w-full ${heroHeightClass} object-cover`}
+              className={`w-full ${sliderHeightClass} object-cover`}
               alt="slide3"
             />
           </div>
@@ -225,160 +226,156 @@ function App() {
 
         {/* overlay */}
         <div
-          className={`absolute inset-0 ${heroHeightClass} bg-gradient-to-b from-transparent to-black/60 pointer-events-none`}
+          className={`absolute top-0 left-0 right-0 ${sliderHeightClass} bg-gradient-to-b from-transparent to-black/60 pointer-events-none`}
         />
-
-        <div className="absolute bottom-[5rem] left-0 right-0 px-4 sm:px-6 lg:px-8">
-          <div className="w-full max-w-7xl mx-auto">
-            <div className="font-pretendard text-white font-bold text-left text-3xl sm:text-4xl lg:text-5xl leading-tight">
-              <div className="mb-2 sm:mb-4">나다운, 우리다운</div>
-              <div>여행의 시작</div>
-            </div>
+      </div>
+      <div className="absolute top-[38rem] left-0 right-0 px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-7xl mx-auto">
+          <div className="font-pretendard bottom-0 text-white font-bold text-left text-3xl sm:text-4xl lg:text-5xl leading-tight ">
+            <div className="mb-2 sm:mb-4">나다운, 우리다운</div>
+            <div>여행의 시작</div>
           </div>
         </div>
+      </div>
 
-        <div className="relative px-4 sm:px-6 lg:absolute lg:-bottom-20 lg:left-0 lg:right-0 lg:px-8">
-          <div className="w-full max-w-7xl mx-auto bg-white rounded-xl shadow-2xl p-4 sm:p-6 mt-6 lg:mt-0 mb-8">
-            <div className="grid gap-4 items-end grid-cols-1 sm:grid-cols-2 lg:grid-cols-6">
-              {/* 출발지 */}
-              <div className="block relative">
-                <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
-                  출발지
-                </label>
-                <input
-                  type="text"
-                  className="border-b-2 border-gray-300 pb-2 focus:border-blue-500 font-pretendard focus:outline-none w-full pr-8 cursor-pointer"
-                  placeholder="출발지 입력"
-                  value={departureLocation ? departureLocation.name : ""}
-                  onClick={() => setIsDepartureOpen(true)}
-                  readOnly
+      <div className="relative px-4 sm:px-6 lg:absolute lg:-bottom-1 lg:left-0 lg:right-0 lg:px-8">
+        <div className="w-full max-w-7xl mx-auto bg-white rounded-xl shadow-2xl p-4 sm:p-6 mt-6 lg:mt-0 mb-8">
+          <div className="grid gap-4 items-end grid-cols-1 sm:grid-cols-2 lg:grid-cols-6">
+            {/* 출발지 */}
+            <div className="block relative">
+              <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
+                출발지
+              </label>
+              <input
+                type="text"
+                className="border-b-2 border-gray-300 pb-2 focus:border-blue-500 font-pretendard focus:outline-none w-full pr-8 cursor-pointer"
+                placeholder="출발지 입력"
+                value={departureLocation ? departureLocation.name : ""}
+                onClick={() => setIsDepartureOpen(true)}
+                readOnly
+              />
+              <button
+                className="absolute right-0 bottom-2"
+                onClick={() => setIsDepartureOpen(true)}
+                type="button"
+              >
+                <FontAwesomeIcon
+                  icon={faLocationDot}
+                  className="text-gray-400"
                 />
-                <button
-                  className="absolute right-0 bottom-2"
-                  onClick={() => setIsDepartureOpen(true)}
-                  type="button"
-                >
-                  <FontAwesomeIcon
-                    icon={faLocationDot}
-                    className="text-gray-400"
-                  />
-                </button>
-              </div>
+              </button>
+            </div>
 
-              {/* 여행지 */}
-              <div className="block relative">
-                <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
-                  여행지
-                </label>
-                <input
-                  type="text"
-                  className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8 cursor-pointer"
-                  placeholder="여행지 입력"
-                  value={destinationLocation ? destinationLocation.name : ""}
-                  onClick={() => setIsDestinationOpen(true)}
-                  readOnly
+            {/* 여행지 */}
+            <div className="block relative">
+              <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
+                여행지
+              </label>
+              <input
+                type="text"
+                className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8 cursor-pointer"
+                placeholder="여행지 입력"
+                value={destinationLocation ? destinationLocation.name : ""}
+                onClick={() => setIsDestinationOpen(true)}
+                readOnly
+              />
+              <button
+                className="absolute right-0 bottom-2"
+                onClick={() => setIsDestinationOpen(true)}
+                type="button"
+              >
+                <FontAwesomeIcon
+                  icon={faLocationDot}
+                  className="text-gray-400"
                 />
-                <button
-                  className="absolute right-0 bottom-2"
-                  onClick={() => setIsDestinationOpen(true)}
-                  type="button"
-                >
-                  <FontAwesomeIcon
-                    icon={faLocationDot}
-                    className="text-gray-400"
-                  />
-                </button>
-              </div>
+              </button>
+            </div>
 
-              {/* 기간 */}
-              <div className="block relative">
-                <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
-                  기간
-                </label>
-                <input
-                  type="text"
-                  className="border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8 cursor-pointer font-pretendard"
-                  placeholder="날짜 선택"
-                  value={formatDateRange()}
-                  onClick={() => setIsCalendarOpen(true)}
-                  readOnly
+            {/* 기간 */}
+            <div className="block relative">
+              <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
+                기간
+              </label>
+              <input
+                type="text"
+                className="border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8 cursor-pointer font-pretendard"
+                placeholder="날짜 선택"
+                value={formatDateRange()}
+                onClick={() => setIsCalendarOpen(true)}
+                readOnly
+              />
+              <button
+                className="absolute right-0 bottom-2"
+                onClick={() => setIsCalendarOpen(true)}
+                type="button"
+              >
+                <FontAwesomeIcon icon={faCalendar} className="text-gray-400" />
+              </button>
+            </div>
+
+            {/* 인원수 */}
+            <div className="block relative">
+              <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
+                인원수
+              </label>
+              <input
+                type="text"
+                className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8 cursor-pointer"
+                placeholder="인원수 선택"
+                value={formatPersonCount()}
+                onClick={() => setIsPersonCountOpen(true)}
+                readOnly
+              />
+              <button
+                className="absolute right-0 bottom-2"
+                onClick={() => setIsPersonCountOpen(true)}
+                type="button"
+              >
+                <FontAwesomeIcon icon={faUser} className="text-gray-400" />
+              </button>
+            </div>
+
+            {/* 이동수단 */}
+            <div className="block relative">
+              <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
+                이동수단
+              </label>
+              <input
+                type="text"
+                className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8 cursor-pointer"
+                placeholder="이동수단 선택"
+                value={getTransportText()}
+                onClick={() => setIsTransportOpen(true)}
+                readOnly
+              />
+              <button
+                className="absolute right-0 bottom-2"
+                onClick={() => setIsTransportOpen(true)}
+                type="button"
+              >
+                <FontAwesomeIcon
+                  icon={getTransportIcon()}
+                  className="text-gray-400"
                 />
-                <button
-                  className="absolute right-0 bottom-2"
-                  onClick={() => setIsCalendarOpen(true)}
-                  type="button"
-                >
-                  <FontAwesomeIcon
-                    icon={faCalendar}
-                    className="text-gray-400"
-                  />
-                </button>
-              </div>
+              </button>
+            </div>
 
-              {/* 인원수 */}
-              <div className="block relative">
-                <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
-                  인원수
-                </label>
-                <input
-                  type="text"
-                  className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8 cursor-pointer"
-                  placeholder="인원수 선택"
-                  value={formatPersonCount()}
-                  onClick={() => setIsPersonCountOpen(true)}
-                  readOnly
-                />
-                <button
-                  className="absolute right-0 bottom-2"
-                  onClick={() => setIsPersonCountOpen(true)}
-                  type="button"
-                >
-                  <FontAwesomeIcon icon={faUser} className="text-gray-400" />
-                </button>
-              </div>
-
-              {/* 이동수단 */}
-              <div className="block relative">
-                <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
-                  이동수단
-                </label>
-                <input
-                  type="text"
-                  className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8 cursor-pointer"
-                  placeholder="이동수단 선택"
-                  value={getTransportText()}
-                  onClick={() => setIsTransportOpen(true)}
-                  readOnly
-                />
-                <button
-                  className="absolute right-0 bottom-2"
-                  onClick={() => setIsTransportOpen(true)}
-                  type="button"
-                >
-                  <FontAwesomeIcon
-                    icon={getTransportIcon()}
-                    className="text-gray-400"
-                  />
-                </button>
-              </div>
-
-              {/* 버튼 */}
-              <div className="block">
-                <button
-                  className="cursor-pointer transition-all bg-[#1344FF] text-white px-4 py-3 rounded-lg
-                  border-[#1344FF] active:translate-y-[2px] hover:bg-blue-600 shadow-lg w-full font-pretendard whitespace-nowrap"
-                  onClick={makePlan}
-                  type="button"
-                >
-                  일정생성
-                </button>
-              </div>
+            {/* 버튼 */}
+            <div className="block">
+              <button
+                className="cursor-pointer transition-all bg-[#1344FF] text-white px-4 py-3 rounded-lg
+                border-[#1344FF] active:translate-y-[2px] hover:bg-blue-600 shadow-lg w-full font-pretendard whitespace-nowrap"
+                onClick={makePlan}
+                type="button"
+              >
+                일정생성
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="hidden lg:block h-28" />
+      <div className="hidden lg:block h-24" />
 
       {/* Modals */}
       <DateRangeModal
