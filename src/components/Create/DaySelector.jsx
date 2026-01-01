@@ -1,15 +1,14 @@
+import { faCalendarDays } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCalendarDays, faCircleInfo } from "@fortawesome/free-solid-svg-icons";
-import { useEffect, useState, useRef } from "react"; // useRef 추가
+import { useEffect, useRef, useState } from "react"; // useRef 추가
 import { createPortal } from "react-dom";
-import TimeTable from "./TimeTable";
 
 // 날씨 기능에 필요한 모듈 추가
 import axios from 'axios';
 import usePlanStore from "../../store/Plan"; // Zustand 스토어 import (경로 수정)
 
-// AI 서버 URL
-const AI_API_URL = import.meta.env.VITE_AI_API_URL;
+// API 서버 URL
+const API_URL = import.meta.env.VITE_API_URL;
 
 // 종료 날짜 계산
 const getEndDate = (startDate, period) => {
@@ -48,8 +47,6 @@ const getWeatherIcon = (description) => {
   
   return '🌤️'; // 기타 (대체로 맑음 등)
 };
-// --- 날씨 헬퍼 함수 끝 ---
-
 
 const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stompClientRef, id, schedule }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -108,12 +105,19 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
           throw new Error('종료 날짜 계산에 실패했습니다.');
         }
         
+        const accessToken = localStorage.getItem("accessToken");
+        
         const response = await axios.post(
-          `${AI_API_URL}/recommendations`,
+          `${API_URL}/api/weather/recommendations`,
           {
             city: travelCategoryName,
             start_date: startDate,
             end_date: calculatedEndDate,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`
+            }
           }
         );
         setWeatherData(response.data);
@@ -157,27 +161,26 @@ const DaySelector = ({ timetables, timeDispatch, selectedDay, onDaySelect, stomp
                 {weatherLoading ? (
                   <span className="text-xs">...</span>
                 ) : dayWeather ? (
-                  <>
-                    <span className="text-3xl" title={dayWeather.description}>
+                  <div className="flex flex-col items-center">
+                    <span className="text-lg leading-none mb-1" title={dayWeather.description}>
                       {getWeatherIcon(dayWeather.description)}
                     </span>
                     <span
-                      className={`text-xs font-semibold ${
+                      className={`text-[10px] font-semibold ${
                         selectedDay === timetable.timetableId
                           ? "text-white"
                           : "text-gray-700"
                       }`}
                     >
-                      {Math.round(dayWeather.temp_min)}°/
-                      {Math.round(dayWeather.temp_max)}°
+                      {Math.round(dayWeather.temp_min)}°/{Math.round(dayWeather.temp_max)}°
                     </span>
-                  </>
+                  </div>
                 ) : (
                   // 날씨 정보가 없거나 로드 실패 시
-                  <span className={`text-2xl ${
+                  <span className={`text-xs ${
                       selectedDay === timetable.timetableId ? "text-white" : "text-gray-400"
                   }`}>
-                    {getWeatherIcon(null)}
+                    N/A
                   </span>
                 )}
               </div>
