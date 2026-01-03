@@ -61,15 +61,15 @@ function App() {
             마이페이지
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 w-full">
-            <div className="w-full lg:w-[30%] lg:min-w-[320px]">
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 w-full items-start">
+            <div className="w-full lg:w-[30%] lg:min-w-[320px] lg:max-w-[400px] flex-shrink-0">
               <Profile
                 userProfile={userProfile}
                 setUserProfile={setUserProfile}
               />
             </div>
 
-            <div className="w-full lg:w-[70%] lg:flex-1">
+            <div className="w-full lg:flex-1">
               <PlanList
                 myPlans={myPlans}
                 setMyPlans={setMyPlans}
