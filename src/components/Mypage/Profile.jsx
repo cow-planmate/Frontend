@@ -14,7 +14,7 @@ import {
   faBed,
   faMapMarkerAlt,
   faPen,
-  faTriangleExclamation
+  faTriangleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
 import ProfileText from "./ProfileText";
 import { useApiClient } from "../../hooks/useApiClient";
@@ -29,15 +29,17 @@ export default function Profile({ userProfile, setUserProfile }) {
   const gender = { 0: "남자", 1: "여자" };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 w-[35rem]  flex flex-col">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 w-full flex flex-col">
       {/* 프로필 헤더 */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex flex-col items-center text-black">
           {userProfile && (
             <>
-              <div 
+              <div
                 className={`w-20 h-20 bg-contain bg-no-repeat rounded-full`}
-                style={{backgroundImage: `url('${gravatarUrl(userProfile.email)}')`}}
+                style={{
+                  backgroundImage: `url('${gravatarUrl(userProfile.email)}')`,
+                }}
               ></div>
               <div className="text-center mt-4">
                 <div className="flex items-center justify-center gap-2">
@@ -55,7 +57,10 @@ export default function Profile({ userProfile, setUserProfile }) {
                       setIsNicknameModalOpen={setIsNicknameModalOpen}
                       currentNickname={userProfile.nickname}
                       onNicknameUpdate={(newNickname) => {
-                        setUserProfile({ ...userProfile, nickname: newNickname });
+                        setUserProfile({
+                          ...userProfile,
+                          nickname: newNickname,
+                        });
                       }}
                     />
                   )}
@@ -165,15 +170,20 @@ const DeleteModal = ({ setIsDeleteOpen }) => {
         </ul>
         <div className="my-4">
           <div className="space-x-2">
-            <input 
+            <input
               type="checkbox"
               onClick={() => setRealDelete((prev) => !prev)}
             />
             <span className="font-semibold">위 내용을 확인했습니다.</span>
           </div>
-          {warnMsg ?
-          <p className="text-sm text-red-500"><FontAwesomeIcon icon={faTriangleExclamation} /> 체크박스에 체크하셔야 탈퇴가 진행됩니다!</p>
-          :<></>}
+          {warnMsg ? (
+            <p className="text-sm text-red-500">
+              <FontAwesomeIcon icon={faTriangleExclamation} /> 체크박스에
+              체크하셔야 탈퇴가 진행됩니다!
+            </p>
+          ) : (
+            <></>
+          )}
         </div>
         <div className="flex justify-between gap-2">
           <button
