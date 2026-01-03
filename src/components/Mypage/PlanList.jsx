@@ -176,7 +176,7 @@ export default function PlanList({
       </div>
 
       {/* 우리들의 일정 섹션 */}
-      <div className="bg-white w-[53rem] rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[28rem]">
+      <div className="bg-white w-full rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[28rem]">
         <div className="border-b border-gray-200 px-6 py-5 flex items-center justify-between flex-shrink-0">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">우리들의 일정</h2>

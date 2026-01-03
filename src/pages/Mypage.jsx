@@ -62,7 +62,7 @@ function App() {
           </div>
 
           <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 w-full items-start">
-            <div className="w-full lg:w-[30%] lg:min-w-[320px] lg:max-w-[400px] flex-shrink-0">
+            <div className="w-full lg:w-[30%] lg:min-w-[320px] lg:max-w-[450px] flex-shrink-0">
               <Profile
                 userProfile={userProfile}
                 setUserProfile={setUserProfile}
