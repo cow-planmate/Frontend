@@ -14,6 +14,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { faBell as faBellRegular } from "@fortawesome/free-regular-svg-icons";
 import useNicknameStore from "../../store/Nickname";
+import FeedbackModal from "../common/Feedback";
 
 export default function Navbar({ onInvitationAccept }) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -29,19 +30,20 @@ export default function Navbar({ onInvitationAccept }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isInvitationOpen, setisInvitationOpen] = useState(false);
   const [invitations, setInvitations] = useState([]);
-  
+  const [isFeedbackOpen, setisFeedbackOpen] = useState(false);
+
   const { nickname } = useNicknameStore();
 
   const location = useLocation();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleMypage = () => {
     if (location.pathname === "/mypage") {
       window.location.reload();
     } else {
-      navigate("/mypage")
+      navigate("/mypage");
     }
-  }
+  };
 
   const { get, post, isAuthenticated, logout } = useApiClient();
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -173,7 +175,7 @@ export default function Navbar({ onInvitationAccept }) {
           </Link>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 ">
           {isAuthenticated() ? (
             <div className="relative" ref={wrapperRef}>
               <div className="flex items-center gap-5">
@@ -185,9 +187,7 @@ export default function Navbar({ onInvitationAccept }) {
                 >
                   <div className="flex items-center h-[42px]">
                     <div className="w-8 h-8 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full mr-3"></div>
-                    <span>
-                      {nickname}님
-                    </span>
+                    <span>{nickname}님</span>
                   </div>
                 </button>
 
@@ -206,14 +206,11 @@ export default function Navbar({ onInvitationAccept }) {
               </div>
               {isProfileOpen && (
                 <div className="absolute right-8 top-full w-36 p-2 bg-white border rounded-lg shadow-md z-50">
-                  <button 
+                  <button
                     className="w-full flex items-center p-3 hover:bg-gray-100 cursor-pointer"
                     onClick={handleMypage}
                   >
-                    <FontAwesomeIcon
-                      className="mr-3 w-4"
-                      icon={faHouseUser}
-                    />
+                    <FontAwesomeIcon className="mr-3 w-4" icon={faHouseUser} />
                     마이페이지
                   </button>
                   <button
@@ -303,6 +300,21 @@ export default function Navbar({ onInvitationAccept }) {
               </button>
             </div>
           )}
+
+          <button
+            onClick={() => setisFeedbackOpen((prev) => !prev)}
+            className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 ease-in-out delay-75 hover:bg-blue-700 text-white text-sm font-medium rounded-md"
+          >
+            <svg
+              className="h-5 w-5 mr-1 self-center items-center"
+              fill="none"
+              stroke="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"></path>
+            </svg>
+            피드백하러가기
+          </button>
         </div>
       </div>
 
@@ -335,6 +347,10 @@ export default function Navbar({ onInvitationAccept }) {
         onClose={handleThemestartClose}
         onThemeOpen={handleThemeOpen}
         selectedThemeKeywords={selectedThemeKeywords}
+      />
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setisFeedbackOpen(false)}
       />
     </div>
   );

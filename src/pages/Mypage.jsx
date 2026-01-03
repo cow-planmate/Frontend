@@ -10,7 +10,6 @@ function App() {
   const [refreshTrigger, setRefreshTrigger] = useState(false);
   const { get, isAuthenticated } = useApiClient();
   const BASE_URL = import.meta.env.VITE_API_URL;
-
   const [userProfile, setUserProfile] = useState(null);
   const [myPlans, setMyPlans] = useState([]);
   const [editablePlans, setEditablePlans] = useState([]);
@@ -28,7 +27,6 @@ function App() {
       if (isAuthenticated()) {
         try {
           const profileData = await get(`${BASE_URL}/api/user/profile`);
-
           setUserProfile(profileData);
           setMyPlans(profileData.myPlanVOs || []);
           setEditablePlans(profileData.editablePlanVOs || []);
@@ -36,7 +34,6 @@ function App() {
           console.error("프로필 정보를 가져오는데 실패했습니다:", err);
           setMyPlans([]);
           setEditablePlans([]);
-
           if (err.message.includes("인증이 만료")) {
             handleLogout();
           }
@@ -47,7 +44,6 @@ function App() {
         setEditablePlans([]);
       }
     };
-
     fetchUserProfile();
   }, [isAuthenticated, get, refreshTrigger]);
 
@@ -59,21 +55,21 @@ function App() {
     <div className="font-pretendard min-h-screen">
       <Navbar onInvitationAccept={handlePlanListRefresh} />
 
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="w-full max-w-7xl mx-auto py-6 sm:py-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="w-full max-w-7xl mx-auto">
           <div className="font-bold text-2xl sm:text-3xl pb-4 sm:pb-6">
             마이페이지
           </div>
 
           <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 w-full">
-            <div className="w-full lg:w-[420px] xl:w-[460px] shrink-0">
+            <div className="w-full lg:w-[30%] lg:min-w-[320px]">
               <Profile
                 userProfile={userProfile}
                 setUserProfile={setUserProfile}
               />
             </div>
 
-            <div className="w-full flex-1 min-w-0">
+            <div className="w-full lg:w-[70%] lg:flex-1">
               <PlanList
                 myPlans={myPlans}
                 setMyPlans={setMyPlans}
