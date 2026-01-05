@@ -1,11 +1,24 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import gravatarUrl from '../utils/gravatarUrl';
 
 const useNicknameStore = create(
   persist(
     (set) => ({
       nickname: '',
-      setNickname: (value) => set(() => ({ nickname: value })),
+      gravatar: '',
+
+      setNickname: (value) => 
+        set((state) => ({
+          ...state,
+          nickname: value 
+        })),
+        
+      setGravatar: (value) => 
+        set((state) => ({
+          ...state,
+          gravatar: gravatarUrl(value)
+        }))
     }),
     {
       name: 'nickname',

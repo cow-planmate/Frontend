@@ -5,9 +5,14 @@ const sortByDate = (list) =>
     (a, b) => new Date(a.date) - new Date(b.date)
   );
 
-const useTimetableStore = create((set) => ({
+const useTimetableStore = create((set, get) => ({
   timetables: [],
   selectedDay: 0,
+
+  START_HOUR: 0,
+  END_HOUR: 0,
+  SLOT_HEIGHT: 40,
+  TOTAL_SLOTS: 0,
 
   // CREATE
   setTimetableCreate: (newTimetable) =>
@@ -60,11 +65,22 @@ const useTimetableStore = create((set) => ({
       timetables: payload
     })),
 
-  setSelectedDay: (day) =>
-    set((state) => ({
-      ...state,
-      selectedDay: day
-    }))
+  setSelectedDay: (dayIndex) => {
+    const { timetables } = get();
+    const timetable = timetables[dayIndex];
+
+    if (!timetable) return;
+
+    const startHour = Number(timetable.startTime.split(":")[0]);
+    const endHour = Number(timetable.endTime.split(":")[0]);
+
+    set({
+      selectedDay: dayIndex,
+      START_HOUR: startHour,
+      END_HOUR: endHour,
+      TOTAL_SLOTS: ((endHour - startHour) * 60) / 15,
+    });
+  }
 }));
 
 export default useTimetableStore;

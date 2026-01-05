@@ -1,7 +1,13 @@
 // 목표: 최대한 간결하고 작동 잘 되게
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { DndContext } from '@dnd-kit/core';
+import { 
+  DndContext,
+  useSensor,
+  useSensors,
+  MouseSensor,
+  TouchSensor,
+} from '@dnd-kit/core';
 import { useApiClient } from "../hooks/useApiClient";
 import { initStompClient } from "../websocket/client";
 
@@ -14,8 +20,7 @@ import Loading from "../components/common/Loading";
 import Navbar from "../components/common/Navbar";
 import PlanInfo from "../components/Create2/PlanInfo/PlanInfo";
 import DaySelector from "../components/Create2/DaySelector/DaySelector";
-import Timetable from "../components/Create2/Timetable/Timetable";
-import Place from "../components/Create2/Place/Place";
+import Main from "../components/Create2/Main/Main";
 
 function App() {
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -27,7 +32,7 @@ function App() {
   const { get, post, isAuthenticated } = useApiClient();
 
   const { planId, setPlanAll } = usePlanStore();
-  const { setTimetableAll } = useTimetableStore();
+  const { setTimetableAll, setSelectedDay } = useTimetableStore();
   const { setUserAll } = useUserStore();
   const { setPlacesAll } = usePlacesStore();
   const [noACL, setNoACL] = useState(false);
@@ -57,6 +62,7 @@ function App() {
             restaurant: restaurant.places,
             restaurantNext: restaurant.nextPageTokens
           });
+          setSelectedDay(0);
 
         } catch(err) {
           const errorMessage = err.response?.data?.message || err.message;
@@ -86,6 +92,11 @@ function App() {
       initStompClient(id);
     }
   }, []);
+
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  );
 
   if (!planId) {
     return (
@@ -135,9 +146,8 @@ function App() {
         >
           <div className="flex md:flex-row flex-col md:space-x-6 space-y-4 md:space-y-0 h-full">
             <DaySelector />
-            <DndContext>
-              <Timetable />
-              <Place />
+            <DndContext sensors={sensors} autoScroll={{ layoutShiftCompensation: false }}>
+              <Main />
             </DndContext>
           </div>
         </div>

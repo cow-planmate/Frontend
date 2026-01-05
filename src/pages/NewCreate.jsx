@@ -131,6 +131,10 @@ function App() {
         (item) => item.timetablePlaceBlockId === checkItem.timetablePlaceBlockId
       );
   }
+
+  useEffect(() => {
+    console.log(schedule);
+  }, [schedule])
   
   useEffect(() => {
     const token = localStorage.getItem('accessToken');

@@ -123,8 +123,11 @@ const DaySelectorModal = ({setIsModalOpen}) => {
       const merged = [...timetables, ...create];
       setTimetableAll(merged);
       
+
       if (selectedDay > merged.length) {
         setSelectedDay(merged.length);
+      } else {
+        setSelectedDay(selectedDay);
       }
 
       setIsModalOpen(false);

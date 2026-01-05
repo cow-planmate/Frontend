@@ -2,7 +2,7 @@ import useTimetableStore from "../../../store/Timetables";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarDays } from "@fortawesome/free-solid-svg-icons";
 import DaySelectorModal from "./DaySelectorModal";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function DaySelector() {
   const { timetables, selectedDay, setSelectedDay } = useTimetableStore();
