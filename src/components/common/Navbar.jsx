@@ -168,25 +168,42 @@ export default function Navbar({ onInvitationAccept }) {
 
   return (
     <div className="border-b border-gray-200 ">
-      <div className="mx-auto w-[1400px] bg-white flex justify-between py-4 items-center">
-        <div>
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 bg-white flex justify-between py-4 items-center">
+        <div className="flex-shrink-0">
           <Link to="/">
-            <Logo />
+            <Logo className="h-6 sm:h-8" />
           </Link>
         </div>
 
-        <div className="flex items-center gap-4 ">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="h-[35px] flex items-center ml-2 sm:ml-3">
+            {" "}
+            <button
+              onClick={() => setisFeedbackOpen((prev) => !prev)}
+              className="inline-flex items-center justify-center h-[40px] px-3 sm:px-4 py-2 bg-blue-600 ease-in-out delay-75 hover:bg-blue-700 text-white text-sm font-medium rounded-md"
+            >
+              <svg
+                className="h-5 w-5 sm:mr-1 self-center items-center"
+                fill="none"
+                stroke="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"></path>
+              </svg>
+              <span className="hidden sm:inline">피드백하러가기</span>
+            </button>
+          </div>
           {isAuthenticated() ? (
             <div className="relative" ref={wrapperRef}>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsProfileOpen((prev) => !prev);
                   }}
                 >
-                  <div className="flex items-center h-[42px]">
-                    <div className="w-8 h-8 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full mr-3"></div>
+                  <div className="flex items-center h-[35px]">
+                    <div className="w-8 h-8 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full mr-2 sm:mr-3"></div>
                     <span>{nickname}님</span>
                   </div>
                 </button>
@@ -205,7 +222,7 @@ export default function Navbar({ onInvitationAccept }) {
                 </button>
               </div>
               {isProfileOpen && (
-                <div className="absolute right-8 top-full w-36 p-2 bg-white border rounded-lg shadow-md z-50">
+                <div className="absolute right-0 sm:right-8 top-full w-36 p-2 bg-white border rounded-lg shadow-md z-50">
                   <button
                     className="w-full flex items-center p-3 hover:bg-gray-100 cursor-pointer"
                     onClick={handleMypage}
@@ -227,7 +244,7 @@ export default function Navbar({ onInvitationAccept }) {
               )}
 
               {isInvitationOpen && (
-                <div className="absolute right-0 top-full w-80 bg-white border rounded-lg shadow-lg z-50">
+                <div className="absolute right-0 top-full w-72 sm:w-80 bg-white border rounded-lg shadow-lg z-50">
                   <div className="p-4">
                     <div
                       className="flex justify-between items-center mb-4"
@@ -291,7 +308,7 @@ export default function Navbar({ onInvitationAccept }) {
               )}
             </div>
           ) : (
-            <div className="h-[44px]">
+            <div className="h-[35px] flex items-center">
               <button
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100"
                 onClick={handleLoginOpen}
@@ -300,21 +317,6 @@ export default function Navbar({ onInvitationAccept }) {
               </button>
             </div>
           )}
-
-          <button
-            onClick={() => setisFeedbackOpen((prev) => !prev)}
-            className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 ease-in-out delay-75 hover:bg-blue-700 text-white text-sm font-medium rounded-md"
-          >
-            <svg
-              className="h-5 w-5 mr-1 self-center items-center"
-              fill="none"
-              stroke="currentColor"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"></path>
-            </svg>
-            피드백하러가기
-          </button>
         </div>
       </div>
 
