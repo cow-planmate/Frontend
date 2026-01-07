@@ -53,7 +53,7 @@ function App() {
   const { setPlanField, setPlanAll } = usePlanStore();
   const { post, isAuthenticated } = useApiClient();
 
-  const sliderHeightClass = "h-[18rem] sm:h-[26rem] lg:h-[45rem]";
+  const sliderHeightClass = "h-[11rem] sm:h-[20rem] lg:h-[45rem]";
 
   const settings = {
     dots: true,
