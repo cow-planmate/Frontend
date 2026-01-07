@@ -198,8 +198,7 @@ function App() {
         <Navbar isLogin={false} />
       </div>
 
-      {/* Hero Slider */}
-      <div className="relative flex flex-col items-center">
+      <div className="relative flex flex-col items-center overflow-hidden">
         <Slider {...settings} className={`w-full ${sliderHeightClass}`}>
           <div>
             <img
