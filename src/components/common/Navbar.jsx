@@ -168,7 +168,7 @@ export default function Navbar({ onInvitationAccept }) {
 
   return (
     <div className="border-b border-gray-200 ">
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 bg-white flex justify-between py-4 items-center">
+      <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8 bg-white flex justify-between py-4 items-center">
         <div className="flex-shrink-0">
           <Link to="/">
             <Logo className="h-6 sm:h-8" />
