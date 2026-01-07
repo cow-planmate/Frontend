@@ -7,7 +7,7 @@ import useNicknameStore from "../store/Nickname";
  * 토큰 인증이 포함된 fetch 요청을 쉽게 사용할 수 있도록 도와주는 커스텀 훅
  */
 export const useApiClient = () => {
-  const { setNickname } = useNicknameStore();
+  const { setNickname, setGravatar } = useNicknameStore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -226,6 +226,9 @@ export const useApiClient = () => {
         }
         if (response.nickname) {
           setNickname(response.nickname);
+        }
+        if (response.email) {
+          setGravatar(response.email);
         }
 
         return response;

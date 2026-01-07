@@ -32,7 +32,7 @@ export default function Navbar({ onInvitationAccept }) {
   const [invitations, setInvitations] = useState([]);
   const [isFeedbackOpen, setisFeedbackOpen] = useState(false);
 
-  const { nickname } = useNicknameStore();
+  const { nickname, gravatar } = useNicknameStore();
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -203,7 +203,13 @@ export default function Navbar({ onInvitationAccept }) {
                   }}
                 >
                   <div className="flex items-center h-[35px]">
-                    <div className="w-8 h-8 bg-no-repeat bg-contain bg-[url('./assets/imgs/default.png')] rounded-full mr-2 sm:mr-3"></div>
+                    <div 
+                      className='w-8 h-8 bg-no-repeat bg-contain rounded-full mr-2 sm:mr-3'
+                      style={ gravatar ? {
+                        backgroundImage: `url('${gravatar}')`
+                      } : {backgroundImage: "url('./assets/imgs/default.png')"}}
+                    >
+                    </div>
                     <span>{nickname}님</span>
                   </div>
                 </button>
