@@ -176,7 +176,7 @@ export default function Navbar({ onInvitationAccept }) {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="h-[35px] flex items-center ml-2 sm:ml-3">
+          <div className="h-[35px] flex items-center mr-2 sm:mr-4">
             {" "}
             <button
               onClick={() => setisFeedbackOpen((prev) => !prev)}
