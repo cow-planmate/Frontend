@@ -13,7 +13,7 @@ import { initStompClient } from "../websocket/client";
 
 import usePlanStore from "../store/Plan";
 import useTimetableStore from "../store/Timetables";
-import useUserStore from "../store/UserDayIndexes";
+// import useUserStore from "../store/Users";
 import usePlacesStore from "../store/Places";
 
 import Loading from "../components/common/Loading";
@@ -33,7 +33,7 @@ function App() {
 
   const { planId, setPlanAll, setEventId } = usePlanStore();
   const { setTimetableAll, setSelectedDay } = useTimetableStore();
-  const { setUserAll } = useUserStore();
+  // const { setUserAll } = useUserStore();
   const { setPlacesAll } = usePlacesStore();
   const [noACL, setNoACL] = useState(false);
 
@@ -53,7 +53,7 @@ function App() {
           
           setPlanAll(planData.planFrame);
           setTimetableAll(planData.timetables.slice().sort((a, b) => new Date(a.date) - new Date(b.date)));
-          setUserAll(planData.userDayIndexes);
+          // setUserAll(planData.userDayIndexes);
           setPlacesAll({
             tour: tour.places,
             tourNext: tour.nextPageTokens,

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import usePlanStore from "../../../store/Plan";
-import useUserStore from "../../../store/UserDayIndexes";
+import useUserStore from "../../../store/Users";
 import useTimetableStore from "../../../store/Timetables";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -17,8 +17,7 @@ export default function PlanInfo({id}) {
     transportationCategoryId, 
     setPlanField
   } = usePlanStore();
-  const { userDayIndexes } = useUserStore();
-  const { setSelectedDay } = useTimetableStore();
+  const { users } = useUserStore();
 
   const navigate = useNavigate();
 
@@ -74,16 +73,17 @@ export default function PlanInfo({id}) {
       </div>
       <div className={`${flexCenter} mx-2 sm:w-auto`}>
         <div className={`space-x-2 sm:space-x-3 ${flexCenter}`}>
-            {userDayIndexes && userDayIndexes.map((userDayIndex) => {
+            {users && users.map((user) => {
               return (
-                <button
-                  key={userDayIndex.nickname}
-                  className="rounded-full w-10 h-10 bg-contain bg-no-repeat bg-[url('./assets/imgs/default.png')]"
-                  title={userDayIndex.nickname}
-                  onClick={() => setSelectedDay(userDayIndex.dayIndex)}
-                  //style={{backgroundImage: `url('./assets/imgs/default.png')`}}
+                <div
+                  key={user.uid}
+                  className={`
+                    rounded-full w-10 h-10 bg-contain bg-no-repeat 
+                    bg-[url('./assets/imgs/default.png')]
+                  `}
+                  title={user.nickname}
                 >
-                </button>
+                </div>
               )
             })}
           <button 

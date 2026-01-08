@@ -1,7 +1,7 @@
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import usePlanStore from "../store/Plan";
-import useUserStore from "../store/UserDayIndexes";
+import useUserStore from "../store/Users";
 import useTimetableStore from "../store/Timetables";
 import useNicknameStore from "../store/Nickname";
 
@@ -49,15 +49,11 @@ export const initStompClient = (id) => {
         }
       });
 
-      // client.subscribe(`/topic/plan-presence/${id}`, (message) => {
-      //   const body = JSON.parse(message.body);
-      //   const action = body.action;
-
-      //   switch(action) {
-      //     case "create":
-
-      //   }
-      // })
+      client.subscribe(`/topic/plan-presence/${id}`, (message) => {
+        const body = JSON.parse(message.body);
+        console.log("(접속자) 수신된 메시지:", body);
+        useUserStore.getState().setUserAll(body.users);
+      });
 
       // client.subscribe(`/topic/plan/${id}/update/plan`, (message) => {
       //   const body = JSON.parse(message.body);
