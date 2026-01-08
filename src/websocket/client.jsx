@@ -6,10 +6,11 @@ import useTimetableStore from "../store/Timetables";
 import useNicknameStore from "../store/Nickname";
 
 let client;
-const prevEventId = usePlanStore.getState().eventId;
 
-function isDifferentEventId(eventId, prevEventId) {
-  if (eventId != prevEventId) {
+function isDifferentEventId(eventId) {
+  const prevEventId = usePlanStore.getState().eventId;
+
+  if (eventId != "" && prevEventId != "" && eventId !== prevEventId) {
     return true;
   }
   return false;
@@ -17,8 +18,8 @@ function isDifferentEventId(eventId, prevEventId) {
 
 const plan = (body) => {
   const eventId = body.eventId;
-  if (isDifferentEventId(eventId, prevEventId)) {
-    console.log("📩 수신된 메시지:", message.body);
+  if (isDifferentEventId(eventId)) {
+    console.log("📩 수신된 메시지:", body);
     usePlanStore.getState().setPlanAll(body.planDtos[0]);
   }
 }
@@ -39,8 +40,7 @@ export const initStompClient = (id) => {
       console.log("✅ WebSocket 연결 완료:", frame);
 
       client.subscribe(`/topic/${id}`, (message) => {
-        console.log(message);
-        const body = JSON.parse(message);
+        const body = JSON.parse(message.body);
         const entity = body.entity;
 
         switch(entity) {
@@ -48,6 +48,16 @@ export const initStompClient = (id) => {
             plan(body);
         }
       });
+
+      // client.subscribe(`/topic/plan-presence/${id}`, (message) => {
+      //   const body = JSON.parse(message.body);
+      //   const action = body.action;
+
+      //   switch(action) {
+      //     case "create":
+
+      //   }
+      // })
 
       // client.subscribe(`/topic/plan/${id}/update/plan`, (message) => {
       //   const body = JSON.parse(message.body);
@@ -157,31 +167,10 @@ export const initStompClient = (id) => {
         };
         console.log(requestMsg)
         client.publish({
-          destination: `/${id}`,
+          destination: `/app/${id}`,
           body: JSON.stringify(requestMsg),
         });
       }
     }
   });
-  
-  // useTimetableStore.subscribe((next, prev) => {
-  //   if (next.selectedDay !== prev.selectedDay) {
-  //     const msg = {
-  //       "userDayIndexVOs": {
-  //         "userDayIndexVO": {
-  //           "nickname": useNicknameStore.getState().nickname,
-  //           "dayIndex": next.selectedDay
-  //          }
-  //       }
-  //     }
-
-  //     if (client.connected) {
-  //       console.log("웹소켓을 전송합니다.", msg)
-  //       client.publish({
-  //         destination: `/app/plan/${id}/update/presence`,
-  //         body: JSON.stringify(msg),
-  //       });
-  //     }
-  //   }
-  // });
 }

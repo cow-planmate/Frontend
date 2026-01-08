@@ -31,7 +31,7 @@ function App() {
   const navigate = useNavigate();
   const { get, post, isAuthenticated } = useApiClient();
 
-  const { planId, setPlanAll, setEventId, eventId } = usePlanStore();
+  const { planId, setPlanAll, setEventId } = usePlanStore();
   const { setTimetableAll, setSelectedDay } = useTimetableStore();
   const { setUserAll } = useUserStore();
   const { setPlacesAll } = usePlacesStore();
