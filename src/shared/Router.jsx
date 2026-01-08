@@ -11,7 +11,6 @@ import Landingpage from "../pages/Landingpage";
 import Create2 from "../pages/Create2";
 import OAuthCallback from "../pages/OAuthCallback";
 import OAuthAdditionalInfo from "../pages/OAuthAdditionalInfo";
-// import TravelPlanner from "../pages/Test";
 
 const Router = () => {
   return (
@@ -30,8 +29,6 @@ const Router = () => {
 
         <Route path="oauth/callback" element={<OAuthCallback />} />
         <Route path="oauth/additional-info" element={<OAuthAdditionalInfo />} />
-
-        {/* <Route path="test" element={<TravelPlanner />} /> */}
       </Routes>
     </BrowserRouter>
   );

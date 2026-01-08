@@ -15,6 +15,10 @@ const DaySelectorModal = ({setIsModalOpen}) => {
   const [update, setUpdate] = useState([]);
   const [deleteTime, setDelete] = useState({"timetableVOs": []});
 
+  useEffect(() => {
+    console.log(create, update, deleteTime)
+  }, [create, update, deleteTime])
+
   const updateDate = (e) => {
     if (e.target.value) {
       const baseDate = new Date(e.target.value);
@@ -97,7 +101,7 @@ const DaySelectorModal = ({setIsModalOpen}) => {
         const uploadCreate = {"timetableVOs": create};
 
         client.publish({
-          destination: `/app/plan/${planId}/create/timetable`,
+          destination: `/app/${planId}`,
           body: JSON.stringify(uploadCreate),
         });
         console.log("🚀 메시지 전송:", create);
@@ -122,7 +126,6 @@ const DaySelectorModal = ({setIsModalOpen}) => {
       
       const merged = [...timetables, ...create];
       setTimetableAll(merged);
-      
 
       if (selectedDay > merged.length) {
         setSelectedDay(merged.length);
