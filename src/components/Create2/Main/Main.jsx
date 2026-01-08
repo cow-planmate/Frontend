@@ -126,7 +126,7 @@ export default function Main() {
       }
 
       // ⚠️ overlap 체크도 해당 day 기준
-      if (checkOverlap(safeStart, safeDuration, dayItems, id)) {
+      if (checkOverlap(safeStart, safeDuration, prev, id)) {
         return prev;
       }
 

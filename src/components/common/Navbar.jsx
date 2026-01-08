@@ -207,7 +207,7 @@ export default function Navbar({ onInvitationAccept }) {
                       className='w-8 h-8 bg-no-repeat bg-contain rounded-full mr-2 sm:mr-3'
                       style={ gravatar ? {
                         backgroundImage: `url('${gravatar}')`
-                      } : {backgroundImage: "url('./assets/imgs/default.png')"}}
+                      } : {backgroundImage: "url('./src/assets/imgs/default.png')"}}
                     >
                     </div>
                     <span>{nickname}님</span>

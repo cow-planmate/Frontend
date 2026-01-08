@@ -31,7 +31,7 @@ function App() {
   const navigate = useNavigate();
   const { get, post, isAuthenticated } = useApiClient();
 
-  const { planId, setPlanAll } = usePlanStore();
+  const { planId, setPlanAll, setEventId, eventId } = usePlanStore();
   const { setTimetableAll, setSelectedDay } = useTimetableStore();
   const { setUserAll } = useUserStore();
   const { setPlacesAll } = usePlacesStore();
@@ -63,7 +63,7 @@ function App() {
             restaurantNext: restaurant.nextPageTokens
           });
           setSelectedDay(0);
-
+          setEventId();
         } catch(err) {
           const errorMessage = err.response?.data?.message || err.message;
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
@@ -109,10 +109,7 @@ function App() {
 
   return (
     <div className="font-pretendard h-screen">
-      {/* <Navbar /> */}
-      <div className="h-[74px] bg-slate-400">
-
-      </div>
+      <Navbar />
       <PlanInfo id={id} />
 
       {noACL ? (
