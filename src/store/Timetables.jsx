@@ -28,7 +28,7 @@ const useTimetableStore = create((set, get) => ({
         };
       }
 
-      // 2. 같은 date 있고 timetableId는 다름 → 기존 삭제 후 새로 넣기
+      // 2. 같은 date 있고 timeTableId는 다름 → 기존 삭제 후 새로 넣기
       const filtered = state.timetables.filter(
         (item) => item.date !== newTimetable.date
       );
@@ -42,7 +42,7 @@ const useTimetableStore = create((set, get) => ({
   setTimetableUpdate: (updatedTimetable) =>
     set((state) => {
       const filtered = state.timetables.filter(
-        (item) => item.timetableId !== updatedTimetable.timetableId
+        (item) => item.timeTableId !== updatedTimetable.timeTableId
       );
       return {
         timetables: sortByDate([...filtered, updatedTimetable]),
@@ -50,11 +50,11 @@ const useTimetableStore = create((set, get) => ({
     }),
 
   // DELETE
-  setTimetableDelete: (timetableId) =>
+  setTimetableDelete: (timeTableId) =>
     set((state) => ({
       timetables: sortByDate(
         state.timetables.filter(
-          (item) => item.timetableId !== timetableId
+          (item) => item.timeTableId !== timeTableId
         )
       ),
     })),
@@ -71,8 +71,8 @@ const useTimetableStore = create((set, get) => ({
 
     if (!timetable) return;
 
-    const startHour = Number(timetable.startTime.split(":")[0]);
-    const endHour = Number(timetable.endTime.split(":")[0]);
+    const startHour = Number(timetable.timeTableStartTime.split(":")[0]);
+    const endHour = Number(timetable.timeTableEndTime.split(":")[0]);
 
     set({
       selectedDay: dayIndex,
@@ -88,19 +88,19 @@ export default useTimetableStore;
 /*
 [
     {
-        "timetableId": 130,
+        "timeTableId": 130,
         "date": "2025-11-19",
         "startTime": "09:00:00",
         "endTime": "20:00:00"
     },
     {
-        "timetableId": 131,
+        "timeTableId": 131,
         "date": "2025-11-20",
         "startTime": "09:00:00",
         "endTime": "20:00:00"
     },
     {
-        "timetableId": 132,
+        "timeTableId": 132,
         "date": "2025-11-21",
         "startTime": "09:00:00",
         "endTime": "20:00:00"

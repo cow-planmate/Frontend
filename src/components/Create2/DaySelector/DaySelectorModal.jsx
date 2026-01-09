@@ -8,12 +8,12 @@ import usePlanStore from '../../../store/Plan';
 const DaySelectorModal = ({setIsModalOpen}) => {
   const client = getClient();
   const { setTimetableAll, selectedDay, setSelectedDay } = useTimetableStore();
-  const { planId } = usePlanStore();
+  const { planId, eventId } = usePlanStore();
 
   const [timetables, setTimetables] = useState(structuredClone(useTimetableStore.getState().timetables));
   const [create, setCreate] = useState([]);
   const [update, setUpdate] = useState([]);
-  const [deleteTime, setDelete] = useState({"timetableVOs": []});
+  const [deleteTime, setDelete] = useState([]);
 
   useEffect(() => {
     console.log(create, update, deleteTime)
@@ -55,10 +55,10 @@ const DaySelectorModal = ({setIsModalOpen}) => {
     const newId = Math.random();
 
     const timetableVO = {
-      timetableId: newId,
+      timeTableId: newId,
       date: newDate,
-      startTime: "09:00:00",
-      endTime: "20:00:00",
+      timeTableStartTime: "09:00:00",
+      timeTableEndTime: "20:00:00",
     }
 
     setCreate((prev) => ([
@@ -75,21 +75,34 @@ const DaySelectorModal = ({setIsModalOpen}) => {
         const newArr = [...prev];
         const lastElement = newArr.pop();
 
-        setDelete((prev2) => ({
+        setDelete((prev2) => ([
           ...prev2,
-          timetableVOs: [
-            ...prev2.timetableVOs,
-            { timetableId: lastElement.timetableId }
-          ]
-        }))
+          { timeTableId: lastElement.timeTableId }
+        ]))
 
         return newArr;
       })
     }
   }
 
+  function requestMsg(action, timetables) {
+    const exportTimetables = timetables.map((timetable) => ({
+      ...timetable,
+      planId: planId
+    }));
+    const msg = {
+      eventId: eventId,
+      action: action,
+      entity: "timetable",
+      timeTableDtos: [
+        ...exportTimetables
+      ]
+    };
+    return msg;
+  }
+
   const handleComfirm = () => {
-    const isInvalid = timetables.some(item => item.startTime >= item.endTime) || create.some(item => item.startTime >= item.endTime);
+    const isInvalid = timetables.some(item => item.timeTableStartTime >= item.timeTableEndTime) || create.some(item => item.timeTableStartTime >= item.timeTableEndTime);
     
     if (isInvalid) {
       alert("시작 시간이 종료 시간과 같거나 큰 항목이 있습니다. 수정 후 다시 시도해주세요.");
@@ -98,30 +111,31 @@ const DaySelectorModal = ({setIsModalOpen}) => {
 
     if (client && client.connected) {
       if (create && create.length > 0) {
-        const uploadCreate = {"timetableVOs": create};
+        const uploadCreate = requestMsg("create", create);
 
         client.publish({
           destination: `/app/${planId}`,
           body: JSON.stringify(uploadCreate),
         });
-        console.log("🚀 메시지 전송:", create);
+        console.log("🚀 메시지 전송:", uploadCreate);
       }
       
       if (update && update.length > 0) {
-        const uploadUpdate = {"timetableVOs": update};
+        const uploadUpdate = requestMsg("update", update);
         client.publish({
-          destination: `/app/plan/${planId}/update/timetable`,
+          destination: `/app/${planId}`,
           body: JSON.stringify(uploadUpdate),
         });
-        console.log("🚀 메시지 전송:", update);
+        console.log("🚀 메시지 전송:", uploadUpdate);
       }
       
       if (deleteTime.timetableVOs && deleteTime.timetableVOs.length > 0) {
+        const uploadDelete = requestMsg("delete", deleteTime);
         client.publish({
-          destination: `/app/plan/${planId}/delete/timetable`,
-          body: JSON.stringify(deleteTime),
+          destination: `/app/${planId}`,
+          body: JSON.stringify(uploadDelete),
         });
-        console.log("🚀 메시지 전송:", deleteTime);
+        console.log("🚀 메시지 전송:", uploadDelete);
       }
       
       const merged = [...timetables, ...create];
@@ -151,10 +165,10 @@ const DaySelectorModal = ({setIsModalOpen}) => {
             <div>종료 시간</div>
           </div>
           {timetables.map((timetable, index) => (
-            <DayGrid key={timetable.timetableId} setTimetables={setTimetables} timetable={timetable} index={index} updateDate={updateDate} setUpdate={setUpdate} />
+            <DayGrid key={timetable.timeTableId} setTimetables={setTimetables} timetable={timetable} index={index} updateDate={updateDate} setUpdate={setUpdate} />
           ))}
           {create.map((timetable, index) => (
-            <DayGrid key={timetable.timetableId} setTimetables={setCreate} timetable={timetable} index={index+(timetables.length)} timetablesLength={timetables.length}/>
+            <DayGrid key={timetable.timeTableId} setTimetables={setCreate} timetable={timetable} index={index+(timetables.length)} timetablesLength={timetables.length}/>
           ))}
         </div>
         <div className="py-3 space-x-2 text-end">

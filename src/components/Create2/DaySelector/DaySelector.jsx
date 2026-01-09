@@ -29,7 +29,7 @@ export default function DaySelector() {
       >
         {timetables.map((timetable, index) => (
           <button
-            key={timetable.timetableId}
+            key={timetable.timeTableId}
             className={`px-4 py-3 md:py-4 rounded-lg flex flex-col items-center shrink-0 ${
               selectedDay === index
                 ? "bg-main text-white"

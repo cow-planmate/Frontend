@@ -17,10 +17,24 @@ function isDifferentEventId(eventId) {
 }
 
 const plan = (body) => {
-  const eventId = body.eventId;
-  if (isDifferentEventId(eventId)) {
-    console.log("📩 수신된 메시지:", body);
-    usePlanStore.getState().setPlanAll(body.planDtos[0]);
+  usePlanStore.getState().setPlanAll(body.planDtos[0]);
+}
+
+const timetable = (body) => {
+  const action = body.action;
+  switch(action) {
+    case "create":
+      body.timeTableDtos.map((item) => {
+        useTimetableStore.getState().setTimetableCreate(item);
+      });
+    case "update":
+      body.timeTableDtos.map((item) => {
+        useTimetableStore.getState().setTimetableUpdate(item);
+      });
+    case "delete":
+      body.timeTableDtos.map((item) => {
+        useTimetableStore.getState().setTimetableDelete(item);
+      });
   }
 }
 
@@ -42,10 +56,16 @@ export const initStompClient = (id) => {
       client.subscribe(`/topic/${id}`, (message) => {
         const body = JSON.parse(message.body);
         const entity = body.entity;
+        const eventId = body.eventId;
 
-        switch(entity) {
-          case "plan":
-            plan(body);
+        if (isDifferentEventId(eventId)) {
+          console.log("📩 수신된 메시지:", body);
+          switch(entity) {
+            case "plan":
+              plan(body);
+            case "timetable":
+              timetable(body);
+          }
         }
       });
 

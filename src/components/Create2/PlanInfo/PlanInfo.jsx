@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import usePlanStore from "../../../store/Plan";
 import useUserStore from "../../../store/Users";
-import useTimetableStore from "../../../store/Timetables";
+import { v4 as uuidv4 } from 'uuid';
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faUserPlus, faInfo } from "@fortawesome/free-solid-svg-icons";
@@ -76,12 +76,16 @@ export default function PlanInfo({id}) {
             {users && users.map((user) => {
               return (
                 <div
-                  key={user.uid}
-                  className={`
-                    rounded-full w-10 h-10 bg-contain bg-no-repeat 
-                    bg-[url('./assets/imgs/default.png')]
-                  `}
-                  title={user.nickname}
+                  key={uuidv4()}
+                  className="rounded-full w-10 h-10 bg-contain bg-no-repeat"
+                  style={
+                    user.userInfo.email ? {
+                      backgroundImage: `url('${user.userInfo.email}')`
+                    } : {
+                      backgroundImage: "url('./src/assets/imgs/default.png')"
+                    }
+                  }
+                  title={user.userInfo.nickname}
                 >
                 </div>
               )

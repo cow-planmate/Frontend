@@ -13,19 +13,19 @@ const DayGrid = ({setTimetables, timetable, index, updateDate, timetablesLength 
 
   const upUpdate = (baseTime, startAndEnd) => {
     setUpdate((prev) => {
-      const idx = prev.findIndex(item => item.timetableId === timetable.timetableId);
+      const idx = prev.findIndex(item => item.timeTableId === timetable.timeTableId);
 
       if (idx !== -1) {
         if (startAndEnd == "start") {
           return prev.map(item =>
-            item.timetableId === timetable.timetableId
-              ? { ...item, startTime: baseTime }
+            item.timeTableId === timetable.timeTableId
+              ? { ...item, timeTableStartTime: baseTime }
               : item
           );
         } else {
           return prev.map(item =>
-            item.timetableId === timetable.timetableId
-              ? { ...item, endTime: baseTime }
+            item.timeTableId === timetable.timeTableId
+              ? { ...item, timeTableEndTime: baseTime }
               : item
           );
         }
@@ -35,27 +35,27 @@ const DayGrid = ({setTimetables, timetable, index, updateDate, timetablesLength 
         return [
           ...prev,
           {
-            timetableId: timetable.timetableId,
+            timeTableId: timetable.timeTableId,
             date: timetable.date,   
-            endTime: timetable.endTime,
-            startTime: baseTime
+            timeTableEndTime: timetable.timeTableEndTime,
+            timeTableStartTime: baseTime
           }
         ];
       } else {
         return [
           ...prev,
           {
-            timetableId: timetable.timetableId,
+            timeTableId: timetable.timeTableId,
             date: timetable.date,   
-            endTime: baseTime,
-            startTime: timetable.startTime
+            timeTableEndTime: baseTime,
+            timeTableStartTime: timetable.timeTableStartTime
           }
         ];
       }
     })
   }
 
-  const startTime = (e) => {
+  const timeTableStartTime = (e) => {
     const baseTime = e.target.value;
     let baseIndex = index;
     if (timetablesLength > 0) {baseIndex -= timetablesLength;}
@@ -63,12 +63,12 @@ const DayGrid = ({setTimetables, timetable, index, updateDate, timetablesLength 
     
     setTimetables((prev) =>
       prev.map((item, i) =>
-        i === baseIndex ? { ...item, startTime: baseTime } : item
+        i === baseIndex ? { ...item, timeTableStartTime: baseTime } : item
       )
     );
   }
 
-  const endTime = (e) => {
+  const timeTableEndTime = (e) => {
     const baseTime = e.target.value;
     let baseIndex = index;
     if (timetablesLength > 0) {baseIndex -= timetablesLength;}
@@ -76,7 +76,7 @@ const DayGrid = ({setTimetables, timetable, index, updateDate, timetablesLength 
 
     setTimetables((prev) =>
       prev.map((item, i) =>
-        i === baseIndex ? { ...item, endTime: baseTime } : item
+        i === baseIndex ? { ...item, timeTableEndTime: baseTime } : item
       )
     );
   }
@@ -95,8 +95,8 @@ const DayGrid = ({setTimetables, timetable, index, updateDate, timetablesLength 
         <div>{timetable.date}</div>
       }
       <select
-        value={timetable.startTime}
-        onChange={startTime}
+        value={timetable.timeTableStartTime}
+        onChange={timeTableStartTime}
         className="border rounded-lg px-2 h-11"
       >
         {times.map((t) => (
@@ -106,8 +106,8 @@ const DayGrid = ({setTimetables, timetable, index, updateDate, timetablesLength 
         ))}
       </select>
       <select
-        value={timetable.endTime}
-        onChange={endTime}
+        value={timetable.timeTableEndTime}
+        onChange={timeTableEndTime}
         className="border rounded-lg px-2 h-11"
       >
         {times.map((t) => (
