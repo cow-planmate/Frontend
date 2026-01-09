@@ -10,16 +10,12 @@ export const formatTime = (slotIndex) => {
 };
 
 export const checkOverlap = (start, duration, items, excludeId = null) => {
-  const { selectedDay } = useTimetableStore.getState();
-
   const end = start + duration;
-  
-  const targetGroup = items[selectedDay];
-  if (!targetGroup) return false;
-
-  return targetGroup.some((i) => {
+  if (!items) {
+    return false;
+  }
+  return items.some((i) => {
     if (excludeId && i.id === excludeId) return false;
-    
     const iEnd = i.start + i.duration;
     return start < iEnd && end > i.start;
   });
@@ -36,3 +32,7 @@ export const findEmptySlot = (duration, items) => {
   }
   return -1;
 };
+
+export const getTimeTableId = (timetables, selectedDay) => {
+  return timetables[selectedDay].timeTableId;
+}

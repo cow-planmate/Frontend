@@ -117,18 +117,27 @@ export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
             ${isDragging ? 'shadow-xl ring-2 ring-blue-300' : ''}
             ${localState.height <= 80 ? 'flex flex-col items-start justify-center px-5' : "p-5"}`}
         >
-          <div className='w-full flex justify-between items-center'>
-            <div>
-              <div className={`font-bold text-lg ${tripColor5[place.categoryId]} truncate pointer-events-none`}>{place.name}</div>
-              <div className={`text-xs ${tripColor4[place.categoryId]} font-medium pointer-events-none`}>
-                <p>{tripCategory[place.categoryId]} | {formatTime(item.start)} - {formatTime(item.start + Math.round(localState.height / SLOT_HEIGHT))}</p>
+          <div className="w-full flex items-center gap-2 min-w-0">
+            <div className="flex-1 min-w-0">
+              <div
+                className={`font-bold text-lg ${tripColor5[place.categoryId]} truncate pointer-events-none`}
+              >
+                {place.name}
+              </div>
+
+              <div
+                className={`text-xs ${tripColor4[place.categoryId]} font-medium pointer-events-none`}
+              >
+                <p>
+                  {tripCategory[place.categoryId]} | {formatTime(item.start)} -{' '}
+                  {formatTime(item.start + Math.round(localState.height / SLOT_HEIGHT))}
+                </p>
               </div>
             </div>
-            <button 
-              className={`w-8 h-8 hover:bg-white hover:bg-opacity-50 rounded-full ${tripColor5[place.categoryId]} text-lg`}
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
+
+            <button
+              className={`w-8 h-8 shrink-0 hover:bg-white hover:bg-opacity-50 rounded-full ${tripColor5[place.categoryId]} text-lg`}
+              onClick={(e) => e.stopPropagation()}
             >
               ×
             </button>

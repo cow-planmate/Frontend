@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import TimetableGrid from '../Timetable/TimetableGrid';
 import Sidebar from '../Place/Sidebar';
 import useTimetableStore from "../../../store/Timetables";
-import { formatTime, checkOverlap, findEmptySlot } from "../../../utils/createUtils";
+import { formatTime, checkOverlap, findEmptySlot, getTimeTableId } from "../../../utils/createUtils";
 import { resizeStyles } from '../Timetable/ResizeHandle'; // 스타일 문자열 import
 
 export default function Main() {
@@ -17,7 +17,7 @@ export default function Main() {
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
   
-  const { TOTAL_SLOTS, SLOT_HEIGHT, selectedDay } = useTimetableStore();
+  const { TOTAL_SLOTS, SLOT_HEIGHT, selectedDay, timetables } = useTimetableStore();
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   
@@ -26,6 +26,10 @@ export default function Main() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    console.log(items)
+  }, [items])
 
   // --- DnD Handlers ---
   useDndMonitor({
@@ -47,7 +51,7 @@ export default function Main() {
         if (targetSlot < 0) targetSlot = 0;
         if (targetSlot + duration > TOTAL_SLOTS) targetSlot = TOTAL_SLOTS - duration;
 
-        const isOverlap = checkOverlap(targetSlot, duration, items, active.data.current.type === 'schedule' ? active.id : null);
+        const isOverlap = checkOverlap(targetSlot, duration, items[getTimeTableId(timetables, selectedDay)], active.data.current.type === 'schedule' ? active.id : null);
 
         setPreview({
           y: targetSlot * SLOT_HEIGHT,
@@ -78,13 +82,13 @@ export default function Main() {
       if (newStart + duration > TOTAL_SLOTS) newStart = TOTAL_SLOTS - duration;
 
       const itemId = type === 'schedule' ? active.id : null;
-      if (checkOverlap(newStart, duration, items, itemId)) return; 
+      if (checkOverlap(newStart, duration, items[getTimeTableId(timetables, selectedDay)], itemId)) return; 
 
       if (type === 'sidebar') {
         setItems(prev => ({
           ...prev,
-          [selectedDay]: [
-            ...(prev[selectedDay] || []),
+          [getTimeTableId(timetables, selectedDay)]: [
+            ...(prev[getTimeTableId(timetables, selectedDay)] || []),
             {
               id: `item-${Date.now()}`,
               place: active.data.current.place,
@@ -96,7 +100,7 @@ export default function Main() {
       } else if (type === 'schedule') {
         setItems(prev => ({
           ...prev,
-          [selectedDay]: (prev[selectedDay] || []).map(item =>
+          [getTimeTableId(timetables, selectedDay)]: (prev[getTimeTableId(timetables, selectedDay)] || []).map(item =>
             item.id === active.id
               ? { ...item, start: newStart }
               : item
@@ -108,7 +112,7 @@ export default function Main() {
 
   const handleResizeEnd = (id, newStart, newDuration) => {
     setItems(prev => {
-      const dayItems = prev[selectedDay] || [];
+      const dayItems = prev[getTimeTableId(timetables, selectedDay)] || [];
 
       const target = dayItems.find(i => i.id === id);
       if (!target) return prev;
@@ -126,13 +130,13 @@ export default function Main() {
       }
 
       // ⚠️ overlap 체크도 해당 day 기준
-      if (checkOverlap(safeStart, safeDuration, prev, id)) {
+      if (checkOverlap(safeStart, safeDuration, dayItems, id)) {
         return prev;
       }
 
       return {
         ...prev,
-        [selectedDay]: dayItems.map(i =>
+        [getTimeTableId(timetables, selectedDay)]: dayItems.map(i =>
           i.id === id
             ? { ...i, start: safeStart, duration: safeDuration }
             : i
@@ -142,15 +146,15 @@ export default function Main() {
   };
 
   const handleMobileAdd = (place) => {
-    const emptySlot = findEmptySlot(4, items);
+    const emptySlot = findEmptySlot(4, items[getTimeTableId(timetables, selectedDay)]);
     if (emptySlot === -1) {
       alert('빈 시간이 없습니다!');
       return;
     }
     setItems(prev => ({
       ...prev,
-      [selectedDay]: [
-        ...(prev[selectedDay] || []),
+      [getTimeTableId(timetables, selectedDay)]: [
+        ...(prev[getTimeTableId(timetables, selectedDay)] || []),
         {
           id: `item-${Date.now()}`,
           place,

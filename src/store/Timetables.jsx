@@ -34,6 +34,7 @@ const useTimetableStore = create((set, get) => ({
       );
 
       return {
+        ...state,
         timetables: sortByDate([...filtered, newTimetable]),
       };
     }),
@@ -45,6 +46,7 @@ const useTimetableStore = create((set, get) => ({
         (item) => item.timeTableId !== updatedTimetable.timeTableId
       );
       return {
+        ...state,
         timetables: sortByDate([...filtered, updatedTimetable]),
       };
     }),
@@ -52,6 +54,7 @@ const useTimetableStore = create((set, get) => ({
   // DELETE
   setTimetableDelete: (timeTableId) =>
     set((state) => ({
+      ...state,
       timetables: sortByDate(
         state.timetables.filter(
           (item) => item.timeTableId !== timeTableId
