@@ -2,13 +2,34 @@ import { useState } from "react";
 
 export default function FeedbackModal({ isOpen, onClose }) {
   const [content, setContent] = useState("");
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   if (!isOpen) return null;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!content.trim()) return;
+    try {
+      const response = await fetch(`${BASE_URL}/api/beta/feedback`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: content.trim(),
+        }),
+      });
 
-    // TODO: API 연결 위치
+      const data = await response.json();
+      console.log("서버 응답:", data);
+      if (!response.ok) {
+        throw new Error("서버 응답 실패");
+      }
+
+      alert("피드백이 성공적으로 전송되었습니다. 감사합니다!");
+    } catch (error) {
+      console.error("에러 발생:", error);
+    }
+
     console.log("피드백 내용:", content);
 
     setContent("");
