@@ -77,7 +77,7 @@ const DaySelectorModal = ({setIsModalOpen}) => {
 
         setDelete((prev2) => ([
           ...prev2,
-          { timeTableId: lastElement.timeTableId }
+          { ...lastElement }
         ]))
 
         return newArr;
@@ -129,7 +129,7 @@ const DaySelectorModal = ({setIsModalOpen}) => {
         console.log("🚀 메시지 전송:", uploadUpdate);
       }
       
-      if (deleteTime.timetableVOs && deleteTime.timetableVOs.length > 0) {
+      if (deleteTime && deleteTime.length > 0) {
         const uploadDelete = requestMsg("delete", deleteTime);
         client.publish({
           destination: `/app/${planId}`,

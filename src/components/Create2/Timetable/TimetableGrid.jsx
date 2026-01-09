@@ -2,10 +2,10 @@ import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { ResizableScheduledItem } from './ResizableScheduledItem';
 import useTimetableStore from "../../../store/Timetables";
-import { formatTime } from "../../../utils/createUtils";
+import { formatTime, getTimeTableId } from "../../../utils/createUtils";
 
 const TimetableGrid = React.forwardRef(({ items, preview, onResizeEnd, showTimetable }, ref) => {
-  const { TOTAL_SLOTS, SLOT_HEIGHT, selectedDay } = useTimetableStore();
+  const { TOTAL_SLOTS, SLOT_HEIGHT, selectedDay, timetables } = useTimetableStore();
   const { setNodeRef } = useDroppable({ id: 'timetable-area' });
 
   // ref merge (for scrolling calculation in parent)
@@ -49,7 +49,7 @@ const TimetableGrid = React.forwardRef(({ items, preview, onResizeEnd, showTimet
           )}
 
           {/* Items */}
-          {(items[selectedDay] || []).map(item => (
+          {(items[getTimeTableId(timetables, selectedDay)] || []).map(item => (
             <ResizableScheduledItem key={item.id} item={item} onResizeEnd={onResizeEnd} />
           ))}
         </div>
