@@ -7,8 +7,10 @@ import useNicknameStore from "../store/Nickname";
 const OAuthAdditionalInfo = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { oauthComplete } = useApiClient();
+  const { setTokens } = useApiClient();
   const { setNickname } = useNicknameStore();
+
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   const {
     provider,
@@ -38,49 +40,79 @@ const OAuthAdditionalInfo = () => {
       ...prev,
       [name]: value,
     }));
+    if (error) setError(null);
+  };
+
+  const validateForm = () => {
+    if (!formData.email || !formData.age || formData.gender === "") {
+      setError("모든 필드를 입력해주세요.");
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError("올바른 이메일 형식을 입력해주세요.");
+      return false;
+    }
+
+    const age = parseInt(formData.age);
+    if (isNaN(age) || age < 0 || age > 150) {
+      setError("올바른 나이를 입력해주세요. (0-150)");
+      return false;
+    }
+
+    const gender = parseInt(formData.gender);
+    if (gender !== 0 && gender !== 1) {
+      setError("성별을 선택해주세요.");
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    // 유효성 검사
-    if (!formData.email || !formData.age || formData.gender === "") {
-      setError("모든 필드를 입력해주세요.");
-      return;
-    }
-
-    const age = parseInt(formData.age);
-    if (isNaN(age) || age < 0) {
-      setError("올바른 나이를 입력해주세요.");
-      return;
-    }
-
-    const gender = parseInt(formData.gender);
-    if (gender !== 0 && gender !== 1) {
-      setError("성별을 선택해주세요.");
+    if (!validateForm()) {
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const response = await oauthComplete({
-        provider,
-        providerId,
-        email: formData.email,
-        age,
-        gender,
+      const response = await fetch(`${API_BASE_URL}/api/oauth/complete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          provider,
+          providerId,
+          email: formData.email,
+          age: parseInt(formData.age),
+          gender: parseInt(formData.gender),
+        }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "추가 정보 등록에 실패했습니다.");
+      }
+
+      const data = await response.json();
+      const { accessToken, refreshToken, userId, nickname } = data;
+
       // 로그인 성공 처리
-      localStorage.setItem("userId", response.userId.toString());
-      localStorage.setItem("nickname", response.nickname);
-      setNickname(response.nickname);
+      setTokens(accessToken, refreshToken);
+      localStorage.setItem("userId", userId.toString());
+      localStorage.setItem("nickname", nickname);
+      setNickname(nickname);
 
       // 메인 페이지로 이동
       navigate("/", { replace: true });
     } catch (err) {
+      console.error("추가 정보 등록 실패:", err);
       setError(err.message || "추가 정보 등록에 실패했습니다.");
     } finally {
       setIsSubmitting(false);
@@ -88,172 +120,126 @@ const OAuthAdditionalInfo = () => {
   };
 
   return (
-    <div style={{ maxWidth: "500px", margin: "50px auto", padding: "20px" }}>
-      <h2>추가 정보 입력</h2>
-      <p style={{ color: "#666", marginBottom: "30px" }}>
-        서비스 이용을 위해 추가 정보를 입력해주세요.
-      </p>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-pretendard">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          추가 정보 입력
+        </h2>
+        <p className="text-gray-600 mb-6">
+          서비스 이용을 위해 추가 정보를 입력해주세요.
+        </p>
 
-      <div
-        style={{
-          marginBottom: "20px",
-          padding: "15px",
-          backgroundColor: "#f5f5f5",
-          borderRadius: "8px",
-        }}
-      >
-        <p>
-          <strong>닉네임:</strong> {initialNickname}
-        </p>
-        <p style={{ fontSize: "14px", color: "#666", marginTop: "5px" }}>
-          닉네임은 마이페이지에서 변경할 수 있습니다.
-        </p>
+        {/* 닉네임 표시 */}
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-gray-700 mb-1">
+            <strong>닉네임:</strong> {initialNickname}
+          </p>
+          <p className="text-xs text-gray-500">
+            닉네임은 마이페이지에서 변경할 수 있습니다.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* 이메일 입력 */}
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              이메일 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="example@email.com"
+              required
+              disabled={initialEmail !== ""}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+          </div>
+
+          {/* 나이 입력 */}
+          <div>
+            <label
+              htmlFor="age"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              나이 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              id="age"
+              name="age"
+              value={formData.age}
+              onChange={handleChange}
+              placeholder="나이를 입력하세요"
+              min="0"
+              max="150"
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* 성별 선택 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              성별 <span className="text-red-500">*</span>
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center flex-1 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="radio"
+                  name="gender"
+                  value="0"
+                  checked={formData.gender === "0"}
+                  onChange={handleChange}
+                  required
+                  className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="ml-3 text-gray-700">남성</span>
+              </label>
+              <label className="flex items-center flex-1 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="radio"
+                  name="gender"
+                  value="1"
+                  checked={formData.gender === "1"}
+                  onChange={handleChange}
+                  required
+                  className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="ml-3 text-gray-700">여성</span>
+              </label>
+            </div>
+          </div>
+
+          {/* 에러 메시지 */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* 제출 버튼 */}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full py-3 bg-main text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                처리 중...
+              </>
+            ) : (
+              "완료"
+            )}
+          </button>
+        </form>
       </div>
-
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "20px" }}>
-          <label
-            htmlFor="email"
-            style={{
-              display: "block",
-              marginBottom: "8px",
-              fontWeight: "bold",
-            }}
-          >
-            이메일 *
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="example@email.com"
-            required
-            style={{
-              width: "100%",
-              padding: "10px",
-              border: "1px solid #ddd",
-              borderRadius: "4px",
-              fontSize: "16px",
-            }}
-            disabled={initialEmail !== ""}
-          />
-        </div>
-
-        <div style={{ marginBottom: "20px" }}>
-          <label
-            htmlFor="age"
-            style={{
-              display: "block",
-              marginBottom: "8px",
-              fontWeight: "bold",
-            }}
-          >
-            나이 *
-          </label>
-          <input
-            type="number"
-            id="age"
-            name="age"
-            value={formData.age}
-            onChange={handleChange}
-            placeholder="나이를 입력하세요"
-            min="0"
-            max="150"
-            required
-            style={{
-              width: "100%",
-              padding: "10px",
-              border: "1px solid #ddd",
-              borderRadius: "4px",
-              fontSize: "16px",
-            }}
-          />
-        </div>
-
-        <div style={{ marginBottom: "30px" }}>
-          <label
-            style={{
-              display: "block",
-              marginBottom: "8px",
-              fontWeight: "bold",
-            }}
-          >
-            성별 *
-          </label>
-          <div style={{ display: "flex", gap: "20px" }}>
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                cursor: "pointer",
-              }}
-            >
-              <input
-                type="radio"
-                name="gender"
-                value="0"
-                checked={formData.gender === "0"}
-                onChange={handleChange}
-                required
-                style={{ marginRight: "8px" }}
-              />
-              남성
-            </label>
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                cursor: "pointer",
-              }}
-            >
-              <input
-                type="radio"
-                name="gender"
-                value="1"
-                checked={formData.gender === "1"}
-                onChange={handleChange}
-                required
-                style={{ marginRight: "8px" }}
-              />
-              여성
-            </label>
-          </div>
-        </div>
-
-        {error && (
-          <div
-            style={{
-              padding: "10px",
-              backgroundColor: "#fee",
-              color: "red",
-              borderRadius: "4px",
-              marginBottom: "20px",
-            }}
-          >
-            {error}
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          style={{
-            width: "100%",
-            padding: "12px",
-            backgroundColor: isSubmitting ? "#ccc" : "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            fontSize: "16px",
-            cursor: isSubmitting ? "not-allowed" : "pointer",
-            fontWeight: "bold",
-          }}
-        >
-          {isSubmitting ? "처리 중..." : "완료"}
-        </button>
-      </form>
     </div>
   );
 };
