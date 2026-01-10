@@ -86,10 +86,10 @@ const useTimetableStore = create((set, get) => ({
       TOTAL_SLOTS: ((endHour - startHour) * 60) / 15,
     });
 
-    useNicknameStore.getState().setLastSelectedDay (
-      usePlanStore.getState().planId, 
-      dayIndex,
-    );
+    // useNicknameStore.getState().setLastSelectedDay (
+    //   usePlanStore.getState().planId, 
+    //   dayIndex,
+    // );
   }
 }));
 
