@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react';
 import { getClient } from '../../../websocket/client';
 import DayGrid from './DayGrid';
 import usePlanStore from '../../../store/Plan';
+import useItemsStore from '../../../store/Schedules';
 
 const DaySelectorModal = ({setIsModalOpen}) => {
   const client = getClient();
   const { setTimetableAll, selectedDay, setSelectedDay } = useTimetableStore();
   const { planId, eventId } = usePlanStore();
+  const { items } = useItemsStore();
 
   const [timetables, setTimetables] = useState(structuredClone(useTimetableStore.getState().timetables));
   const [create, setCreate] = useState([]);
@@ -108,6 +110,8 @@ const DaySelectorModal = ({setIsModalOpen}) => {
       alert("시작 시간이 종료 시간과 같거나 큰 항목이 있습니다. 수정 후 다시 시도해주세요.");
       return;
     }
+
+    const isOverlap = deleteTime.some(item => items[item.timeTableId]);
 
     if (client && client.connected) {
       if (create && create.length > 0) {

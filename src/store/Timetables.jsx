@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import usePlanStore from "./Plan";
 
 const sortByDate = (list) =>
   [...list].sort(
@@ -87,26 +88,3 @@ const useTimetableStore = create((set, get) => ({
 }));
 
 export default useTimetableStore;
-
-/*
-[
-    {
-        "timeTableId": 130,
-        "date": "2025-11-19",
-        "startTime": "09:00:00",
-        "endTime": "20:00:00"
-    },
-    {
-        "timeTableId": 131,
-        "date": "2025-11-20",
-        "startTime": "09:00:00",
-        "endTime": "20:00:00"
-    },
-    {
-        "timeTableId": 132,
-        "date": "2025-11-21",
-        "startTime": "09:00:00",
-        "endTime": "20:00:00"
-    }
-]
-*/

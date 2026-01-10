@@ -3,17 +3,55 @@ import SockJS from "sockjs-client";
 import usePlanStore from "../store/Plan";
 import useUserStore from "../store/Users";
 import useTimetableStore from "../store/Timetables";
-import useNicknameStore from "../store/Nickname";
+import useItemsStore from "../store/Schedules";
 
 let client;
 
+function getTimeSlotIndex(timeTableStartTime, time, intervalMinutes = 15) {
+  const toMinutes = (t) => {
+    const [h, m, s] = t.split(':').map(Number);
+    return h * 60 + m + s / 60;
+  };
+
+  const startMinutes = toMinutes(timeTableStartTime);
+  const targetMinutes = toMinutes(time);
+
+  return Math.floor((targetMinutes - startMinutes) / intervalMinutes);
+}
+
 function isDifferentEventId(eventId) {
   const prevEventId = usePlanStore.getState().eventId;
-
   if (eventId != "" && prevEventId != "" && eventId !== prevEventId) {
     return true;
   }
   return false;
+}
+
+function convertBlock(block) {
+  const timeTableId = block.timeTableId;
+  const {timetables} = useTimetableStore.getState();
+  const timeTableStartTime = timetables.find(
+    (t) => t.timeTableId === timeTableId
+  )?.timeTableStartTime;
+  const start = getTimeSlotIndex(timeTableStartTime, block.blockStartTime);
+  const duration = getTimeSlotIndex(block.blockStartTime, block.blockEndTime);
+  const blockId = block.placeTheme;
+  console.log(start)
+  console.log(duration)
+
+  const place = {
+    placeId: block.placePhotoId,
+    categoryId: block.placeCategoryId,
+    url: block.placeLink,
+    name: block.placeName,
+    formatted_address: block.placeAddress,
+    rating: block.placeRating,
+    iconUrl: "./src/assets/imgs/default.png",
+    xlocation: block.xLocation,
+    ylocation: block.yLocation,
+  }
+
+  return {timeTableId, place, start, duration, blockId};
 }
 
 const plan = (body) => {
@@ -46,6 +84,34 @@ const timetable = (body) => {
   }
 }
 
+const timetableplaceblock = (body) => {
+  const eventId = body.eventId;
+  if (isDifferentEventId(eventId)) {
+    console.log("📩 수신된 메시지:", body);
+    const action = body.action;
+    
+    switch(action) {
+      case "create":
+        body.timeTablePlaceBlockDtos.map((item) => {
+          const convert = convertBlock(item);
+          useItemsStore.getState().addItemFromWebsocket(convert);
+        })
+        break;
+      case "update":
+        body.timeTablePlaceBlockDtos.map((item) => {
+          const convert = convertBlock(item);
+          useItemsStore.getState().moveItemFromWebsocket(convert);
+        })
+        break;
+      case "delete":
+        body.timeTablePlaceBlockDtos.map((item) => {
+          useItemsStore.getState().deleteItem(item.placeTheme, item.timeTableId);
+        })
+        break;
+    }
+  }
+}
+
 export const getClient = () => client;
 export const initStompClient = (id) => {
   const token = localStorage.getItem('accessToken');
@@ -72,6 +138,9 @@ export const initStompClient = (id) => {
           case "timetable":
             timetable(body);
             break;
+          case "timetableplaceblock":
+            timetableplaceblock(body);
+            break;
         }
       });
 
@@ -80,85 +149,6 @@ export const initStompClient = (id) => {
         console.log("(접속자) 수신된 메시지:", body);
         useUserStore.getState().setUserAll(body.users);
       });
-
-      // client.subscribe(`/topic/plan/${id}/update/plan`, (message) => {
-      //   const body = JSON.parse(message.body);
-      //   const planEventId = usePlanStore.getState().eventId;
-      //   if (planEventId !== body.eventId) {
-      //     console.log("📩 수신된 메시지:", message.body);
-      //     usePlanStore.getState().setPlanAll({...body, eventId: planEventId});
-      //   }
-      // });
-
-      // client.subscribe(`/topic/plan/${id}/create/timetable`, (message) => {
-      //   const body = JSON.parse(message.body);
-      //   console.log("📩 수신된 메시지:", message.body);
-      //   body.timetableVOs.map((item) => {
-      //     useTimetableStore.getState().setTimetableCreate(item);
-      //   })
-      // });
-
-      // client.subscribe(`/topic/plan/${id}/update/timetable`, (message) => {
-      //   const body = JSON.parse(message.body);
-      //   console.log("📩 수신된 메시지:", message.body);
-      //   body.timetableVOs.map((item) => {
-      //     useTimetableStore.getState().setTimetableUpdate(item);
-      //   })
-      // });
-
-      // client.subscribe(`/topic/plan/${id}/delete/timetable`, (message) => {
-      //   const body = JSON.parse(message.body);
-      //   console.log("📩 수신된 메시지:", message.body);
-      //   body.timetableVOs.map((item) => {
-      //     useTimetableStore.getState().setTimetableDelete(item);
-      //   })
-      // });
-
-      // client.subscribe(
-      //   `/topic/plan/${id}/create/timetableplaceblock`,
-      //   (message) => {
-      //   }
-      // );
-
-      // client.subscribe(
-      //   `/topic/plan/${id}/update/timetableplaceblock`,
-      //   (message) => {
-          
-      //   }
-      // );
-
-      // client.subscribe(
-      //   `/topic/plan/${id}/delete/timetableplaceblock`,
-      //   (message) => {
-          
-      //   }
-      // );
-
-      // client.subscribe(
-      //   `/topic/plan/${id}/delete/presence`, (message) => {
-      //     const body = JSON.parse(message.body);
-      //     console.log("📩 수신된 메시지:", message.body);
-      //     useUserStore.getState().setUserDelete(body);
-      //   }
-      // );
-
-      // client.subscribe(
-      //   `/topic/plan/${id}/update/presence`,
-      //   (message) => {
-      //     const body = JSON.parse(message.body);
-      //     console.log("📩 수신된 메시지:", message.body);
-      //     useUserStore.getState().setUserUpdate(body);
-      //   }
-      // );
-
-      // client.subscribe(
-      //   `/topic/plan/${id}/create/presence`,
-      //   (message) => {
-      //     const body = JSON.parse(message.body);
-      //     console.log("📩 수신된 메시지:", message.body);
-      //     useUserStore.getState().setUserCreate(body);
-      //   }
-      // );
     },
 
     onStompError: (frame) => {

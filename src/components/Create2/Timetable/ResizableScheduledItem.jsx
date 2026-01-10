@@ -4,11 +4,22 @@ import { Resizable } from 'react-resizable';
 import { CSS } from '@dnd-kit/utilities';
 import ResizeHandle from './ResizeHandle';
 import useTimetableStore from "../../../store/Timetables";
-import { formatTime } from "../../../utils/createUtils";
+import { exportBlock, formatTime, getTimeTableId } from "../../../utils/createUtils";
+import { getClient } from '../../../websocket/client';
+import useItemsStore from '../../../store/Schedules';
+import usePlanStore from '../../../store/Plan';
+import { useSearchParams } from 'react-router-dom';
 
 export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
-  const { SLOT_HEIGHT, TOTAL_SLOTS } = useTimetableStore();
+  const client = getClient();
+  const { eventId } = usePlanStore();
+  const { SLOT_HEIGHT, TOTAL_SLOTS, timetables, selectedDay } = useTimetableStore();
+  const { deleteItem } = useItemsStore();
   const [isResizing, setIsResizing] = useState(false);
+  
+  const [searchParams] = useSearchParams();
+  const id = searchParams.get("id");
+  
   const place = item?.place;
   
   const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({
@@ -69,7 +80,7 @@ export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
       newDuration = finalDuration;
     }
 
-    onResizeEnd(item.id, newStart, newDuration);
+    onResizeEnd(item, newStart, newDuration);
   };
 
   const dragStyle = transform && !isResizing ? {
@@ -84,6 +95,24 @@ export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
   const tripColor3 = { 0: "border-lime-500", 1: "border-orange-500", 2: "border-blue-500", 4: "boder-gray-500" };
   const tripColor4 = { 0: "text-lime-600", 1: "text-orange-600", 2: "text-blue-600", 4: "text-gray-600" };
   const tripColor5 = { 0: "text-lime-900", 1: "text-orange-900", 2: "text-blue-900", 4: "text-gray-900" };
+
+  const sendWebsocket = (block) => {
+    if (client && client.connected) {
+      const msg = {
+        eventId: eventId,
+        action: "delete",
+        entity: "timetableplaceblock",
+        timeTablePlaceBlockDtos: [
+          block
+        ]
+      };
+      client.publish({
+        destination: `/app/${id}`,
+        body: JSON.stringify(msg),
+      });
+      console.log("🚀 메시지 전송:", msg);
+    }
+  }
 
   return (
     <div
@@ -137,7 +166,12 @@ export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
 
             <button
               className={`w-8 h-8 shrink-0 hover:bg-white hover:bg-opacity-50 rounded-full ${tripColor5[place.categoryId]} text-lg`}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteItem(item.id, getTimeTableId(timetables, selectedDay));
+                const block = exportBlock(getTimeTableId(timetables, selectedDay), place, item.start, item.duration, item.id);
+                sendWebsocket(block);
+              }}
             >
               ×
             </button>

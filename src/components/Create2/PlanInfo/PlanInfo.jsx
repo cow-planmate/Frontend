@@ -10,6 +10,7 @@ import { faMap } from "@fortawesome/free-regular-svg-icons";
 
 import PlanInfoModal from "./PlanInfoModal";
 import ShareModal from "../../common/ShareModal";
+import MapModal from "./MapModal";
 
 export default function PlanInfo({id}) {
   const { 
@@ -29,6 +30,7 @@ export default function PlanInfo({id}) {
   
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isMapOpen, setIsMapOpen] = useState(false);
 
   const [localName, setLocalName] = useState(planName);
 
@@ -91,6 +93,7 @@ export default function PlanInfo({id}) {
               )
             })}
           <button 
+            onClick={() => setIsMapOpen(true)}
             className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg border border-gray-500 hover:bg-gray-100"
           >
             <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faMap} /></div>
@@ -120,13 +123,15 @@ export default function PlanInfo({id}) {
         {localName}
       </span>
 
-      {isInfoOpen && <PlanInfoModal setIsInfoOpen={setIsInfoOpen}/>}
+      {isInfoOpen && <PlanInfoModal setIsInfoOpen={setIsInfoOpen} />}
 
       {isShareOpen && <ShareModal
         isOwner={true}
         setIsShareOpen={setIsShareOpen}
         id={id}
       />}
+
+      {isMapOpen && <MapModal setIsMapOpen={setIsMapOpen} />}
     </div>
   )
 }
