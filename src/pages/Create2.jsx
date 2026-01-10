@@ -13,7 +13,6 @@ import { initStompClient } from "../websocket/client";
 
 import usePlanStore from "../store/Plan";
 import useTimetableStore from "../store/Timetables";
-// import useUserStore from "../store/Users";
 import usePlacesStore from "../store/Places";
 
 import Loading from "../components/common/Loading";
@@ -23,6 +22,7 @@ import DaySelector from "../components/Create2/DaySelector/DaySelector";
 import Main from "../components/Create2/Main/Main";
 import useItemsStore from "../store/Schedules";
 import { convertBlock } from "../utils/createUtils";
+import useNicknameStore from "../store/Nickname";
 
 function App() {
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -37,6 +37,7 @@ function App() {
   const { setTimetableAll, setSelectedDay } = useTimetableStore();
   const { addItemFromWebsocket } = useItemsStore();
   const { setPlacesAll } = usePlacesStore();
+  const { lastSelectedDay } = useNicknameStore();
   const [noACL, setNoACL] = useState(false);
 
   // 초기 데이터 로딩
@@ -63,7 +64,12 @@ function App() {
             restaurant: restaurant.places,
             restaurantNext: restaurant.nextPageTokens
           });
-          setSelectedDay(0);
+          
+          if (lastSelectedDay[id] && planData.timetables.length >= lastSelectedDay[id]) {
+            setSelectedDay(lastSelectedDay[id]);
+          } else {
+            setSelectedDay(0);
+          }
           setEventId();
           planData.placeBlocks.map((item) => {
             const convert = convertBlock(item);

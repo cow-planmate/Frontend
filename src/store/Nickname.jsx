@@ -7,7 +7,7 @@ const useNicknameStore = create(
     (set) => ({
       nickname: '',
       gravatar: '',
-      // lastSelectedDay: {},
+      lastSelectedDay: {},
 
       setNickname: (value) => 
         set((state) => ({
@@ -21,15 +21,14 @@ const useNicknameStore = create(
           gravatar: gravatarUrl(value)
         })),
 
-      // setLastSelectedDay: (id, day) => {
-      //   set((state) => ({
-      //     ...state,
-      //     lastSelectedDay: {
-      //       ...lastSelectedDay,
-      //       [id]: day,
-      //     }
-      //   }))
-      // }
+      setLastSelectedDay: (id, day) => 
+        set((state) => ({
+          ...state,
+          lastSelectedDay: {
+            ...state.lastSelectedDay,
+            [id]: day,
+          }
+        }))
     }),
     {
       name: 'nickname',
