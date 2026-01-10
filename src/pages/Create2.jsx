@@ -21,6 +21,8 @@ import Navbar from "../components/common/Navbar";
 import PlanInfo from "../components/Create2/PlanInfo/PlanInfo";
 import DaySelector from "../components/Create2/DaySelector/DaySelector";
 import Main from "../components/Create2/Main/Main";
+import useItemsStore from "../store/Schedules";
+import { convertBlock } from "../utils/createUtils";
 
 function App() {
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -33,7 +35,7 @@ function App() {
 
   const { planId, setPlanAll, setEventId } = usePlanStore();
   const { setTimetableAll, setSelectedDay } = useTimetableStore();
-  // const { setUserAll } = useUserStore();
+  const { addItemFromWebsocket } = useItemsStore();
   const { setPlacesAll } = usePlacesStore();
   const [noACL, setNoACL] = useState(false);
 
@@ -53,7 +55,6 @@ function App() {
           
           setPlanAll(planData.planFrame);
           setTimetableAll(planData.timetables.slice().sort((a, b) => new Date(a.date) - new Date(b.date)));
-          // setUserAll(planData.userDayIndexes);
           setPlacesAll({
             tour: tour.places,
             tourNext: tour.nextPageTokens,
@@ -64,6 +65,10 @@ function App() {
           });
           setSelectedDay(0);
           setEventId();
+          planData.placeBlocks.map((item) => {
+            const convert = convertBlock(item);
+            addItemFromWebsocket(convert);
+          });
         } catch(err) {
           const errorMessage = err.response?.data?.message || err.message;
           console.error("일정 정보를 가져오는데 실패했습니다:", err);

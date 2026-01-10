@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import usePlanStore from "./Plan";
+import useNicknameStore from "./Nickname";
 
 const sortByDate = (list) =>
   [...list].sort(
@@ -84,6 +85,11 @@ const useTimetableStore = create((set, get) => ({
       END_HOUR: endHour,
       TOTAL_SLOTS: ((endHour - startHour) * 60) / 15,
     });
+
+    useNicknameStore.getState().setLastSelectedDay (
+      usePlanStore.getState().planId, 
+      dayIndex,
+    );
   }
 }));
 

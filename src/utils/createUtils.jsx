@@ -73,3 +73,42 @@ export function exportBlock(timeTableId, place, newStart, duration, blockId) {
   }
   return block;
 }
+
+function getTimeSlotIndex(timeTableStartTime, time, intervalMinutes = 15) {
+  const toMinutes = (t) => {
+    const [h, m, s] = t.split(':').map(Number);
+    return h * 60 + m + s / 60;
+  };
+
+  const startMinutes = toMinutes(timeTableStartTime);
+  const targetMinutes = toMinutes(time);
+
+  return Math.floor((targetMinutes - startMinutes) / intervalMinutes);
+}
+
+export function convertBlock(block) {
+  const timeTableId = block.timeTableId;
+  const {timetables} = useTimetableStore.getState();
+  const timeTableStartTime = timetables.find(
+    (t) => t.timeTableId === timeTableId
+  )?.timeTableStartTime;
+  const start = getTimeSlotIndex(timeTableStartTime, block.blockStartTime);
+  const duration = getTimeSlotIndex(block.blockStartTime, block.blockEndTime);
+  const blockId = block.placeTheme;
+  console.log(start)
+  console.log(duration)
+
+  const place = {
+    placeId: block.placePhotoId,
+    categoryId: block.placeCategoryId,
+    url: block.placeLink,
+    name: block.placeName,
+    formatted_address: block.placeAddress,
+    rating: block.placeRating,
+    iconUrl: "./src/assets/imgs/default.png",
+    xlocation: block.xLocation,
+    ylocation: block.yLocation,
+  }
+
+  return {timeTableId, place, start, duration, blockId};
+}

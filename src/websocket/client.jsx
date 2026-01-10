@@ -4,20 +4,9 @@ import usePlanStore from "../store/Plan";
 import useUserStore from "../store/Users";
 import useTimetableStore from "../store/Timetables";
 import useItemsStore from "../store/Schedules";
+import { convertBlock } from "../utils/createUtils";
 
 let client;
-
-function getTimeSlotIndex(timeTableStartTime, time, intervalMinutes = 15) {
-  const toMinutes = (t) => {
-    const [h, m, s] = t.split(':').map(Number);
-    return h * 60 + m + s / 60;
-  };
-
-  const startMinutes = toMinutes(timeTableStartTime);
-  const targetMinutes = toMinutes(time);
-
-  return Math.floor((targetMinutes - startMinutes) / intervalMinutes);
-}
 
 function isDifferentEventId(eventId) {
   const prevEventId = usePlanStore.getState().eventId;
@@ -25,33 +14,6 @@ function isDifferentEventId(eventId) {
     return true;
   }
   return false;
-}
-
-function convertBlock(block) {
-  const timeTableId = block.timeTableId;
-  const {timetables} = useTimetableStore.getState();
-  const timeTableStartTime = timetables.find(
-    (t) => t.timeTableId === timeTableId
-  )?.timeTableStartTime;
-  const start = getTimeSlotIndex(timeTableStartTime, block.blockStartTime);
-  const duration = getTimeSlotIndex(block.blockStartTime, block.blockEndTime);
-  const blockId = block.placeTheme;
-  console.log(start)
-  console.log(duration)
-
-  const place = {
-    placeId: block.placePhotoId,
-    categoryId: block.placeCategoryId,
-    url: block.placeLink,
-    name: block.placeName,
-    formatted_address: block.placeAddress,
-    rating: block.placeRating,
-    iconUrl: "./src/assets/imgs/default.png",
-    xlocation: block.xLocation,
-    ylocation: block.yLocation,
-  }
-
-  return {timeTableId, place, start, duration, blockId};
 }
 
 const plan = (body) => {
@@ -168,7 +130,7 @@ export const initStompClient = (id) => {
     if (JSON.stringify(state) !== JSON.stringify(prevState)) {
       const { eventId, setEventId, setPlanAll, setPlanField, ...payload } = state;
       console.log(payload)
-      if (client.connected) {
+      if (client.connected && eventId) {
         const requestMsg = {
           "eventId": eventId,
           "action": "update",
