@@ -8,7 +8,7 @@ const OAuthAdditionalInfo = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { setTokens } = useApiClient();
-  const { setNickname } = useNicknameStore();
+  const { setNickname, setGravatar } = useNicknameStore();
 
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -101,13 +101,13 @@ const OAuthAdditionalInfo = () => {
       }
 
       const data = await response.json();
-      const { accessToken, refreshToken, userId, nickname } = data;
+      const { accessToken, refreshToken, userId, nickname, email } = data;
 
       // 로그인 성공 처리
       setTokens(accessToken, refreshToken);
       localStorage.setItem("userId", userId.toString());
-      localStorage.setItem("nickname", nickname);
       setNickname(nickname);
+      setGravatar(email);
 
       // 메인 페이지로 이동
       navigate("/", { replace: true });
