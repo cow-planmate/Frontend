@@ -53,7 +53,7 @@ function App() {
   const { setPlanField, setPlanAll } = usePlanStore();
   const { post, isAuthenticated } = useApiClient();
 
-  const sliderHeightClass = "h-[11rem] sm:h-[20rem] lg:h-[45rem]";
+  const sliderHeightClass = "h-[14rem] sm:h-[20rem] lg:h-[45rem]";
 
   const settings = {
     dots: true,
@@ -227,12 +227,13 @@ function App() {
         <div
           className={`absolute top-0 left-0 right-0 ${sliderHeightClass} bg-gradient-to-b from-transparent to-black/60 pointer-events-none`}
         />
-      </div>
-      <div className="absolute top-[38rem] left-0 right-0 px-4 sm:px-6 lg:px-8">
-        <div className="w-full max-w-7xl mx-auto">
-          <div className="font-pretendard bottom-0 text-white font-bold text-left text-3xl sm:text-4xl lg:text-5xl leading-tight ">
-            <div className="mb-2 sm:mb-4">나다운, 우리다운</div>
-            <div>여행의 시작</div>
+
+        <div className="absolute bottom-6 sm:bottom-12 lg:bottom-20 left-0 right-0 px-4 sm:px-6 lg:px-8 pointer-events-none">
+          <div className="w-full max-w-7xl mx-auto">
+            <div className="font-pretendard text-white font-bold text-left text-3xl sm:text-4xl lg:text-5xl leading-tight drop-shadow-md">
+              <div className="mb-2 sm:mb-4">나다운, 우리다운</div>
+              <div>여행의 시작</div>
+            </div>
           </div>
         </div>
       </div>
