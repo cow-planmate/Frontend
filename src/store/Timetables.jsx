@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import usePlanStore from "./Plan";
 import useNicknameStore from "./Nickname";
+import { getTimeSlotIndex, getTimeTableId } from "../utils/createUtils";
+import useItemsStore from "./Schedules";
 
 const sortByDate = (list) =>
   [...list].sort(
@@ -47,6 +49,37 @@ const useTimetableStore = create((set, get) => ({
       const filtered = state.timetables.filter(
         (item) => item.timeTableId !== updatedTimetable.timeTableId
       );
+
+      const prev = state.timetables.find(
+        p => p.timeTableId === updatedTimetable.timeTableId
+      );
+
+      if (prev && prev.timeTableStartTime !== updatedTimetable.timeTableStartTime) {
+        const plusTime = getTimeSlotIndex(updatedTimetable.timeTableStartTime, prev.timeTableStartTime);
+
+        useItemsStore.getState().items[updatedTimetable.timeTableId]?.forEach((item) => {
+          const timeTableId = updatedTimetable.timeTableId;
+          const blockId = item.id;
+          const place = item.place;
+          const start = item.start + plusTime;
+          const duration = item.duration;
+          useItemsStore.getState().moveItemFromWebsocket({timeTableId, place, start, duration, blockId});
+        })
+      }
+
+      if (getTimeTableId(state.timetables, state.selectedDay) == updatedTimetable.timeTableId) {
+        const startHour = Number(updatedTimetable.timeTableStartTime.split(":")[0]);
+        const endHour = Number(updatedTimetable.timeTableEndTime.split(":")[0]);
+
+        return {
+          ...state,
+          START_HOUR: startHour,
+          END_HOUR: endHour,
+          TOTAL_SLOTS: ((endHour - startHour) * 60) / 15,
+          timetables: sortByDate([...filtered, updatedTimetable]),
+        };
+      }
+
       return {
         ...state,
         timetables: sortByDate([...filtered, updatedTimetable]),

@@ -5,14 +5,16 @@ import { getClient } from '../../../websocket/client';
 import DayGrid from './DayGrid';
 import usePlanStore from '../../../store/Plan';
 import useItemsStore from '../../../store/Schedules';
+import { checkOverlap, getTimeSlotIndex } from '../../../utils/createUtils';
 
 const DaySelectorModal = ({setIsModalOpen}) => {
   const client = getClient();
   const { setTimetableAll, selectedDay, setSelectedDay } = useTimetableStore();
   const { planId, eventId } = usePlanStore();
-  const { items } = useItemsStore();
+  const { items, moveItemFromWebsocket } = useItemsStore();
+  const prevTimetables = structuredClone(useTimetableStore.getState().timetables);
 
-  const [timetables, setTimetables] = useState(structuredClone(useTimetableStore.getState().timetables));
+  const [timetables, setTimetables] = useState(structuredClone(prevTimetables));
   const [create, setCreate] = useState([]);
   const [update, setUpdate] = useState([]);
   const [deleteTime, setDelete] = useState([]);
@@ -103,6 +105,29 @@ const DaySelectorModal = ({setIsModalOpen}) => {
     return msg;
   }
 
+  const isOverlap = () => {
+    return update.some((timetable) => {
+      const prev = prevTimetables.find(
+        p => p.timeTableId === timetable.timeTableId
+      );
+      const newStartSlot = getTimeSlotIndex(prev.timeTableStartTime, timetable.timeTableStartTime);
+      const prevEndSlot = getTimeSlotIndex(prev.timeTableStartTime, prev.timeTableEndTime);
+      const newEndSlot = getTimeSlotIndex(prev.timeTableStartTime, timetable.timeTableEndTime);
+
+      console.log(newStartSlot, prevEndSlot, newEndSlot)
+
+      if (items[timetable.timeTableId]) {
+        if (newStartSlot > 0 && checkOverlap(0, newStartSlot, items[timetable.timeTableId])) {
+          return true;
+        }
+        if (newEndSlot - prevEndSlot < 0 && checkOverlap(newEndSlot, prevEndSlot, items[timetable.timeTableId])) {
+          return true;
+        }
+      }
+      return false;
+    })
+  }
+
   const handleComfirm = () => {
     const isInvalid = timetables.some(item => item.timeTableStartTime >= item.timeTableEndTime) || create.some(item => item.timeTableStartTime >= item.timeTableEndTime);
     
@@ -111,8 +136,18 @@ const DaySelectorModal = ({setIsModalOpen}) => {
       return;
     }
 
-    const isOverlap = deleteTime.some(item => items[item.timeTableId]);
+    const isDeleteDay = deleteTime.some(item => items[item.timeTableId]);
 
+    if (isDeleteDay) {
+      alert("지우려는 일정에 블록이 존재합니다. 블록을 완전히 삭제한 후 다시 시도해주세요.");
+      return;
+    }
+
+    if (isOverlap()) {
+      alert("변경하려는 시간 밖에 블록이 존재합니다. 변경하려는 시간 안으로 블록을 이동하거나 삭제한 후 다시 시도해주세요.");
+      return;
+    }
+    
     if (client && client.connected) {
       if (create && create.length > 0) {
         const uploadCreate = requestMsg("create", create);
@@ -141,9 +176,35 @@ const DaySelectorModal = ({setIsModalOpen}) => {
         });
         console.log("🚀 메시지 전송:", uploadDelete);
       }
-      
+    }
+
+    if ((client && client.connected) || planId == '-1') {
       const merged = [...timetables, ...create];
       setTimetableAll(merged);
+
+      const changedStartTimes = timetables.reduce((acc, curr) => {
+        const prev = prevTimetables.find(
+          p => p.timeTableId === curr.timeTableId
+        );
+
+        if (prev && prev.timeTableStartTime !== curr.timeTableStartTime) {
+          acc[curr.timeTableId] = getTimeSlotIndex(curr.timeTableStartTime, prev.timeTableStartTime);
+        } 
+
+        return acc;
+      }, {});
+
+      Object.entries(changedStartTimes).forEach(([key, value]) => {
+        console.log(key, value)
+        items[key]?.forEach((item) => {
+          const timeTableId = key;
+          const blockId = item.id;
+          const place = item.place;
+          const start = item.start + value;
+          const duration = item.duration;
+          moveItemFromWebsocket({timeTableId, place, start, duration, blockId});
+        })
+      });
 
       if (selectedDay > merged.length) {
         setSelectedDay(merged.length);

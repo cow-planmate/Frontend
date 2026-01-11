@@ -17,6 +17,8 @@ export const checkOverlap = (start, duration, items, excludeId = null) => {
   return items.some((i) => {
     if (excludeId && i.id === excludeId) return false;
     const iEnd = i.start + i.duration;
+    console.log(start, end)
+    console.log(i.start, iEnd)
     return start < iEnd && end > i.start;
   });
 };
@@ -37,9 +39,7 @@ export const getTimeTableId = (timetables, selectedDay) => {
   return timetables[selectedDay].timeTableId;
 }
 
-function slotIndexToTime(newStart, intervalMinutes = 15) {
-  const { START_HOUR } = useTimetableStore.getState();
-  
+export function slotIndexToTime(START_HOUR, newStart, intervalMinutes = 15) {
   const totalMinutes =
     START_HOUR * 60 + newStart * intervalMinutes;
 
@@ -54,8 +54,9 @@ function slotIndexToTime(newStart, intervalMinutes = 15) {
 }
 
 export function exportBlock(timeTableId, place, newStart, duration, blockId) {
-  const blockStartTime = slotIndexToTime(newStart);
-  const blockEndTime = slotIndexToTime(newStart + duration);
+  const { START_HOUR } = useTimetableStore.getState();
+  const blockStartTime = slotIndexToTime(START_HOUR, newStart);
+  const blockEndTime = slotIndexToTime(START_HOUR, newStart + duration);
   const block = {
     blockId: Math.random(),
     placeName: place.name,
@@ -74,7 +75,7 @@ export function exportBlock(timeTableId, place, newStart, duration, blockId) {
   return block;
 }
 
-function getTimeSlotIndex(timeTableStartTime, time, intervalMinutes = 15) {
+export function getTimeSlotIndex(timeTableStartTime, time, intervalMinutes = 15) {
   const toMinutes = (t) => {
     const [h, m, s] = t.split(':').map(Number);
     return h * 60 + m + s / 60;
@@ -88,7 +89,7 @@ function getTimeSlotIndex(timeTableStartTime, time, intervalMinutes = 15) {
 
 export function convertBlock(block) {
   const timeTableId = block.timeTableId;
-  const {timetables} = useTimetableStore.getState();
+  const { timetables } = useTimetableStore.getState();
   const timeTableStartTime = timetables.find(
     (t) => t.timeTableId === timeTableId
   )?.timeTableStartTime;

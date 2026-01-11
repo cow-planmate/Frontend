@@ -27,6 +27,7 @@ import Slider from "react-slick";
 import img1 from "../assets/imgs/img1.jpg";
 import img2 from "../assets/imgs/img2.jpg";
 import img3 from "../assets/imgs/img3.jpg";
+import useTimetableStore from "../store/Timetables";
 
 function App() {
   const navigate = useNavigate();
@@ -51,6 +52,7 @@ function App() {
   ]);
 
   const { setPlanField, setPlanAll } = usePlanStore();
+  const { setTimetableAll } = useTimetableStore();
   const { post, isAuthenticated } = useApiClient();
 
   const sliderHeightClass = "h-[11rem] sm:h-[20rem] lg:h-[45rem]";
@@ -149,22 +151,6 @@ function App() {
       );
       const formattedDates = allDates.map((date) => formatDateForApi(date));
 
-      const apiStartDate = formatDateForApi(dateRange[0].startDate);
-      const apiPeriod = allDates.length;
-
-      setPlanAll({
-        planName: "",
-        travelCategoryName: destinationLocation?.name || "",
-        travelName: destinationLocation?.name || "",
-        travelId: destinationLocation?.id || null,
-        departure: departureLocation?.name || "",
-        transportationCategoryId: selectedTransport === "car" ? 1 : 0,
-        adultCount: Number(personCount.adults),
-        childCount: Number(personCount.children),
-        startDate: apiStartDate,
-        period: apiPeriod,
-      });
-
       if (isAuthenticated()) {
         const requestData = {
           departure: departureLocation.name,
@@ -183,7 +169,26 @@ function App() {
           navigate(`/create?id=${data.planId}`);
         }
       } else {
-        navigate(`/create2`);
+        setPlanAll({
+          planName: "비로그인 생성 프로젝트",
+          planId: -1,
+          travelCategoryName: destinationLocation?.name.split(" ")[0] || "",
+          travelName: destinationLocation?.name.split(" ")[1] || "",
+          travelId: destinationLocation?.id || null,
+          departure: departureLocation?.name || "",
+          transportationCategoryId: selectedTransport === "car" ? 1 : 0,
+          adultCount: Number(personCount.adults),
+          childCount: Number(personCount.children),
+        });
+
+        const putTimetables = formattedDates.map((date, index) => ({
+          timeTableId: index,
+          date,
+          timeTableStartTime: "09:00:00",
+          timeTableEndTime: "20:00:00",
+        }));
+        setTimetableAll(putTimetables);
+        navigate(`/create`);
       }
     } catch (err) {
       console.error("에러, 다시시도해주세요", err);
