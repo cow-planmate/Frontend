@@ -1,28 +1,28 @@
 // 목표: 최대한 간결하고 작동 잘 되게
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { 
+import {
   DndContext,
-  useSensor,
-  useSensors,
   MouseSensor,
   TouchSensor,
+  useSensor,
+  useSensors,
 } from '@dnd-kit/core';
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApiClient } from "../hooks/useApiClient";
 import { initStompClient } from "../websocket/client";
 
+import usePlacesStore from "../store/Places";
 import usePlanStore from "../store/Plan";
 import useTimetableStore from "../store/Timetables";
-import usePlacesStore from "../store/Places";
 
 import Loading from "../components/common/Loading";
 import Navbar from "../components/common/Navbar";
-import PlanInfo from "../components/Create2/PlanInfo/PlanInfo";
 import DaySelector from "../components/Create2/DaySelector/DaySelector";
 import Main from "../components/Create2/Main/Main";
+import PlanInfo from "../components/Create2/PlanInfo/PlanInfo";
+import useNicknameStore from "../store/Nickname";
 import useItemsStore from "../store/Schedules";
 import { convertBlock } from "../utils/createUtils";
-import useNicknameStore from "../store/Nickname";
 
 function App() {
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -112,7 +112,7 @@ function App() {
     if (id && isAuthenticated() && planId) {
       initStompClient(id);
     }
-  }, []);
+  }, [id, planId]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
