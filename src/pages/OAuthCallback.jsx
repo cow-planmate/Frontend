@@ -8,7 +8,7 @@ const OAuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { setTokens } = useApiClient();
-  const { setNickname } = useNicknameStore();
+  const { setNickname, setGravatar } = useNicknameStore();
   const [error, setError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(true);
 
@@ -49,8 +49,8 @@ const OAuthCallback = () => {
 
           // 토큰 저장
           setTokens(accessToken, refreshToken);
-          localStorage.setItem("nickname", nickname);
           setNickname(nickname);
+          setGravatar(email);
 
           // userId는 JWT에서 파싱하거나 별도 API 호출
           try {
