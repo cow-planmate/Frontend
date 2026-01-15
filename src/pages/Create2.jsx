@@ -9,7 +9,7 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApiClient } from "../hooks/useApiClient";
-import { initStompClient } from "../websocket/client";
+import { disconnectStompClient, initStompClient } from "../websocket/client";
 
 import usePlacesStore from "../store/Places";
 import usePlanStore from "../store/Plan";
@@ -111,8 +111,13 @@ function App() {
   useEffect(() => {
     if (id && isAuthenticated() && planId) {
       initStompClient(id);
+      
+      // 페이지를 나갈 때 WebSocket 연결을 종료하는 클린업 함수 추가
+      return () => {
+        disconnectStompClient();
+      };
     }
-  }, [id, planId]);
+  }, [id, planId, isAuthenticated]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),

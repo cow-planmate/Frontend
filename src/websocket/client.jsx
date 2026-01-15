@@ -49,21 +49,22 @@ const timetable = (body) => {
 
 const timetableplaceblock = (body) => {
   const eventId = body.eventId;
-  if (isDifferentEventId(eventId)) {
+  const action = body.action;
+
+  if (isDifferentEventId(eventId) || action === "create") {
     console.log("📩 수신된 메시지:", body);
-    const action = body.action;
     
     switch(action) {
       case "create":
         body.timeTablePlaceBlockDtos.map((item) => {
           const convert = convertBlock(item);
-          useItemsStore.getState().addItemFromWebsocket(convert);
+          if (convert) useItemsStore.getState().addItemFromWebsocket(convert);
         })
         break;
       case "update":
         body.timeTablePlaceBlockDtos.map((item) => {
           const convert = convertBlock(item);
-          useItemsStore.getState().moveItemFromWebsocket(convert);
+          if (convert) useItemsStore.getState().moveItemFromWebsocket(convert);
         })
         break;
       case "delete":
@@ -76,6 +77,15 @@ const timetableplaceblock = (body) => {
 }
 
 export const getClient = () => client;
+
+export const disconnectStompClient = () => {
+  if (client) {
+    console.log("🔌 WebSocket 연결 종료 중...");
+    client.deactivate();
+    client = null;
+  }
+};
+
 export const initStompClient = (id) => {
   if (client && client.active) {
     console.log("⚠️ 이미 활성화된 WebSocket 클라이언트가 있습니다. 기존 연결을 종료합니다.");

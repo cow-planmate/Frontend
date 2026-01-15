@@ -109,12 +109,29 @@ const useItemsStore = create((set) => ({
 
   addItemFromWebsocket: ({ timeTableId, place, start, duration, blockId }) =>
     set((state) => {
-      console.log(start);
+      const dayItems = state.items[timeTableId] || [];
+      const exists = dayItems.some(item => item.id === blockId);
+
+      if (exists) {
+        // 이미 존재하면 (내가 보낸 거라면) 서버에서 받은 진짜 PK(place.blockId)로 업데이트
+        return {
+          items: {
+            ...state.items,
+            [timeTableId]: dayItems.map(item =>
+              item.id === blockId 
+                ? { ...item, place: { ...item.place, blockId: place.blockId }, start, duration }
+                : item
+            )
+          }
+        };
+      }
+
+      // 존재하지 않으면 (다른 사람이 만든 거라면) 새로 추가
       return {
         items: {
           ...state.items,
           [timeTableId]: [
-            ...(state.items[timeTableId] || []),
+            ...dayItems,
             {
               id: blockId,
               place: place,
@@ -133,7 +150,12 @@ const useItemsStore = create((set) => ({
           ...state.items,
           [timeTableId]: (state.items[timeTableId] || []).map((item) =>
             item.id === blockId
-              ? { ...item, start: start, duration: duration }
+              ? { 
+                  ...item, 
+                  start: start, 
+                  duration: duration,
+                  place: { ...item.place, blockId: place.blockId } 
+                }
               : item
           ),
         },

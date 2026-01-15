@@ -57,10 +57,11 @@ export function exportBlock(timeTableId, place, newStart, duration, blockId) {
   const { START_HOUR } = useTimetableStore.getState();
   const blockStartTime = slotIndexToTime(START_HOUR, newStart);
   const blockEndTime = slotIndexToTime(START_HOUR, newStart + duration);
+
   const block = {
-    blockId: Math.random(),
+    blockId: typeof blockId === 'number' ? blockId : (place.blockId || null),
     placeName: place.name,
-    placeTheme: blockId,
+    placeTheme: blockId.toString(),
     placeRating: place.rating,
     placeAddress: place.formatted_address,
     placeLink: place.url,
@@ -78,7 +79,7 @@ export function exportBlock(timeTableId, place, newStart, duration, blockId) {
 export function getTimeSlotIndex(timeTableStartTime, time, intervalMinutes = 15) {
   const toMinutes = (t) => {
     const [h, m, s] = t.split(':').map(Number);
-    return h * 60 + m + s / 60;
+    return h * 60 + m + (s || 0) / 60;
   };
 
   const startMinutes = toMinutes(timeTableStartTime);
@@ -93,13 +94,15 @@ export function convertBlock(block) {
   const timeTableStartTime = timetables.find(
     (t) => t.timeTableId === timeTableId
   )?.timeTableStartTime;
+  
+  if (!timeTableStartTime) return null;
+
   const start = getTimeSlotIndex(timeTableStartTime, block.blockStartTime);
   const duration = getTimeSlotIndex(block.blockStartTime, block.blockEndTime);
   const blockId = block.placeTheme;
-  console.log(start)
-  console.log(duration)
 
   const place = {
+    blockId: block.blockId,
     placeId: block.placePhotoId,
     categoryId: block.placeCategoryId,
     url: block.placeLink,

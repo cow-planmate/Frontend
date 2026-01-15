@@ -1,14 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
-import { useDndMonitor, DragOverlay } from '@dnd-kit/core';
+import { DragOverlay, useDndMonitor } from '@dnd-kit/core';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import TimetableGrid from '../Timetable/TimetableGrid';
-import Sidebar from '../Place/Sidebar';
-import useTimetableStore from "../../../store/Timetables";
-import { formatTime, checkOverlap, findEmptySlot, getTimeTableId, exportBlock } from "../../../utils/createUtils";
-import { resizeStyles } from '../Timetable/ResizeHandle'; // 스타일 문자열 import
-import useItemsStore from "../../../store/Schedules";
-import { getClient } from '../../../websocket/client';
 import usePlanStore from '../../../store/Plan';
+import useItemsStore from "../../../store/Schedules";
+import useTimetableStore from "../../../store/Timetables";
+import { checkOverlap, exportBlock, findEmptySlot, formatTime, getTimeTableId } from "../../../utils/createUtils";
+import { getClient } from '../../../websocket/client';
+import Sidebar from '../Place/Sidebar';
+import { resizeStyles } from '../Timetable/ResizeHandle'; // 스타일 문자열 import
+import TimetableGrid from '../Timetable/TimetableGrid';
 
 export default function Main() {
   const client = getClient();
@@ -129,13 +129,17 @@ export default function Main() {
         const block = exportBlock(getTimeTableId(timetables, selectedDay), place, newStart, duration, blockId)
         sendWebsocket("create", block);
       } else if (type === 'schedule') {
+        const ttId = getTimeTableId(timetables, selectedDay);
+        const latestItem = items[ttId]?.find(it => it.id === active.id);
+        const latestPlace = latestItem ? latestItem.place : place;
+
         moveItem({
           timetables,
           selectedDay,
           activeId: active.id,
           newStart,
         });
-        const block = exportBlock(getTimeTableId(timetables, selectedDay), place, newStart, duration, active.id)
+        const block = exportBlock(ttId, latestPlace, newStart, duration, active.id)
         sendWebsocket("update", block);
       }
     }
@@ -151,7 +155,7 @@ export default function Main() {
       newDuration,
       TOTAL_SLOTS,
     });
-    const block = exportBlock(getTimeTableId(timetables, selectedDay), item, newStart, newDuration, id)
+    const block = exportBlock(getTimeTableId(timetables, selectedDay), item.place, newStart, newDuration, id)
     sendWebsocket("update", block);
   };
 
