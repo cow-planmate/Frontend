@@ -31,6 +31,7 @@ export default function Signup({
   const [showVerification, setShowVerification] = useState(false);
   const [isNicknameVerified, setIsNicknameVerified] = useState(false);
   const [emailVerificationToken, setEmailVerificationToken] = useState("");
+  const [isAgreed, setIsAgreed] = useState(false);
   // 비밀번호 검증 상태
   const [passwordValidation, setPasswordValidation] = useState({
     hasMinLength: false,
@@ -84,6 +85,8 @@ export default function Signup({
       setPasswordMatch(true);
 
       setEmailVerificationToken("");
+
+      setIsAgreed(false);
     }
   }, [isOpen]);
 
@@ -384,6 +387,7 @@ export default function Signup({
     !passwordValidation.hasMaxLength ||
     !passwordValidation.hasAllRequired ||
     !passwordMatch;
+  !isAgreed;
 
   // 비밀번호 재입력 필드 활성화 조건
   const isConfirmPasswordDisabled =
@@ -680,6 +684,65 @@ export default function Signup({
                   여
                 </button>
               </div>
+            </div>
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2 text-left pl-2">
+              개인정보 수집·이용 동의
+            </label>
+
+            {/* 약관 내용 박스 (스크롤 가능) */}
+            <div className="w-full h-32 p-3 bg-gray-50 border border-gray-300 rounded-lg overflow-y-auto text-xs text-gray-600 leading-relaxed text-left">
+              <p className="font-bold mb-1">1. 수집·이용 목적</p>
+              <ul className="list-disc pl-4 mb-2 space-y-0.5">
+                <li>회원 관리 및 서비스 제공</li>
+                <li>문의 대응 및 공지사항 전달</li>
+                <li>맞춤형 서비스 제공 및 이벤트 안내</li>
+              </ul>
+
+              <p className="font-bold mb-1">2. 수집하는 개인정보 항목</p>
+              <ul className="list-disc pl-4 mb-2 space-y-0.5">
+                <li>필수 항목: 이름, 비밀번호, 이메일</li>
+                <li>선택 항목: 나이, 성별</li>
+              </ul>
+
+              <p className="font-bold mb-1">3. 개인정보 보유·이용 기간</p>
+              <ul className="list-disc pl-4 mb-2 space-y-0.5">
+                <li>회원 탈퇴 시 지체 없이 파기</li>
+                <li>
+                  단, 관련 법령에 따라 보존이 필요한 경우 해당 기간 동안 보관
+                </li>
+              </ul>
+
+              <p className="font-bold mb-1">4. 동의 거부 권리 및 불이익 안내</p>
+              <ul className="list-disc pl-4 space-y-0.5">
+                <li>
+                  회원가입 시 필수 항목 동의를 거부할 경우 회원가입이
+                  불가합니다.
+                </li>
+                <li>
+                  선택 항목은 동의하지 않아도 회원가입은 가능하며, 일부 서비스
+                  이용이 제한될 수 있습니다.
+                </li>
+              </ul>
+            </div>
+
+            {/* 체크박스 */}
+            <div className="flex items-center mt-2 pl-2">
+              <input
+                id="privacy-agreement"
+                type="checkbox"
+                checked={isAgreed}
+                onChange={(e) => setIsAgreed(e.target.checked)}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+              />
+              <label
+                htmlFor="privacy-agreement"
+                className="ml-2 text-sm text-gray-700 cursor-pointer select-none"
+              >
+                개인정보 수집 및 이용에 동의합니다{" "}
+                <span className="text-red-500">(필수)</span>
+              </label>
             </div>
           </div>
 
