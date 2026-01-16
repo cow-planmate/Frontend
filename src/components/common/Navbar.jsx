@@ -216,7 +216,12 @@ export default function Navbar({ onInvitationAccept }) {
 
                 <button
                   className="relative flex items-center"
-                  onClick={() => setisInvitationOpen((prev) => !prev)}
+                  onClick={() => {
+                    setisInvitationOpen((prev) => !prev);
+                    if (!isInvitationOpen) {
+                      fetchInvitations();
+                    }
+                  }}
                 >
                   <FontAwesomeIcon
                     icon={faBellRegular}
