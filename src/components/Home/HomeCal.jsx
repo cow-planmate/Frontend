@@ -21,14 +21,14 @@ export default function DateRangeModal({
       ></div>
 
       {/* 모달 컨텐츠 */}
-      <div className=" font-pretendard relative bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden w-[665px]">
+      <div className=" font-pretendard relative bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden w-[350px]">
         <div className="overflow-x-hidden flex justify-end">
           <DateRangePicker
             ranges={dateRange}
             onChange={onDateChange}
             showSelectionPreview={true}
             moveRangeOnFirstSelection={false}
-            months={2}
+            months={1}
             direction="horizontal"
             staticRanges={[]}
             inputRanges={[]}
