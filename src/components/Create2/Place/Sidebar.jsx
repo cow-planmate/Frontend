@@ -8,7 +8,7 @@ import LoadingRing from "../../../assets/imgs/ring-resize.svg?react";
 
 export default function Sidebar({ planId, isMobile, showSidebar, handleMobileAdd }) {
   const BASE_URL = import.meta.env.VITE_API_URL;
-  const { get } = useApiClient();
+  const { get, post } = useApiClient();
   const store = usePlacesStore();
   const { search, setAddSearch, setAddNext } = store;
 
@@ -42,9 +42,12 @@ export default function Sidebar({ planId, isMobile, showSidebar, handleMobileAdd
   const handleNext = async () => {
     const currentTab = selectedTab;
     const nextPageTokens = store[`${currentTab}Next`];
+    console.log(nextPageTokens)
     try {
       setNextLoading(true);
-      const res = await get(`${BASE_URL}/api/plan/nextplace/${nextPageTokens}`);
+      const res = await post(`${BASE_URL}/api/plan/nextplace`, {
+        tokens: nextPageTokens,
+      });
       setAddNext(currentTab, res.places, res.nextPageTokens);
     } catch (err) {
       console.error("실패!", err);

@@ -1,0 +1,60 @@
+import { useEffect } from "react";
+import { useApiClient } from "../../../hooks/useApiClient";
+import LoadingRing from "../../../assets/imgs/ring-resize.svg?react";
+import usePlanStore from "../../../store/Plan";
+import useTimetableStore from "../../../store/Timetables";
+import { exportBlock, getTimeTableId } from "../../../utils/createUtils";
+import useItemsStore from "../../../store/Schedules";
+import { useNavigate } from "react-router-dom";
+
+export default function NoLoginSave({isOpen}) {
+  const BASE_URL = import.meta.env.VITE_API_URL;
+  const { isAuthenticated, patch } = useApiClient();
+  const { departure, transportationCategoryId, travelId, adultCount, childCount } = usePlanStore();
+  const { timetables } = useTimetableStore();
+  const { items } = useItemsStore();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const exportBlocks = Object.entries(items).flatMap(([key, day]) => {
+      if (!Array.isArray(day)) return [];
+      return day.map(item => 
+        exportBlock(key, item.place, item.start, item.duration, item.id)
+      )
+    });
+
+    const savePlan = async () => {
+      if (isAuthenticated()) {
+        try {
+          const res = patch(`${BASE_URL}/api/plan/save`, {
+            departure: departure,
+            transportationCategoryId: transportationCategoryId,
+            travelId: travelId,
+            adultCount: adultCount,
+            childCount: childCount,
+            timetables: timetables,
+            timetablePlaceBlocks: exportBlocks
+          });
+          console.log(res.message);
+          navigate(`/mypage`);
+        } catch(err) {
+          console.error("요청에 실패했습니다.", err);
+        }
+      }
+    }
+
+    savePlan();
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm font-pretendard">
+      <div className="flex flex-col items-center space-y-3">
+        <LoadingRing className="w-20"/>
+      </div>
+    </div>
+  )
+}

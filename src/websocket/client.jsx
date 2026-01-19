@@ -56,13 +56,13 @@ const timetableplaceblock = (body) => {
       case "create":
         body.timeTablePlaceBlockDtos.map((item) => {
           const convert = convertBlock(item);
-          useItemsStore.getState().addItemFromWebsocket(convert);
+          if (convert) useItemsStore.getState().addItemFromWebsocket(convert);
         })
         break;
       case "update":
         body.timeTablePlaceBlockDtos.map((item) => {
           const convert = convertBlock(item);
-          useItemsStore.getState().moveItemFromWebsocket(convert);
+          if (convert) useItemsStore.getState().moveItemFromWebsocket(convert);
         })
         break;
       case "delete":
@@ -75,7 +75,21 @@ const timetableplaceblock = (body) => {
 }
 
 export const getClient = () => client;
+
+export const disconnectStompClient = () => {
+  if (client) {
+    console.log("🔌 WebSocket 연결 종료 중...");
+    client.deactivate();
+    client = null;
+  }
+};
+
 export const initStompClient = (id) => {
+  if (client && client.active) {
+    console.log("⚠️ 이미 활성화된 WebSocket 클라이언트가 있습니다. 기존 연결을 종료합니다.");
+    client.deactivate();
+  }
+
   const token = localStorage.getItem('accessToken');
   const BASE_URL = import.meta.env.VITE_API_URL;
   const SERVER_URL = `${BASE_URL}/ws?token=${encodeURIComponent(token)}`;
@@ -91,6 +105,7 @@ export const initStompClient = (id) => {
 
       client.subscribe(`/topic/${id}`, (message) => {
         const body = JSON.parse(message.body);
+        console.log("📩 [WebSocket] 수신 데이터 (Topic):", body);
         const entity = body.entity;
         
         switch(entity) {
@@ -108,7 +123,7 @@ export const initStompClient = (id) => {
 
       client.subscribe(`/topic/plan-presence/${id}`, (message) => {
         const body = JSON.parse(message.body);
-        console.log("(접속자) 수신된 메시지:", body);
+        console.log("👥 [WebSocket] 접속자 수신 데이터:", body);
         useUserStore.getState().setUserAll(body.users);
       });
     },
@@ -117,11 +132,6 @@ export const initStompClient = (id) => {
       console.error("❌ STOMP 에러:", frame.headers["message"]);
       client.deactivate();
     },
-
-    // onWebSocketClose: () => {
-    //   console.log("🔌 WebSocket 연결 종료");
-    //   client.deactivate();
-    // },
   });
 
   client.activate();

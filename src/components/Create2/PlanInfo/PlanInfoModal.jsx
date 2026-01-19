@@ -40,6 +40,7 @@ export default function PlanInfoModal({setIsInfoOpen}) {
 
   const handleDestinationLocationSelect = (location) => {
     setPlanField("travelId", location.id);
+    setPlanField("travelCategoryName", location.name.split(" ")[0]);
     setPlanField("travelName", location.name.split(" ").pop());
   };
 

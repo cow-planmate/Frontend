@@ -18,6 +18,7 @@ import PlanInfoModal from "./PlanInfoModal";
 import ShareModal from "../../common/ShareModal";
 import MapModal from "./MapModal";
 import { useApiClient } from "../../../hooks/useApiClient";
+import NoLoginSave from "./NoLoginSave";
 
 export default function PlanInfo({id}) {
   const { 
@@ -53,6 +54,7 @@ export default function PlanInfo({id}) {
     accommodation: [],
     restaurant: [],
   });
+  const [isSaveOpen, setIsSaveOpen] = useState(false);
 
   const [step, setStep] = useState(0);
 
@@ -63,9 +65,6 @@ export default function PlanInfo({id}) {
 
   const handleLoginClose = () => {
     setIsLoginOpen(false);
-    if (isAuthenticated()) {
-      setStep(2);
-    }
   };
 
   const handlePasswordFindOpen = () => {
@@ -98,6 +97,7 @@ export default function PlanInfo({id}) {
   const handleThemeComplete = (keywords) => {
     setSelectedThemeKeywords(keywords);
     setIsThemeOpen(false);
+    setStep(2);
   };
 
   // 추가된 함수들
@@ -110,7 +110,7 @@ export default function PlanInfo({id}) {
   };
 
   const refreshUserProfile = () => {
-    return null;
+    setStep(2);
   }
 
   useEffect(() => {
@@ -126,7 +126,7 @@ export default function PlanInfo({id}) {
 
   useEffect(() => {
     if (step === 2) {
-      console.log("test");
+      setIsSaveOpen(true);
     }
   }, [step]);
 
@@ -258,7 +258,7 @@ export default function PlanInfo({id}) {
             onClose={handleSignupClose}
             onThemeOpen={handleThemestartOpen} // 추가된 prop
             selectedThemeKeywords={selectedThemeKeywords}
-            onLoginSuccess={refreshUserProfile}
+            onLoginSuccess={null}
           />
           <Theme
             isOpen={isThemeOpen}
@@ -272,6 +272,10 @@ export default function PlanInfo({id}) {
             selectedThemeKeywords={selectedThemeKeywords}
           />
         </>
+      }
+
+      {step === 2 && 
+        <NoLoginSave isOpen={isSaveOpen}/>
       }
     </div>
   )

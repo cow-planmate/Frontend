@@ -9,7 +9,7 @@ import {
   TouchSensor,
 } from '@dnd-kit/core';
 import { useApiClient } from "../hooks/useApiClient";
-import { initStompClient } from "../websocket/client";
+import { disconnectStompClient, initStompClient } from "../websocket/client";
 
 import usePlanStore from "../store/Plan";
 import useTimetableStore from "../store/Timetables";
@@ -35,11 +35,11 @@ function App() {
 
   const { 
     planId, setPlanAll, setEventId,
-    travelCategoryName, travelName
+    travelCategoryName, travelName, travelId
   } = usePlanStore();
   const { setTimetableAll, setSelectedDay } = useTimetableStore();
   const { addItemFromWebsocket } = useItemsStore();
-  const { setPlacesAll } = usePlacesStore();
+  const { setPlacesAll, tour, lodging, restaurant } = usePlacesStore();
   const { lastSelectedDay } = useNicknameStore();
   const [noACL, setNoACL] = useState(false);
 
@@ -48,25 +48,12 @@ function App() {
     const fetchPlanData = async () => {
       if (id && isAuthenticated()) {
         try {
-          const [planData, tour, lodging, restaurant] = await Promise.all([
-            get(`${BASE_URL}/api/plan/${id}`),
-            get(`${BASE_URL}/api/plan/${id}/tour`),
-            get(`${BASE_URL}/api/plan/${id}/lodging`),
-            get(`${BASE_URL}/api/plan/${id}/restaurant`),
-          ]);
+          const planData = await get(`${BASE_URL}/api/plan/${id}`)
 
           console.log(planData)
           
           setPlanAll(planData.planFrame);
           setTimetableAll(planData.timetables.slice().sort((a, b) => new Date(a.date) - new Date(b.date)));
-          setPlacesAll({
-            tour: tour.places,
-            tourNext: tour.nextPageTokens,
-            lodging: lodging.places,
-            lodgingNext: lodging.nextPageTokens,
-            restaurant: restaurant.places,
-            restaurantNext: restaurant.nextPageTokens
-          });
           
           if (lastSelectedDay[id] && planData.timetables.length >= lastSelectedDay[id]) {
             setSelectedDay(lastSelectedDay[id]);
@@ -85,34 +72,75 @@ function App() {
           }
         }
       } else { // 비로그인 걸러내기
-        try {
-          const [tour, lodging, restaurant] = await Promise.all([
-            get(`${BASE_URL}/api/plan/tour/${travelCategoryName}/${travelName}`),
-            get(`${BASE_URL}/api/plan/lodging/${travelCategoryName}/${travelName}`),
-            get(`${BASE_URL}/api/plan/restaurant/${travelCategoryName}/${travelName}`),
-          ]);
-          setPlacesAll({
-            tour: tour.places,
-            tourNext: tour.nextPageTokens,
-            lodging: lodging.places,
-            lodgingNext: lodging.nextPageTokens,
-            restaurant: restaurant.places,
-            restaurantNext: restaurant.nextPageTokens
-          });
-          setSelectedDay(0);
-        } catch(err) {
-          console.error("추천 장소를 가져오는데 실패했습니다:", err);
-        }
+        setSelectedDay(0);
       }
     }
     fetchPlanData();
   }, []);
 
   useEffect(() => {
+    const updatePlace = async () => {
+      if (id && isAuthenticated()) {
+        try {
+          const [tourData, lodgingData, restaurantData] = await Promise.all([
+            get(`${BASE_URL}/api/plan/${id}/tour`),
+            get(`${BASE_URL}/api/plan/${id}/lodging`),
+            get(`${BASE_URL}/api/plan/${id}/restaurant`),
+          ]);
+
+          setPlacesAll({
+            tour: tourData.places,
+            tourNext: tourData.nextPageTokens,
+            lodging: lodgingData.places,
+            lodgingNext: lodgingData.nextPageTokens,
+            restaurant: restaurantData.places,
+            restaurantNext: restaurantData.nextPageTokens
+          });
+        } catch(err) {
+          console.error("추천 장소를 가져오는데 실패했습니다:", err);
+        }
+      } else {
+        try {
+          const [tourData, lodgingData, restaurantData] = await Promise.all([
+            get(`${BASE_URL}/api/plan/tour/${travelCategoryName}/${travelName}`),
+            get(`${BASE_URL}/api/plan/lodging/${travelCategoryName}/${travelName}`),
+            get(`${BASE_URL}/api/plan/restaurant/${travelCategoryName}/${travelName}`),
+          ]);
+  
+          setPlacesAll({
+            tour: tourData.places,
+            tourNext: tourData.nextPageTokens,
+            lodging: lodgingData.places,
+            lodgingNext: lodgingData.nextPageTokens,
+            restaurant: restaurantData.places,
+            restaurantNext: restaurantData.nextPageTokens
+          });
+        } catch (err) {
+          console.error("추천 장소를 가져오는데 실패했습니다:", err);
+        }
+      }
+    }
+    updatePlace();
+  }, [travelCategoryName, travelName, travelId])
+
+  useEffect(() => {
     if (id && isAuthenticated() && planId) {
       initStompClient(id);
+
+      return () => {
+        disconnectStompClient();
+      }
     }
-  }, []);
+  }, [id, planId, isAuthenticated]);
+
+  // useEffect(() => {
+  //   console.log(planId, tour, lodging, restaurant);
+  //   console.log(!planId || tour.length === 0 || lodging.length === 0 || restaurant.length === 0);
+  // }, [planId, tour, lodging, restaurant])
+
+  useEffect(() => {
+    console.log(travelCategoryName, travelName, travelId)
+  }, [travelCategoryName, travelName, travelId])
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
@@ -128,7 +156,7 @@ function App() {
     }
   };
 
-  if (!planId) {
+  if (!planId || tour.length === 0 || lodging.length === 0 || restaurant.length === 0) {
     return (
       <div className="font-pretendard h-screen">
         <Navbar />
