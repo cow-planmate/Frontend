@@ -20,27 +20,33 @@ function isDifferentEventId(eventId) {
 const plan = (body) => {
   const eventId = body.eventId;
   console.log("📩 수신된 메시지:", body);
-  if (isDifferentEventId(eventId)) {
-    usePlanStore.getState().setPlanAll(body.planDtos[0]);
+  const data = body.planDtos || body.plans;
+  if (!data) return;
+
+  if (isDifferentEventId(eventId) || body.isUndoRedo) {
+    usePlanStore.getState().setPlanAll(data[0]);
   }
 }
 
 const timetable = (body) => {
   const action = body.action;
+  const data = body.timeTableDtos || body.timetables;
+  if (!data) return;
+
   switch(action) {
     case "create":
-      body.timeTableDtos.map((item) => {
+      data.map((item) => {
         console.log(item)
         useTimetableStore.getState().setTimetableCreate(item);
       });
       break;
     case "update":
-      body.timeTableDtos.map((item) => {
+      data.map((item) => {
         useTimetableStore.getState().setTimetableUpdate(item);
       });
       break;
     case "delete":
-      body.timeTableDtos.map((item) => {
+      data.map((item) => {
         useTimetableStore.getState().setTimetableDelete(item.timeTableId);
       });
       break;
@@ -50,25 +56,27 @@ const timetable = (body) => {
 const timetableplaceblock = (body) => {
   const eventId = body.eventId;
   const action = body.action;
+  const data = body.timeTablePlaceBlockDtos || body.timetableplaceblocks;
+  const isUndoRedo = body.isUndoRedo;
 
-  if (isDifferentEventId(eventId) || action === "create") {
+  if ((isDifferentEventId(eventId) || action === "create" || !eventId || isUndoRedo) && data) {
     console.log("📩 수신된 메시지:", body);
     
     switch(action) {
       case "create":
-        body.timeTablePlaceBlockDtos.map((item) => {
+        data.map((item) => {
           const convert = convertBlock(item);
           if (convert) useItemsStore.getState().addItemFromWebsocket(convert);
         })
         break;
       case "update":
-        body.timeTablePlaceBlockDtos.map((item) => {
+        data.map((item) => {
           const convert = convertBlock(item);
           if (convert) useItemsStore.getState().moveItemFromWebsocket(convert);
         })
         break;
       case "delete":
-        body.timeTablePlaceBlockDtos.map((item) => {
+        data.map((item) => {
           useItemsStore.getState().deleteItem(item.placeTheme, item.timeTableId);
         })
         break;
@@ -77,6 +85,24 @@ const timetableplaceblock = (body) => {
 }
 
 export const getClient = () => client;
+
+export const sendUndo = (roomId) => {
+  if (client && client.connected) {
+    client.publish({
+      destination: `/app/${roomId}`,
+      body: JSON.stringify({ action: "undo" }),
+    });
+  }
+};
+
+export const sendRedo = (roomId) => {
+  if (client && client.connected) {
+    client.publish({
+      destination: `/app/${roomId}`,
+      body: JSON.stringify({ action: "redo" }),
+    });
+  }
+};
 
 export const disconnectStompClient = () => {
   if (client) {

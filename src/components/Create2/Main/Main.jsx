@@ -5,10 +5,12 @@ import usePlanStore from '../../../store/Plan';
 import useItemsStore from "../../../store/Schedules";
 import useTimetableStore from "../../../store/Timetables";
 import { checkOverlap, exportBlock, findEmptySlot, formatTime, getTimeTableId } from "../../../utils/createUtils";
-import { getClient } from '../../../websocket/client';
+import { getClient, sendRedo, sendUndo } from '../../../websocket/client';
 import Sidebar from '../Place/Sidebar';
 import { resizeStyles } from '../Timetable/ResizeHandle'; // 스타일 문자열 import
 import TimetableGrid from '../Timetable/TimetableGrid';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faRotateLeft, faRotateRight } from "@fortawesome/free-solid-svg-icons";
 
 export default function Main() {
   const client = getClient();
@@ -183,8 +185,26 @@ export default function Main() {
   const showSidebar = !isMobile || activeTab === 'recommend';
 
   return (
-    <div className="flex flex-1 flex-col h-full overflow-hidden select-none">
+    <div className="flex flex-1 flex-col h-full overflow-hidden select-none relative">
       <style>{resizeStyles}</style>
+
+      {/* Undo/Redo Buttons */}
+      <div className="absolute top-2 right-[calc(32%+24px)] z-10 flex space-x-2">
+        <button
+          onClick={() => sendUndo(id)}
+          className="flex items-center justify-center w-10 h-10 bg-white border border-gray-200 rounded-full shadow-md hover:bg-gray-50 text-gray-600 transition-colors"
+          title="되돌리기 (Ctrl+Z)"
+        >
+          <FontAwesomeIcon icon={faRotateLeft} />
+        </button>
+        <button
+          onClick={() => sendRedo(id)}
+          className="flex items-center justify-center w-10 h-10 bg-white border border-gray-200 rounded-full shadow-md hover:bg-gray-50 text-gray-600 transition-colors"
+          title="다시실행 (Ctrl+Y / Ctrl+Shift+Z)"
+        >
+          <FontAwesomeIcon icon={faRotateRight} />
+        </button>
+      </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden relative md:space-x-6">
