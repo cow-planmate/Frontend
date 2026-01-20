@@ -1,15 +1,15 @@
 import { useEffect } from "react";
-import { useApiClient } from "../../../hooks/useApiClient";
-import LoadingRing from "../../../assets/imgs/ring-resize.svg?react";
-import usePlanStore from "../../../store/Plan";
-import useTimetableStore from "../../../store/Timetables";
-import { exportBlock, getTimeTableId } from "../../../utils/createUtils";
-import useItemsStore from "../../../store/Schedules";
 import { useNavigate } from "react-router-dom";
+import LoadingRing from "../../../assets/imgs/ring-resize.svg?react";
+import { useApiClient } from "../../../hooks/useApiClient";
+import usePlanStore from "../../../store/Plan";
+import useItemsStore from "../../../store/Schedules";
+import useTimetableStore from "../../../store/Timetables";
+import { exportBlock } from "../../../utils/createUtils";
 
 export default function NoLoginSave({isOpen}) {
   const BASE_URL = import.meta.env.VITE_API_URL;
-  const { isAuthenticated, patch } = useApiClient();
+  const { isAuthenticated, post } = useApiClient();
   const { departure, transportationCategoryId, travelId, adultCount, childCount } = usePlanStore();
   const { timetables } = useTimetableStore();
   const { items } = useItemsStore();
@@ -28,12 +28,14 @@ export default function NoLoginSave({isOpen}) {
     const savePlan = async () => {
       if (isAuthenticated()) {
         try {
-          const res = patch(`${BASE_URL}/api/plan/save`, {
-            departure: departure,
-            transportationCategoryId: transportationCategoryId,
-            travelId: travelId,
-            adultCount: adultCount,
-            childCount: childCount,
+          const res = await post(`${BASE_URL}/api/plan/create`, {
+            planFrame: {
+              departure: departure,
+              transportationCategoryId: transportationCategoryId,
+              travelId: travelId,
+              adultCount: adultCount,
+              childCount: childCount,
+            },
             timetables: timetables,
             timetablePlaceBlocks: exportBlocks
           });

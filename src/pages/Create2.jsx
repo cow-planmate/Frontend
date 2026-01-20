@@ -120,7 +120,8 @@ function App() {
         }
       }
     }
-    updatePlace();
+
+    if (travelCategoryName && travelName && travelId) updatePlace();
   }, [travelCategoryName, travelName, travelId])
 
   useEffect(() => {

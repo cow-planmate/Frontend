@@ -3,6 +3,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { ResizableScheduledItem } from './ResizableScheduledItem';
 import useTimetableStore from "../../../store/Timetables";
 import { formatTime, getTimeTableId } from "../../../utils/createUtils";
+import Weather from './Weather';
 
 const TimetableGrid = React.forwardRef(({ items, preview, onResizeEnd, showTimetable }, ref) => {
   const { TOTAL_SLOTS, SLOT_HEIGHT, selectedDay, timetables } = useTimetableStore();
@@ -17,9 +18,7 @@ const TimetableGrid = React.forwardRef(({ items, preview, onResizeEnd, showTimet
 
   return (
     <div className={`flex-1 md:w-[36%] md:flex-initial flex flex-col border border-gray-300 rounded-lg transition-all duration-300 ${showTimetable ? 'opacity-100 z-10' : 'opacity-0 absolute inset-0 -z-10'}`}>
-      <div className="border-b p-4">
-        <div className='font-semibold text-lg'>테스트</div>
-      </div>
+      <Weather />
       <div className="h-full flex flex-col overflow-hidden relative py-4 px-5 scroll-smooth overflow-y-auto overflow-x-hidden">
         <div ref={combinedRef} className="flex-1 relative">
           

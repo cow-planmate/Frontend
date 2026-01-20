@@ -107,8 +107,8 @@ export function convertBlock(block) {
     formatted_address: block.placeAddress,
     rating: block.placeRating,
     iconUrl: "./src/assets/imgs/default.png",
-    xlocation: block.xLocation,
-    ylocation: block.yLocation,
+    xlocation: block.xLocation || block.xlocation,
+    ylocation: block.yLocation || block.ylocation,
   }
 
   return {timeTableId, place, start, duration, blockId};
