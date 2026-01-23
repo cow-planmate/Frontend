@@ -1,25 +1,20 @@
 import { useEffect, useState } from "react"
+import { useApiClient } from "../../hooks/useApiClient";
 
-import useTimetableStore from "../../../store/Timetables";
-import usePlanStore from "../../../store/Plan";
-import { useApiClient } from "../../../hooks/useApiClient";
+import Sunny from "../../assets/imgs/weather/clear-day.svg";             // 맑음
+import SemiSunny from "../../assets/imgs/weather/cloudy-day-1.svg";      // 대체로 맑음
+import SemiCloudy from "../../assets/imgs/weather/cloudy-day-2.svg";     // 구름 조금
+import Cloudy from "../../assets/imgs/weather/cloudy-original.svg";      // 흐림
+import Fog from "../../assets/imgs/weather/fog.svg";                     // 안개
+import SemiRainy from "../../assets/imgs/weather/rainy-5.svg";           // 이슬비
+import Rainy from "../../assets/imgs/weather/rainy-6.svg";               // 비
+import Snowy from "../../assets/imgs/weather/snowy-6.svg";               // 눈
+import Sonagi from "../../assets/imgs/weather/sonagi.svg";               // 소나기
+import Thunderstorms from "../../assets/imgs/weather/thunderstorms.svg"; // 뇌우
 
-import Sunny from "../../../assets/imgs/weather/clear-day.svg";             // 맑음
-import SemiSunny from "../../../assets/imgs/weather/cloudy-day-1.svg";      // 대체로 맑음
-import SemiCloudy from "../../../assets/imgs/weather/cloudy-day-2.svg";     // 구름 조금
-import Cloudy from "../../../assets/imgs/weather/cloudy-original.svg";      // 흐림
-import Fog from "../../../assets/imgs/weather/fog.svg";                     // 안개
-import SemiRainy from "../../../assets/imgs/weather/rainy-5.svg";           // 이슬비
-import Rainy from "../../../assets/imgs/weather/rainy-6.svg";               // 비
-import Snowy from "../../../assets/imgs/weather/snowy-6.svg";               // 눈
-import Sonagi from "../../../assets/imgs/weather/sonagi.svg";               // 소나기
-import Thunderstorms from "../../../assets/imgs/weather/thunderstorms.svg"; // 뇌우
-
-export default function Weather() {
+export default function Weather({timetables, selectedDay, travelCategoryName, travelName, travelId}) {
   const BASE_URL = import.meta.env.VITE_API_URL;
 
-  const { timetables, selectedDay } = useTimetableStore();
-  const { travelCategoryName, travelName, travelId } = usePlanStore();
   const { post } = useApiClient();
 
   const [weather, setWeather] = useState({});
@@ -88,21 +83,21 @@ export default function Weather() {
       <div className="flex space-x-4 items-center">
         <div className="-space-y-1">
           <p className="text-xs text-gray-500">최저</p>
-          {nowWeather.temp_min ? 
+          {nowWeather.temp_min != null ? 
             <p className="text-lg font-semibold text-blue-600">{nowWeather?.temp_min}℃</p> :
             <div className="bg-gray-300 rounded-lg w-9 h-6"></div>
           }
         </div>
         <div className="-space-y-1">
           <p className="text-xs text-gray-500">최고</p>
-          {nowWeather.temp_max ? 
+          {nowWeather.temp_max != null ? 
             <p className="text-lg font-semibold text-red-600">{nowWeather?.temp_max}℃</p> :
             <div className="bg-gray-300 rounded-lg w-9 h-6"></div>
           }
         </div>
         <div className="-space-y-1">
           <p className="text-xs text-gray-500">체감</p>
-          {nowWeather.feels_like ? 
+          {nowWeather.feels_like != null ? 
             <p className="text-lg font-semibold">{nowWeather?.feels_like}℃</p> :
             <div className="bg-gray-300 rounded-lg w-9 h-6"></div>
           }
