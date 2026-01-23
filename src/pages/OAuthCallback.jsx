@@ -18,8 +18,19 @@ const OAuthCallback = () => {
     const handleCallback = async () => {
       try {
         const status = searchParams.get("status");
+        const success = searchParams.get("success");
+        const message = searchParams.get("message");
 
         // 기존 사용자 로그인 (loginCode 방식)
+        if (success === "false") {
+          setError(
+            message
+              ? decodeURIComponent(message)
+              : "OAuth 로그인에 실패했습니다.",
+          );
+          setIsProcessing(false);
+          return;
+        }
         if (status === "SUCCESS") {
           const code = searchParams.get("code");
 
@@ -37,7 +48,7 @@ const OAuthCallback = () => {
               headers: {
                 "Content-Type": "application/json",
               },
-            }
+            },
           );
 
           if (!response.ok) {
@@ -60,7 +71,7 @@ const OAuthCallback = () => {
                 headers: {
                   Authorization: `Bearer ${accessToken}`,
                 },
-              }
+              },
             );
 
             if (userResponse.ok) {
