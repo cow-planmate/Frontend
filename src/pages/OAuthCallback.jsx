@@ -31,6 +31,7 @@ const OAuthCallback = () => {
           setIsProcessing(false);
           return;
         }
+
         if (status === "SUCCESS") {
           const code = searchParams.get("code");
 
