@@ -1,4 +1,4 @@
-export const ScheduledItem = ({ item }) => {
+export const ScheduledItem = ({ item, START_HOUR }) => {
   const SLOT_HEIGHT = 40;
   
   const place = item?.place;
@@ -34,7 +34,7 @@ export const ScheduledItem = ({ item }) => {
       className="absolute touch-none"
     >
         <div
-          className={`w-full h-full ${tripColor1[place.categoryId]} border-l-4 ${tripColor3[place.categoryId]} rounded shadow-sm overflow-hidden select-none hover:${tripColor2[place.categoryId]} transition-colors cursor-move
+          className={`w-full h-full ${tripColor1[place.categoryId]} border-l-4 ${tripColor3[place.categoryId]} rounded shadow-sm overflow-hidden select-none hover:${tripColor2[place.categoryId]} transition-colors
             ${localState.height <= 80 ? 'flex flex-col items-start justify-center px-5' : "p-5"}`}
         >
           <div className="w-full flex items-center gap-2 min-w-0">

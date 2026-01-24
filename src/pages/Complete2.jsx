@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useApiClient } from "../hooks/useApiClient";
+import { getTimeSlotIndex } from "../utils/createUtils";
 
 import Navbar from "../components/common/Navbar";
 import Loading from "../components/common/Loading";
@@ -41,12 +42,15 @@ function App() {
     );
   
   function convertBlock(block) {
-    const timeTableId = block.timeTableId;
-    const timeTableStartTime = timetables.find(
+    const timeTableId = block?.timeTableId;
+    const timeTableStartTime = timetables?.find(
       (t) => t.timeTableId === timeTableId
     )?.timeTableStartTime;
-    const start = getTimeSlotIndex(timeTableStartTime, block.blockStartTime);
-    const duration = getTimeSlotIndex(block.blockStartTime, block.blockEndTime);
+
+    console.log(timetables)
+    console.log(timeTableStartTime)
+    const start = getTimeSlotIndex(timeTableStartTime, block?.blockStartTime);
+    const duration = getTimeSlotIndex(block?.blockStartTime, block?.blockEndTime);
     const blockId = block.placeTheme;
     console.log(start)
     console.log(duration)
@@ -80,6 +84,23 @@ function App() {
       ],
     }));
   };
+  
+  const [prevPlaces, setPrevPlaces] = useState(null);
+
+  useEffect(() => {
+    const addPlaceBlocks = () => {
+      prevPlaces.map((item) => {
+        console.log(item)
+        const convert = convertBlock(item); 
+        addPlaceBlock(convert); 
+      });
+    }
+    console.log(timetables, prevPlaces)
+    if (timetables && prevPlaces) {
+      addPlaceBlocks();
+    }
+  }, [timetables, prevPlaces])
+
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -112,19 +133,20 @@ function App() {
 
         const sortTimetables = sortByDate(planData.timetables);
         setTimetables(sortTimetables);
-        
-        planData.placeBlocks.map((item) => {
-          const convert = convertBlock(item); 
-          addPlaceBlock(convert); 
-        });
-
         setSelectedDay(0);
+
+        setPrevPlaces(planData.placeBlocks);
+
         setFinishLoading(true);
       }
     };
 
     fetchUserProfile();
   }, [id, get]);
+
+  useEffect(() => {
+
+  })
 
   if (!finishLoading) {
     return (

@@ -38,14 +38,6 @@ export default function PlanInfoModal({setIsInfoOpen, planFrame}) {
           className={infodiv}
         >
           <div className="space-y-1.5">
-            <p className="text-gray-500 text-start font-semibold">출발지</p>
-            <p className="text text-start max-w-full truncate">{planFrame.departure}</p>
-          </div>
-        </div>
-        <div
-          className={infodiv}
-        >
-          <div className="space-y-1.5">
             <p className="text-gray-500 text-start font-semibold">여행지</p>
             <p className="text text-start max-w-full truncate">{planFrame.travelName}</p>
           </div>

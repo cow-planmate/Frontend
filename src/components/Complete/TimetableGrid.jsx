@@ -55,7 +55,7 @@ const TimetableGrid = ({ planFrame, placeBlocks, selectedDay, timetables, showTi
           </div>
 
           {(placeBlocks[getTimeTableId(timetables, selectedDay)] || []).map(item => (
-            <ScheduledItem key={item.id} item={item} />
+            <ScheduledItem key={item.id} item={item} START_HOUR={START_HOUR} />
           ))}
         </div>
       </div>
