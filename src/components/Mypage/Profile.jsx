@@ -102,13 +102,15 @@ export default function Profile({ userProfile, setUserProfile }) {
               change={true}
               iconColor="text-gray-700"
             />
-            <ProfileText
-              icon={faLock}
-              title="비밀번호"
-              content="password"
-              change={false}
-              iconColor="text-gray-500"
-            />
+            {userProfile.isSocialLogin === false && (
+              <ProfileText
+                icon={faLock}
+                title="비밀번호"
+                content="password"
+                change={false}
+                iconColor="text-gray-500"
+              />
+            )}
           </>
         )}
 
