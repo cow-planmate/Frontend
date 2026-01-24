@@ -7,10 +7,10 @@ const usePlacesStore = create((set) => ({
   search: [],
   weather: [],
 
-  tourNext: "",
-  lodgingNext: "",
-  restaurantNext: "",
-  searchNext: "",
+  tourNext: [],
+  lodgingNext: [],
+  restaurantNext: [],
+  searchNext: [],
 
   setPlacesAll: (payload) =>
     set((state) => ({

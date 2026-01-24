@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { SidebarItem } from './SidebarItem';
-import { useApiClient } from "../../../hooks/useApiClient";
-import usePlacesStore from "../../../store/Places";
 import { faCirclePlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useState } from 'react';
 import LoadingRing from "../../../assets/imgs/ring-resize.svg?react";
+import { useApiClient } from "../../../hooks/useApiClient";
+import usePlacesStore from "../../../store/Places";
+import { SidebarItem } from './SidebarItem';
 
 export default function Sidebar({ planId, isMobile, showSidebar, handleMobileAdd }) {
   const BASE_URL = import.meta.env.VITE_API_URL;
-  const { get } = useApiClient();
+  const { get, post } = useApiClient();
   const store = usePlacesStore();
   const { search, setAddSearch, setAddNext } = store;
 
@@ -21,6 +21,7 @@ export default function Sidebar({ planId, isMobile, showSidebar, handleMobileAdd
   const koreanName = { tour: "관광지", lodging: "숙소", restaurant: "식당", search: "검색" };
 
   const currentPlaces = selectedTab === "weather" ? [] : store[selectedTab] ?? [];
+  const nextPageTokens = store[`${selectedTab}Next`] ?? [];
 
   const doSearch = async () => {
     const q = searchText.trim();
@@ -42,9 +43,13 @@ export default function Sidebar({ planId, isMobile, showSidebar, handleMobileAdd
   const handleNext = async () => {
     const currentTab = selectedTab;
     const nextPageTokens = store[`${currentTab}Next`];
+
     try {
       setNextLoading(true);
-      const res = await get(`${BASE_URL}/api/plan/nextplace/${nextPageTokens}`);
+      // 'tokens' is now a list of NextPageTokenDTO objects containing their own metadata
+      const res = await post(`${BASE_URL}/api/plan/nextplace`, {
+        tokens: Array.isArray(nextPageTokens) ? nextPageTokens : []
+      });
       setAddNext(currentTab, res.places, res.nextPageTokens);
     } catch (err) {
       console.error("실패!", err);
@@ -100,7 +105,7 @@ export default function Sidebar({ planId, isMobile, showSidebar, handleMobileAdd
               onMobileAdd={() => handleMobileAdd(place)}
             />
           ))}
-          {(selectedTab !== "search" || search.length !== 0) && (
+          {nextPageTokens.length > 0 && (
             <div className="text-center py-3">
               <button className="text-3xl text-main hover:text-mainDark" onClick={handleNext}>
                 {nextLoading ? <LoadingRing className="w-[30px]"/> : <FontAwesomeIcon icon={faCirclePlus} />}
