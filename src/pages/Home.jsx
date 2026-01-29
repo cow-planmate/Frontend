@@ -156,7 +156,7 @@ function App() {
         travelCategoryName: destinationLocation?.name || "",
         travelName: destinationLocation?.name || "",
         travelId: destinationLocation?.id || null,
-        departure: null,
+        departure: "",
         transportationCategoryId: selectedTransport === "car" ? 1 : 0,
         adultCount: Number(personCount.adults),
         childCount: Number(personCount.children),
@@ -166,7 +166,7 @@ function App() {
 
       if (isAuthenticated()) {
         const requestData = {
-          departure: null,
+          departure: "",
           travelId: destinationLocation.id,
           dates: formattedDates,
           adultCount: Number(personCount.adults),
