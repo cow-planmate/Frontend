@@ -1,6 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Home from "../pages/Home";
-import Complete from "../pages/Complete";
+// import Complete from "../pages/Complete";
 // import Create from "../pages/NewCreate";
 import Mypage from "../pages/Mypage";
 import Signuptest from "../pages/Signuptest";
@@ -29,8 +29,6 @@ const Router = () => {
 
         <Route path="oauth/callback" element={<OAuthCallback />} />
         <Route path="oauth/additional-info" element={<OAuthAdditionalInfo />} />
-
-        
         
         {/* <Route path="create" element={<Create />} /> */}
         {/* <Route path="complete" element={<Complete />} /> */}

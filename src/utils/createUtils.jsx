@@ -1,4 +1,7 @@
+import usePlanStore from "../store/Plan";
 import useTimetableStore from "../store/Timetables";
+import usePlacesStore from "../store/Places";
+import useItemsStore from "../store/Schedules";
 
 export const formatTime = (slotIndex) => {
   const { START_HOUR } = useTimetableStore.getState();
@@ -53,24 +56,44 @@ export function slotIndexToTime(START_HOUR, newStart, intervalMinutes = 15) {
   return `${h}:${m}:00`;
 }
 
-export function exportBlock(timeTableId, place, newStart, duration, blockId) {
+export function exportBlock(timeTableId, place, newStart, duration, blockId, noLogin = false, date = null) {
   const { START_HOUR } = useTimetableStore.getState();
   const blockStartTime = slotIndexToTime(START_HOUR, newStart);
   const blockEndTime = slotIndexToTime(START_HOUR, newStart + duration);
-  const block = {
-    blockId: Math.random(),
-    placeName: place.name,
-    placeTheme: blockId,
-    placeRating: place.rating,
-    placeAddress: place.formatted_address,
-    placeLink: place.url,
-    blockStartTime: blockStartTime,
-    blockEndTime: blockEndTime,
-    xLocation: place.xlocation,
-    yLocation: place.ylocation,
-    placeCategoryId: place.categoryId,
-    timeTableId: timeTableId,
-    placePhotoId: place.placeId
+  let block;
+  if (noLogin) {
+    block = {
+      blockId: Math.random(),
+      placeName: place.name,
+      placeTheme: blockId,
+      placeRating: place.rating,
+      placeAddress: place.formatted_address,
+      placeLink: place.url,
+      startTime: blockStartTime,
+      endTime: blockEndTime,
+      xLocation: place.xlocation,
+      yLocation: place.ylocation,
+      placeCategoryId: place.categoryId,
+      timeTableId: timeTableId,
+      placePhotoId: place.placeId,
+      date: date
+    }
+  } else {
+    block = {
+      blockId: Math.random(),
+      placeName: place.name,
+      placeTheme: blockId,
+      placeRating: place.rating,
+      placeAddress: place.formatted_address,
+      placeLink: place.url,
+      blockStartTime: blockStartTime,
+      blockEndTime: blockEndTime,
+      xLocation: place.xlocation,
+      yLocation: place.ylocation,
+      placeCategoryId: place.categoryId,
+      timeTableId: timeTableId,
+      placePhotoId: place.placeId,
+    }
   }
   return block;
 }
@@ -113,3 +136,10 @@ export function convertBlock(block) {
 
   return {timeTableId, place, start, duration, blockId};
 }
+
+export const resetAllStores = () => {
+  usePlanStore.getState().resetPlan();
+  useTimetableStore.getState().resetTimetable();
+  usePlacesStore.getState().resetPlaces();
+  useItemsStore.getState().resetItems();
+};

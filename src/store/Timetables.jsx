@@ -123,7 +123,16 @@ const useTimetableStore = create((set, get) => ({
       usePlanStore.getState().planId, 
       dayIndex,
     );
-  }
+  },
+
+  resetTimetable: () =>
+    set({
+      timetables: [],
+      selectedDay: 0,
+      START_HOUR: 0,
+      END_HOUR: 0,
+      TOTAL_SLOTS: 0,
+    }),
 }));
 
 export default useTimetableStore;

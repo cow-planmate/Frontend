@@ -21,7 +21,7 @@ import PlanInfo from "../components/Create2/PlanInfo/PlanInfo";
 import DaySelector from "../components/Create2/DaySelector/DaySelector";
 import Main from "../components/Create2/Main/Main";
 import useItemsStore from "../store/Schedules";
-import { convertBlock } from "../utils/createUtils";
+import { convertBlock, resetAllStores } from "../utils/createUtils";
 import useNicknameStore from "../store/Nickname";
 
 function App() {
@@ -42,6 +42,12 @@ function App() {
   const { setPlacesAll, tour, lodging, restaurant } = usePlacesStore();
   const { lastSelectedDay } = useNicknameStore();
   const [noACL, setNoACL] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      resetAllStores();
+    }
+  }, []);
 
   // 초기 데이터 로딩
   useEffect(() => {

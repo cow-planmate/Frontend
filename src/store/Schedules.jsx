@@ -153,7 +153,12 @@ const useItemsStore = create((set) => ({
           ),
         },
       }
-    })
+    }),
+
+  resetItems: () =>
+    set({
+      items: {},
+    }),
 }));
 
 export default useItemsStore;

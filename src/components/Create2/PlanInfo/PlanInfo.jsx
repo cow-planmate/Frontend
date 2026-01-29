@@ -97,7 +97,6 @@ export default function PlanInfo({id}) {
   const handleThemeComplete = (keywords) => {
     setSelectedThemeKeywords(keywords);
     setIsThemeOpen(false);
-    setStep(2);
   };
 
   // 추가된 함수들
@@ -107,6 +106,7 @@ export default function PlanInfo({id}) {
 
   const handleThemestartClose = () => {
     setIsThemestartOpen(false);
+    setStep(2);
   };
 
   const refreshUserProfile = () => {

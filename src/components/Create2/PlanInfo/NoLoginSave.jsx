@@ -10,7 +10,9 @@ import { exportBlock } from "../../../utils/createUtils";
 export default function NoLoginSave({isOpen}) {
   const BASE_URL = import.meta.env.VITE_API_URL;
   const { isAuthenticated, post } = useApiClient();
-  const { departure, transportationCategoryId, travelId, adultCount, childCount } = usePlanStore();
+  const { 
+    departure, transportationCategoryId, travelId, adultCount, childCount,
+  } = usePlanStore();
   const { timetables } = useTimetableStore();
   const { items } = useItemsStore();
   const navigate = useNavigate();
@@ -20,8 +22,10 @@ export default function NoLoginSave({isOpen}) {
 
     const exportBlocks = Object.entries(items).flatMap(([key, day]) => {
       if (!Array.isArray(day)) return [];
+      const date = timetables.find((t) => t.timeTableId === Number(key))?.date;
+      console.log(date);
       return day.map(item => 
-        exportBlock(key, item.place, item.start, item.duration, item.id)
+        exportBlock(key, item.place, item.start, item.duration, item.id, true, date)
       )
     });
 
