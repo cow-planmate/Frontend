@@ -32,19 +32,25 @@ export const transformApiResponse = (apiResponse) => {
     let iconUrl;
     if (place.placeCategoryId) {
       if (place.placeCategoryId === 0) {
-        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png";
+        iconUrl =
+          "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png";
       } else if (place.placeCategoryId === 1) {
-        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/lodging-71.png";
+        iconUrl =
+          "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/lodging-71.png";
       } else {
-        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png";
+        iconUrl =
+          "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png";
       }
     } else {
       if (place.placeCategory === 0) {
-        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png";
+        iconUrl =
+          "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png";
       } else if (place.placeCategory === 1) {
-        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/lodging-71.png";
+        iconUrl =
+          "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/lodging-71.png";
       } else {
-        iconUrl = "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png";
+        iconUrl =
+          "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png";
       }
     }
 
@@ -80,7 +86,7 @@ export const transformApiResponse = (apiResponse) => {
       result[targetTimetableId].push(transformedPlace);
     }
   });
-  console.log(result)
+  console.log(result);
   return result;
 };
 
@@ -92,7 +98,12 @@ export const addMinutes = (time, minsToAdd) => {
 };
 
 // 시간 겹침 체크 함수
-export const checkTimeOverlap = (newItem, timeSlots, daySchedule, excludeId = null) => {
+export const checkTimeOverlap = (
+  newItem,
+  timeSlots,
+  daySchedule,
+  excludeId = null,
+) => {
   const newStartIndex = getTimeSlotIndex(newItem.timeSlot, timeSlots);
   const newEndIndex = newStartIndex + newItem.duration - 1;
 
@@ -102,12 +113,19 @@ export const checkTimeOverlap = (newItem, timeSlots, daySchedule, excludeId = nu
     const existingStartIndex = getTimeSlotIndex(item.timeSlot, timeSlots);
     const existingEndIndex = existingStartIndex + item.duration - 1;
 
-    return !(newEndIndex < existingStartIndex || newStartIndex > existingEndIndex);
+    return !(
+      newEndIndex < existingStartIndex || newStartIndex > existingEndIndex
+    );
   });
 };
 
 // 가장 가까운 빈 시간대 찾기
-export const findNearestAvailableTime = (preferredTimeSlot, duration, timeSlots, daySchedule) => {
+export const findNearestAvailableTime = (
+  preferredTimeSlot,
+  duration,
+  timeSlots,
+  daySchedule,
+) => {
   const preferredIndex = getTimeSlotIndex(preferredTimeSlot, timeSlots);
 
   // 선호 시간부터 시작해서 아래로 검색
@@ -137,11 +155,10 @@ export const getTimeSlotIndex = (timeSlot, timeSlots) => {
 
 // 카테고리에 따른 장소 분류
 export const getCategoryByIconUrl = (categoryId) => {
-  if (categoryId === 0) {
-    return "관광지";
-  } else if (categoryId === 1) {
-    return "숙소";
-  } else {
-    return "식당";
-  }
+  if (categoryId === 0) return "관광지";
+  if (categoryId === 1) return "숙소";
+  if (categoryId === 2) return "식당";
+  if (categoryId === 3) return "직접 추가";
+  if (categoryId === 4) return "검색";
+  return "식당";
 };
