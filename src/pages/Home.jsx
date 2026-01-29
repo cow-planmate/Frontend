@@ -133,7 +133,6 @@ function App() {
   const makePlan = async () => {
     try {
       if (
-        !departureLocation ||
         !destinationLocation ||
         !dateRange[0].startDate ||
         !dateRange[0].endDate ||
@@ -145,7 +144,7 @@ function App() {
 
       const allDates = getDatesBetween(
         dateRange[0].startDate,
-        dateRange[0].endDate
+        dateRange[0].endDate,
       );
       const formattedDates = allDates.map((date) => formatDateForApi(date));
 
@@ -157,7 +156,7 @@ function App() {
         travelCategoryName: destinationLocation?.name || "",
         travelName: destinationLocation?.name || "",
         travelId: destinationLocation?.id || null,
-        departure: departureLocation?.name || "",
+        departure: null,
         transportationCategoryId: selectedTransport === "car" ? 1 : 0,
         adultCount: Number(personCount.adults),
         childCount: Number(personCount.children),
@@ -167,7 +166,7 @@ function App() {
 
       if (isAuthenticated()) {
         const requestData = {
-          departure: departureLocation.name,
+          departure: null,
           travelId: destinationLocation.id,
           dates: formattedDates,
           adultCount: Number(personCount.adults),
@@ -240,32 +239,7 @@ function App() {
 
       <div className="relative px-4 sm:px-6 lg:absolute lg:-bottom-1 lg:left-0 lg:right-0 lg:px-8">
         <div className="w-full max-w-7xl mx-auto bg-white rounded-xl shadow-2xl p-4 sm:p-6 mt-6 lg:mt-0 mb-8">
-          <div className="grid gap-4 items-end grid-cols-1 sm:grid-cols-2 lg:grid-cols-6">
-            {/* 출발지 */}
-            <div className="block relative">
-              <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
-                출발지
-              </label>
-              <input
-                type="text"
-                className="border-b-2 border-gray-300 pb-2 focus:border-blue-500 font-pretendard focus:outline-none w-full pr-8 cursor-pointer"
-                placeholder="출발지 입력"
-                value={departureLocation ? departureLocation.name : ""}
-                onClick={() => setIsDepartureOpen(true)}
-                readOnly
-              />
-              <button
-                className="absolute right-0 bottom-2"
-                onClick={() => setIsDepartureOpen(true)}
-                type="button"
-              >
-                <FontAwesomeIcon
-                  icon={faLocationDot}
-                  className="text-gray-400"
-                />
-              </button>
-            </div>
-
+          <div className="grid gap-4 items-end grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
             {/* 여행지 */}
             <div className="block relative">
               <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
