@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import usePlanStore from "../../../store/Plan";
 import useUserStore from "../../../store/Users";
 import { v4 as uuidv4 } from 'uuid';
+import { useApiClient } from "../../../hooks/useApiClient";
+import { sendRedo, sendUndo } from "../../../websocket/client";
 
 import Login from "../../auth/Login";
 import PasswordFind from "../../auth/PasswordFind";
@@ -11,14 +13,14 @@ import Theme from "../../auth/Theme";
 import Themestart from "../../auth/Themestart"; // 추가된 import
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faUserPlus, faInfo } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faUserPlus, faInfo, faRotateLeft, faRotateRight } from "@fortawesome/free-solid-svg-icons";
 import { faMap } from "@fortawesome/free-regular-svg-icons";
 
 import PlanInfoModal from "./PlanInfoModal";
 import ShareModal from "../../common/ShareModal";
 import MapModal from "./MapModal";
-import { useApiClient } from "../../../hooks/useApiClient";
 import NoLoginSave from "./NoLoginSave";
+import TitleModal from "./TitleModal";
 
 export default function PlanInfo({id}) {
   const { 
@@ -38,6 +40,7 @@ export default function PlanInfo({id}) {
   const spanRef = useRef(null);
   const inputRef = useRef(null);
   
+  const [isTitleOpen, setIsTitleOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
@@ -141,17 +144,30 @@ export default function PlanInfo({id}) {
   return (
     <div className={`mx-auto min-[1464px]:w-[1416px] min-[1464px]:px-0 md:px-6 md:pt-6 p-4 pb-0 ${flexCenter} justify-between w-full`}>
       <div className={`${flexCenter} space-x-3`}>
-        <div>
-          <input
-            ref={inputRef}
-            type="text"
-            className={`${infoButton} box-content text-lg font-semibold`}
-            onChange={(e) => setLocalName(e.target.value)}
-            onBlur={() => setPlanField("planName", localName)}
-            style={{ minWidth: '1ch' }}
-            value={localName}
-          />
-        </div>
+        <button
+          onClick={() => setIsTitleOpen(true)}
+          className={`${infoButton} text-lg font-semibold`}
+        >
+          {planName}
+        </button>
+        {planId !== -1 && 
+          <div className="flex">
+            <button 
+              onClick={() => sendUndo(id)}
+              className="size-7 hover:bg-gray-200 rounded-full flex items-center justify-center"
+              title="되돌리기 (Ctrl+Z)"
+            >
+              <FontAwesomeIcon icon={faRotateLeft} />
+            </button>
+            <button 
+              onClick={() => sendRedo(id)}
+              className="size-7 hover:bg-gray-200 rounded-full flex items-center justify-center"
+              title="다시실행 (Ctrl+Y / Ctrl+Shift+Z)"
+            >
+              <FontAwesomeIcon icon={faRotateRight} />
+            </button>
+          </div>
+        }
         <button 
           className="block text-sm rounded-full bg-gray-300 hover:bg-gray-400 p-2 w-9"
           onClick={() => setIsInfoOpen(true)}
@@ -222,14 +238,8 @@ export default function PlanInfo({id}) {
           }
         </div>
       </div>
-
-      <span
-        ref={spanRef}
-        className="invisible absolute whitespace-pre text-base md:text-lg"
-      >
-        {localName}
-      </span>
-
+      
+      {isTitleOpen && <TitleModal setIsTitleOpen={setIsTitleOpen} />}
       {isInfoOpen && <PlanInfoModal setIsInfoOpen={setIsInfoOpen} />}
 
       {isShareOpen && <ShareModal

@@ -118,7 +118,7 @@ export function convertBlock(block) {
   )?.timeTableStartTime;
   const start = getTimeSlotIndex(timeTableStartTime, block.blockStartTime);
   const duration = getTimeSlotIndex(block.blockStartTime, block.blockEndTime);
-  const blockId = block.placeTheme;
+  const blockId = `${block.timeTableId}-${block.placeTheme}-${block.blockId || Date.now()}-${Math.random()}`;
   console.log(start)
   console.log(duration)
 

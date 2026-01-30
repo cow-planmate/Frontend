@@ -9,7 +9,7 @@ import {
   TouchSensor,
 } from '@dnd-kit/core';
 import { useApiClient } from "../hooks/useApiClient";
-import { disconnectStompClient, initStompClient } from "../websocket/client";
+import { disconnectStompClient, initStompClient, sendRedo, sendUndo } from "../websocket/client";
 
 import usePlanStore from "../store/Plan";
 import useTimetableStore from "../store/Timetables";
@@ -140,14 +140,42 @@ function App() {
     }
   }, [id, planId, isAuthenticated]);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Input이나 Textarea에서는 동작하지 않도록 처리
+      if (!isAuthenticated() || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      if (e.ctrlKey || e.metaKey) {
+        const key = e.key.toLowerCase();
+        if (key === 'z') {
+          e.preventDefault();
+          if (e.shiftKey) {
+            console.log("🚀 Redo 요청");
+            sendRedo(id);
+          } else {
+            console.log("🚀 Undo 요청");
+            sendUndo(id);
+          }
+        } else if (key === 'y') {
+          e.preventDefault();
+          console.log("🚀 Redo 요청");
+          sendRedo(id);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [id, isAuthenticated]);
+
   // useEffect(() => {
   //   console.log(planId, tour, lodging, restaurant);
   //   console.log(!planId || tour.length === 0 || lodging.length === 0 || restaurant.length === 0);
   // }, [planId, tour, lodging, restaurant])
 
-  useEffect(() => {
-    console.log(travelCategoryName, travelName, travelId)
-  }, [travelCategoryName, travelName, travelId])
+  // useEffect(() => {
+  //   console.log(travelCategoryName, travelName, travelId)
+  // }, [travelCategoryName, travelName, travelId])
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),

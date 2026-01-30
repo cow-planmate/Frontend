@@ -43,7 +43,7 @@ export default function PlanInfoModal({setIsInfoOpen}) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm font-pretendard">
       <div className="relative bg-white p-4 rounded-2xl shadow-2xl sm:w-[580px] w-[90vw] border border-gray-100 max-h-[90vh] overflow-y-auto space-y-2">
         <div className="flex justify-between items-center px-2 pt-2">
-          <div className="font-bold text-lg">
+          <div className="font-bold text-xl text-gray-800">
             일정 정보
           </div>
           <button 
