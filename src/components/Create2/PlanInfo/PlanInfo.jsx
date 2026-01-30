@@ -36,16 +36,11 @@ export default function PlanInfo({id}) {
 
   const flexCenter = "flex items-center";
   const infoButton = "rounded-lg py-1 px-2 hover:bg-gray-100";
-
-  const spanRef = useRef(null);
-  const inputRef = useRef(null);
   
   const [isTitleOpen, setIsTitleOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
-
-  const [localName, setLocalName] = useState(planName);
   
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isPasswordFindOpen, setIsPasswordFindOpen] = useState(false);
@@ -115,17 +110,6 @@ export default function PlanInfo({id}) {
   const refreshUserProfile = () => {
     setStep(2);
   }
-
-  useEffect(() => {
-    setLocalName(planName);
-  }, [planName]);
-
-  useEffect(() => {
-    if (spanRef.current && inputRef.current) {
-      const spanWidth = spanRef.current.getBoundingClientRect().width;
-      inputRef.current.style.width = `${spanWidth}px`;
-    }
-  }, [localName]);
 
   useEffect(() => {
     if (step === 2) {
