@@ -9,11 +9,12 @@ import {
   TouchSensor,
 } from '@dnd-kit/core';
 import { useApiClient } from "../hooks/useApiClient";
-import { disconnectStompClient, initStompClient } from "../websocket/client";
+import { disconnectStompClient, initStompClient, sendRedo, sendUndo } from "../websocket/client";
 
 import usePlanStore from "../store/Plan";
 import useTimetableStore from "../store/Timetables";
 import usePlacesStore from "../store/Places";
+import useUserStore from "../store/Users";
 
 import Loading from "../components/common/Loading";
 import Navbar from "../components/common/Navbar";
@@ -41,6 +42,7 @@ function App() {
   const { addItemFromWebsocket } = useItemsStore();
   const { setPlacesAll, tour, lodging, restaurant } = usePlacesStore();
   const { lastSelectedDay } = useNicknameStore();
+  const { setUserAll } = useUserStore();
   const [noACL, setNoACL] = useState(false);
 
   useEffect(() => {
@@ -54,12 +56,17 @@ function App() {
     const fetchPlanData = async () => {
       if (id && isAuthenticated()) {
         try {
-          const planData = await get(`${BASE_URL}/api/plan/${id}`)
+          const [planData, presence] = await Promise.all([
+            get(`${BASE_URL}/api/plan/${id}`),
+            get(`${BASE_URL}/presence/${id}`)
+          ])
 
           console.log(planData)
+          console.log(presence)
           
           setPlanAll(planData.planFrame);
           setTimetableAll(planData.timetables.slice().sort((a, b) => new Date(a.date) - new Date(b.date)));
+          setUserAll(presence);
           
           if (lastSelectedDay[id] && planData.timetables.length >= lastSelectedDay[id]) {
             setSelectedDay(lastSelectedDay[id]);
@@ -140,14 +147,42 @@ function App() {
     }
   }, [id, planId, isAuthenticated]);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Input이나 Textarea에서는 동작하지 않도록 처리
+      if (!isAuthenticated() || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      if (e.ctrlKey || e.metaKey) {
+        const key = e.key.toLowerCase();
+        if (key === 'z') {
+          e.preventDefault();
+          if (e.shiftKey) {
+            console.log("🚀 Redo 요청");
+            sendRedo(id);
+          } else {
+            console.log("🚀 Undo 요청");
+            sendUndo(id);
+          }
+        } else if (key === 'y') {
+          e.preventDefault();
+          console.log("🚀 Redo 요청");
+          sendRedo(id);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [id, isAuthenticated]);
+
   // useEffect(() => {
   //   console.log(planId, tour, lodging, restaurant);
   //   console.log(!planId || tour.length === 0 || lodging.length === 0 || restaurant.length === 0);
   // }, [planId, tour, lodging, restaurant])
 
-  useEffect(() => {
-    console.log(travelCategoryName, travelName, travelId)
-  }, [travelCategoryName, travelName, travelId])
+  // useEffect(() => {
+  //   console.log(travelCategoryName, travelName, travelId)
+  // }, [travelCategoryName, travelName, travelId])
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),

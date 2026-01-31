@@ -1,9 +1,9 @@
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import usePlanStore from "../store/Plan";
-import useUserStore from "../store/Users";
-import useTimetableStore from "../store/Timetables";
 import useItemsStore from "../store/Schedules";
+import useTimetableStore from "../store/Timetables";
+import useUserStore from "../store/Users";
 import { convertBlock } from "../utils/createUtils";
 
 let client;
@@ -19,27 +19,33 @@ function isDifferentEventId(eventId) {
 const plan = (body) => {
   const eventId = body.eventId;
   console.log("📩 수신된 메시지:", body);
-  if (isDifferentEventId(eventId)) {
-    usePlanStore.getState().setPlanAll(body.planDtos[0]);
+  const data = body.planDtos || body.plans;
+  if (!data) return;
+
+  if (isDifferentEventId(eventId) || body.isUndoRedo) {
+    usePlanStore.getState().setPlanAll(data[0]);
   }
 }
 
 const timetable = (body) => {
   const action = body.action;
+  const data = body.timeTableDtos || body.timetables;
+  if (!data) return;
+
   switch(action) {
     case "create":
-      body.timeTableDtos.map((item) => {
+      data.map((item) => {
         console.log(item)
         useTimetableStore.getState().setTimetableCreate(item);
       });
       break;
     case "update":
-      body.timeTableDtos.map((item) => {
+      data.map((item) => {
         useTimetableStore.getState().setTimetableUpdate(item);
       });
       break;
     case "delete":
-      body.timeTableDtos.map((item) => {
+      data.map((item) => {
         useTimetableStore.getState().setTimetableDelete(item.timeTableId);
       });
       break;
@@ -48,25 +54,28 @@ const timetable = (body) => {
 
 const timetableplaceblock = (body) => {
   const eventId = body.eventId;
-  if (isDifferentEventId(eventId)) {
+  const action = body.action;
+  const data = body.timeTablePlaceBlockDtos || body.timetableplaceblocks;
+  const isUndoRedo = body.isUndoRedo;
+
+  if ((isDifferentEventId(eventId) || isUndoRedo) && data) {
     console.log("📩 수신된 메시지:", body);
-    const action = body.action;
     
     switch(action) {
       case "create":
-        body.timeTablePlaceBlockDtos.map((item) => {
+        data.map((item) => {
           const convert = convertBlock(item);
           if (convert) useItemsStore.getState().addItemFromWebsocket(convert);
         })
         break;
       case "update":
-        body.timeTablePlaceBlockDtos.map((item) => {
+        data.map((item) => {
           const convert = convertBlock(item);
           if (convert) useItemsStore.getState().moveItemFromWebsocket(convert);
         })
         break;
       case "delete":
-        body.timeTablePlaceBlockDtos.map((item) => {
+        data.map((item) => {
           useItemsStore.getState().deleteItem(item.placeTheme, item.timeTableId);
         })
         break;
@@ -76,11 +85,28 @@ const timetableplaceblock = (body) => {
 
 export const getClient = () => client;
 
+export const sendUndo = (roomId) => {
+  if (client && client.connected) {
+    client.publish({
+      destination: `/app/${roomId}`,
+      body: JSON.stringify({ action: "undo" }),
+    });
+  }
+};
+
+export const sendRedo = (roomId) => {
+  if (client && client.connected) {
+    client.publish({
+      destination: `/app/${roomId}`,
+      body: JSON.stringify({ action: "redo" }),
+    });
+  }
+};
+
 export const disconnectStompClient = () => {
   if (client) {
     console.log("🔌 WebSocket 연결 종료 중...");
     client.deactivate();
-    client = null;
   }
 };
 
@@ -132,6 +158,11 @@ export const initStompClient = (id) => {
       console.error("❌ STOMP 에러:", frame.headers["message"]);
       client.deactivate();
     },
+
+    // onWebSocketClose: () => {
+    //   console.log("🔌 WebSocket 연결 종료");
+    //   client.deactivate();
+    // },
   });
 
   client.activate();
