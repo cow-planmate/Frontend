@@ -5,7 +5,6 @@ import { useState } from "react";
 
 import TransportModal from "./TransportModal";
 import PersonCountModal from "../../common/PersonCountModal";
-import DepartureModal from "../../common/DepartureModal";
 import LocationModal from "../../common/LocationModal";
 
 export default function PlanInfoModal({setIsInfoOpen}) {

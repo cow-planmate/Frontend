@@ -14,6 +14,7 @@ import { disconnectStompClient, initStompClient, sendRedo, sendUndo } from "../w
 import usePlanStore from "../store/Plan";
 import useTimetableStore from "../store/Timetables";
 import usePlacesStore from "../store/Places";
+import useUserStore from "../store/Users";
 
 import Loading from "../components/common/Loading";
 import Navbar from "../components/common/Navbar";
@@ -41,6 +42,7 @@ function App() {
   const { addItemFromWebsocket } = useItemsStore();
   const { setPlacesAll, tour, lodging, restaurant } = usePlacesStore();
   const { lastSelectedDay } = useNicknameStore();
+  const { setUserAll } = useUserStore();
   const [noACL, setNoACL] = useState(false);
 
   useEffect(() => {
@@ -54,12 +56,17 @@ function App() {
     const fetchPlanData = async () => {
       if (id && isAuthenticated()) {
         try {
-          const planData = await get(`${BASE_URL}/api/plan/${id}`)
+          const [planData, presence] = await Promise.all([
+            get(`${BASE_URL}/api/plan/${id}`),
+            get(`${BASE_URL}/presence/${id}`)
+          ])
 
           console.log(planData)
+          console.log(presence)
           
           setPlanAll(planData.planFrame);
           setTimetableAll(planData.timetables.slice().sort((a, b) => new Date(a.date) - new Date(b.date)));
+          setUserAll(presence);
           
           if (lastSelectedDay[id] && planData.timetables.length >= lastSelectedDay[id]) {
             setSelectedDay(lastSelectedDay[id]);
