@@ -1,7 +1,13 @@
 import { useDraggable } from "@dnd-kit/core";
 import MapIcon from "../../../assets/imgs/googlemaps.svg?react"; // 경로 확인 필요
 
-export const SidebarItem = ({ place, duration, isMobile, onMobileAdd }) => {
+export const SidebarItem = ({
+  place,
+  duration,
+  isMobile,
+  onMobileAdd,
+  onDelete,
+}) => {
   const BASE_URL = import.meta.env.VITE_API_URL;
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -49,7 +55,7 @@ export const SidebarItem = ({ place, duration, isMobile, onMobileAdd }) => {
           )}
         </div>
       </div>
-      <div className="space-x-2 flex">
+      <div className="space-x-2 flex items-center">
         {place.url && (
           <button
             onClick={(e) => {
@@ -60,6 +66,20 @@ export const SidebarItem = ({ place, duration, isMobile, onMobileAdd }) => {
             className="w-8 h-8 flex items-center justify-center hover:bg-gray-200 rounded-lg border border-gray-300"
           >
             <MapIcon className="h-6 block" />
+          </button>
+        )}
+        {onDelete && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="w-8 h-8 flex items-center justify-center hover:bg-red-100 text-gray-500 hover:text-red-600 rounded-lg border border-gray-300"
+            aria-label="리스트에서 삭제"
+          >
+            ×
           </button>
         )}
         {isMobile && (
