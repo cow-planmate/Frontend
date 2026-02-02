@@ -1,34 +1,34 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
-import { useApiClient } from "../hooks/useApiClient";
-import Navbar from "../components/common/Navbar";
-import DateRangeModal from "../components/Home/HomeCal";
-import PersonCountModal from "../components/common/PersonCountModal";
-import TransportModal from "../components/common/TransportModal";
 import DepartureModal from "../components/common/DepartureModal";
 import DestinationModal from "../components/common/LocationModal";
+import Navbar from "../components/common/Navbar";
+import PersonCountModal from "../components/common/PersonCountModal";
+import TransportModal from "../components/common/TransportModal";
+import DateRangeModal from "../components/Home/HomeCal";
+import { useApiClient } from "../hooks/useApiClient";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faUser,
-  faLocationDot,
-  faCalendar,
-  faCar,
-  faBus,
+    faBus,
+    faCalendar,
+    faCar,
+    faLocationDot,
+    faUser,
 } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { useNavigate } from "react-router-dom";
 import usePlanStore from "../store/Plan";
 
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
 import Slider from "react-slick";
+import "slick-carousel/slick/slick-theme.css";
+import "slick-carousel/slick/slick.css";
 
 import img1 from "../assets/imgs/img1.jpg";
 import img2 from "../assets/imgs/img2.jpg";
 import img3 from "../assets/imgs/img3.jpg";
 
-function App() {
+function App({ hideNavbar = false }) {
   const navigate = useNavigate();
 
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -193,9 +193,11 @@ function App() {
   return (
     <div className="relative w-full">
       {/* Navbar */}
-      <div className="text-center h-auto font-pretendard">
-        <Navbar isLogin={false} />
-      </div>
+      {!hideNavbar && (
+        <div className="text-center h-auto font-pretendard">
+          <Navbar isLogin={false} />
+        </div>
+      )}
 
       <div className="relative flex flex-col items-center overflow-hidden">
         <Slider {...settings} className={`w-full ${sliderHeightClass}`}>

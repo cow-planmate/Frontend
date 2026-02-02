@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useApiClient } from "../../hooks/useApiClient";
+import { X, ChevronRight, ChevronLeft, Check, Compass, Utensils, Bed } from 'lucide-react';
 
-export default function Theme({ isOpen, onClose, onComplete }) {
+export default function Theme({ isOpen, onClose, onComplete, initialKeywords = {} }) {
   const [selectedKeywords, setSelectedKeywords] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [allSelectedKeywords, setAllSelectedKeywords] = useState({});
@@ -10,22 +11,30 @@ export default function Theme({ isOpen, onClose, onComplete }) {
   const { get } = useApiClient();
   const BASE_URL = import.meta.env.VITE_API_URL;
 
+  const getCategoryIcon = (catId) => {
+    switch(catId) {
+      case 0: return <Compass className="w-5 h-5" />;
+      case 2: return <Bed className="w-5 h-5" />;
+      case 1: return <Utensils className="w-5 h-5" />;
+      default: return <Compass className="w-5 h-5" />;
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       setCurrentStep(0);
       setSelectedKeywords([]);
-      setAllSelectedKeywords({});
+      // 초기 선택값 반영
+      setAllSelectedKeywords(initialKeywords || {});
       getPreferredTheme();
     }
-  }, [isOpen]);
+  }, [isOpen, initialKeywords]);
 
-  // currentStep이 변경될 때마다 해당 step의 이전 선택사항을 복원
   useEffect(() => {
     if (categories.length > 0 && keywordsByStep[currentStep]) {
       const currentCategoryId = categories[currentStep].id;
       const previousSelections = allSelectedKeywords[currentCategoryId] || [];
 
-      // 이전에 선택된 키워드들의 인덱스를 찾아서 복원
       const restoredIndexes = [];
       previousSelections.forEach((selectedItem) => {
         const index = keywordsByStep[currentStep].findIndex(
@@ -45,8 +54,6 @@ export default function Theme({ isOpen, onClose, onComplete }) {
   const getPreferredTheme = async () => {
     try {
       const res = await get(`${BASE_URL}/api/user/preferredTheme`);
-      console.log("API 응답:", res); // 디버깅용
-
       const themeList = res.preferredThemes || [];
 
       if (Array.isArray(themeList) && themeList.length > 0) {
@@ -69,7 +76,6 @@ export default function Theme({ isOpen, onClose, onComplete }) {
         });
 
         categoryList.sort((a, b) => a.id - b.id);
-
         categoryList.forEach((cat) => {
           categorizedKeywords.push(categoryMap[cat.id] || []);
         });
@@ -77,13 +83,16 @@ export default function Theme({ isOpen, onClose, onComplete }) {
         setCategories(categoryList);
         setKeywordsByStep(categorizedKeywords);
 
-        const initialSelected = {};
-        categoryList.forEach((cat) => {
-          initialSelected[cat.id] = [];
+        // 이미 initialKeywords로 설정된 값이 있다면 유지하고, 없다면 빈 배열로 초기화
+        setAllSelectedKeywords(prev => {
+          const updated = { ...prev };
+          categoryList.forEach((cat) => {
+            if (!updated[cat.id]) {
+              updated[cat.id] = [];
+            }
+          });
+          return updated;
         });
-        setAllSelectedKeywords(initialSelected);
-      } else {
-        console.error("API 응답 형식이 올바르지 않습니다:", res);
       }
     } catch (err) {
       console.error("선호 테마 가져오기 실패:", err.message);
@@ -107,16 +116,15 @@ export default function Theme({ isOpen, onClose, onComplete }) {
     const currentStepKeywords = keywordsByStep[currentStep];
     const selected = selectedKeywords
       .map((i) => currentStepKeywords[i])
-      .filter((item) => !!item); // null/undefined 제거
+      .filter((item) => !!item);
 
     setAllSelectedKeywords((prev) => ({
       ...prev,
-      [currentCategoryId]: selected, // 객체 배열로 저장
+      [currentCategoryId]: selected,
     }));
 
     if (currentStep < categories.length - 1) {
       setCurrentStep(currentStep + 1);
-      // selectedKeywords는 useEffect에서 자동으로 복원됨
     } else {
       const final = {
         ...allSelectedKeywords,
@@ -137,7 +145,6 @@ export default function Theme({ isOpen, onClose, onComplete }) {
 
     if (currentStep < categories.length - 1) {
       setCurrentStep(currentStep + 1);
-      // selectedKeywords는 useEffect에서 자동으로 복원됨
     } else {
       const final = {
         ...allSelectedKeywords,
@@ -148,7 +155,6 @@ export default function Theme({ isOpen, onClose, onComplete }) {
   };
 
   const goToPreviousStep = () => {
-    // 현재 선택사항을 저장하고 이전 단계로
     const currentCategoryId = categories[currentStep].id;
     const currentStepKeywords = keywordsByStep[currentStep];
     const selected = selectedKeywords
@@ -161,73 +167,111 @@ export default function Theme({ isOpen, onClose, onComplete }) {
     }));
 
     setCurrentStep(currentStep - 1);
-    // selectedKeywords는 useEffect에서 자동으로 복원됨
   };
 
   const currentKeywords = keywordsByStep[currentStep];
+  const progress = categories.length > 0 ? ((currentStep + 1) / categories.length) * 100 : 0;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60] font-pretendard">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[120] font-pretendard">
       <div
-        className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 max-h-[70vh] flex flex-col"
+        className="w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[85vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        <h1 className="text-lg font-bold text-gray-900 text-center mb-4">
-          {categories.length > 0 && categories[currentStep]
-            ? `좋아하는 ${categories[currentStep].name} 키워드를 선택해주세요!`
-            : "로딩 중..."}
-        </h1>
+        {/* Header with Progress */}
+        <div className="relative">
+          <div className="p-6 pb-4 flex justify-between items-center bg-white">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-50 text-[#1344FF] rounded-lg">
+                {categories[currentStep] && getCategoryIcon(categories[currentStep].id)}
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 leading-tight">
+                  {categories.length > 0 && categories[currentStep]
+                    ? `${categories[currentStep].name} 취향`
+                    : "로딩 중..."}
+                </h1>
+                <p className="text-xs text-gray-400 mt-0.5 font-medium">최대 5개까지 선택 가능</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          {/* Progress Bar */}
+          <div className="absolute bottom-0 left-0 h-1 bg-gray-100 w-full">
+            <div 
+              className="h-full bg-[#1344FF] transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
 
-        <div className="flex-1 overflow-y-auto mb-4">
-          <div className="grid grid-cols-3 gap-3">
+        <div className="p-8 flex-1 overflow-y-auto">
+          <div className="mb-6">
+            <p className="text-[#1a1a1a] font-medium text-lg text-center">
+              어떤 <span className="text-[#1344FF] underline underline-offset-4 decoration-2">키워드</span>를 좋아하시나요?
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {currentKeywords && Array.isArray(currentKeywords) ? (
-              currentKeywords.map((keyword, index) => (
-                <button
-                  key={keyword.preferredThemeId}
-                  onClick={() => toggleKeyword(index)}
-                  className={`rounded-lg px-2 py-2 text-sm transition-all ${
-                    selectedKeywords.includes(index)
-                      ? "bg-main text-white hover:bg-blue-800"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {keyword.preferredThemeName}
-                </button>
-              ))
+              currentKeywords.map((keyword, index) => {
+                const isSelected = selectedKeywords.includes(index);
+                return (
+                  <button
+                    key={keyword.preferredThemeId}
+                    onClick={() => toggleKeyword(index)}
+                    className={`
+                      relative group py-4 px-3 rounded-xl text-sm font-bold transition-all duration-200 border-2
+                      flex flex-col items-center justify-center gap-2
+                      ${isSelected
+                        ? "bg-[#1344FF] border-[#1344FF] text-white shadow-lg scale-105"
+                        : "bg-white border-gray-100 text-gray-600 hover:border-[#1344FF] hover:text-[#1344FF] hover:bg-blue-50/30"}
+                    `}
+                  >
+                    {isSelected && (
+                      <div className="absolute top-1.5 right-1.5">
+                        <Check className="w-3.5 h-3.5" />
+                      </div>
+                    )}
+                    <span className="truncate w-full text-center">#{keyword.preferredThemeName}</span>
+                  </button>
+                );
+              })
             ) : (
-              <div className="col-span-3 text-center text-gray-500">
-                키워드를 불러오는 중...
+              <div className="col-span-full py-20 flex flex-col items-center justify-center text-gray-400 gap-3">
+                 <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#1344FF] border-t-transparent"></div>
+                 <p className="text-sm">키워드를 불러오고 있어요...</p>
               </div>
             )}
           </div>
         </div>
 
-        <div className="text-center text-sm text-gray-500 mb-4">
-          {selectedKeywords.length}/5 선택됨
-        </div>
-
-        <div className="flex justify-between items-center">
+        {/* Footer */}
+        <div className="p-6 bg-gray-50 flex items-center justify-between border-t border-gray-100">
           <button
-            onClick={skipStep}
-            className="px-4 py-2 text-gray-500 hover:text-gray-700"
+            onClick={currentStep === 0 ? onClose : goToPreviousStep}
+            className="px-5 py-3 text-gray-500 font-bold hover:text-gray-900 transition-colors flex items-center gap-1"
           >
-            건너뛰기
+            <ChevronLeft className="w-4 h-4" />
+            {currentStep === 0 ? "취소" : "이전"}
           </button>
-
-          <div className="flex space-x-2">
-            {currentStep > 0 && (
-              <button
-                onClick={goToPreviousStep}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-              >
-                이전
-              </button>
-            )}
+          
+          <div className="flex gap-2">
+            <button
+              onClick={skipStep}
+              className="px-5 py-3 text-gray-400 hover:text-gray-600 font-medium transition-colors"
+            >
+              건너뛰기
+            </button>
             <button
               onClick={nextStep}
-              className="px-4 py-2 rounded-lg bg-main text-white hover:bg-blue-700"
+              disabled={!currentKeywords}
+              className="px-8 py-3 bg-[#1344FF] text-white font-bold rounded-xl hover:bg-[#0d34cc] transition-all shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {currentStep === categories.length - 1 ? "완료" : "다음"}
+              {currentStep === categories.length - 1 ? "선택 완료" : "다음 단계"}
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
