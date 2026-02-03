@@ -36,6 +36,7 @@ export default function PlanmateV2() {
 
   const handleViewChange = (view: 'feed' | 'community' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker' | 'community-create', data?: any) => {
     setCurrentView(view);
+    window.scrollTo(0, 0);
     
     // URL 업데이트
     if (view === 'mypage') navigate('/mypage');

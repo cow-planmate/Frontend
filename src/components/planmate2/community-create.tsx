@@ -1,5 +1,10 @@
+import "@blocknote/core/fonts/inter.css";
+import { ko } from "@blocknote/core/locales";
+import { BlockNoteView } from "@blocknote/mantine";
+import "@blocknote/mantine/style.css";
+import { useCreateBlockNote } from "@blocknote/react";
 import { ArrowLeft, Send } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 interface CommunityCreateProps {
   type: 'free' | 'qna' | 'mate';
@@ -9,7 +14,19 @@ interface CommunityCreateProps {
 
 export default function CommunityCreate({ type, onBack, onSubmit }: CommunityCreateProps) {
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  
+  // BlockNote Editor 초기 설정
+  const initialContent = useMemo(() => [
+    {
+      type: "paragraph",
+      content: [],
+    },
+  ], []);
+
+  const editor = useCreateBlockNote({
+    dictionary: ko,
+    initialContent,
+  });
 
   const getTitle = () => {
     switch (type) {
@@ -20,13 +37,17 @@ export default function CommunityCreate({ type, onBack, onSubmit }: CommunityCre
     }
   };
 
-  const handleSubmit = () => {
-    if (!title.trim() || !content.trim()) {
+  const handleSubmit = async () => {
+    if (!title.trim() || editor.document.length === 0) {
       alert('제목과 내용을 모두 입력해주세요.');
       return;
     }
+    
+    // 블록 데이터를 JSON으로 변환 (제출 시 필요)
+    const blocks = editor.document;
+    
     // API 호출 로직이 들어갈 곳
-    console.log('Post submitted:', { type, title, content });
+    console.log('Post submitted:', { type, title, blocks });
     onSubmit();
   };
 
@@ -64,13 +85,12 @@ export default function CommunityCreate({ type, onBack, onSubmit }: CommunityCre
           />
         </div>
 
-        {/* Content Input */}
-        <div className="p-8">
-          <textarea
-            placeholder="내용을 입력하세요..."
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="w-full min-h-[500px] text-lg leading-relaxed focus:outline-none resize-none placeholder:text-gray-300"
+        {/* Content Input - BlockNote Editor */}
+        <div className="p-4 bg-white min-h-[500px]">
+          <BlockNoteView 
+            editor={editor} 
+            theme="light"
+            className="min-h-[480px]"
           />
         </div>
       </div>
@@ -79,8 +99,9 @@ export default function CommunityCreate({ type, onBack, onSubmit }: CommunityCre
       <div className="mt-6 p-6 bg-blue-50 rounded-2xl">
         <h3 className="text-sm font-bold text-[#1344FF] mb-2">💡 게시글 작성 팁</h3>
         <ul className="text-sm text-blue-700/80 space-y-1 list-disc list-inside">
+          <li>'/'를 입력하여 텍스트 스타일, 목록, 이미지 등을 추가할 수 있습니다.</li>
           <li>여행지에 대한 구체적인 질문은 답변을 받기 더 쉬워요.</li>
-          <li>사진을 함께 첨부하면 더 많은 관심을 받을 수 있어요 (준비 중).</li>
+          <li>사진을 함께 첨부하면 더 많은 관심을 받을 수 있어요.</li>
           <li>도움이 된 답변에는 추천을 눌러주세요.</li>
         </ul>
       </div>

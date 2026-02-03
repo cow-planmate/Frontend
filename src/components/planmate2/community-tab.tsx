@@ -144,7 +144,7 @@ export default function CommunityTab({ initialTab = 'free', onNavigate }: Commun
                 더보기 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-3 mb-4">
               {COMMUNITY_POSTS.free.map(post => (
                 <div key={post.id} className="flex items-center justify-between p-4 hover:bg-[#f8f9fa] rounded-xl transition-colors cursor-pointer">
                   <div className="flex-1">
@@ -161,6 +161,12 @@ export default function CommunityTab({ initialTab = 'free', onNavigate }: Commun
                 </div>
               ))}
             </div>
+            <button 
+              onClick={() => onNavigate('community-create', { boardType: 'free' })}
+              className="w-full py-3 bg-blue-50 text-[#1344FF] rounded-xl hover:bg-blue-100 transition-all font-bold text-sm"
+            >
+              + 자유게시판 새 글 작성하기
+            </button>
           </div>
 
           {/* 메이트 찾기 */}
@@ -177,7 +183,7 @@ export default function CommunityTab({ initialTab = 'free', onNavigate }: Commun
                 더보기 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-3 mb-4">
               {COMMUNITY_POSTS.mate.map(post => (
                 <div key={post.id} className="flex items-center justify-between p-4 hover:bg-[#f8f9fa] rounded-xl transition-colors cursor-pointer">
                   <div className="flex-1">
@@ -196,6 +202,12 @@ export default function CommunityTab({ initialTab = 'free', onNavigate }: Commun
                 </div>
               ))}
             </div>
+            <button 
+              onClick={() => onNavigate('community-create', { boardType: 'mate' })}
+              className="w-full py-3 bg-purple-50 text-purple-600 rounded-xl hover:bg-purple-100 transition-all font-bold text-sm"
+            >
+              + 메이트 찾기 글쓰기
+            </button>
           </div>
 
           {/* Q&A */}
@@ -212,7 +224,7 @@ export default function CommunityTab({ initialTab = 'free', onNavigate }: Commun
                 더보기 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-3 mb-4">
               {COMMUNITY_POSTS.qna.map(post => (
                 <div key={post.id} className="flex items-center justify-between p-4 hover:bg-[#f8f9fa] rounded-xl transition-colors cursor-pointer">
                   <div className="flex-1">
@@ -231,14 +243,14 @@ export default function CommunityTab({ initialTab = 'free', onNavigate }: Commun
                 </div>
               ))}
             </div>
+            <button 
+              onClick={() => onNavigate('community-create', { boardType: 'qna' })}
+              className="w-full py-3 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-100 transition-all font-bold text-sm"
+            >
+              + 질문하기
+            </button>
           </div>
 
-          <button 
-            onClick={() => onNavigate('community-create')}
-            className="w-full bg-[#1344FF] text-white py-4 rounded-xl hover:bg-[#0d34cc] transition-all shadow-md font-medium"
-          >
-            + 새 글 작성하기
-          </button>
         </div>
 
         <div className="space-y-6">
