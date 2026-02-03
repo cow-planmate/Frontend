@@ -52,7 +52,7 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
             </button>
             <button
               onClick={() => onNavigate('mypage')}
-              className={`p-2.5 rounded-lg transition-all ml-2 ${
+              className={`p-2.5 rounded-full transition-all ml-2 ${
                 currentView === 'mypage'
                   ? 'bg-[#1344FF] text-white shadow-md'
                   : 'text-[#666666] hover:bg-[#f0f4ff] hover:text-[#1344FF]'
@@ -117,7 +117,7 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
                 onNavigate('mypage');
                 setIsMobileMenuOpen(false);
               }}
-              className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-all ${
+              className={`w-full text-left px-4 py-3 rounded-full font-medium transition-all ${
                 currentView === 'mypage'
                   ? 'bg-[#1344FF] text-white'
                   : 'text-[#666666] hover:bg-[#f0f4ff] hover:text-[#1344FF]'

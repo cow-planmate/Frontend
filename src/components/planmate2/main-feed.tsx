@@ -1,6 +1,8 @@
 import { Award, Clock, Copy, Heart, MapPin, MessageCircle, PlusCircle, Search, SlidersHorizontal, Star, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { useApiClient } from '../../hooks/useApiClient';
+import { Map, MapMarker, CustomOverlayMap } from 'react-kakao-maps-sdk';
+import useKakaoLoader from '../../hooks/useKakaoLoader';
 
 interface MainFeedProps {
   onNavigate: (view: any, data?: any) => void;
@@ -55,6 +57,7 @@ const MOCK_POSTS = [
 ];
 
 export default function MainFeed({ onNavigate }: MainFeedProps) {
+  useKakaoLoader();
   const { isAuthenticated } = useApiClient();
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
@@ -438,57 +441,51 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
               <h3 className="text-lg font-bold text-[#1a1a1a]">여행지 지도</h3>
             </div>
             
-            {/* 간단한 한국 지도 */}
-            <div className="relative bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 mb-4 h-64 overflow-hidden">
-              {/* 서울 */}
-              <div 
-                className="absolute top-[25%] left-[48%] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
-                style={{ zIndex: 10 }}
+            {/* 카카오 지도 */}
+            <div className="rounded-2xl mb-4 h-80 overflow-hidden border border-[#e5e7eb] relative z-0 shadow-inner group">
+              <Map
+                center={{ lat: 35.95, lng: 128.25 }}
+                level={14}
+                style={{ width: '100%', height: '100%' }}
+                draggable={true}
+                zoomable={true}
               >
-                <div className="relative">
-                  <div className="w-8 h-8 bg-[#1344FF] rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg group-hover:scale-110 transition-transform">
-                    1
-                  </div>
-                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white px-2 py-1 rounded-xl shadow-md whitespace-nowrap text-xs font-medium">
-                    서울 (1개)
-                  </div>
-                </div>
+                {[
+                  { name: '서울', lat: 37.5665, lng: 126.9780, count: 12, color: '#1344FF' },
+                  { name: '부산', lat: 35.1796, lng: 129.0756, count: 5, color: '#FF3B30' },
+                  { name: '제주도', lat: 33.4996, lng: 126.5312, count: 8, color: '#34C759' }
+                ].map((loc) => (
+                  <CustomOverlayMap
+                    key={loc.name}
+                    position={{ lat: loc.lat, lng: loc.lng }}
+                    yAnchor={1.2}
+                  >
+                    <div className="group/marker cursor-pointer">
+                      {/* 툴팁/라벨 */}
+                      <div className="relative bg-white px-3 py-1.5 rounded-full shadow-lg border border-[#e5e7eb] hover:border-[#1344FF] transition-all transform hover:-translate-y-1 flex items-center gap-2">
+                        <div 
+                          className="w-2 h-2 rounded-full animate-pulse"
+                          style={{ backgroundColor: loc.color }}
+                        />
+                        <span className="text-xs font-bold text-[#1a1a1a] whitespace-nowrap">
+                          {loc.name}
+                        </span>
+                        <span className="text-[10px] bg-[#f0f4ff] text-[#1344FF] px-1.5 py-0.5 rounded-full font-bold">
+                          {loc.count}
+                        </span>
+                        
+                        {/* 꼬리표 (Triangle) */}
+                        <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-r border-b border-[#e5e7eb] rotate-45" />
+                      </div>
+                    </div>
+                  </CustomOverlayMap>
+                ))}
+              </Map>
+              
+              {/* 지도 위 오버레이 (데코레이션) */}
+              <div className="absolute top-4 right-4 z-10 bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-white/50 shadow-sm text-[10px] font-medium text-[#666666] pointer-events-none">
+                지역별 인기 여행지
               </div>
-
-              {/* 부산 */}
-              <div 
-                className="absolute bottom-[25%] right-[28%] transform translate-x-1/2 translate-y-1/2 cursor-pointer group"
-                style={{ zIndex: 10 }}
-              >
-                <div className="relative">
-                  <div className="w-8 h-8 bg-[#1344FF] rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg group-hover:scale-110 transition-transform">
-                    1
-                  </div>
-                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white px-2 py-1 rounded-xl shadow-md whitespace-nowrap text-xs font-medium">
-                    부산 (1개)
-                  </div>
-                </div>
-              </div>
-
-              {/* 제주도 */}
-              <div 
-                className="absolute bottom-[8%] left-[35%] transform -translate-x-1/2 translate-y-1/2 cursor-pointer group"
-                style={{ zIndex: 10 }}
-              >
-                <div className="relative">
-                  <div className="w-8 h-8 bg-[#1344FF] rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg group-hover:scale-110 transition-transform">
-                    1
-                  </div>
-                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white px-2 py-1 rounded-xl shadow-md whitespace-nowrap text-xs font-medium">
-                    제주도 (1개)
-                  </div>
-                </div>
-              </div>
-
-              {/* 한국 지도 실루엣 (간단한 SVG) */}
-              <svg viewBox="0 0 200 250" className="w-full h-full opacity-20" style={{ position: 'absolute', top: 0, left: 0 }}>
-                <path d="M100,20 L120,30 L130,50 L125,80 L135,100 L130,120 L140,140 L135,160 L125,170 L120,180 L110,185 L100,190 L90,185 L80,180 L75,170 L65,160 L60,140 L70,120 L65,100 L75,80 L70,50 L80,30 Z M70,200 Q80,210 90,205 Q80,215 70,210 Z" fill="currentColor" className="text-gray-300" />
-              </svg>
             </div>
 
             {/* 지역 목록 */}

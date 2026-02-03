@@ -90,16 +90,16 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
               <div className="flex items-center gap-2 ml-2 relative">
                 <button
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                  className={`p-1 rounded-xl transition-all ${
+                  className={`p-1 rounded-full transition-all ${
                     currentView === 'mypage' || isProfileMenuOpen
                       ? 'ring-2 ring-[#1344FF] ring-offset-2'
                       : 'hover:bg-[#f0f4ff]'
                   }`}
                 >
                   {gravatar ? (
-                    <img src={gravatar} alt="Profile" className="w-10 h-10 rounded-xl" />
+                    <img src={gravatar} alt="Profile" className="w-10 h-10 rounded-full" />
                   ) : (
-                    <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                       <User className="w-6 h-6 text-[#666666]" />
                     </div>
                   )}
@@ -215,7 +215,7 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
                   }`}
                 >
                   {gravatar ? (
-                    <img src={gravatar} alt="Profile" className="w-8 h-8 rounded-lg" />
+                    <img src={gravatar} alt="Profile" className="w-8 h-8 rounded-full" />
                   ) : (
                     <User className="w-5 h-5" />
                   )}

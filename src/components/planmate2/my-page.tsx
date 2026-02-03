@@ -1,5 +1,5 @@
-import { BookOpen, CalendarDays, Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, Copy, Eye, Heart, LogOut, MessageCircle, PenTool, Settings, ThumbsUp, Users, User, Trash2, CheckSquare, Square, Check } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Award, BookOpen, CalendarDays, Calendar as CalendarIcon, Camera, Check, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, Copy, Eye, Heart, LogOut, MessageCircle, PenTool, Settings, Square, Star, ThumbsUp, Trash2, User, Users } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApiClient } from '../../hooks/useApiClient';
 import useNicknameStore from '../../store/Nickname';
@@ -193,13 +193,59 @@ export default function MyPage({ onNavigate }: MyPageProps) {
   // 캘린더 이벤트 팝업 상태
   const [selectedCalendarEvent, setSelectedCalendarEvent] = useState<any>(null);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [isLevelModalOpen, setIsLevelModalOpen] = useState(false);
+
   const BASE_URL = import.meta.env.VITE_API_URL;
   const setStoreNickname = useNicknameStore((state: any) => (state as any).setNickname);
+
+  // User Level & EXP Logic
+  const stats = {
+    forks: 10,       // 가져간 일정
+    feedPosts: 2,    // 피드 게시글
+    community: 3,    // 커뮤니티 글
+    comments: 12,    // 댓글 수
+    attendance: 18   // 출석 점수
+  };
+
+  // EXP 계산: 가져가기(5) + 피드(10) + 커뮤니티(5) + 댓글(2) + 출석(1)
+  const exp = (stats.forks * 5) + (stats.feedPosts * 10) + (stats.community * 5) + (stats.comments * 2) + stats.attendance; 
+  
+  const LEVEL_CONFIG = [
+    { lv: 1, name: '여행 입문자', range: '0-49 EXP', min: 0, max: 49 },
+    { lv: 2, name: '여행 애호가', range: '50-99 EXP', min: 50, max: 99 },
+    { lv: 3, name: '여행 전문가', range: '100-199 EXP', min: 100, max: 199 },
+    { lv: 4, name: '여행 마스터', range: '200-499 EXP', min: 200, max: 499 },
+    { lv: 5, name: '여행 레전드', range: '500 EXP 이상', min: 500, max: 9999 },
+  ];
+
+  const currentLevelInfo = LEVEL_CONFIG.find(l => exp >= l.min && exp <= l.max) || LEVEL_CONFIG[0];
+  const userLevel = currentLevelInfo.lv;
+  const levelName = currentLevelInfo.name;
+  
+  const nextLevelInfo = LEVEL_CONFIG[userLevel] || null;
+  const displayMax = nextLevelInfo ? nextLevelInfo.min + (nextLevelInfo.max - nextLevelInfo.min + 1) : 100;
+  // Let's keep displayMax consistent with the range for the current level's bar
+  const currentLevelMax = currentLevelInfo.max + 1; 
+  const remainingCount = currentLevelMax - exp;
 
   const handleLogout = () => {
     logout();
     setStoreNickname('');
     navigate('/');
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImage(reader.result as string);
+        alert("프로필 이미지가 변경되었습니다. (데모)");
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleProfileSubmit = async () => {
@@ -284,6 +330,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
       if (ownedToDelete.length > 0) {
         // useApiClient의 del은 두번째 인자가 config/body일 수 있음. 
         // fetch option에 body를 실어보내야 함.
+        // @ts-ignore
         await del(`${BASE_URL}/api/plan`, { planIds: ownedToDelete });
         setMyPlans(prev => prev.filter((p: any) => !ownedToDelete.includes(p.planId)));
       }
@@ -409,8 +456,10 @@ export default function MyPage({ onNavigate }: MyPageProps) {
       startDate: startDate || new Date(),
       endDate: endDate || new Date(),
       dateStr: hasDates ? `${plan.startDate} - ${plan.endDate}` : '날짜 확인 필요',
+      duration: plan.duration,
       dDay: dDayStr,
       status: isPast ? '완료' : '예정됨',
+      hasDates: hasDates,
       theme: plan.isOwner ? 'blue' : 'orange',
       isOwner: plan.isOwner,
       progress: Math.floor(Math.random() * 100), 
@@ -433,7 +482,6 @@ export default function MyPage({ onNavigate }: MyPageProps) {
   const MY_COMMUNITY_POSTS: any[] = [];
   const LIKED_COMMUNITY_POSTS: any[] = [];
 
-  const totalForks = 0;
   const totalLikes = 0;
 
   // --- Full Screen Calendar Logic ---
@@ -486,7 +534,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
   // Get events for a specific date
   const getEventsForDate = (cellDate: Date) => {
     return allPlans.filter(trip => {
-      if (trip.dateStr === '날짜 정보가 없습니다') return false;
+      if (!trip.hasDates) return false;
       const start = new Date(trip.startDate);
       start.setHours(0,0,0,0);
       const end = new Date(trip.endDate);
@@ -519,20 +567,32 @@ export default function MyPage({ onNavigate }: MyPageProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 프로필 헤더 */}
         <div className="bg-white rounded-xl shadow-md p-8 mb-8">
-          <div className="flex flex-col md:flex-row items-center gap-6">
+          <div className="flex flex-col md:flex-row items-center gap-8">
             {/* 프로필 이미지 */}
-            <div className="relative">
-              {userProfile ? (
-                 <img
-                  src={gravatarUrl(userProfile.email)}
-                  alt="프로필"
-                  className="w-32 h-32 rounded-full border-4 border-[#1344FF]"
-                />
-              ) : (
-                <div className="w-32 h-32 rounded-full border-4 border-gray-200 bg-gray-100 flex items-center justify-center">
-                  <User className="w-16 h-16 text-gray-400" />
+            <div className="relative group">
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleImageChange} 
+                className="hidden" 
+                accept="image/*"
+              />
+              <div className="relative">
+                {userProfile ? (
+                  <img
+                    src={profileImage || gravatarUrl(userProfile.email)}
+                    alt="프로필"
+                    className="w-32 h-32 rounded-full border-4 border-[#1344FF] object-cover transition-all group-hover:brightness-90"
+                  />
+                ) : (
+                  <div className="w-32 h-32 rounded-full border-4 border-gray-200 bg-gray-100 flex items-center justify-center transition-all group-hover:brightness-90">
+                    <User className="w-16 h-16 text-gray-400" />
+                  </div>
+                )}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <Camera className="w-8 h-8 text-white drop-shadow-lg" />
                 </div>
-              )}
+              </div>
               <button 
                 onClick={() => {
                   setNewNickname(userProfile?.nickname || '');
@@ -540,7 +600,8 @@ export default function MyPage({ onNavigate }: MyPageProps) {
                   setNewGender(userProfile?.gender || 0);
                   setIsProfileModalOpen(true);
                 }}
-                className="absolute bottom-0 right-0 bg-[#1344FF] text-white p-2 rounded-full hover:bg-[#0d34cc] transition-all shadow-lg"
+                className="absolute bottom-0 right-0 bg-[#1344FF] text-white p-2.5 rounded-full hover:bg-[#0d34cc] transition-all shadow-lg hover:scale-110"
+                title="프로필 수정"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -548,16 +609,45 @@ export default function MyPage({ onNavigate }: MyPageProps) {
 
             {/* 프로필 정보 */}
             <div className="flex-1 text-center md:text-left">
-              <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-                <h1 className="text-3xl font-bold text-[#1a1a1a]">{userProfile?.nickname || '사용자'}</h1>
-                <span className="px-3 py-1 bg-blue-100 text-[#1344FF] text-xs font-bold rounded-full">
-                  {userProfile?.gender === 0 ? '남성' : userProfile?.gender === 1 ? '여성' : '성별미설정'} · {userProfile?.age || '연령미설정'}
+              <div className="flex items-center justify-center md:justify-start gap-4 mb-2">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-4xl font-black text-[#1a1a1a] tracking-tight">{userProfile?.nickname || '사용자'}</h1>
+                  <button 
+                    onClick={() => setIsLevelModalOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-[#1344FF] to-[#4B70FF] text-white rounded-full shadow-sm hover:shadow-md transition-all hover:scale-105 active:scale-95"
+                  >
+                    <Award className="w-3 h-3" />
+                    <span className="text-[10px] font-black uppercase tracking-wider">LV.{userLevel}</span>
+                    <span className="w-1 h-1 bg-white/50 rounded-full" />
+                    <span className="text-xs font-bold">{levelName}</span>
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
+                <p className="text-[#666666] font-medium">{userProfile?.email || '로그인이 필요합니다'}</p>
+                <span className="text-gray-300">|</span>
+                <span className="px-2 py-0.5 bg-gray-50 text-gray-500 text-xs font-semibold rounded border border-gray-100">
+                  {userProfile?.gender === 0 ? '남성' : userProfile?.gender === 1 ? '여성' : '성별미설정'} · {userProfile?.age || '연령미설정'}세
                 </span>
               </div>
-              <p className="text-[#666666] mb-4">{userProfile?.email || '로그인이 필요합니다'}</p>
               
+              {/* 레벨 진행바 (추가) */}
+              <div className="max-w-xs mx-auto md:mx-0 mb-6">
+                <div className="flex justify-between text-xs mb-1.5">
+                  <span className="text-[#1344FF] font-bold text-xs uppercase tracking-tighter">현재 경험치</span>
+                  <span className="text-gray-400 font-medium">{exp} / {displayMax} EXP</span>
+                </div>
+                <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-[#1344FF] to-[#4B70FF] transition-all duration-1000"
+                    style={{ width: `${Math.min(100, (exp / displayMax) * 100)}%` }}
+                  />
+                </div>
+              </div>
+
               {/* 취향 태그 */}
-              <div className="flex flex-wrap gap-2 mb-6 justify-center md:justify-start">
+              <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                 {(typeof userProfile?.preferredThemes === 'string' 
                   ? userProfile.preferredThemes.split(',') 
                   : Array.isArray(userProfile?.preferredThemes)
@@ -718,7 +808,10 @@ export default function MyPage({ onNavigate }: MyPageProps) {
                             className={`
                               text-[10px] h-6 flex items-center px-1 truncate relative z-10 cursor-pointer
                               hover:brightness-95 transition-all
-                              ${event.theme === 'blue' ? 'bg-[#1344FF] text-white shadow-sm' : 'bg-orange-400 text-white shadow-sm'}
+                              ${event.status === '완료' 
+                                ? 'bg-gray-200 text-gray-600 border border-gray-300' 
+                                : (event.theme === 'blue' ? 'bg-[#1344FF] text-white shadow-sm' : 'bg-orange-400 text-white shadow-sm')
+                              }
                               ${roundedLeft} ${roundedRight}
                             `}
                             title={event.title}
@@ -828,7 +921,14 @@ export default function MyPage({ onNavigate }: MyPageProps) {
                             </span>
                           </div>
                           <h4 className="text-xl font-bold text-[#1a1a1a] mb-1 text-left">{trip.title}</h4>
-                          <p className="text-sm text-[#666666] text-left">{trip.dateStr}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm text-[#666666] text-left">{trip.dateStr}</p>
+                            {trip.duration && (
+                              <span className="text-[10px] font-bold text-[#1344FF] bg-blue-50 px-2 py-0.5 rounded border border-blue-100 whitespace-nowrap">
+                                {trip.duration}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center gap-2">
                           {!isDeleteMode && (
@@ -925,7 +1025,14 @@ export default function MyPage({ onNavigate }: MyPageProps) {
                           </div>
                         </div>
                         <h5 className="font-bold text-[#1a1a1a] mb-1 truncate text-left">{trip.title}</h5>
-                        <p className="text-xs text-[#666666]">{trip.dateStr}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-[#666666]">{trip.dateStr}</p>
+                          {trip.duration && (
+                            <span className="text-[10px] font-bold text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 whitespace-nowrap">
+                              {trip.duration}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ))
                   ) : (
@@ -1213,10 +1320,30 @@ export default function MyPage({ onNavigate }: MyPageProps) {
 
       {/* 프로필 수정 모달 */}
       {isProfileModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[110] p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
             <h3 className="text-2xl font-bold mb-6 text-[#1a1a1a]">프로필 수정</h3>
             <div className="space-y-6">
+              {/* 이미지 수정 섹션 추가 */}
+              <div className="flex flex-col items-center gap-4 py-4 border-b border-gray-100">
+                <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                   <img
+                    src={profileImage || (userProfile ? gravatarUrl(userProfile.email) : '')}
+                    alt="프로필 미리보기"
+                    className="w-24 h-24 rounded-full border-4 border-[#f0f4ff] group-hover:border-[#1344FF] transition-all object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Camera className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-sm font-bold text-[#1344FF] hover:underline"
+                >
+                  프로필 사진 변경하기
+                </button>
+              </div>
+
               {/* 닉네임 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 font-bold">닉네임</label>
@@ -1305,7 +1432,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
                       );
                     }
 
-                    return validThemes.map((label, idx) => (
+                    return validThemes.map((label: string, idx: number) => (
                       <span key={idx} className="px-3 py-1.5 bg-white text-[#1344FF] text-xs font-bold rounded-lg border border-blue-100 shadow-sm">
                         #{label}
                       </span>
@@ -1348,6 +1475,123 @@ export default function MyPage({ onNavigate }: MyPageProps) {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 사용자 레벨 상세 모달 (요청 이미지와 동일하게 구현) */}
+      {isLevelModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[120] p-4 animate-in fade-in duration-200" onClick={() => setIsLevelModalOpen(false)}>
+          <div 
+            className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 상단 타이틀 */}
+            <div className="flex items-center gap-2 mb-8">
+              <div className="p-2 rounded-xl text-[#1344FF]">
+                <Award className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-black text-[#1a1a1a]">사용자 레벨</h3>
+            </div>
+
+            {/* 현재 레벨 요약 카드 */}
+            <div className="bg-[#f5f7ff] rounded-3xl p-6 mb-8 border border-blue-50/50 relative overflow-hidden">
+              <div className="flex items-center gap-4 mb-6 relative z-10">
+                <div className="w-16 h-16 bg-gradient-to-br from-[#1344FF] to-[#7C3AED] rounded-full flex items-center justify-center shadow-lg shadow-blue-200">
+                  <span className="text-white text-xl font-black">Lv.{userLevel}</span>
+                </div>
+                <div>
+                  <h4 className="text-2xl font-black text-[#1a1a1a] mb-0.5">{levelName}</h4>
+                  <p className="text-sm text-[#666666] font-medium">{currentLevelInfo.range}</p>
+                </div>
+              </div>
+
+              {/* 진행도 섹션 */}
+              <div className="space-y-3 relative z-10">
+                <div className="flex justify-between items-end">
+                  <span className="text-sm font-bold text-[#666666]">현재 경험치</span>
+                  <div className="text-right">
+                    <span className="text-[#1344FF] font-black text-lg">{exp}</span>
+                    <span className="text-[#666666] font-bold text-sm"> / {displayMax} EXP</span>
+                  </div>
+                </div>
+                
+                <div className="h-2.5 w-full bg-gray-200/50 rounded-full overflow-hidden p-0.5 border border-white/50">
+                  <div 
+                    className="h-full bg-gradient-to-r from-[#1344FF] via-[#7C3AED] to-[#1344FF] rounded-full transition-all duration-1000 bg-[length:200%_100%] animate-gradient-x"
+                    style={{ width: `${Math.min(100, (exp/displayMax) * 100)}%` }}
+                  />
+                </div>
+                
+                <p className="text-xs font-bold text-[#666666]">
+                  다음 레벨까지 <span className="text-[#1344FF]">{remainingCount} EXP</span> 남았어요!
+                </p>
+              </div>
+
+              {/* 데코레이션 배경 */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#1344FF] opacity-[0.03] rounded-full -mr-16 -mt-16" />
+            </div>
+
+            {/* EXP 획득 내역 Breakdown */}
+            <div className="grid grid-cols-2 gap-2 mb-8">
+              <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+                <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">일정 가져오기</p>
+                <p className="text-sm font-black text-[#1a1a1a]">{stats.forks}회 <span className="text-[10px] text-[#1344FF] font-medium">+{stats.forks * 5}</span></p>
+              </div>
+              <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+                <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">활동 (글/댓글)</p>
+                <p className="text-sm font-black text-[#1a1a1a]">{stats.feedPosts + stats.community + stats.comments}회 <span className="text-[10px] text-[#1344FF] font-medium">+{(stats.feedPosts * 10) + (stats.community * 5) + (stats.comments * 2)}</span></p>
+              </div>
+              <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100 col-span-2 flex justify-between items-center px-4">
+                <span className="text-[10px] text-gray-400 font-bold uppercase">출석 포인트</span>
+                <span className="text-sm font-black text-[#1a1a1a]">{stats.attendance} pts <span className="text-[10px] text-[#1344FF] font-medium">+{stats.attendance}</span></span>
+              </div>
+            </div>
+
+            {/* 레벨 목록 */}
+            <div className="space-y-3">
+              {LEVEL_CONFIG.map((level) => {
+                const isActive = level.lv === userLevel;
+                const isLegend = level.lv === 5;
+                return (
+                  <div 
+                    key={level.lv}
+                    className={`flex items-center gap-4 p-4 rounded-2xl transition-all border-2 ${
+                      isActive 
+                        ? 'bg-white border-[#1344FF] shadow-md shadow-blue-50' 
+                        : 'bg-[#f8f9fa] border-transparent opacity-60'
+                    }`}
+                  >
+                    <div className={`p-1 rounded-lg ${isActive ? 'text-[#1344FF]' : isLegend ? 'text-orange-400' : 'text-gray-400'}`}>
+                      {isActive ? (
+                        <Star className="w-5 h-5 fill-current" />
+                      ) : isLegend ? (
+                        <Star className="w-5 h-5 text-orange-400" />
+                      ) : (
+                        <Star className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm font-black ${isActive ? 'text-[#1344FF]' : 'text-[#666666]'}`}>
+                          Lv.{level.lv} {level.name}
+                        </span>
+                      </div>
+                      <p className={`text-xs ${isActive ? 'text-blue-400 font-medium' : 'text-gray-400'}`}>
+                        {level.range}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <button 
+              onClick={() => setIsLevelModalOpen(false)}
+              className="w-full mt-8 py-4 bg-[#f8f9fa] text-gray-500 font-bold rounded-2xl hover:bg-gray-100 transition-all active:scale-95"
+            >
+              닫기
+            </button>
           </div>
         </div>
       )}

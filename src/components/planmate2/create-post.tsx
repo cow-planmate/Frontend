@@ -1,28 +1,18 @@
-import { ArrowLeft, Calendar, Clock, Copy, GripVertical, Heading1, Heading2, Heading3, Image as ImageIcon, List, MapPin, Plus, Quote, Type, X } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import "@blocknote/core/fonts/inter.css";
+import { ko } from "@blocknote/core/locales";
+import { BlockNoteView } from "@blocknote/mantine";
+import "@blocknote/mantine/style.css";
+import { useCreateBlockNote } from "@blocknote/react";
+import { ArrowLeft, Calendar, Clock, Copy, Image as ImageIcon, MapPin, Search, X } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useApiClient } from '../../hooks/useApiClient';
 
 interface CreatePostProps {
   onBack: () => void;
   onSubmit: () => void;
 }
 
-// --- Block Editor Types & Components ---
-
-type BlockType = 'text' | 'h1' | 'h2' | 'h3' | 'bullet' | 'number' | 'quote' | 'image';
-
-interface Block {
-  id: string;
-  type: BlockType;
-  content: string;
-  imageUrl?: string; // For image blocks
-}
-
-// Initial Data for testing
-const INITIAL_BLOCKS: Block[] = [
-  { id: 'b1', type: 'h1', content: '' },
-  { id: 'b2', type: 'text', content: '' },
-];
-
+// --- Mock Data ---
 const MY_PLANS = [
     {
       id: 1,
@@ -89,375 +79,12 @@ const MY_PLANS = [
     },
   ];
 
-// Utility to generate IDs
-const generateId = () => Math.random().toString(36).substr(2, 9);
-
-// Auto-resizing Textarea Component
-const BlockInput = ({
-  block,
-  onUpdate,
-  onKeyDown,
-  onFocus,
-  autoFocus
-}: {
-  block: Block;
-  onUpdate: (content: string) => void;
-  onKeyDown: (e: React.KeyboardEvent) => void;
-  onFocus: () => void;
-  autoFocus?: boolean;
-}) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Auto resize
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [block.content, block.type]);
-
-  useEffect(() => {
-    if (autoFocus && textareaRef.current) {
-      // Move cursor to end
-      textareaRef.current.focus();
-      const len = textareaRef.current.value.length;
-      textareaRef.current.setSelectionRange(len, len);
-    }
-  }, [autoFocus]);
-
-  const getPlaceholder = () => {
-    switch (block.type) {
-      case 'h1': return '제목 1';
-      case 'h2': return '제목 2';
-      case 'h3': return '제목 3';
-      case 'quote': return '인용구 입력...';
-      case 'bullet': return '목록 입력...';
-      default: return `내용을 입력하세요 ('/'를 눌러 명령어 확인)`;
-    }
-  };
-
-  const getStyles = () => {
-    const base = "w-full bg-transparent resize-none outline-none leading-relaxed overflow-hidden block";
-    switch (block.type) {
-      case 'h1': return `${base} text-3xl font-bold mb-2 placeholder:text-gray-300`;
-      case 'h2': return `${base} text-2xl font-bold mb-2 mt-4 placeholder:text-gray-300`;
-      case 'h3': return `${base} text-xl font-bold mb-1 mt-2 placeholder:text-gray-300`;
-      case 'quote': return `${base} text-lg text-gray-600 italic border-l-4 border-gray-300 pl-4 py-1 my-2`;
-      case 'bullet': return `${base} text-base`; // Bullet logic handled in parent wrapper usually, or here
-      default: return `${base} text-base text-[#1a1a1a] min-h-[1.5em]`;
-    }
-  };
-
-  return (
-    <textarea
-      ref={textareaRef}
-      value={block.content}
-      onChange={(e) => onUpdate(e.target.value)}
-      onKeyDown={onKeyDown}
-      onFocus={onFocus}
-      placeholder={getPlaceholder()}
-      className={getStyles()}
-      rows={1}
-    />
-  );
-};
-
-// --- Main Editor Component ---
-
-const NotionEditor = ({ blocks, setBlocks }: { blocks: Block[], setBlocks: React.Dispatch<React.SetStateAction<Block[]>> }) => {
-  const [focusedBlockId, setFocusedBlockId] = useState<string | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
-  const [menuSearch, setMenuSearch] = useState('');
-  
-  // Drag and Drop state
-  const [draggedBlockId, setDraggedBlockId] = useState<string | null>(null);
-
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  // Close menu on click outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    if (menuOpen) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [menuOpen]);
-
-  // Update a block
-  const updateBlock = (id: string, updates: Partial<Block>) => {
-    setBlocks(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
-  };
-
-  // Add block
-  const addBlock = (afterId: string, type: BlockType = 'text') => {
-    const newBlock: Block = { id: generateId(), type, content: '' };
-    const idx = blocks.findIndex(b => b.id === afterId);
-    if (idx === -1) return;
-    
-    const newBlocks = [...blocks];
-    newBlocks.splice(idx + 1, 0, newBlock);
-    setBlocks(newBlocks);
-    setFocusedBlockId(newBlock.id);
-  };
-
-  // Remove block
-  const removeBlock = (id: string) => {
-    if (blocks.length <= 1) return; // Don't delete last block
-    const idx = blocks.findIndex(b => b.id === id);
-    const prevBlock = blocks[idx - 1];
-    
-    const newBlocks = blocks.filter(b => b.id !== id);
-    setBlocks(newBlocks);
-    
-    if (prevBlock) {
-      setFocusedBlockId(prevBlock.id);
-    }
-  };
-
-  // Key Handlers
-  const handleKeyDown = (e: React.KeyboardEvent, block: Block, index: number) => {
-    if (menuOpen) {
-       // Menu navigation logic could go here
-       if (e.key === 'Escape') setMenuOpen(false);
-       return;
-    }
-
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      if (block.type === 'bullet' || block.type === 'number') {
-         // Continue list
-         addBlock(block.id, block.type);
-      } else {
-         addBlock(block.id, 'text');
-      }
-    } else if (e.key === 'Backspace' && block.content === '') {
-      e.preventDefault();
-      removeBlock(block.id);
-    } else if (e.key === '/') {
-       // Delay slightly to let the '/' type in, then calculate position?
-       // Actually common pattern is to just open menu and NOT type '/' if it's empty
-       // But user might want to type '/'. 
-       // Simple approach: Let it type, checking value in onChange. 
-       // Better: If text is empty or just '/', show menu.
-    } else if (e.key === 'ArrowUp') {
-       if (index > 0) {
-         e.preventDefault();
-         setFocusedBlockId(blocks[index - 1].id);
-       }
-    } else if (e.key === 'ArrowDown') {
-       if (index < blocks.length - 1) {
-         e.preventDefault();
-         setFocusedBlockId(blocks[index + 1].id);
-       }
-    }
-  };
-
-  // Check for slash command
-  const handleContentChange = (block: Block, newContent: string) => {
-    updateBlock(block.id, { content: newContent });
-    
-    if (newContent === '/') {
-        // Find the element to position menu
-        // This is a bit hacky without ref access to exact cursor, but works for "start of line" slash
-        const element = document.activeElement as HTMLElement;
-        if (element) {
-           const rect = element.getBoundingClientRect();
-           setMenuPosition({ 
-               top: rect.bottom + window.scrollY + 5, 
-               left: rect.left + window.scrollX 
-           });
-           setMenuOpen(true);
-           setMenuSearch('');
-        }
-    } else if (menuOpen && !newContent.startsWith('/')) {
-        setMenuOpen(false);
-    }
-  };
-
-  const selectMenuOption = (type: BlockType) => {
-     if (!focusedBlockId) return;
-     updateBlock(focusedBlockId, { type, content: '' }); // Clear the '/'
-     setMenuOpen(false);
-     
-     // Special handling for image (might want to auto-open upload)
-     if (type === 'image') {
-        // Maybe set a placeholder or trigger file input
-     }
-  };
-
-  // --- Drag and Drop Logic (HTML5 Native) ---
-  const onDragStart = (e: React.DragEvent, id: string) => {
-    setDraggedBlockId(id);
-    e.dataTransfer.effectAllowed = 'move';
-    // Transparent drag image hack if needed, but default is usually fine
-  };
-
-  const onDragOver = (e: React.DragEvent, targetId: string) => {
-    e.preventDefault(); // Necessary for drop
-    if (!draggedBlockId || draggedBlockId === targetId) return;
-  };
-
-  const onDrop = (e: React.DragEvent, targetId: string) => {
-     e.preventDefault();
-     if (!draggedBlockId || draggedBlockId === targetId) return;
-     
-     const fromIndex = blocks.findIndex(b => b.id === draggedBlockId);
-     const toIndex = blocks.findIndex(b => b.id === targetId);
-     
-     const newBlocks = [...blocks];
-     const [movedBlock] = newBlocks.splice(fromIndex, 1);
-     newBlocks.splice(toIndex, 0, movedBlock);
-     
-     setBlocks(newBlocks);
-     setDraggedBlockId(null);
-  };
-
-  const MENU_OPTIONS = [
-    { type: 'text', label: '텍스트', icon: <Type className="w-4 h-4" /> },
-    { type: 'h1', label: '제목 1', icon: <Heading1 className="w-4 h-4" /> },
-    { type: 'h2', label: '제목 2', icon: <Heading2 className="w-4 h-4" /> },
-    { type: 'h3', label: '제목 3', icon: <Heading3 className="w-4 h-4" /> },
-    { type: 'bullet', label: '글머리 기호', icon: <List className="w-4 h-4" /> },
-    { type: 'quote', label: '인용구', icon: <Quote className="w-4 h-4" /> },
-    { type: 'image', label: '이미지', icon: <ImageIcon className="w-4 h-4" /> },
-  ];
-
-  return (
-    <div className="relative min-h-[400px] pb-32">
-       {blocks.map((block, index) => (
-         <div 
-           key={block.id}
-           className="group relative flex items-start gap-2 mb-1 px-2"
-           onDragOver={(e) => onDragOver(e, block.id)}
-           onDrop={(e) => onDrop(e, block.id)}
-         >
-            {/* Drag Handle & Plus Button */}
-            <div 
-               className="absolute left-[-2rem] top-1 opacity-0 group-hover:opacity-100 transition-opacity flex items-center"
-               contentEditable={false}
-            >
-               <div 
-                 className="p-1 cursor-grab active:cursor-grabbing text-gray-400 hover:bg-gray-100 rounded-lg"
-                 draggable
-                 onDragStart={(e) => onDragStart(e, block.id)}
-               >
-                 <GripVertical className="w-4 h-4" />
-               </div>
-               <button 
-                 onClick={() => addBlock(block.id)}
-                 className="p-1 text-gray-400 hover:bg-gray-100 rounded-lg"
-               >
-                 <Plus className="w-4 h-4" />
-               </button>
-            </div>
-
-            {/* Block Content Renderer */}
-            <div className="flex-1 min-w-0">
-               {block.type === 'bullet' && (
-                 <div className="flex items-start gap-2">
-                    <span className="text-xl leading-relaxed select-none">•</span>
-                    <BlockInput 
-                        block={block} 
-                        onUpdate={(v) => handleContentChange(block, v)}
-                        onKeyDown={(e) => handleKeyDown(e, block, index)}
-                        onFocus={() => setFocusedBlockId(block.id)}
-                        autoFocus={focusedBlockId === block.id}
-                    />
-                 </div>
-               )}
-               
-               {block.type === 'image' ? (
-                 <div className="border border-gray-200 rounded-xl p-4 bg-gray-50 flex flex-col items-center justify-center gap-2 group/image">
-                    {block.imageUrl ? (
-                        <div className="relative w-full">
-                           <img src={block.imageUrl} alt="Uploaded" className="w-full rounded-xl" />
-                           <button 
-                             onClick={() => updateBlock(block.id, { imageUrl: undefined })}
-                             className="absolute top-2 right-2 bg-white p-1 rounded-full shadow hover:bg-gray-100"
-                           >
-                             <X className="w-4 h-4" />
-                           </button>
-                        </div>
-                    ) : (
-                        <div className="w-full">
-                           <div className="flex items-center gap-2 mb-2 justify-center text-gray-400">
-                              <ImageIcon className="w-8 h-8" />
-                              <span className="text-sm">이미지 URL을 입력하거나 업로드하세요</span>
-                           </div>
-                           <input 
-                             type="text"
-                             placeholder="이미지 URL 입력..."
-                             className="w-full px-3 py-2 border rounded-xl text-sm"
-                             onKeyDown={(e) => {
-                               if (e.key === 'Enter') {
-                                 e.preventDefault();
-                                 updateBlock(block.id, { imageUrl: (e.target as HTMLInputElement).value });
-                               } else if (e.key === 'Backspace' && !(e.target as HTMLInputElement).value) {
-                                   removeBlock(block.id);
-                               }
-                             }}
-                             autoFocus
-                           />
-                           {/* Fallback delete if stuck */}
-                           <button 
-                             onClick={() => removeBlock(block.id)} 
-                             className="text-xs text-red-500 mt-2 hover:underline"
-                           >
-                             블록 삭제
-                           </button>
-                        </div>
-                    )}
-                 </div>
-               ) : block.type !== 'bullet' && (
-                 <BlockInput 
-                    block={block} 
-                    onUpdate={(v) => handleContentChange(block, v)}
-                    onKeyDown={(e) => handleKeyDown(e, block, index)}
-                    onFocus={() => setFocusedBlockId(block.id)}
-                    autoFocus={focusedBlockId === block.id}
-                 />
-               )}
-            </div>
-         </div>
-       ))}
-
-       {/* Floating Slash Menu */}
-       {menuOpen && menuPosition && (
-         <div 
-           ref={menuRef}
-           className="fixed z-50 bg-white rounded-xl shadow-xl border border-gray-200 w-64 overflow-hidden animate-in fade-in zoom-in-95 duration-100"
-           style={{ top: menuPosition.top, left: menuPosition.left }}
-         >
-            <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500">
-               기본 블록
-            </div>
-            <div className="max-h-64 overflow-y-auto py-1">
-               {MENU_OPTIONS.map((option) => (
-                 <button
-                   key={option.type}
-                   onClick={() => selectMenuOption(option.type as BlockType)}
-                   className="w-full flex items-center gap-3 px-3 py-2 hover:bg-blue-50 text-left transition-colors"
-                 >
-                    <div className="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center bg-white text-gray-600">
-                       {option.icon}
-                    </div>
-                    <span className="text-sm font-medium text-gray-700">{option.label}</span>
-                 </button>
-               ))}
-            </div>
-         </div>
-       )}
-    </div>
-  );
-};
-
-
 // --- Page Component ---
 
 export default function CreatePost({ onBack, onSubmit }: CreatePostProps) {
+  const { apiRequest } = useApiClient();
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [destination, setDestination] = useState('');
@@ -465,15 +92,53 @@ export default function CreatePost({ onBack, onSubmit }: CreatePostProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [coverImage, setCoverImage] = useState<string | null>(null);
   
-  // Custom Editor State
-  const [blocks, setBlocks] = useState<Block[]>(INITIAL_BLOCKS);
+  // BlockNote Editor 초기 설정 고정
+  const initialContent = useMemo(() => [
+    {
+      type: "paragraph",
+      content: [],
+    },
+  ], []);
+
+  const editor = useCreateBlockNote({
+    dictionary: ko,
+    initialContent,
+  });
 
   // 플랜 선택 모달
   const [showPlanModal, setShowPlanModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [planSearch, setPlanSearch] = useState('');
+  const [plans, setPlans] = useState<any[]>([]);
+  const [loadingPlans, setLoadingPlans] = useState(false);
   const [schedule, setSchedule] = useState<any[]>([]);
 
   const tags = ['#뚜벅이최적화', '#극한의J', '#여유로운P', '#동선낭비없는'];
+
+  // 모달 열릴 때 플랜 목록 가져오기
+  useEffect(() => {
+    if (showPlanModal) {
+      fetchMyPlans();
+    }
+  }, [showPlanModal]);
+
+  const fetchMyPlans = async () => {
+    setLoadingPlans(true);
+    try {
+      const data = await apiRequest(`${BASE_URL}/api/plan/my`);
+      const allPlans = [...(data.myPlans || []), ...(data.editablePlans || [])];
+      
+      if (allPlans.length === 0) {
+        setPlans(MY_PLANS); // 데이터 없으면 Mock 데이터 사용
+      } else {
+        setPlans(allPlans);
+      }
+    } catch (err) {
+      console.error('플랜 로드 실패:', err);
+      setPlans(MY_PLANS); // 에러 시 Mock 데이터로 폴백
+    } finally {
+      setLoadingPlans(false);
+    }
+  };
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev =>
@@ -481,13 +146,52 @@ export default function CreatePost({ onBack, onSubmit }: CreatePostProps) {
     );
   };
 
-  const handlePlanSelect = (plan: any) => {
-    setSelectedPlan(plan);
-    setDestination(plan.destination);
-    setDuration(plan.duration);
-    setSchedule(plan.schedule);
+  const handlePlanSelect = async (plan: any) => {
+    // 만약 planId가 있으면 API 호출, 없으면 Mock 데이터 직접 사용
+    if (plan.planId) {
+      try {
+        const details = await apiRequest(`${BASE_URL}/api/plan/${plan.planId}/complete`);
+        const { planFrame, timetables, placeBlocks } = details;
+        
+        setTitle(planFrame.planName || '');
+        setDestination(planFrame.travelName || '');
+        
+        // 기간 계산 (timetables 이용)
+        if (timetables && timetables.length > 0) {
+          const days = timetables.length;
+          setDuration(`${days - 1}박 ${days}일`);
+        }
+        
+        // 스케줄 데이터 변환
+        const scheduleData = timetables.map((tt: any, idx: number) => ({
+          day: idx + 1,
+          date: tt.date,
+          items: placeBlocks
+            .filter((pb: any) => pb.timeTableId === tt.timetableId)
+            .sort((a: any, b: any) => (a.startTime || '').localeCompare(b.startTime || ''))
+            .map((pb: any) => ({
+              time: pb.startTime ? pb.startTime.substring(0, 5) : '00:00',
+              place: pb.placeName,
+              description: pb.placeAddress
+            }))
+        }));
+        setSchedule(scheduleData);
+      } catch (err) {
+        console.error('플랜 상세 정보 로드 실패:', err);
+      }
+    } else {
+      // Mock 데이터용 처리
+      setDestination(plan.destination);
+      setDuration(plan.duration);
+      setSchedule(plan.schedule);
+    }
     setShowPlanModal(false);
   };
+
+  const filteredPlans = plans.filter(plan => 
+    (plan.planName || plan.title || '').toLowerCase().includes(planSearch.toLowerCase()) ||
+    (plan.destination || '').toLowerCase().includes(planSearch.toLowerCase())
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -496,7 +200,7 @@ export default function CreatePost({ onBack, onSubmit }: CreatePostProps) {
       return;
     }
     // Serialize blocks to JSON or HTML here if needed for backend
-    console.log('Submitted Blocks:', blocks);
+    console.log('Submitted Blocks:', editor.document);
     
     alert('여행기가 성공적으로 작성되었습니다!');
     onSubmit();
@@ -649,18 +353,13 @@ export default function CreatePost({ onBack, onSubmit }: CreatePostProps) {
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-[#1a1a1a]">여행 후기 <span className="text-red-500">*</span></h2>
-              <div className="text-xs text-gray-500 flex items-center gap-1">
+              <div className="text-xs text-gray-500">
                 <span className="bg-gray-100 px-2 py-1 rounded-lg border border-gray-200 font-mono text-xs">/</span> 를 입력하여 메뉴 열기
               </div>
             </div>
             
-            <div className="min-h-[500px] border border-[#e5e7eb] rounded-xl p-8 bg-white focus-within:ring-2 focus-within:ring-[#1344FF]/20 focus-within:border-[#1344FF] transition-all" onClick={() => {
-                // Focus last block if clicking empty space at bottom
-                if (blocks.length > 0) {
-                  // Optional: Focus logic handled by blocks themselves, but this helps UX
-                }
-            }}>
-               <NotionEditor blocks={blocks} setBlocks={setBlocks} />
+            <div className="min-h-[500px] border border-[#e5e7eb] rounded-xl bg-white focus-within:ring-2 focus-within:ring-[#1344FF]/20 focus-within:border-[#1344FF] transition-all overflow-hidden">
+               <BlockNoteView editor={editor} theme="light" />
             </div>
           </div>
 
@@ -747,37 +446,68 @@ export default function CreatePost({ onBack, onSubmit }: CreatePostProps) {
                 <X className="w-6 h-6 text-[#666666]" />
               </button>
             </div>
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-              {MY_PLANS.map((plan) => (
-                <div
-                  key={plan.id}
-                  onClick={() => handlePlanSelect(plan)}
-                  className="border border-[#e5e7eb] rounded-xl p-4 hover:border-[#1344FF] hover:bg-blue-50 cursor-pointer transition-all"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h4 className="text-lg font-bold text-[#1a1a1a] mb-1">{plan.title}</h4>
-                      <div className="flex items-center gap-4 text-sm text-[#666666]">
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          {plan.destination}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          {plan.duration}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-sm text-[#1344FF] font-medium">
-                      {plan.startDate} ~ {plan.endDate}
-                    </span>
-                  </div>
-                  <div className="text-sm text-[#666666]">
-                    총 {plan.schedule.length}일 일정 · 
-                    {plan.schedule.reduce((sum, day) => sum + day.items.length, 0)}개 장소
-                  </div>
+
+            {/* 검색바 */}
+            <div className="relative mb-6">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={planSearch}
+                onChange={(e) => setPlanSearch(e.target.value)}
+                placeholder="플랜 이름 또는 목적지 검색..."
+                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#1344FF] transition-all"
+              />
+            </div>
+
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+              {loadingPlans ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1344FF] mx-auto mb-4"></div>
+                  <p className="text-gray-500">내 플랜을 불러오는 중...</p>
                 </div>
-              ))}
+              ) : filteredPlans.length > 0 ? (
+                filteredPlans.map((plan) => (
+                  <div
+                    key={plan.planId || plan.id}
+                    onClick={() => handlePlanSelect(plan)}
+                    className="border border-[#e5e7eb] rounded-xl p-4 hover:border-[#1344FF] hover:bg-blue-50 cursor-pointer transition-all"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h4 className="text-lg font-bold text-[#1a1a1a] mb-1">
+                          {plan.planName || plan.title}
+                        </h4>
+                        <div className="flex items-center gap-4 text-sm text-[#666666]">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-4 h-4" />
+                            {plan.destination || '여행지'}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            {plan.duration || `${plan.startDate} ~ ${plan.endDate}`}
+                          </span>
+                        </div>
+                      </div>
+                      {plan.startDate && (
+                        <span className="text-sm text-[#1344FF] font-medium">
+                          {plan.startDate} ~ {plan.endDate}
+                        </span>
+                      )}
+                    </div>
+                    {(plan.schedule || plan.planId) && (
+                      <div className="text-sm text-[#666666]">
+                        {plan.schedule 
+                          ? `총 ${plan.schedule.length}일 일정 · ${plan.schedule.reduce((sum: number, day: any) => sum + day.items.length, 0)}개 장소`
+                          : "플랜 상세 정보 포함"}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  검색 결과가 없습니다.
+                </div>
+              )}
             </div>
           </div>
         </div>
