@@ -53,7 +53,7 @@ function App({ hideNavbar = false }) {
   const { setPlanField, setPlanAll } = usePlanStore();
   const { post, isAuthenticated } = useApiClient();
 
-  const sliderHeightClass = "h-[14rem] sm:h-[20rem] lg:h-[45rem]";
+  const sliderHeightClass = "h-[14rem] sm:h-[20rem] lg:h-[36rem]";
 
   const settings = {
     dots: true,
@@ -62,9 +62,11 @@ function App({ hideNavbar = false }) {
     slidesToShow: 1,
     slidesToScroll: 1,
     autoplay: true,
-    autoplaySpeed: 4000,
+    autoplaySpeed: 3000,
     fade: true,
-    arrows: true,
+    arrows: false,
+    pauseOnHover: false,
+    pauseOnFocus: false,
   };
 
   const handleDateChange = (item) => {

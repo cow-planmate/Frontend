@@ -233,7 +233,12 @@ export default function CommunityTab({ initialTab = 'free', onNavigate }: Commun
             </div>
           </div>
 
-          <button className="w-full bg-[#1344FF] text-white py-4 rounded-xl hover:bg-[#0d34cc] transition-all shadow-md font-medium">+ 새 글 작성하기</button>
+          <button 
+            onClick={() => onNavigate('community-create')}
+            className="w-full bg-[#1344FF] text-white py-4 rounded-xl hover:bg-[#0d34cc] transition-all shadow-md font-medium"
+          >
+            + 새 글 작성하기
+          </button>
         </div>
 
         <div className="space-y-6">

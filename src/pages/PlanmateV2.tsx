@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import BoardList from '../components/planmate2/board-list';
 import CommunityTab from '../components/planmate2/community-tab';
+import CommunityCreate from '../components/planmate2/community-create';
 import CreatePost from '../components/planmate2/create-post';
 import MainFeed from '../components/planmate2/main-feed';
 import MyPage from '../components/planmate2/my-page';
@@ -12,7 +13,7 @@ import Home from './Home';
 export default function PlanmateV2() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [currentView, setCurrentView] = useState<'feed' | 'community' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker'>('feed');
+  const [currentView, setCurrentView] = useState<'feed' | 'community' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker' | 'community-create'>('feed');
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [selectedCommunityType, setSelectedCommunityType] = useState<string>('free');
   const [boardType, setBoardType] = useState<'free' | 'qna' | 'mate'>('free');
@@ -22,18 +23,27 @@ export default function PlanmateV2() {
       setCurrentView('mypage');
     } else if (location.pathname === '/community') {
       setCurrentView('community');
+    } else if (location.pathname === '/community/create') {
+      setCurrentView('community-create');
+    } else if (location.pathname === '/plan-maker') {
+      setCurrentView('plan-maker');
+    } else if (location.pathname === '/create-post') {
+      setCurrentView('create');
     } else if (location.pathname === '/') {
       setCurrentView('feed');
     }
   }, [location.pathname]);
 
-  const handleViewChange = (view: 'feed' | 'community' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker', data?: any) => {
+  const handleViewChange = (view: 'feed' | 'community' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker' | 'community-create', data?: any) => {
     setCurrentView(view);
     
     // URL 업데이트
     if (view === 'mypage') navigate('/mypage');
     else if (view === 'community') navigate('/community');
+    else if (view === 'plan-maker') navigate('/plan-maker');
+    else if (view === 'create') navigate('/create-post');
     else if (view === 'feed') navigate('/');
+    else if (view === 'community-create') navigate('/community/create');
     
     if (data?.post) setSelectedPost(data.post);
     if (data?.communityType) setSelectedCommunityType(data.communityType);
@@ -47,7 +57,7 @@ export default function PlanmateV2() {
         onNavigate={handleViewChange}
       />
       
-      <main>
+      <main className="w-full">
         {currentView === 'feed' && <MainFeed onNavigate={handleViewChange} />}
         {currentView === 'community' && (
           <CommunityTab 
@@ -77,10 +87,15 @@ export default function PlanmateV2() {
         {currentView === 'mypage' && (
           <MyPage onNavigate={handleViewChange} />
         )}
+        {currentView === 'community-create' && (
+          <CommunityCreate 
+            type={boardType}
+            onBack={() => handleViewChange('board-list', { boardType })}
+            onSubmit={() => handleViewChange('board-list', { boardType })}
+          />
+        )}
         {currentView === 'plan-maker' && (
-          <div className="max-w-7xl mx-auto">
-            <Home hideNavbar={true} />
-          </div>
+          <Home hideNavbar={true} />
         )}
       </main>
     </div>

@@ -4,7 +4,6 @@ import Create2 from "../pages/Create2";
 import Home from "../pages/Home";
 import Landingpage from "../pages/Landingpage";
 import Logintest from "../pages/Logintest";
-import Mypage from "../pages/Mypage";
 import Create from "../pages/NewCreate";
 import OAuthAdditionalInfo from "../pages/OAuthAdditionalInfo";
 import OAuthCallback from "../pages/OAuthCallback";
@@ -19,7 +18,10 @@ const Router = () => {
       <Routes>
         <Route path="/" element={<PlanmateV2 />} />
         <Route path="community" element={<PlanmateV2 />} />
+        <Route path="community/create" element={<PlanmateV2 />} />
         <Route path="mypage" element={<PlanmateV2 />} />
+        <Route path="plan-maker" element={<PlanmateV2 />} />
+        <Route path="create-post" element={<PlanmateV2 />} />
         <Route path="legacy-home" element={<Home />} />
         <Route path="complete" element={<Complete />} />
         <Route path="create" element={<Create />} />

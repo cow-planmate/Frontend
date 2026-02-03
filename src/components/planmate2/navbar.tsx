@@ -42,9 +42,9 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
   };
 
   return (
-    <nav className="bg-white border-b border-[#e5e7eb] sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+    <nav className="bg-white border-b border-[#e5e7eb] sticky top-0 z-50 h-20 w-full">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 h-full">
+        <div className="flex justify-between items-center h-full">
           {/* 로고 */}
           <div className="flex items-center cursor-pointer group" onClick={() => onNavigate('feed')}>
             <div className="w-10 h-10 bg-[#1344FF] rounded-xl flex items-center justify-center group-hover:bg-[#0d34cc] transition-all">
@@ -54,33 +54,33 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
           </div>
 
           {/* 데스크톱 메뉴 */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-2">
             <button
               onClick={() => onNavigate('feed')}
-              className={`px-6 py-2.5 rounded-xl font-medium transition-all ${
+              className={`min-w-[120px] px-5 py-2.5 rounded-xl font-bold transition-all text-[15px] ${
                 currentView === 'feed'
                   ? 'bg-[#1344FF] text-white shadow-md'
-                  : 'text-[#666666] hover:bg-[#f0f4ff] hover:text-[#1344FF]'
+                  : 'text-[#666666] hover:bg-gray-50 hover:text-[#1344FF]'
               }`}
             >
               여행기 피드
             </button>
             <button
               onClick={() => onNavigate('community')}
-              className={`px-6 py-2.5 rounded-xl font-medium transition-all ${
+              className={`min-w-[120px] px-5 py-2.5 rounded-xl font-bold transition-all text-[15px] ${
                 currentView === 'community'
                   ? 'bg-[#1344FF] text-white shadow-md'
-                  : 'text-[#666666] hover:bg-[#f0f4ff] hover:text-[#1344FF]'
+                  : 'text-[#666666] hover:bg-gray-50 hover:text-[#1344FF]'
               }`}
             >
               커뮤니티
             </button>
             <button
               onClick={() => onNavigate('plan-maker')}
-              className={`px-6 py-2.5 rounded-xl font-medium transition-all ${
+              className={`min-w-[120px] px-5 py-2.5 rounded-xl font-bold transition-all text-[15px] ${
                 currentView === 'plan-maker'
                   ? 'bg-[#1344FF] text-white shadow-md'
-                  : 'text-[#666666] hover:bg-[#f0f4ff] hover:text-[#1344FF]'
+                  : 'text-[#666666] hover:bg-gray-50 hover:text-[#1344FF]'
               }`}
             >
               여행 일정 생성

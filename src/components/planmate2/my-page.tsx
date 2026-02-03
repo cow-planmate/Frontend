@@ -684,7 +684,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
         </div>
 
         {/* Full-screen Calendar Section */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8 h-[800px] flex flex-col">
+        <div className="bg-white rounded-xl shadow-md p-6 mb-8 min-h-[800px] flex flex-col">
           <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-2">
               <CalendarDays className="w-6 h-6 text-[#1344FF]" />
@@ -763,7 +763,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
             </div>
 
             {/* Days */}
-            <div className="flex-1 grid grid-cols-7 grid-rows-6">
+            <div className="flex-1 grid grid-cols-7">
               {gridCells.map((cell, idx) => {
                 const events = getEventsForDate(cell.date);
                 
@@ -771,7 +771,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
                   <div 
                     key={idx} 
                     className={`
-                      border-r border-b border-gray-100 p-2 relative transition-colors flex flex-col
+                      border-r border-b border-gray-100 p-2 relative transition-colors flex flex-col min-h-[120px]
                       ${!cell.isCurrentMonth ? 'bg-gray-50/50 text-gray-300' : 'bg-white text-gray-900'}
                       ${cell.day === new Date().getDate() && cell.isCurrentMonth && currentMonth === new Date().getMonth() ? 'bg-blue-50/30' : ''}
                     `}

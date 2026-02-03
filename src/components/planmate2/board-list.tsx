@@ -162,21 +162,24 @@ export default function BoardList({ type, onBack, onNavigate }: BoardListProps) 
             className="w-full pl-12 pr-4 py-3 border border-[#e5e7eb] rounded-xl focus:outline-none focus:border-[#1344FF] transition-colors bg-white shadow-sm"
           />
         </div>
-        <button className="px-6 py-3 bg-[#1344FF] text-white rounded-xl hover:bg-[#0d34cc] transition-all shadow-md font-medium flex items-center justify-center gap-2">
+        <button 
+          onClick={() => onNavigate('community-create')}
+          className="px-6 py-3 bg-[#1344FF] text-white rounded-xl hover:bg-[#0d34cc] transition-all shadow-md font-medium flex items-center justify-center gap-2"
+        >
           <PenTool className="w-5 h-5" />
           글쓰기
         </button>
       </div>
 
-      {/* List */}
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="divide-y divide-gray-100">
-          {posts.map((post) => (
-            <div 
-              key={post.id} 
-              className="p-6 hover:bg-[#f8f9fa] transition-colors cursor-pointer"
-              onClick={() => onNavigate('detail', { post: { ...post, image: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=800&auto=format&fit=crop' } })} // Mock navigation to detail
-            >
+    {/* List */}
+    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+      <div className="divide-y divide-gray-100">
+        {posts.map((post) => (
+          <div 
+            key={post.id} 
+            className="p-6 hover:bg-[#f8f9fa] transition-colors cursor-pointer"
+            onClick={() => onNavigate('detail', { post: { ...post, image: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=800&auto=format&fit=crop' } })} // Mock navigation to detail
+          >
               <div className="flex justify-between items-start mb-2">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
