@@ -17,7 +17,7 @@ const MY_PLANS = [
     {
       id: 1,
       title: '서울 3박 4일 여행',
-      destination: '서울',
+      destination: '서울특별시 종로구',
       duration: '3박 4일',
       startDate: '2024.03.15',
       endDate: '2024.03.18',
@@ -44,7 +44,7 @@ const MY_PLANS = [
     {
       id: 2,
       title: '제주도 힐링 여행',
-      destination: '제주도',
+      destination: '제주특별자치도 제주시',
       duration: '4박 5일',
       startDate: '2024.04.01',
       endDate: '2024.04.05',
@@ -62,7 +62,7 @@ const MY_PLANS = [
     {
       id: 3,
       title: '부산 바다 여행',
-      destination: '부산',
+      destination: '부산광역시 해운대구',
       duration: '2박 3일',
       startDate: '2024.05.10',
       endDate: '2024.05.12',
@@ -187,8 +187,13 @@ export default function CreatePost({ onBack, onSubmit }: CreatePostProps) {
         const details = await apiRequest(`${BASE_URL}/api/plan/${plan.planId}/complete`);
         const { planFrame, timetables, placeBlocks } = details;
         
-        setTitle(planFrame.planName || '');
-        setDestination(planFrame.travelName || '');
+        // 제목은 자동으로 입력되지 않도록 수정 (사용자 요청)
+        // setTitle(planFrame.planName || ''); 
+        
+        const fullDestination = planFrame.travelCategoryName && planFrame.travelName 
+          ? (planFrame.travelName.includes(planFrame.travelCategoryName) ? planFrame.travelName : `${planFrame.travelCategoryName} ${planFrame.travelName}`)
+          : (planFrame.travelName || '');
+        setDestination(fullDestination);
         
         // 기간 계산 (timetables 이용)
         if (timetables && timetables.length > 0) {
