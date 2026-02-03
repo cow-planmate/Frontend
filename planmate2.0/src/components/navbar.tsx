@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Menu, X, MapPin, User, PlusCircle } from 'lucide-react';
+import { Menu, X, User, PlusCircle } from 'lucide-react';
+// @ts-ignore
+import Logo from '../../assets/imgs/logo.svg?react';
 
 interface NavbarProps {
   currentView: string;
@@ -15,10 +17,7 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
         <div className="flex justify-between items-center h-20">
           {/* 로고 */}
           <div className="flex items-center cursor-pointer group" onClick={() => onNavigate('feed')}>
-            <div className="w-10 h-10 bg-[#1344FF] rounded-xl flex items-center justify-center group-hover:bg-[#0d34cc] transition-all">
-              <MapPin className="w-6 h-6 text-white" />
-            </div>
-            <span className="ml-3 text-xl font-bold text-[#1a1a1a] group-hover:text-[#1344FF] transition-colors">가져가는 여행기</span>
+            <Logo className="h-7 sm:h-8" />
           </div>
 
           {/* 데스크톱 메뉴 */}

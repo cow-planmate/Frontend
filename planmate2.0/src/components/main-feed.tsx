@@ -307,28 +307,28 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* 메인 피드 */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6 h-fit">
           {sortedPosts.length > 0 ? (
             sortedPosts.map(post => (
               <div
                 key={post.id}
                 onClick={() => onNavigate('detail', { post })}
-                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all cursor-pointer"
+                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all cursor-pointer flex flex-col"
               >
                 {/* 이미지 */}
-                <div className="relative h-64 overflow-hidden">
+                <div className="relative h-48 overflow-hidden">
                   <img
                     src={post.image}
                     alt={post.title}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-medium text-[#1a1a1a] shadow-md">
+                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-[#1a1a1a] shadow-md">
                     {post.destination}
                   </div>
                 </div>
 
                 {/* 콘텐츠 */}
-                <div className="p-6">
+                <div className="p-5 flex-1 flex flex-col">
                   {/* 작성자 정보 */}
                   <div className="flex items-center mb-4">
                     <img
@@ -343,32 +343,32 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
                   </div>
 
                   {/* 제목 & 설명 */}
-                  <h3 className="text-xl font-bold text-[#1a1a1a] mb-2">
+                  <h3 className="text-lg font-bold text-[#1a1a1a] mb-2 line-clamp-1">
                     {post.title}
                   </h3>
-                  <p className="text-[#666666] mb-4">
+                  <p className="text-sm text-[#666666] mb-4 line-clamp-2 h-10">
                     {post.description}
                   </p>
 
                   {/* 태그 */}
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {post.tags.map(tag => (
+                    {post.tags.slice(0, 2).map(tag => (
                       <span
                         key={tag}
-                        className="px-3 py-1 bg-[#f8f9fa] text-[#1344FF] text-sm rounded-full"
+                        className="px-3 py-1 bg-[#f8f9fa] text-[#1344FF] text-xs rounded-full"
                       >
                         {tag}
                       </span>
                     ))}
-                    <span className="px-3 py-1 bg-[#f8f9fa] text-[#666666] text-sm rounded-full flex items-center gap-1">
+                    <span className="px-3 py-1 bg-[#f8f9fa] text-[#666666] text-xs rounded-full flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {post.duration}
                     </span>
                   </div>
 
                   {/* 액션 버튼 */}
-                  <div className="flex items-center justify-between pt-4 border-t border-[#e5e7eb]">
-                    <div className="flex items-center gap-6">
+                  <div className="flex items-center justify-between pt-4 border-t border-[#e5e7eb] mt-auto">
+                    <div className="flex items-center gap-4">
                       <button
                         onClick={(e) => handleLike(post.id, e)}
                         className={`flex items-center gap-2 transition-colors ${
@@ -378,22 +378,22 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
                         }`}
                       >
                         <Heart
-                          className={`w-5 h-5 ${likedPosts.has(post.id) ? 'fill-current' : ''}`}
+                          className={`w-4 h-4 ${likedPosts.has(post.id) ? 'fill-current' : ''}`}
                         />
-                        <span>{post.likes + (likedPosts.has(post.id) ? 1 : 0)}</span>
+                        <span className="text-sm">{post.likes + (likedPosts.has(post.id) ? 1 : 0)}</span>
                       </button>
                       <button className="flex items-center gap-2 text-[#666666] hover:text-[#1344FF] transition-colors">
-                        <MessageCircle className="w-5 h-5" />
-                        <span>{post.comments}</span>
+                        <MessageCircle className="w-4 h-4" />
+                        <span className="text-sm">{post.comments}</span>
                       </button>
                     </div>
                     <button
                       onClick={(e) => handleFork(post, e)}
-                      className="flex items-center gap-2 bg-[#1344FF] text-white px-5 py-2 rounded-lg hover:bg-[#0d34cc] transition-all shadow-sm"
+                      className="flex items-center gap-2 bg-[#1344FF] text-white px-4 py-2 rounded-lg hover:bg-[#0d34cc] transition-all shadow-sm"
                     >
                       <Copy className="w-4 h-4" />
-                      <span>Fork</span>
-                      <span className="bg-white/20 px-2 py-0.5 rounded-full text-sm">
+                      <span className="text-xs font-bold">Fork</span>
+                      <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">
                         {post.forks}
                       </span>
                     </button>
@@ -402,7 +402,7 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
               </div>
             ))
           ) : (
-            <div className="bg-white rounded-xl shadow-md p-12 text-center">
+            <div className="col-span-full bg-white rounded-xl shadow-md p-12 text-center">
               <Search className="w-16 h-16 text-[#e5e7eb] mx-auto mb-4" />
               <h3 className="text-xl font-bold text-[#1a1a1a] mb-2">검색 결과가 없습니다</h3>
               <p className="text-[#666666] mb-6">다른 검색어나 필터를 시도해보세요</p>

@@ -68,6 +68,10 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
   const [selectedRegion, setSelectedRegion] = useState<string>('전체');
   const [selectedDuration, setSelectedDuration] = useState<string>('전체');
   const [sortBy, setSortBy] = useState<string>('최신순');
+  const [mapState, setMapState] = useState({
+    center: { lat: 35.95, lng: 128.25 },
+    level: 14
+  });
 
   const tags = ['#뚜벅이최적화', '#극한의J', '#여유로운P', '#동선낭비없는'];
   const regions = ['전체', '서울', '부산', '제주도', '강릉', '경주', '전주'];
@@ -133,14 +137,33 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
     alert(`"${post.title}" 여행 일정을 복제했습니다! 나만의 일정으로 수정해보세요.`);
   };
 
+  const handleRegionSelect = (regionName: string) => {
+    if (selectedRegion === regionName) {
+      setSelectedRegion('전체');
+      setMapState({ center: { lat: 35.95, lng: 128.25 }, level: 14 });
+    } else {
+      setSelectedRegion(regionName);
+      const coords: Record<string, any> = {
+        '서울': { lat: 37.5665, lng: 126.9780 },
+        '부산': { lat: 35.1796, lng: 129.0756 },
+        '제주도': { lat: 33.4996, lng: 126.5312 }
+      };
+      if (coords[regionName]) {
+        setMapState({ center: coords[regionName], level: 11 });
+      }
+    }
+  };
+
   const clearFilters = () => {
     setSelectedRegion('전체');
     setSelectedDuration('전체');
     setSortBy('최신순');
     setSelectedTag(null);
     setSearchQuery('');
+    setMapState({ center: { lat: 35.95, lng: 128.25 }, level: 14 });
   };
 
+  // 필터링 로직
   const activeFilterCount = 
     (selectedRegion !== '전체' ? 1 : 0) +
     (selectedDuration !== '전체' ? 1 : 0) +
@@ -227,7 +250,7 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
                 {regions.map(region => (
                   <button
                     key={region}
-                    onClick={() => setSelectedRegion(region)}
+                    onClick={() => region === '전체' ? clearFilters() : handleRegionSelect(region)}
                     className={`px-4 py-2 rounded-xl text-sm transition-all ${
                       selectedRegion === region
                         ? 'bg-[#1344FF] text-white shadow-sm'
@@ -323,93 +346,93 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* 메인 피드 */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6 h-fit">
           {sortedPosts.length > 0 ? (
             sortedPosts.map(post => (
               <div
                 key={post.id}
                 onClick={() => onNavigate('detail', { post })}
-                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all cursor-pointer"
+                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all cursor-pointer flex flex-col"
               >
                 {/* 이미지 */}
-                <div className="relative h-64 overflow-hidden">
+                <div className="relative h-48 overflow-hidden">
                   <img
                     src={post.image}
                     alt={post.title}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-medium text-[#1a1a1a] shadow-md">
+                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-[#1344FF] shadow-sm">
                     {post.destination}
                   </div>
                 </div>
 
                 {/* 콘텐츠 */}
-                <div className="p-6">
+                <div className="p-5 flex-1 flex flex-col">
                   {/* 작성자 정보 */}
-                  <div className="flex items-center mb-4">
+                  <div className="flex items-center mb-3">
                     <img
                       src={post.authorImage}
                       alt={post.author}
-                      className="w-10 h-10 rounded-full mr-3"
+                      className="w-8 h-8 rounded-full mr-2"
                     />
                     <div>
-                      <p className="font-medium text-[#1a1a1a]">{post.author}</p>
-                      <p className="text-sm text-[#666666]">{post.createdAt}</p>
+                      <p className="text-sm font-bold text-[#1a1a1a] leading-none mb-1">{post.author}</p>
+                      <p className="text-[11px] text-[#666666]">{post.createdAt}</p>
                     </div>
                   </div>
 
                   {/* 제목 & 설명 */}
-                  <h3 className="text-xl font-bold text-[#1a1a1a] mb-2">
+                  <h3 className="text-lg font-bold text-[#1a1a1a] mb-2 line-clamp-1">
                     {post.title}
                   </h3>
-                  <p className="text-[#666666] mb-4">
+                  <p className="text-sm text-[#666666] mb-4 line-clamp-2 h-10">
                     {post.description}
                   </p>
 
                   {/* 태그 */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {post.tags.map(tag => (
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {post.tags.slice(0, 2).map(tag => (
                       <span
                         key={tag}
-                        className="px-3 py-1 bg-[#f8f9fa] text-[#1344FF] text-sm rounded-full"
+                        className="px-2 py-0.5 bg-[#f0f4ff] text-[#1344FF] text-[11px] font-bold rounded-md"
                       >
                         {tag}
                       </span>
                     ))}
-                    <span className="px-3 py-1 bg-[#f8f9fa] text-[#666666] text-sm rounded-full flex items-center gap-1">
+                    <span className="px-2 py-0.5 bg-[#f8f9fa] text-[#666666] text-[11px] font-medium rounded-md flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {post.duration}
                     </span>
                   </div>
 
                   {/* 액션 버튼 */}
-                  <div className="flex items-center justify-between pt-4 border-t border-[#e5e7eb]">
-                    <div className="flex items-center gap-6">
+                  <div className="flex items-center justify-between pt-4 border-t border-[#e5e7eb] mt-auto">
+                    <div className="flex items-center gap-4">
                       <button
                         onClick={(e) => handleLike(post.id, e)}
-                        className={`flex items-center gap-2 transition-colors ${
+                        className={`flex items-center gap-1.5 transition-colors ${
                           likedPosts.has(post.id)
                             ? 'text-red-500'
                             : 'text-[#666666] hover:text-red-500'
                         }`}
                       >
                         <Heart
-                          className={`w-5 h-5 ${likedPosts.has(post.id) ? 'fill-current' : ''}`}
+                          className={`w-4 h-4 ${likedPosts.has(post.id) ? 'fill-current' : ''}`}
                         />
-                        <span>{post.likes + (likedPosts.has(post.id) ? 1 : 0)}</span>
+                        <span className="text-sm font-medium">{post.likes + (likedPosts.has(post.id) ? 1 : 0)}</span>
                       </button>
-                      <button className="flex items-center gap-2 text-[#666666] hover:text-[#1344FF] transition-colors">
-                        <MessageCircle className="w-5 h-5" />
-                        <span>{post.comments}</span>
+                      <button className="flex items-center gap-1.5 text-[#666666] hover:text-[#1344FF] transition-colors">
+                        <MessageCircle className="w-4 h-4" />
+                        <span className="text-sm font-medium">{post.comments}</span>
                       </button>
                     </div>
                     <button
                       onClick={(e) => handleFork(post, e)}
-                      className="flex items-center gap-2 bg-[#1344FF] text-white px-5 py-2 rounded-xl hover:bg-[#0d34cc] transition-all shadow-sm"
+                      className="flex items-center gap-1.5 bg-[#1344FF] text-white px-3 py-1.5 rounded-lg hover:bg-[#0d34cc] transition-all shadow-sm group/btn"
                     >
-                      <Copy className="w-4 h-4" />
-                      <span>가져가기</span>
-                      <span className="bg-white/20 px-2 py-0.5 rounded-full text-sm">
+                      <Copy className="w-3.5 h-3.5" />
+                      <span className="text-xs font-bold">가져가기</span>
+                      <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px] font-bold">
                         {post.forks}
                       </span>
                     </button>
@@ -418,7 +441,7 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
               </div>
             ))
           ) : (
-            <div className="bg-white rounded-xl shadow-md p-12 text-center">
+            <div className="col-span-full bg-white rounded-xl shadow-md p-12 text-center">
               <Search className="w-16 h-16 text-[#e5e7eb] mx-auto mb-4" />
               <h3 className="text-xl font-bold text-[#1a1a1a] mb-2">검색 결과가 없습니다</h3>
               <p className="text-[#666666] mb-6">다른 검색어나 필터를 시도해보세요</p>
@@ -444,42 +467,56 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
             {/* 카카오 지도 */}
             <div className="rounded-2xl mb-4 h-80 overflow-hidden border border-[#e5e7eb] relative z-0 shadow-inner group">
               <Map
-                center={{ lat: 35.95, lng: 128.25 }}
-                level={14}
+                center={mapState.center}
+                level={mapState.level}
                 style={{ width: '100%', height: '100%' }}
                 draggable={true}
                 zoomable={true}
               >
                 {[
-                  { name: '서울', lat: 37.5665, lng: 126.9780, count: 12, color: '#1344FF' },
-                  { name: '부산', lat: 35.1796, lng: 129.0756, count: 5, color: '#FF3B30' },
-                  { name: '제주도', lat: 33.4996, lng: 126.5312, count: 8, color: '#34C759' }
-                ].map((loc) => (
-                  <CustomOverlayMap
-                    key={loc.name}
-                    position={{ lat: loc.lat, lng: loc.lng }}
-                    yAnchor={1.2}
-                  >
-                    <div className="group/marker cursor-pointer">
-                      {/* 툴팁/라벨 */}
-                      <div className="relative bg-white px-3 py-1.5 rounded-full shadow-lg border border-[#e5e7eb] hover:border-[#1344FF] transition-all transform hover:-translate-y-1 flex items-center gap-2">
-                        <div 
-                          className="w-2 h-2 rounded-full animate-pulse"
-                          style={{ backgroundColor: loc.color }}
-                        />
-                        <span className="text-xs font-bold text-[#1a1a1a] whitespace-nowrap">
-                          {loc.name}
-                        </span>
-                        <span className="text-[10px] bg-[#f0f4ff] text-[#1344FF] px-1.5 py-0.5 rounded-full font-bold">
-                          {loc.count}
-                        </span>
-                        
-                        {/* 꼬리표 (Triangle) */}
-                        <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-r border-b border-[#e5e7eb] rotate-45" />
+                  { name: '서울', lat: 37.5665, lng: 126.9780, color: '#1344FF' },
+                  { name: '부산', lat: 35.1796, lng: 129.0756, color: '#FF3B30' },
+                  { name: '제주도', lat: 33.4996, lng: 126.5312, color: '#34C759' }
+                ].map((loc) => {
+                  const count = MOCK_POSTS.filter(p => p.destination === loc.name).length;
+                  return (
+                    <CustomOverlayMap
+                      key={loc.name}
+                      position={{ lat: loc.lat, lng: loc.lng }}
+                      yAnchor={1.2}
+                    >
+                      <div 
+                        className={`group/marker cursor-pointer transition-all ${selectedRegion === loc.name ? 'scale-110' : ''}`}
+                        onClick={() => handleRegionSelect(loc.name)}
+                      >
+                        {/* 툴팁/라벨 */}
+                        <div className={`relative px-3 py-1.5 rounded-full shadow-lg border transition-all transform hover:-translate-y-1 flex items-center gap-2 ${
+                          selectedRegion === loc.name 
+                            ? 'bg-[#1344FF] border-[#1344FF] text-white' 
+                            : 'bg-white border-[#e5e7eb] hover:border-[#1344FF] text-[#1a1a1a]'
+                        }`}>
+                          <div 
+                            className={`w-2 h-2 rounded-full ${selectedRegion === loc.name ? 'bg-white' : 'animate-pulse'}`}
+                            style={selectedRegion === loc.name ? {} : { backgroundColor: loc.color }}
+                          />
+                          <span className="text-xs font-bold whitespace-nowrap">
+                            {loc.name}
+                          </span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                            selectedRegion === loc.name ? 'bg-white/20 text-white' : 'bg-[#f0f4ff] text-[#1344FF]'
+                          }`}>
+                            {count}
+                          </span>
+                          
+                          {/* 꼬리표 (Triangle) */}
+                          <div className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 border-r border-b rotate-45 ${
+                            selectedRegion === loc.name ? 'bg-[#1344FF] border-[#1344FF]' : 'bg-white border-[#e5e7eb]'
+                          }`} />
+                        </div>
                       </div>
-                    </div>
-                  </CustomOverlayMap>
-                ))}
+                    </CustomOverlayMap>
+                  );
+                })}
               </Map>
               
               {/* 지도 위 오버레이 (데코레이션) */}
@@ -490,27 +527,45 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
 
             {/* 지역 목록 */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between p-3 bg-[#f8f9fa] rounded-xl hover:bg-blue-50 transition-colors cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-[#1344FF] rounded-full"></div>
-                  <span className="font-medium text-[#1a1a1a]">서울</span>
-                </div>
-                <span className="text-sm text-[#666666]">1개</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-[#f8f9fa] rounded-xl hover:bg-blue-50 transition-colors cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-[#1344FF] rounded-full"></div>
-                  <span className="font-medium text-[#1a1a1a]">제주도</span>
-                </div>
-                <span className="text-sm text-[#666666]">1개</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-[#f8f9fa] rounded-xl hover:bg-blue-50 transition-colors cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-[#1344FF] rounded-full"></div>
-                  <span className="font-medium text-[#1a1a1a]">부산</span>
-                </div>
-                <span className="text-sm text-[#666666]">1개</span>
-              </div>
+              {[
+                { name: '서울', color: '#1344FF' },
+                { name: '제주도', color: '#34C759' },
+                { name: '부산', color: '#FF3B30' }
+              ].map((loc) => {
+                const count = MOCK_POSTS.filter(p => p.destination === loc.name).length;
+                return (
+                  <div 
+                    key={loc.name}
+                    onClick={() => handleRegionSelect(loc.name)}
+                    className={`flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${
+                      selectedRegion === loc.name 
+                        ? 'bg-blue-50 border border-[#1344FF]/20 shadow-sm' 
+                        : 'bg-[#f8f9fa] hover:bg-blue-50 border border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: loc.color }}
+                      ></div>
+                      <span className={`font-medium ${selectedRegion === loc.name ? 'text-[#1344FF]' : 'text-[#1a1a1a]'}`}>
+                        {loc.name}
+                      </span>
+                    </div>
+                    <span className={`text-sm ${selectedRegion === loc.name ? 'text-[#1344FF] font-bold' : 'text-[#666666]'}`}>
+                      {count}개
+                    </span>
+                  </div>
+                );
+              })}
+              {selectedRegion !== '전체' && (
+                <button 
+                  onClick={() => setSelectedRegion('전체')}
+                  className="w-full text-center py-2 text-xs text-[#666666] hover:text-[#1344FF] transition-colors"
+                >
+                  필터 초기화
+                </button>
+              )}
             </div>
           </div>
 
@@ -526,7 +581,7 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
               날짜, 인원, 여행지만 입력하면 AI가 최적의 동선을 짜드려요!
             </p>
             <button
-              onClick={() => onNavigate('plan-maker')}
+              onClick={() => onNavigate('create')}
               className="w-full bg-[#1344FF] text-white py-3 rounded-xl font-medium hover:bg-[#0d34cc] transition-colors shadow-sm"
             >
               여행 일정 생성 시작하기

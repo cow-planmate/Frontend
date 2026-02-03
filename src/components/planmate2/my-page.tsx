@@ -1,4 +1,4 @@
-import { Award, BookOpen, CalendarDays, Calendar as CalendarIcon, Camera, Check, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, Copy, Eye, Heart, LogOut, MessageCircle, PenTool, Settings, Square, Star, ThumbsUp, Trash2, User, Users } from 'lucide-react';
+import { Award, BookOpen, CalendarDays, Calendar as CalendarIcon, Camera, Check, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, Copy, Eye, Heart, LogOut, MessageCircle, PenTool, Plus, Settings, Square, Star, ThumbsUp, Trash2, User, Users, TrendingUp, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApiClient } from '../../hooks/useApiClient';
@@ -169,6 +169,9 @@ export default function MyPage({ onNavigate }: MyPageProps) {
   const [myPlans, setMyPlans] = useState<any[]>([]);
   const [editablePlans, setEditablePlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // 체크리스트 관리 상태
+  const [planChecklists, setPlanChecklists] = useState<Record<number, any[]>>({});
 
   // 모달 상태
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -427,28 +430,86 @@ export default function MyPage({ onNavigate }: MyPageProps) {
     }
   }, [userProfile]);
 
+  // 체크리스트 초기화 및 핸들러
+  useEffect(() => {
+    const newChecklists: Record<number, any[]> = { ...planChecklists };
+    let changed = false;
+
+    [...myPlans, ...editablePlans].forEach(plan => {
+      if (!newChecklists[plan.planId]) {
+        newChecklists[plan.planId] = [
+          { id: Date.now() + Math.random(), text: '숙소 예약 확인', done: true },
+          { id: Date.now() + Math.random(), text: '짐 싸기 완료', done: false },
+          { id: Date.now() + Math.random(), text: '맛집 리스트 체크', done: false },
+        ];
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      setPlanChecklists(newChecklists);
+    }
+  }, [myPlans, editablePlans]);
+
+  const handleToggleChecklist = (planId: number, itemId: number) => {
+    setPlanChecklists(prev => ({
+      ...prev,
+      [planId]: prev[planId].map(item => 
+        item.id === itemId ? { ...item, done: !item.done } : item
+      )
+    }));
+  };
+
+  const handleUpdateChecklistText = (planId: number, itemId: number, newText: string) => {
+    setPlanChecklists(prev => ({
+      ...prev,
+      [planId]: prev[planId].map(item => 
+        item.id === itemId ? { ...item, text: newText } : item
+      )
+    }));
+  };
+
+  const handleAddChecklistItem = (planId: number) => {
+    const newItem = { id: Date.now(), text: '할 일 입력', done: false };
+    setPlanChecklists(prev => ({
+      ...prev,
+      [planId]: [...(prev[planId] || []), newItem]
+    }));
+  };
+
+  const handleDeleteChecklistItem = (planId: number, itemId: number) => {
+    setPlanChecklists(prev => ({
+      ...prev,
+      [planId]: prev[planId].filter(item => item.id !== itemId)
+    }));
+  };
+
   // 플랜 데이터를 V2 UI 형식으로 변환
   const allPlans = [
     ...myPlans.map(p => ({ ...p, isOwner: true })), 
     ...editablePlans.map(p => ({ ...p, isOwner: false }))
   ].map(plan => {
     const hasDates = plan.startDate && plan.endDate;
-    const startDate = hasDates ? new Date(plan.startDate) : null;
-    const endDate = hasDates ? new Date(plan.endDate) : null;
     
+    // 타임존 영향을 받지 않도록 날짜 객체 생성 및 시간 초기화
+    const startDate = hasDates ? new Date(plan.startDate) : null;
+    if (startDate) startDate.setHours(0, 0, 0, 0);
+    
+    const endDate = hasDates ? new Date(plan.endDate) : null;
+    if (endDate) endDate.setHours(0, 0, 0, 0);
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     let dDayStr = 'D-Day';
     if (startDate) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const start = new Date(startDate);
-      start.setHours(0, 0, 0, 0);
-      
-      const diffTime = start.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const diffTime = startDate.getTime() - today.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
       dDayStr = diffDays === 0 ? 'D-Day' : diffDays > 0 ? `D-${diffDays}` : `D+${Math.abs(diffDays)}`;
     }
 
-    const isPast = hasDates && new Date(plan.endDate) < new Date();
+    const isPast = hasDates && endDate && endDate < today;
+    const isOngoing = hasDates && !isPast && (startDate && startDate <= today);
 
     return {
       id: plan.planId,
@@ -458,22 +519,21 @@ export default function MyPage({ onNavigate }: MyPageProps) {
       dateStr: hasDates ? `${plan.startDate} - ${plan.endDate}` : '날짜 확인 필요',
       duration: plan.duration,
       dDay: dDayStr,
-      status: isPast ? '완료' : '예정됨',
+      status: isPast ? '완료' : (isOngoing ? '진행 중' : '예정됨'),
       hasDates: hasDates,
       theme: plan.isOwner ? 'blue' : 'orange',
       isOwner: plan.isOwner,
       progress: Math.floor(Math.random() * 100), 
-      checklist: [
-        { text: '여행 준비 완료', done: true }
-      ]
+      checklist: planChecklists[plan.planId] || []
     };
   });
 
+  const ongoingPlans = allPlans.filter(plan => plan.status === '진행 중');
   const upcomingPlans = allPlans.filter(plan => plan.status === '예정됨');
   const pastPlans = allPlans.filter(plan => plan.status === '완료');
 
-  const SCHEDULED_TRIPS = allPlans.filter(p => p.status === '예정됨');
-  const PAST_TRIPS = allPlans.filter(p => p.status === '완료');
+  const SCHEDULED_TRIPS = [...ongoingPlans, ...upcomingPlans];
+  const PAST_TRIPS = pastPlans;
 
   // Mock data for things not yet in API
   const MY_TRAVEL_POSTS: any[] = [];
@@ -684,7 +744,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
         </div>
 
         {/* Full-screen Calendar Section */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8 min-h-[800px] flex flex-col">
+        <div className="bg-white rounded-xl shadow-md p-6 mb-8 h-[500px] flex flex-col">
           <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-2">
               <CalendarDays className="w-6 h-6 text-[#1344FF]" />
@@ -763,19 +823,20 @@ export default function MyPage({ onNavigate }: MyPageProps) {
             </div>
 
             {/* Days */}
-            <div className="flex-1 grid grid-cols-7">
-              {gridCells.map((cell, idx) => {
-                const events = getEventsForDate(cell.date);
-                
-                return (
-                  <div 
-                    key={idx} 
-                    className={`
-                      border-r border-b border-gray-100 p-2 relative transition-colors flex flex-col min-h-[120px]
-                      ${!cell.isCurrentMonth ? 'bg-gray-50/50 text-gray-300' : 'bg-white text-gray-900'}
-                      ${cell.day === new Date().getDate() && cell.isCurrentMonth && currentMonth === new Date().getMonth() ? 'bg-blue-50/30' : ''}
-                    `}
-                  >
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-7 h-full">
+                {gridCells.map((cell, idx) => {
+                  const events = getEventsForDate(cell.date);
+                  
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`
+                        border-r border-b border-gray-100 p-2 relative transition-colors flex flex-col min-h-[80px]
+                        ${!cell.isCurrentMonth ? 'bg-gray-50/50 text-gray-300' : 'bg-white text-gray-900'}
+                        ${cell.day === new Date().getDate() && cell.isCurrentMonth && currentMonth === new Date().getMonth() ? 'bg-blue-50/30' : ''}
+                      `}
+                    >
                     <span className={`text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full mb-1 ${
                       cell.day === new Date().getDate() && cell.isCurrentMonth && currentMonth === new Date().getMonth()
                         ? 'bg-[#1344FF] text-white' 
@@ -827,6 +888,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
             </div>
           </div>
         </div>
+      </div>
 
         
          {/* 여행 일정 섹션 */}
@@ -877,103 +939,262 @@ export default function MyPage({ onNavigate }: MyPageProps) {
           </div>
 
             {/* 여행 목록 */}
-            <div className="space-y-6">
-              {/* 예정된 여행 목록 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {upcomingPlans.length > 0 ? (
-                  upcomingPlans.map((trip) => (
-                    <div 
-                      key={trip.id} 
-                      onClick={() => !isDeleteMode && navigate(`/complete?id=${trip.id}`)}
-                      className={`bg-gradient-to-br ${trip.theme === 'blue' ? 'from-blue-50 to-purple-50 border-[#1344FF]' : 'from-orange-50 to-pink-50 border-orange-200'} rounded-xl p-6 border-2 relative overflow-hidden group transition-all ${isDeleteMode ? 'cursor-default ring-2 ring-offset-2 ' + (selectedPlanIds.includes(trip.id) ? 'ring-[#1344FF]' : 'ring-transparent') : 'cursor-pointer'}`}
-                    >
-                      {/* 파티원 공유 뱃지 */}
-                      {!trip.isOwner && (
-                        <div className="absolute top-0 right-0 bg-orange-500 text-white px-3 py-1 rounded-bl-xl text-[10px] font-bold flex items-center gap-1 shadow-sm">
-                          <Users className="w-3 h-3" />
-                          공유됨
-                        </div>
-                      )}
-
-                      {/* 체크박스 (관리 모드) */}
-                      {isDeleteMode && (
-                        <div 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            togglePlanSelection(trip.id);
-                          }}
-                          className="absolute top-3 left-3 z-20 cursor-pointer"
-                        >
-                          <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${selectedPlanIds.includes(trip.id) ? 'bg-[#1344FF] border-[#1344FF] text-white' : 'bg-white border-gray-300'}`}>
-                            {selectedPlanIds.includes(trip.id) && <Check className="w-4 h-4" />}
+            <div className="space-y-8">
+              {/* 진행 중인 여행 목록 */}
+              {ongoingPlans.length > 0 && (
+                <div className="space-y-4 pb-2">
+                  <h4 className="text-lg font-bold text-[#1344FF] flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 animate-pulse" />
+                    진행 중인 여행
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {ongoingPlans.map((trip) => (
+                      <div 
+                        key={trip.id} 
+                        onClick={() => !isDeleteMode && navigate(`/complete?id=${trip.id}`)}
+                        className={`bg-white rounded-xl p-4 border-2 border-[#1344FF]/20 relative overflow-hidden group transition-all shadow-sm ${isDeleteMode ? 'cursor-default ring-2 ring-offset-2 ' + (selectedPlanIds.includes(trip.id) ? 'ring-white' : 'ring-transparent') : 'cursor-pointer hover:shadow-md hover:-translate-y-1'}`}
+                      >
+                        {/* 체크박스 (관리 모드) */}
+                        {isDeleteMode && (
+                          <div 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              togglePlanSelection(trip.id);
+                            }}
+                            className="absolute top-2 left-2 z-20 cursor-pointer"
+                          >
+                            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${selectedPlanIds.includes(trip.id) ? 'bg-[#1344FF] border-[#1344FF] text-white' : 'bg-transparent border-gray-300'}`}>
+                              {selectedPlanIds.includes(trip.id) && <Check className="w-3 h-3" />}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                      <div className="flex items-start justify-between mb-4">
-                        <div className={isDeleteMode ? 'ml-8' : ''}>
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className={`px-3 py-1 ${trip.theme === 'blue' ? 'bg-[#1344FF]' : 'bg-orange-500'} text-white text-xs font-bold rounded-full`}>
-                              {trip.dDay}
-                            </span>
-                            <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
-                              {trip.status}
-                            </span>
-                          </div>
-                          <h4 className="text-xl font-bold text-[#1a1a1a] mb-1 text-left">{trip.title}</h4>
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm text-[#666666] text-left">{trip.dateStr}</p>
-                            {trip.duration && (
-                              <span className="text-[10px] font-bold text-[#1344FF] bg-blue-50 px-2 py-0.5 rounded border border-blue-100 whitespace-nowrap">
-                                {trip.duration}
+                        <div className="relative z-10 flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                              <span className="text-[#1344FF] text-[10px] font-black tracking-wider">
+                                ON AIR
                               </span>
+                            </div>
+                            {!isDeleteMode && (
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeletePlan(trip.id, trip.isOwner);
+                                }}
+                                className="p-1 px-1.5 hover:bg-red-50 text-gray-300 hover:text-red-500 rounded-lg transition-all"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
                             )}
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {!isDeleteMode && (
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeletePlan(trip.id, trip.isOwner);
-                              }}
-                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-white/80 rounded-lg transition-all opacity-0 group-hover:opacity-100 shadow-sm border border-gray-100"
-                              title={trip.isOwner ? "삭제" : "나가기"}
-                            >
-                              <Trash2 className="w-5 h-5 flex-shrink-0" />
-                            </button>
-                          )}
-                          <CalendarIcon className={`w-8 h-8 ${trip.theme === 'blue' ? 'text-[#1344FF]' : 'text-orange-500'}`} />
+                          
+                          <div className="text-left">
+                            <h4 className="text-base font-black text-[#1a1a1a] mb-0.5 tracking-tight truncate">{trip.title}</h4>
+                            <div className="flex items-center gap-1 text-gray-400">
+                              <CalendarIcon className="w-2.5 h-2.5 flex-shrink-0" />
+                              <p className="text-[10px] font-bold">{trip.dateStr}</p>
+                            </div>
+                          </div>
+
+                          {/* 체크리스트 */}
+                          <div className="bg-blue-50/50 rounded-lg p-2 border border-blue-100/50">
+                            <div className="space-y-1">
+                              {trip.checklist.map((item: any) => (
+                                <div key={item.id} className="flex items-center gap-1.5 group/checkItem">
+                                  <div 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleToggleChecklist(trip.id, item.id);
+                                    }}
+                                    className={`w-3 h-3 rounded flex-shrink-0 border transition-all flex items-center justify-center cursor-pointer ${item.done ? 'bg-[#1344FF] border-[#1344FF]' : 'border-gray-200 bg-white'}`}
+                                  >
+                                    {item.done && <Check className="w-2 h-2 text-white" />}
+                                  </div>
+                                  <input 
+                                    type="text"
+                                    value={item.text}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onChange={(e) => handleUpdateChecklistText(trip.id, item.id, e.target.value)}
+                                    className={`flex-1 bg-transparent text-[10px] font-bold outline-none border-b border-transparent focus:border-[#1344FF]/20 transition-all ${item.done ? 'text-gray-300 line-through' : 'text-gray-600'}`}
+                                  />
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteChecklistItem(trip.id, item.id);
+                                    }}
+                                    className="opacity-0 group-hover/checkItem:opacity-100 p-0.5 text-gray-300 hover:text-red-500 transition-all"
+                                  >
+                                    <X className="w-2.5 h-2.5" />
+                                  </button>
+                                </div>
+                              ))}
+                              
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddChecklistItem(trip.id);
+                                }}
+                                className="w-full flex items-center justify-center gap-1 py-1 mt-1 border border-dashed border-gray-200 rounded text-[9px] font-bold text-gray-400 hover:text-[#1344FF] hover:border-[#1344FF]/30 hover:bg-white transition-all"
+                              >
+                                <Plus className="w-2 h-2" />
+                                할 일 추가
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-1 mt-auto">
+                            <div className="flex justify-between text-[9px] font-black text-gray-400 uppercase">
+                              <span className="text-[#1344FF]">{trip.progress}%</span>
+                            </div>
+                            <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+                              <div className="h-full bg-[#1344FF] transition-all duration-1000" style={{ width: `${trip.progress}%` }} />
+                            </div>
+                          </div>
                         </div>
                       </div>
-
-                      {!isDeleteMode && (
-                        <button 
-                          onClick={() => navigate(`/complete?id=${trip.id}`)}
-                          className={`w-full mt-4 text-white py-3 rounded-xl transition-all font-medium shadow-md ${
-                            trip.theme === 'blue' 
-                              ? 'bg-[#1344FF] hover:bg-[#0d34cc]' 
-                              : 'bg-gradient-to-r from-orange-400 to-pink-500 hover:from-orange-500 hover:to-pink-600'
-                          }`}
-                        >
-                          일정 확인 및 수정
-                        </button>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full py-12 text-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                    <CalendarIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500 font-medium">예정된 여행 일정이 없습니다.</p>
-                    <button 
-                      onClick={() => onNavigate('feed')}
-                      className="mt-4 text-[#1344FF] font-bold hover:underline"
-                    >
-                      새로운 여행 계획하기
-                    </button>
+                    ))}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+
+              {/* 예정된 여행 목록 */}
+              {upcomingPlans.length > 0 && (
+                <div className="space-y-4">
+                  {(ongoingPlans.length > 0) && (
+                    <h4 className="text-lg font-bold text-[#1a1a1a] flex items-center gap-2">
+                      <CalendarDays className="w-5 h-5 text-gray-400" />
+                      예정된 여행
+                    </h4>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {upcomingPlans.map((trip) => (
+                      <div 
+                        key={trip.id} 
+                        onClick={() => !isDeleteMode && navigate(`/complete?id=${trip.id}`)}
+                        className={`bg-white rounded-xl p-4 border-2 relative overflow-hidden group transition-all shadow-sm ${trip.theme === 'blue' ? 'border-blue-50 hover:border-blue-200' : 'border-orange-50 hover:border-orange-200'} ${isDeleteMode ? 'cursor-default ring-2 ring-offset-2 ' + (selectedPlanIds.includes(trip.id) ? 'ring-[#1344FF]' : 'ring-transparent') : 'cursor-pointer hover:shadow-md hover:-translate-y-1'}`}
+                      >
+                        {/* 파티원 공유 뱃지 */}
+                        {!trip.isOwner && (
+                          <div className="absolute top-0 right-0 bg-orange-500 text-white px-2 py-0.5 rounded-bl-lg text-[8px] font-bold flex items-center gap-1 shadow-sm z-10">
+                            <Users className="w-2 h-2" />
+                            SHR
+                          </div>
+                        )}
+
+                        {/* 체크박스 (관리 모드) */}
+                        {isDeleteMode && (
+                          <div 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              togglePlanSelection(trip.id);
+                            }}
+                            className="absolute top-2 left-2 z-20 cursor-pointer"
+                          >
+                            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${selectedPlanIds.includes(trip.id) ? 'bg-[#1344FF] border-[#1344FF] text-white' : 'bg-white border-gray-300'}`}>
+                              {selectedPlanIds.includes(trip.id) && <Check className="w-3 h-3" />}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex flex-col gap-3 relative z-10">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`px-1.5 py-0.5 ${trip.theme === 'blue' ? 'bg-[#1344FF]' : 'bg-orange-500'} text-white text-[9px] font-bold rounded`}>
+                                {trip.dDay}
+                              </span>
+                              <span className="text-gray-400 text-[9px] font-bold">
+                                {trip.status}
+                              </span>
+                            </div>
+                            {!isDeleteMode && (
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeletePlan(trip.id, trip.isOwner);
+                                }}
+                                className="p-1 px-1.5 text-gray-200 hover:text-red-500 hover:bg-gray-50 rounded-lg transition-all"
+                                title={trip.isOwner ? "삭제" : "나가기"}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="text-left">
+                            <h4 className="text-base font-bold text-[#1a1a1a] mb-0.5 truncate">{trip.title}</h4>
+                            <p className="text-[10px] text-[#666666] flex items-center gap-1">
+                              <CalendarIcon className="w-2.5 h-2.5" />
+                              {trip.dateStr}
+                            </p>
+                          </div>
+
+                          {/* 체크리스트 - 예정된 여행용 (심플 스타일) */}
+                          <div className="bg-gray-50/50 rounded-lg p-2 border border-gray-100/50">
+                            <div className="space-y-1">
+                              {trip.checklist.map((item: any) => (
+                                <div key={item.id} className="flex items-center gap-1.5 group/prepItem">
+                                  <div 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleToggleChecklist(trip.id, item.id);
+                                    }}
+                                    className={`w-3 h-3 rounded flex-shrink-0 border transition-all flex items-center justify-center cursor-pointer ${item.done ? (trip.theme === 'blue' ? 'bg-[#1344FF] border-[#1344FF]' : 'bg-orange-500 border-orange-500') : 'bg-white border-gray-200'}`}
+                                  >
+                                    {item.done && <Check className="w-2 h-2 text-white" />}
+                                  </div>
+                                  <input 
+                                    type="text"
+                                    value={item.text}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onChange={(e) => handleUpdateChecklistText(trip.id, item.id, e.target.value)}
+                                    className={`flex-1 bg-transparent text-[10px] font-medium outline-none border-b border-transparent focus:border-gray-200 transition-all ${item.done ? 'text-gray-300 line-through' : 'text-gray-600'}`}
+                                  />
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteChecklistItem(trip.id, item.id);
+                                    }}
+                                    className="opacity-0 group-hover/prepItem:opacity-100 p-0.5 text-gray-200 hover:text-red-500 transition-all font-bold"
+                                  >
+                                    <X className="w-2.5 h-2.5" />
+                                  </button>
+                                </div>
+                              ))}
+                              
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddChecklistItem(trip.id);
+                                }}
+                                className="w-full flex items-center justify-center gap-1 py-1 mt-1 border border-dashed border-gray-200 rounded text-[9px] font-bold text-gray-400 hover:text-gray-600 hover:bg-white transition-all"
+                              >
+                                <Plus className="w-2 h-2" />
+                                할 일 추가
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 진행 중인 여행과 예정된 여행이 모두 없을 때만 표시 */}
+              {ongoingPlans.length === 0 && upcomingPlans.length === 0 && (
+                <div className="py-12 text-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                  <CalendarIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 font-medium">진행 중이거나 예정된 여행 일정이 없습니다.</p>
+                  <button 
+                    onClick={() => onNavigate('plan-maker')}
+                    className="mt-4 text-[#1344FF] font-bold hover:underline"
+                  >
+                    새로운 여행 계획하기
+                  </button>
+                </div>
+              )}
 
               {/* 지난 여행 목록 (간소화) */}
               <div className="bg-[#f8f9fa] rounded-xl p-6">
