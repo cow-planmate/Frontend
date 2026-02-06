@@ -1,5 +1,6 @@
-import { Award, BookOpen, CalendarDays, Calendar as CalendarIcon, Camera, Check, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, Copy, Eye, Heart, LogOut, MessageCircle, PenTool, Plus, Settings, Square, Star, ThumbsUp, Trash2, TrendingUp, User, Users, X } from 'lucide-react';
+import { Award, BookOpen, CalendarDays, Calendar as CalendarIcon, Camera, Check, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, Copy, Eye, Heart, LogOut, MapPin, MessageCircle, PenTool, Plus, Settings, Square, Star, ThumbsUp, Trash2, TrendingUp, User, Users, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { CustomOverlayMap, Map } from 'react-kakao-maps-sdk';
 import { useNavigate } from 'react-router-dom';
 import { useApiClient } from '../../hooks/useApiClient';
 import useNicknameStore from '../../store/Nickname';
@@ -154,6 +155,31 @@ const LIKED_COMMUNITY_POSTS = [
     author: '몽골러'
   }
 ];
+
+const REGION_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  '서울': { lat: 37.5665, lng: 126.9780 },
+  '경기도': { lat: 37.4138, lng: 127.5183 },
+  '인천': { lat: 37.4563, lng: 126.7052 },
+  '강원도': { lat: 37.8228, lng: 128.1555 },
+  '충청북도': { lat: 36.6357, lng: 127.4913 },
+  '충청남도': { lat: 36.5184, lng: 126.8000 },
+  '대전': { lat: 36.3504, lng: 127.3845 },
+  '세종': { lat: 36.4800, lng: 127.2890 },
+  '전북': { lat: 35.7175, lng: 127.1530 },
+  '전라북도': { lat: 35.7175, lng: 127.1530 },
+  '전남': { lat: 34.8679, lng: 126.9910 },
+  '전라남도': { lat: 34.8679, lng: 126.9910 },
+  '광주': { lat: 35.1595, lng: 126.8526 },
+  '경북': { lat: 36.4919, lng: 128.8889 },
+  '경상북도': { lat: 36.4919, lng: 128.8889 },
+  '경남': { lat: 35.4606, lng: 128.2132 },
+  '경상남도': { lat: 35.4606, lng: 128.2132 },
+  '부산': { lat: 35.1796, lng: 129.0756 },
+  '대구': { lat: 35.8714, lng: 128.6014 },
+  '울산': { lat: 35.5384, lng: 129.3114 },
+  '제주': { lat: 33.4996, lng: 126.5312 },
+  '제주도': { lat: 33.4996, lng: 126.5312 },
+};
 
 export default function MyPage({ onNavigate }: MyPageProps) {
   const navigate = useNavigate();
@@ -528,6 +554,31 @@ export default function MyPage({ onNavigate }: MyPageProps) {
     };
   });
 
+  // 캘린더 일정이 일직선으로 이어지도록 레인(Lane) 계산
+  const eventsWithLanes = (() => {
+    const sorted = [...allPlans].sort((a, b) => {
+      const startA = a.startDate.getTime();
+      const startB = b.startDate.getTime();
+      if (startA !== startB) return startA - startB;
+      return (b.endDate.getTime() - b.startDate.getTime()) - (a.endDate.getTime() - a.startDate.getTime());
+    });
+
+    const lanes: number[] = [];
+    return sorted.map(plan => {
+      const start = plan.startDate.getTime();
+      const end = plan.endDate.getTime();
+      
+      let laneIndex = lanes.findIndex(laneEnd => laneEnd < start);
+      if (laneIndex === -1) {
+        laneIndex = lanes.length;
+        lanes.push(end);
+      } else {
+        lanes[laneIndex] = end;
+      }
+      return { ...plan, lane: laneIndex };
+    });
+  })();
+
   const ongoingPlans = allPlans.filter(plan => plan.status === '진행 중');
   const upcomingPlans = allPlans.filter(plan => plan.status === '예정됨');
   const pastPlans = allPlans.filter(plan => plan.status === '완료');
@@ -543,6 +594,22 @@ export default function MyPage({ onNavigate }: MyPageProps) {
   const LIKED_COMMUNITY_POSTS: any[] = [];
 
   const totalLikes = 0;
+
+  // 지도용 데이터 가공 (지역별 그룹화)
+  const groupedPlansByRegion = [...myPlans, ...editablePlans].reduce((acc: any, plan: any) => {
+    const region = plan.region || '서울';
+    if (!acc[region]) {
+      acc[region] = {
+        name: region,
+        count: 0,
+        plans: [],
+        coords: REGION_COORDINATES[region] || REGION_COORDINATES['서울']
+      };
+    }
+    acc[region].count += 1;
+    acc[region].plans.push(plan);
+    return acc;
+  }, {});
 
   // --- Full Screen Calendar Logic ---
   const currentYear = date.getFullYear();
@@ -593,7 +660,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
 
   // Get events for a specific date
   const getEventsForDate = (cellDate: Date) => {
-    return allPlans.filter(trip => {
+    return eventsWithLanes.filter(trip => {
       if (!trip.hasDates) return false;
       const start = new Date(trip.startDate);
       start.setHours(0,0,0,0);
@@ -772,154 +839,214 @@ export default function MyPage({ onNavigate }: MyPageProps) {
           </div>
         </div>
 
-        {/* Full-screen Calendar Section */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8 h-[500px] flex flex-col">
-          <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
-            <div className="flex items-center gap-2">
-              <CalendarDays className="w-6 h-6 text-[#1344FF]" />
-              <h3 className="text-xl font-bold text-[#1a1a1a]">나의 캘린더 일정</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          {/* Calendar Section */}
+          <div className="bg-white rounded-xl shadow-md p-6 h-[500px] flex flex-col">
+            <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="w-6 h-6 text-[#1344FF]" />
+                <h3 className="text-xl font-bold text-[#1a1a1a]">나의 캘린더</h3>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Previous Month Button */}
+                <button 
+                  onClick={handlePrevMonth}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-[#1344FF] transition-colors"
+                  title="이전 달"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {/* Year Wheel Picker Style */}
+                <div className="relative group">
+                  <select
+                    value={currentYear}
+                    onChange={(e) => setDate(new Date(parseInt(e.target.value), currentMonth, 1))}
+                    className="appearance-none bg-white border-2 border-gray-100 text-[#1a1a1a] text-sm font-bold py-1.5 pl-3 pr-8 rounded-xl cursor-pointer hover:border-[#1344FF] focus:outline-none focus:border-[#1344FF] transition-all"
+                  >
+                    {[2023, 2024, 2025, 2026].map(year => (
+                      <option key={year} value={year}>{year}년</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400 group-hover:text-[#1344FF]">
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
+                </div>
+
+                {/* Month Wheel Picker Style */}
+                <div className="relative group">
+                  <select
+                    value={currentMonth}
+                    onChange={(e) => setDate(new Date(currentYear, parseInt(e.target.value), 1))}
+                    className="appearance-none bg-white border-2 border-gray-100 text-[#1a1a1a] text-sm font-bold py-1.5 pl-3 pr-8 rounded-xl cursor-pointer hover:border-[#1344FF] focus:outline-none focus:border-[#1344FF] transition-all"
+                  >
+                    {Array.from({ length: 12 }, (_, i) => i).map(month => (
+                      <option key={month} value={month}>{month + 1}월</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400 group-hover:text-[#1344FF]">
+                      <ChevronDown className="w-4 h-4" />
+                  </div>
+                </div>
+
+                {/* Next Month Button */}
+                <button 
+                  onClick={handleNextMonth}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-[#1344FF] transition-colors"
+                  title="다음 달"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+                
+                <button 
+                  onClick={() => setDate(new Date())}
+                  className="ml-1 px-3 py-1.5 bg-[#1344FF] text-white text-xs font-bold rounded-xl shadow-sm hover:bg-[#0d34cc] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  오늘
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Previous Month Button */}
-              <button 
-                onClick={handlePrevMonth}
-                className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-[#1344FF] transition-colors"
-                title="이전 달"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-
-              {/* Year Wheel Picker Style */}
-              <div className="relative group">
-                <select
-                  value={currentYear}
-                  onChange={(e) => setDate(new Date(parseInt(e.target.value), currentMonth, 1))}
-                  className="appearance-none bg-white border-2 border-gray-100 text-[#1a1a1a] text-lg font-bold py-2 pl-4 pr-10 rounded-xl cursor-pointer hover:border-[#1344FF] focus:outline-none focus:border-[#1344FF] transition-all"
-                >
-                  {[2023, 2024, 2025, 2026].map(year => (
-                    <option key={year} value={year}>{year}년</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 group-hover:text-[#1344FF]">
-                  <ChevronDown className="w-4 h-4" />
-                </div>
+            {/* Calendar Grid */}
+            <div className="flex-1 flex flex-col border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+              {/* Weekday Headers */}
+              <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+                {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map((day, idx) => (
+                  <div key={day} className={`text-center py-2 text-[10px] font-bold ${idx === 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                    {day[0]}
+                  </div>
+                ))}
               </div>
 
-              {/* Month Wheel Picker Style */}
-              <div className="relative group">
-                <select
-                  value={currentMonth}
-                  onChange={(e) => setDate(new Date(currentYear, parseInt(e.target.value), 1))}
-                  className="appearance-none bg-white border-2 border-gray-100 text-[#1a1a1a] text-lg font-bold py-2 pl-4 pr-10 rounded-xl cursor-pointer hover:border-[#1344FF] focus:outline-none focus:border-[#1344FF] transition-all"
-                >
-                  {Array.from({ length: 12 }, (_, i) => i).map(month => (
-                    <option key={month} value={month}>{month + 1}월</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 group-hover:text-[#1344FF]">
-                    <ChevronDown className="w-4 h-4" />
+              {/* Days */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar">
+                <div className="grid grid-cols-7 min-h-full">
+                  {gridCells.map((cell, idx) => {
+                    const events = getEventsForDate(cell.date);
+                    
+                    return (
+                      <div 
+                        key={idx} 
+                        className={`
+                          border-r border-b border-gray-100 p-1 relative transition-colors flex flex-col min-h-[60px] h-full
+                          ${!cell.isCurrentMonth ? 'bg-gray-50/50 text-gray-300' : 'bg-white text-gray-900'}
+                          ${cell.day === new Date().getDate() && cell.isCurrentMonth && currentMonth === new Date().getMonth() ? 'bg-blue-50/30' : ''}
+                        `}
+                      >
+                      <span className={`text-[10px] font-medium w-5 h-5 flex items-center justify-center rounded-full mb-0.5 ${
+                        cell.day === new Date().getDate() && cell.isCurrentMonth && currentMonth === new Date().getMonth()
+                          ? 'bg-[#1344FF] text-white' 
+                          : ''
+                      }`}>
+                        {cell.day}
+                      </span>
+                      
+                      {/* Event Bars */}
+                      <div className="flex-1 flex flex-col gap-0.5 mt-0.5 -mx-1.5 pb-1">
+                        {(() => {
+                          const maxLane = events.length > 0 ? Math.max(...events.map(e => e.lane || 0)) : -1;
+                          return Array.from({ length: maxLane + 1 }).map((_, laneIdx) => {
+                            const event = events.find(e => e.lane === laneIdx);
+                            if (!event) return <div key={laneIdx} className="h-4" />;
+                            
+                            const isStart = new Date(event.startDate).toDateString() === cell.date.toDateString();
+                            const isEnd = new Date(event.endDate).toDateString() === cell.date.toDateString();
+                            const isRowStart = idx % 7 === 0;
+                            const showTitle = isStart || isRowStart;
+                            
+                            const roundedLeft = isStart ? 'rounded-l-[4px] ml-1.5' : ''; 
+                            const roundedRight = isEnd ? 'rounded-r-[4px] mr-1.5' : ''; 
+
+                            return (
+                              <div 
+                                key={`${event.id}-${laneIdx}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedCalendarEvent(event);
+                                }}
+                                className={`
+                                  text-[8px] h-4 flex items-center px-1 truncate relative z-10 cursor-pointer
+                                  transition-colors
+                                  ${event.status === '완료' 
+                                    ? 'bg-gray-100 text-gray-400 opacity-50' 
+                                    : (event.theme === 'blue' ? 'bg-[#1344FF] text-white' : 'bg-orange-400 text-white')
+                                  }
+                                  ${roundedLeft} ${roundedRight}
+                                `}
+                                title={event.title}
+                              >
+                                {showTitle && <span className="truncate font-bold pl-1">{event.title}</span>}
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+                  );
+                })}
                 </div>
               </div>
-
-              {/* Next Month Button */}
-              <button 
-                onClick={handleNextMonth}
-                className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-[#1344FF] transition-colors"
-                title="다음 달"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-              
-              <button 
-                onClick={() => setDate(new Date())}
-                className="ml-2 px-4 py-2 bg-[#1344FF] text-white text-sm font-bold rounded-xl shadow-sm hover:bg-[#0d34cc] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
-              >
-                오늘
-              </button>
             </div>
           </div>
 
-          {/* Full Screen Grid */}
-          <div className="flex-1 flex flex-col border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-            {/* Weekday Headers */}
-            <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
-              {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map((day, idx) => (
-                <div key={day} className={`text-center py-3 text-xs font-bold ${idx === 0 ? 'text-red-500' : 'text-gray-500'}`}>
-                  {day}
-                </div>
-              ))}
+          {/* Map Section */}
+          <div className="bg-white rounded-xl shadow-md p-6 h-[500px] flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-6 h-6 text-[#1344FF]" />
+                <h3 className="text-xl font-bold text-[#1a1a1a]">나의 여행 발자취</h3>
+              </div>
+              <div className="bg-blue-50 px-3 py-1 rounded-full">
+                <span className="text-sm font-bold text-[#1344FF]">총 {allPlans.length}곳 방문</span>
+              </div>
             </div>
-
-            {/* Days */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
-              <div className="grid grid-cols-7 h-full">
-                {gridCells.map((cell, idx) => {
-                  const events = getEventsForDate(cell.date);
-                  
-                  return (
-                    <div 
-                      key={idx} 
-                      className={`
-                        border-r border-b border-gray-100 p-2 relative transition-colors flex flex-col min-h-[80px]
-                        ${!cell.isCurrentMonth ? 'bg-gray-50/50 text-gray-300' : 'bg-white text-gray-900'}
-                        ${cell.day === new Date().getDate() && cell.isCurrentMonth && currentMonth === new Date().getMonth() ? 'bg-blue-50/30' : ''}
-                      `}
-                    >
-                    <span className={`text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full mb-1 ${
-                      cell.day === new Date().getDate() && cell.isCurrentMonth && currentMonth === new Date().getMonth()
-                        ? 'bg-[#1344FF] text-white' 
-                        : ''
-                    }`}>
-                      {cell.day}
-                    </span>
-                    
-                    {/* Event Bars */}
-                    <div className="flex-1 flex flex-col gap-1 mt-1">
-                      {events.map((event, eventIdx) => {
-                        const isStart = new Date(event.startDate).toDateString() === cell.date.toDateString();
-                        const isEnd = new Date(event.endDate).toDateString() === cell.date.toDateString();
-                        const isRowStart = idx % 7 === 0;
-                        const isRowEnd = idx % 7 === 6;
-                        
-                        const showTitle = isStart || isRowStart;
-                        
-                        // "이어지는" 느낌을 주기 위한 스타일 계산
-                        const roundedLeft = isStart ? 'rounded-l-md ml-1' : '-ml-[10px]'; 
-                        const roundedRight = isEnd ? 'rounded-r-md mr-1' : '-mr-[10px]'; 
-
-                        return (
-                          <div 
-                            key={`${event.id}-${eventIdx}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedCalendarEvent(event);
-                            }}
-                            className={`
-                              text-[10px] h-6 flex items-center px-1 truncate relative z-10 cursor-pointer
-                              hover:brightness-95 transition-all
-                              ${event.status === '완료' 
-                                ? 'bg-gray-200 text-gray-600 border border-gray-300' 
-                                : (event.theme === 'blue' ? 'bg-[#1344FF] text-white shadow-sm' : 'bg-orange-400 text-white shadow-sm')
-                              }
-                              ${roundedLeft} ${roundedRight}
-                            `}
-                            title={event.title}
-                          >
-                            {showTitle && <span className="truncate font-bold pl-1">{event.title}</span>}
-                          </div>
-                        );
-                      })}
+            
+            <div className="flex-1 rounded-xl overflow-hidden border border-gray-200 relative">
+              <Map
+                center={{ lat: 36.5, lng: 127.8 }}
+                style={{ width: "100%", height: "100%" }}
+                level={13}
+                draggable={true}
+                zoomable={true}
+              >
+                {Object.values(groupedPlansByRegion).map((region: any) => (
+                  <CustomOverlayMap
+                    key={region.name}
+                    position={region.coords}
+                  >
+                    <div className="relative group">
+                      <div className="bg-white rounded-2xl shadow-xl border-2 border-[#1344FF] px-3 py-1.5 flex items-center gap-2 hover:scale-110 transition-transform cursor-pointer">
+                        <div className="w-6 h-6 bg-[#1344FF] text-white rounded-full flex items-center justify-center text-xs font-bold">
+                          {region.count}
+                        </div>
+                        <span className="text-sm font-bold text-gray-800">{region.name}</span>
+                      </div>
+                      
+                      {/* Hover Tooltip */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-48 bg-white rounded-xl shadow-2xl p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 border border-gray-100">
+                        <p className="text-xs font-bold text-gray-400 mb-2 border-b pb-1">{region.name} 여행 목록</p>
+                        <div className="space-y-1.5">
+                          {region.plans.slice(0, 3).map((plan: any, i: number) => (
+                            <div key={i} className="flex items-center gap-2">
+                              <div className={`w-1.5 h-1.5 rounded-full ${plan.isOwner ? 'bg-blue-500' : 'bg-orange-500'}`} />
+                              <p className="text-[11px] text-gray-700 truncate font-medium">{plan.planName}</p>
+                            </div>
+                          ))}
+                          {region.plans.length > 3 && (
+                            <p className="text-[10px] text-gray-400 mt-1 pl-3.5">외 {region.count - 3}개의 일정...</p>
+                          )}
+                        </div>
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-white" />
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  </CustomOverlayMap>
+                ))}
+              </Map>
             </div>
           </div>
         </div>
-      </div>
 
-        
          {/* 여행 일정 섹션 */}
         <div className="bg-white rounded-xl shadow-md p-6 mb-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -998,9 +1125,9 @@ export default function MyPage({ onNavigate }: MyPageProps) {
                           </div>
                         )}
 
-                        <div className="relative z-10 flex flex-col md:flex-row gap-6">
+                        <div className="relative z-10 flex flex-col gap-6">
                           {/* 왼쪽: 기본 정보 */}
-                          <div className="flex-1 flex flex-col gap-4">
+                          <div className="flex flex-col gap-4">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <span className="flex h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
@@ -1041,7 +1168,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
                           </div>
 
                           {/* 오른쪽: 체크리스트 */}
-                          <div className="flex-1 bg-gray-50/50 rounded-2xl p-4 border border-blue-100/30 flex flex-col">
+                          <div className="bg-gray-50/50 rounded-2xl p-4 border border-blue-100/30 flex flex-col">
                             <div className="flex items-center justify-between mb-3 px-1">
                               <span className="text-[10px] font-black text-[#1344FF] uppercase tracking-widest opacity-60">Check List</span>
                               <span className="text-[10px] font-bold text-gray-400">
@@ -1137,9 +1264,9 @@ export default function MyPage({ onNavigate }: MyPageProps) {
                           </div>
                         )}
 
-                        <div className="flex flex-col md:flex-row gap-6 relative z-10">
+                        <div className="flex flex-col gap-6 relative z-10">
                           {/* 왼쪽: 기본 정보 */}
-                          <div className="flex-1 flex flex-col gap-4">
+                          <div className="flex flex-col gap-4">
                             <div className="flex items-start justify-between">
                               <div className="flex items-center gap-2">
                                 <span className={`px-2 py-1 ${trip.theme === 'blue' ? 'bg-[#1344FF]' : 'bg-orange-500'} text-white text-[10px] font-black rounded shadow-sm`}>
@@ -1179,7 +1306,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
                           </div>
 
                           {/* 오른쪽: 체크리스트 */}
-                          <div className="flex-1 bg-gray-50/50 rounded-2xl p-4 border border-gray-100/50 flex flex-col">
+                          <div className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100/50 flex flex-col">
                             <div className="flex items-center justify-between mb-3 px-1">
                               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Check List</span>
                               <span className="text-[10px] font-bold text-gray-400">
