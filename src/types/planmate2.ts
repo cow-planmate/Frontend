@@ -8,6 +8,7 @@ export interface TravelPost {
   coverImage: string;
   forkCount: number;
   likeCount: number;
+  dislikeCount: number;
   tags: string[];
   createdAt: string;
   verified: boolean;
@@ -30,6 +31,7 @@ export type CommunityPost = {
   authorAvatar: string;
   createdAt: string;
   likes: number;
+  dislikes: number;
   comments: number;
   isPinned?: boolean;
   isHot?: boolean;

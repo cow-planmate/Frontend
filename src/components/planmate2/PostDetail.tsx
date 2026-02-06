@@ -10,6 +10,7 @@ import {
     Share2,
     Shield,
     ThumbsUp,
+    ThumbsDown,
     User,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -30,6 +31,7 @@ type Comment = {
 
 export function PostDetail({ post, onBack }: PostDetailProps) {
   const [isLiked, setIsLiked] = useState(false);
+  const [isDisliked, setIsDisliked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showForkModal, setShowForkModal] = useState(false);
   const [comment, setComment] = useState('');
@@ -169,7 +171,22 @@ export function PostDetail({ post, onBack }: PostDetailProps) {
               <p className="text-xl font-semibold text-gray-700">
                 {isLiked ? post.likeCount + 1 : post.likeCount}
               </p>
-              <p className="text-xs text-gray-500">좋아요</p>
+              <p className="text-xs text-gray-500">추천</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <ThumbsDown
+              className={`w-6 h-6 cursor-pointer ${isDisliked ? 'text-blue-500 fill-blue-500' : 'text-gray-400'}`}
+              onClick={() => {
+                setIsDisliked(!isDisliked);
+                if (isLiked) setIsLiked(false);
+              }}
+            />
+            <div>
+              <p className="text-xl font-semibold text-gray-700">
+                {isDisliked ? post.dislikeCount + 1 : post.dislikeCount}
+              </p>
+              <p className="text-xs text-gray-500">비추천</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

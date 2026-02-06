@@ -1,4 +1,4 @@
-import { Clock, Copy, Filter, Heart, MapPin, Search, Shield, TrendingUp } from 'lucide-react';
+import { Clock, Copy, Filter, Heart, MapPin, Search, Shield, TrendingUp, ThumbsDown } from 'lucide-react';
 import { useState } from 'react';
 import { mockPosts } from '../../data/mockData';
 import { TravelPost } from '../../types/planmate2';
@@ -197,6 +197,10 @@ export function Feed({ onViewPost }: FeedProps) {
                     <div className="flex items-center gap-1">
                       <Heart className="w-4 h-4 text-gray-400" />
                       <span className="text-sm text-gray-600">{post.likeCount}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <ThumbsDown className="w-3.5 h-3.5 text-gray-400" />
+                      <span className="text-sm text-gray-600">{post.dislikeCount}</span>
                     </div>
                   </div>
                   <button className="px-4 py-2 bg-[#1344FF] text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm active:translate-y-[2px]">

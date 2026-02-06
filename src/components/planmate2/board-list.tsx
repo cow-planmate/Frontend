@@ -1,4 +1,4 @@
-import { ArrowLeft, Eye, HelpCircle, MessageCircle, MessageSquare, PenTool, Search, ThumbsUp, Users } from 'lucide-react';
+import { ArrowLeft, Eye, HelpCircle, MessageCircle, MessageSquare, PenTool, Search, ThumbsDown, ThumbsUp, Users } from 'lucide-react';
 import { useState } from 'react';
 
 interface BoardListProps {
@@ -14,6 +14,7 @@ const MOCK_POSTS = {
     author: `사용자${i + 1}`,
     level: Math.floor(Math.random() * 5) + 1,
     likes: Math.floor(Math.random() * 100),
+    dislikes: Math.floor(Math.random() * 20),
     comments: Math.floor(Math.random() * 50),
     views: Math.floor(Math.random() * 1000),
     createdAt: `${Math.floor(Math.random() * 24) + 1}시간 전`,
@@ -25,6 +26,7 @@ const MOCK_POSTS = {
     author: `질문자${i + 1}`,
     level: Math.floor(Math.random() * 3) + 1,
     likes: Math.floor(Math.random() * 50),
+    dislikes: Math.floor(Math.random() * 10),
     comments: Math.floor(Math.random() * 20),
     views: Math.floor(Math.random() * 500),
     createdAt: `${Math.floor(Math.random() * 24) + 1}시간 전`,
@@ -37,6 +39,7 @@ const MOCK_POSTS = {
     author: `동행자${i + 1}`,
     level: Math.floor(Math.random() * 5) + 1,
     likes: Math.floor(Math.random() * 30),
+    dislikes: Math.floor(Math.random() * 5),
     comments: Math.floor(Math.random() * 10),
     views: Math.floor(Math.random() * 200),
     createdAt: `${Math.floor(Math.random() * 24) + 1}시간 전`,
@@ -213,8 +216,7 @@ export default function BoardList({ type, onBack, onNavigate }: BoardListProps) 
                   <span>{post.createdAt}</span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="flex items-center gap-1"><ThumbsUp className="w-4 h-4 text-[#1344FF]" />{post.likes}</span>
-                  <span className="flex items-center gap-1"><MessageCircle className="w-4 h-4" />{post.comments}</span>
+                  <span className="flex items-center gap-1"><ThumbsUp className="w-4 h-4 text-[#1344FF]" />{post.likes}</span>                  <span className="flex items-center gap-1"><ThumbsDown className="w-4 h-4 text-gray-500" />{post.dislikes}</span>                  <span className="flex items-center gap-1"><MessageCircle className="w-4 h-4" />{post.comments}</span>
                   <span className="flex items-center gap-1"><Eye className="w-4 h-4" />{post.views}</span>
                 </div>
               </div>

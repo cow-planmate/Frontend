@@ -1,4 +1,4 @@
-import { ArrowLeft, Calendar, Camera, Car, ChevronDown, ChevronUp, Clock, Coffee, Copy, CornerDownRight, Heart, Landmark, MapPin, Send, Share2, ShoppingBag, Users, Utensils } from 'lucide-react';
+import { ArrowLeft, Calendar, Camera, Car, ChevronDown, ChevronUp, Clock, Coffee, Copy, CornerDownRight, Heart, Landmark, MapPin, Send, Share2, ShoppingBag, ThumbsDown, Users, Utensils } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface PostDetailProps {
@@ -181,12 +181,23 @@ const MOCK_COMMENTS: Comment[] = [
 
 export default function PostDetail({ post, onBack }: PostDetailProps) {
   const [isLiked, setIsLiked] = useState(false);
+  const [isDisliked, setIsDisliked] = useState(false);
   const [comment, setComment] = useState('');
   const [replyContent, setReplyContent] = useState('');
   const [comments, setComments] = useState<Comment[]>(MOCK_COMMENTS);
   const [selectedDay, setSelectedDay] = useState(MOCK_SCHEDULE[0].day);
   const [isScheduleOpen, setIsScheduleOpen] = useState(true);
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
+
+  const handleLikeClick = () => {
+    if (isDisliked) setIsDisliked(false);
+    setIsLiked(!isLiked);
+  };
+
+  const handleDislikeClick = () => {
+    if (isLiked) setIsLiked(false);
+    setIsDisliked(!isDisliked);
+  };
 
   // Default values for potentially missing props
   const tags = post.tags || [];
@@ -579,7 +590,7 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
                         <div className="flex items-center gap-4 mt-2">
                           <button className="text-sm text-[#666666] hover:text-[#1344FF] flex items-center gap-1 transition-colors">
                             <Heart className="w-4 h-4" />
-                            좋아요 {comment.likes}
+                            추천 {comment.likes}
                           </button>
                           <button 
                             onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
@@ -636,7 +647,7 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
                               </div>
                               <button className="text-xs text-[#666666] hover:text-[#1344FF] mt-1 flex items-center gap-1">
                                 <Heart className="w-3 h-3" />
-                                좋아요 {reply.likes}
+                                추천 {reply.likes}
                               </button>
                             </div>
                           </div>
@@ -664,29 +675,50 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
                 </span>
               </button>
               
-              <div className="flex gap-3 mb-6">
+              <div className="flex gap-2 mb-6">
                 <button
-                  onClick={() => setIsLiked(!isLiked)}
-                  className={`flex-1 py-3 rounded-xl border transition-all flex items-center justify-center gap-2 ${
+                  onClick={handleLikeClick}
+                  className={`flex-1 py-3 rounded-xl border transition-all flex flex-col items-center justify-center gap-1 ${
                     isLiked
                       ? 'border-red-500 text-red-500 bg-red-50'
                       : 'border-[#e5e7eb] text-[#666666] hover:border-red-500 hover:text-red-500'
                   }`}
                 >
                   <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-                  {(post.likes || 0) + (isLiked ? 1 : 0)}
+                  <span className="text-xs font-medium">추천</span>
+                  <span className="text-xs font-bold">{(post.likes || 0) + (isLiked ? 1 : 0)}</span>
+                </button>
+                <button
+                  onClick={handleDislikeClick}
+                  className={`flex-1 py-3 rounded-xl border transition-all flex flex-col items-center justify-center gap-1 ${
+                    isDisliked
+                      ? 'border-gray-900 text-gray-900 bg-gray-50'
+                      : 'border-[#e5e7eb] text-[#666666] hover:border-gray-900 hover:text-gray-900'
+                  }`}
+                >
+                  <ThumbsDown className={`w-5 h-5 ${isDisliked ? 'fill-current' : ''}`} />
+                  <span className="text-xs font-medium">비추천</span>
+                  <span className="text-xs font-bold">{(post.dislikes || 0) + (isDisliked ? 1 : 0)}</span>
                 </button>
                 <button
                   onClick={handleShare}
-                  className="flex-1 py-3 rounded-xl border border-[#e5e7eb] text-[#666666] hover:border-[#1344FF] hover:text-[#1344FF] transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-3 rounded-xl border border-[#e5e7eb] text-[#666666] hover:border-[#1344FF] hover:text-[#1344FF] transition-all flex flex-col items-center justify-center gap-1"
                 >
                   <Share2 className="w-5 h-5" />
-                  공유
+                  <span className="text-xs font-medium">공유</span>
                 </button>
               </div>
 
               {/* 통계 */}
               <div className="border-t border-[#e5e7eb] pt-4 space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-[#666666]">추천</span>
+                  <span className="font-medium text-[#1a1a1a]">{(post.likes || 0) + (isLiked ? 1 : 0)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-[#666666]">비추천</span>
+                  <span className="font-medium text-[#1a1a1a]">{(post.dislikes || 0) + (isDisliked ? 1 : 0)}</span>
+                </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-[#666666]">조회수</span>
                   <span className="font-medium text-[#1a1a1a]">1,234</span>

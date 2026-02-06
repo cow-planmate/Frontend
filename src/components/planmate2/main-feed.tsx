@@ -1,4 +1,4 @@
-import { Award, Clock, Copy, Heart, MapPin, MessageCircle, PlusCircle, Search, SlidersHorizontal, Star, X } from 'lucide-react';
+import { Award, Clock, Copy, Heart, MapPin, MessageCircle, PlusCircle, Search, SlidersHorizontal, Star, ThumbsDown, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { useApiClient } from '../../hooks/useApiClient';
 import { Map, MapMarker, CustomOverlayMap } from 'react-kakao-maps-sdk';
@@ -19,6 +19,7 @@ const MOCK_POSTS = [
     description: '경복궁, 북촌한옥마을, 명동까지 핫플 다 담았어요!',
     tags: ['#뚜벅이최적화', '#동선낭비없는'],
     likes: 342,
+    dislikes: 12,
     comments: 28,
     forks: 156,
     duration: '3박 4일',
@@ -34,6 +35,7 @@ const MOCK_POSTS = [
     description: '카페, 해변, 맛집 위주로 느긋하게 다녀왔어요',
     tags: ['#여유로운P', '#극한의J'],
     likes: 289,
+    dislikes: 8,
     comments: 34,
     forks: 203,
     duration: '4박 5일',
@@ -49,6 +51,7 @@ const MOCK_POSTS = [
     description: '해운대, 광안리, 송정해수욕장 완벽 동선',
     tags: ['#뚜벅이최적화', '#극한의J'],
     likes: 421,
+    dislikes: 15,
     comments: 52,
     forks: 278,
     duration: '2박 3일',
@@ -61,6 +64,7 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
   const { isAuthenticated } = useApiClient();
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
+  const [dislikedPosts, setDislikedPosts] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   
@@ -121,7 +125,34 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
 
   const handleLike = (postId: number, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (dislikedPosts.has(postId)) {
+      setDislikedPosts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(postId);
+        return newSet;
+      });
+    }
     setLikedPosts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(postId)) {
+        newSet.delete(postId);
+      } else {
+        newSet.add(postId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleDislike = (postId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (likedPosts.has(postId)) {
+      setLikedPosts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(postId);
+        return newSet;
+      });
+    }
+    setDislikedPosts(prev => {
       const newSet = new Set(prev);
       if (newSet.has(postId)) {
         newSet.delete(postId);
@@ -407,7 +438,7 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
 
                   {/* 액션 버튼 */}
                   <div className="flex items-center justify-between pt-4 border-t border-[#e5e7eb] mt-auto">
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                       <button
                         onClick={(e) => handleLike(post.id, e)}
                         className={`flex items-center gap-1.5 transition-colors ${
@@ -420,6 +451,19 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
                           className={`w-4 h-4 ${likedPosts.has(post.id) ? 'fill-current' : ''}`}
                         />
                         <span className="text-sm font-medium">{post.likes + (likedPosts.has(post.id) ? 1 : 0)}</span>
+                      </button>
+                      <button
+                        onClick={(e) => handleDislike(post.id, e)}
+                        className={`flex items-center gap-1.5 transition-colors ${
+                          dislikedPosts.has(post.id)
+                            ? 'text-gray-900'
+                            : 'text-[#666666] hover:text-gray-900'
+                        }`}
+                      >
+                        <ThumbsDown
+                          className={`w-4 h-4 ${dislikedPosts.has(post.id) ? 'fill-current' : ''}`}
+                        />
+                        <span className="text-sm font-medium">{post.dislikes + (dislikedPosts.has(post.id) ? 1 : 0)}</span>
                       </button>
                       <button className="flex items-center gap-1.5 text-[#666666] hover:text-[#1344FF] transition-colors">
                         <MessageCircle className="w-4 h-4" />

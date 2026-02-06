@@ -1,4 +1,4 @@
-import { Award, BookOpen, CalendarDays, Calendar as CalendarIcon, Camera, Check, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, Copy, Eye, Heart, LogOut, MessageCircle, PenTool, Plus, Settings, Square, Star, ThumbsUp, Trash2, User, Users, TrendingUp, X } from 'lucide-react';
+import { Award, BookOpen, CalendarDays, Calendar as CalendarIcon, Camera, Check, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, Copy, Eye, Heart, LogOut, MessageCircle, PenTool, Plus, Settings, Square, Star, ThumbsUp, Trash2, TrendingUp, User, Users, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApiClient } from '../../hooks/useApiClient';
@@ -737,6 +737,35 @@ export default function MyPage({ onNavigate }: MyPageProps) {
                 <div className="text-center">
                   <p className="text-2xl font-bold text-[#1344FF]">0</p>
                   <p className="text-sm text-[#666666]">좋아요</p>
+                </div>
+              </div>
+
+              {/* 내 업적 섹션 추가 */}
+              <div className="mt-8 pt-6 border-t border-gray-100">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-[#1344FF]" />
+                    <h3 className="text-lg font-bold text-[#1a1a1a]">내 업적</h3>
+                  </div>
+                  <span className="text-xs font-bold text-[#1344FF] bg-blue-50 px-2 py-1 rounded-full">3 / 5 달성</span>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                  {[
+                    { title: "첫 걸음", unlocked: true, color: "bg-amber-100 text-amber-600 border-amber-200" },
+                    { title: "계획의 달인", unlocked: true, color: "bg-blue-100 text-blue-600 border-blue-200" },
+                    { title: "열혈 리뷰어", unlocked: true, color: "bg-pink-100 text-pink-600 border-pink-200" },
+                    { title: "베스트 파트너", unlocked: false, color: "bg-gray-100 text-gray-400 border-gray-200" },
+                    { title: "전국 제패", unlocked: false, color: "bg-gray-100 text-gray-400 border-gray-200" },
+                  ].map((achievement, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all hover:scale-105 cursor-default ${achievement.color}`}
+                      title={achievement.unlocked ? "달성 완료" : "미달성"}
+                    >
+                      {achievement.unlocked ? "🏆 " : "🔒 "}
+                      {achievement.title}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

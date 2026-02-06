@@ -5,6 +5,7 @@ import {
   Pin,
   Send,
   ThumbsUp,
+  ThumbsDown,
   TrendingUp,
   Users,
   Zap
@@ -20,6 +21,7 @@ type CommunityPost = {
   authorAvatar: string;
   createdAt: string;
   likes: number;
+  dislikes: number;
   comments: number;
   isPinned?: boolean;
   isHot?: boolean;
@@ -58,6 +60,7 @@ export function Community() {
       authorAvatar: '🌱',
       createdAt: '5분 전',
       likes: 12,
+      dislikes: 2,
       comments: 8,
       isPinned: false,
       isHot: true,
@@ -72,6 +75,7 @@ export function Community() {
       authorAvatar: '🏝️',
       createdAt: '1시간 전',
       likes: 24,
+      dislikes: 1,
       comments: 15,
       isPinned: true,
       tags: ['제주도', '3월', '여성'],
@@ -85,6 +89,7 @@ export function Community() {
       authorAvatar: '📝',
       createdAt: '3시간 전',
       likes: 89,
+      dislikes: 3,
       comments: 42,
       isHot: true,
       tags: [],
@@ -98,6 +103,7 @@ export function Community() {
       authorAvatar: '🌊',
       createdAt: '5시간 전',
       likes: 45,
+      dislikes: 0,
       comments: 12,
       tags: ['강릉', '후기'],
     },
@@ -110,6 +116,7 @@ export function Community() {
       authorAvatar: '🎒',
       createdAt: '6시간 전',
       likes: 18,
+      dislikes: 4,
       comments: 23,
       tags: ['질문', '짐'],
     },
@@ -121,8 +128,7 @@ export function Community() {
       author: '인기플래너',
       authorAvatar: '⭐',
       createdAt: '8시간 전',
-      likes: 156,
-      comments: 34,
+      likes: 156,      dislikes: 12,      comments: 34,
       tags: [],
     },
   ];
@@ -286,6 +292,10 @@ export function Community() {
                           {post.likes}
                         </span>
                         <span className="flex items-center gap-1">
+                          <ThumbsDown className="w-3 h-3" />
+                          {post.dislikes}
+                        </span>
+                        <span className="flex items-center gap-1">
                           <MessageCircle className="w-3 h-3" />
                           {post.comments}
                         </span>
@@ -372,6 +382,7 @@ export function Community() {
 function PostDetailView({ post, onBack }: { post: CommunityPost; onBack: () => void }) {
   const [comment, setComment] = useState('');
   const [isLiked, setIsLiked] = useState(false);
+  const [isDisliked, setIsDisliked] = useState(false);
 
   const comments = [
     {
@@ -454,10 +465,13 @@ function PostDetailView({ post, onBack }: { post: CommunityPost; onBack: () => v
           </div>
         )}
 
-        {/* Like Button */}
+        {/* Like & Dislike Button */}
         <div className="flex items-center gap-4 mb-8 pb-6 border-b border-gray-200">
           <button
-            onClick={() => setIsLiked(!isLiked)}
+            onClick={() => {
+              setIsLiked(!isLiked);
+              if (isDisliked) setIsDisliked(false);
+            }}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
               isLiked
                 ? 'bg-blue-600 text-white shadow-md'
@@ -465,7 +479,21 @@ function PostDetailView({ post, onBack }: { post: CommunityPost; onBack: () => v
             }`}
           >
             <ThumbsUp className={`w-5 h-5 ${isLiked ? 'fill-white' : ''}`} />
-            좋아요 {isLiked ? post.likes + 1 : post.likes}
+            추천 {isLiked ? post.likes + 1 : post.likes}
+          </button>
+          <button
+            onClick={() => {
+              setIsDisliked(!isDisliked);
+              if (isLiked) setIsLiked(false);
+            }}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
+              isDisliked
+                ? 'bg-red-600 text-white shadow-md'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <ThumbsDown className={`w-5 h-5 ${isDisliked ? 'fill-white' : ''}`} />
+            비추천 {isDisliked ? post.dislikes + 1 : post.dislikes}
           </button>
           <div className="flex items-center gap-2 text-gray-600">
             <MessageCircle className="w-5 h-5" />
