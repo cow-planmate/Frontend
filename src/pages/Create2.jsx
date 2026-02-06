@@ -56,17 +56,12 @@ function App() {
     const fetchPlanData = async () => {
       if (id && isAuthenticated()) {
         try {
-          const [planData, presence] = await Promise.all([
-            get(`${BASE_URL}/api/plan/${id}`),
-            get(`${BASE_URL}/presence/${id}`)
-          ])
+          const planData = await get(`${BASE_URL}/api/plan/${id}`);
 
           console.log(planData)
-          console.log(presence)
           
           setPlanAll(planData.planFrame);
           setTimetableAll(planData.timetables.slice().sort((a, b) => new Date(a.date) - new Date(b.date)));
-          setUserAll(presence);
           
           if (lastSelectedDay[id] && planData.timetables.length >= lastSelectedDay[id]) {
             setSelectedDay(lastSelectedDay[id]);

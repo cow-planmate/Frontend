@@ -20,7 +20,6 @@ import PlanInfoModal from "./PlanInfoModal";
 import ShareModal from "../../common/ShareModal";
 import MapModal from "./MapModal";
 import NoLoginSave from "./NoLoginSave";
-import TitleModal from "./TitleModal";
 
 export default function PlanInfo({id}) {
   const { 
@@ -36,8 +35,11 @@ export default function PlanInfo({id}) {
 
   const flexCenter = "flex items-center";
   const infoButton = "rounded-lg py-1 px-2 hover:bg-gray-100";
+
+  const spanRef = useRef(null);
+  const inputRef = useRef(null);
+  const [localName, setLocalName] = useState(planName);
   
-  const [isTitleOpen, setIsTitleOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
@@ -125,15 +127,31 @@ export default function PlanInfo({id}) {
     setStep(2);
   }
 
+  useEffect(() => {
+    setLocalName(planName);
+  }, [planName]);
+
+  useEffect(() => {
+    if (spanRef.current && inputRef.current) {
+      const spanWidth = spanRef.current.getBoundingClientRect().width;
+      inputRef.current.style.width = `${spanWidth}px`;
+    }
+  }, [localName]);
+
   return (
     <div className={`mx-auto min-[1464px]:w-[1416px] min-[1464px]:px-0 md:px-6 md:pt-6 p-4 pb-0 ${flexCenter} justify-between w-full`}>
       <div className={`${flexCenter} space-x-3`}>
-        <button
-          onClick={() => setIsTitleOpen(true)}
-          className={`${infoButton} text-lg font-semibold`}
-        >
-          {planName}
-        </button>
+        <div>
+          <input
+            ref={inputRef}
+            type="text"
+            className={`${infoButton} box-content text-lg font-semibold`}
+            onChange={(e) => setLocalName(e.target.value)}
+            onBlur={() => setPlanField("planName", localName)}
+            style={{ minWidth: '1ch' }}
+            value={localName}
+          />
+        </div>
         {planId !== -1 && 
           <div className="flex">
             <button 
@@ -222,8 +240,14 @@ export default function PlanInfo({id}) {
           }
         </div>
       </div>
-      
-      {isTitleOpen && <TitleModal setIsTitleOpen={setIsTitleOpen} />}
+
+      <span
+        ref={spanRef}
+        className="invisible absolute whitespace-pre text-base md:text-lg"
+      >
+        {localName}
+      </span>
+
       {isInfoOpen && <PlanInfoModal setIsInfoOpen={setIsInfoOpen} />}
 
       {isShareOpen && <ShareModal
