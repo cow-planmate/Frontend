@@ -5,6 +5,7 @@ import usePlacesStore from "../../../store/Places";
 import { faCirclePlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import LoadingRing from "../../../assets/imgs/ring-resize.svg?react";
+import useNicknameStore from "../../../store/Nickname";
 
 export default function Sidebar({
   planId,
@@ -16,6 +17,7 @@ export default function Sidebar({
   const { get, post } = useApiClient();
   const store = usePlacesStore();
   const { search, setAddSearch, setAddNext } = store;
+  const { customPlaces, createCustomPlace, removeCustomPlace } = useNicknameStore();
 
   const [selectedTab, setSelectedTab] = useState("tour");
   const [searchText, setSearchText] = useState("");
@@ -37,36 +39,20 @@ export default function Sidebar({
     search: "검색",
   };
 
-  const [customPlaces, setCustomPlaces] = useState([]);
   const [customPlaceName, setCustomPlaceName] = useState("");
 
   const currentPlaces =
     selectedTab === "weather"
       ? []
       : selectedTab === "custom"
-        ? customPlaces
+        ? customPlaces[planId]
         : (store[selectedTab] ?? []);
-
-  const createCustomPlace = (name) => ({
-    placeId: `custom-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    name: name.trim(),
-    categoryId: 3,
-    formatted_address: "",
-    rating: null,
-    url: "",
-    iconUrl:
-      "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
-  });
 
   const handleCustomAdd = () => {
     const name = customPlaceName.trim();
     if (!name) return;
-    setCustomPlaces((prev) => [...prev, createCustomPlace(name)]);
+    createCustomPlace(planId, name)
     setCustomPlaceName("");
-  };
-
-  const removeCustomPlace = (placeId) => {
-    setCustomPlaces((prev) => prev.filter((p) => p.placeId !== placeId));
   };
 
   const doSearch = async () => {
@@ -150,12 +136,12 @@ export default function Sidebar({
           </div>
         )}
         {selectedTab === "custom" && (
-          <div className="px-3 py-2 border-b border-gray-300 shrink-0">
+          <div className="px-3 py-2 shrink-0">
             <div className="flex items-center space-x-2">
               <input
                 type="text"
                 placeholder="장소 이름을 입력하세요"
-                className="flex-1 border rounded-md px-3 py-2 border-gray-300"
+                className="flex-1 border rounded-md px-3 py-2"
                 value={customPlaceName}
                 onChange={(e) => setCustomPlaceName(e.target.value)}
                 onKeyDown={(e) => {
@@ -170,9 +156,6 @@ export default function Sidebar({
                 추가
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              리스트에 추가된 뒤 드래그하여 시간표에 넣을 수 있습니다.
-            </p>
           </div>
         )}
         <div
@@ -186,15 +169,17 @@ export default function Sidebar({
               onMobileAdd={() => handleMobileAdd(place)}
               onDelete={
                 selectedTab === "custom"
-                  ? () => removeCustomPlace(place.placeId)
+                  ? () => removeCustomPlace(planId, place.placeId)
                   : undefined
               }
             />
           ))}
-          {selectedTab === "custom" && customPlaces.length === 0 && (
+          {selectedTab === "custom" && customPlaces[planId].length === 0 && (
             <div className="text-center py-8 text-gray-500 text-sm">
               위 입력란에 장소 이름을 입력한 뒤 &quot;추가&quot; 버튼을 누르면
               리스트에 추가됩니다. 추가된 항목을 드래그하여 시간표에 넣어보세요.
+              <br/>
+              그리고 추가된 장소 목록은 현재 접속하고 있는 기기에만 저장돼요.
             </div>
           )}
           {selectedTab !== "custom" &&
