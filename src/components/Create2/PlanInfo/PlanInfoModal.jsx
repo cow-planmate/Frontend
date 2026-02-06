@@ -5,13 +5,11 @@ import { useState } from "react";
 
 import TransportModal from "./TransportModal";
 import PersonCountModal from "../../common/PersonCountModal";
-import DepartureModal from "../../common/DepartureModal";
 import LocationModal from "../../common/LocationModal";
 
 export default function PlanInfoModal({setIsInfoOpen}) {
   const { 
     travelName,
-    departure, 
     transportationCategoryId,
     adultCount, 
     childCount,
@@ -23,12 +21,10 @@ export default function PlanInfoModal({setIsInfoOpen}) {
   const transInfo = {0: "대중교통", 1: "자동차"};
 
   const [isPersonCountOpen, setIsPersonCountOpen] = useState(false);
-  const [isDepartureOpen, setIsDepartureOpen] = useState(false);
   const [isDestinationOpen, setIsDestinationOpen] = useState(false);
   const [isTransportOpen, setIsTransportOpen] = useState(false); 
 
   const handlePersonCountClose = () => setIsPersonCountOpen(false);
-  const handleDepartureClose = () => setIsDepartureOpen(false);
   const handleDestinationClose = () => setIsDestinationOpen(false);
 
   const handlePersonCountChange = (count) => {
@@ -36,10 +32,9 @@ export default function PlanInfoModal({setIsInfoOpen}) {
     setPlanField("childCount", count.children);
   };
 
-  const handleDepartureLocationSelect = (location) => setPlanField("departure", location.name);
-
   const handleDestinationLocationSelect = (location) => {
     setPlanField("travelId", location.id);
+    setPlanField("travelCategoryName", location.name.split(" ")[0]);
     setPlanField("travelName", location.name.split(" ").pop());
   };
 
@@ -47,7 +42,7 @@ export default function PlanInfoModal({setIsInfoOpen}) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm font-pretendard">
       <div className="relative bg-white p-4 rounded-2xl shadow-2xl sm:w-[580px] w-[90vw] border border-gray-100 max-h-[90vh] overflow-y-auto space-y-2">
         <div className="flex justify-between items-center px-2 pt-2">
-          <div className="font-bold text-lg">
+          <div className="font-bold text-xl text-gray-800">
             일정 정보
           </div>
           <button 
@@ -79,15 +74,6 @@ export default function PlanInfoModal({setIsInfoOpen}) {
           </div>
         </button>
         <button
-          onClick={() => setIsDepartureOpen(true)}
-          className={infoButton}
-        >
-          <div className="space-y-1.5">
-            <p className="text-gray-500 text-start font-semibold">출발지</p>
-            <p className="text text-start max-w-full truncate">{departure}</p>
-          </div>
-        </button>
-        <button
           onClick={() => setIsDestinationOpen(true)}
           className={infoButton}
         >
@@ -112,14 +98,6 @@ export default function PlanInfoModal({setIsInfoOpen}) {
         onClose={handlePersonCountClose}
         personCount={{adults: adultCount, children: childCount}}
         onPersonCountChange={handlePersonCountChange}
-      />
-
-      <DepartureModal
-        isOpen={isDepartureOpen}
-        onClose={handleDepartureClose}
-        onLocationSelect={handleDepartureLocationSelect}
-        title="출발지 검색"
-        placeholder="출발지를 입력해주세요"
       />
 
       <LocationModal

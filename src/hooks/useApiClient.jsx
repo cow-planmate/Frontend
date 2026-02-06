@@ -135,6 +135,10 @@ export const useApiClient = () => {
           throw new Error("접근 권한이 없습니다.");
         }
 
+        if (response.status === 409) {
+          throw new Error("409");
+        }
+
         // fetch는 4xx, 5xx 에러에서 예외를 발생시키지 않으므로, 직접 처리
         if (!response.ok) {
           // 서버에서 보낸 에러 메시지를 우선적으로 사용하도록 시도

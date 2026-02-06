@@ -7,10 +7,10 @@ const usePlacesStore = create((set) => ({
   search: [],
   weather: [],
 
-  tourNext: "",
-  lodgingNext: "",
-  restaurantNext: "",
-  searchNext: "",
+  tourNext: [],
+  lodgingNext: [],
+  restaurantNext: [],
+  searchNext: [],
 
   setPlacesAll: (payload) =>
     set((state) => ({
@@ -39,6 +39,19 @@ const usePlacesStore = create((set) => ({
       ],
       [`${field}Next`]: nextPageTokens,
     })),
+
+  resetPlaces: () =>
+    set({
+      tour: [],
+      lodging: [],
+      restaurant: [],
+      search: [],
+      weather: [],
+      tourNext: [],
+      lodgingNext: [],
+      restaurantNext: [],
+      searchNext: [],
+    }),
 }));
 
 export default usePlacesStore;

@@ -1,13 +1,15 @@
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { ResizableScheduledItem } from './ResizableScheduledItem';
+import usePlanStore from '../../../store/Plan';
 import useTimetableStore from "../../../store/Timetables";
 import { formatTime, getTimeTableId } from "../../../utils/createUtils";
+import Weather from '../../common/Weather';
 
 const TimetableGrid = React.forwardRef(({ items, preview, onResizeEnd, showTimetable }, ref) => {
+  const { travelCategoryName, travelName, travelId } = usePlanStore();
   const { TOTAL_SLOTS, SLOT_HEIGHT, selectedDay, timetables } = useTimetableStore();
   const { setNodeRef } = useDroppable({ id: 'timetable-area' });
-
   // ref merge (for scrolling calculation in parent)
   const combinedRef = (node) => {
     setNodeRef(node);
@@ -17,6 +19,13 @@ const TimetableGrid = React.forwardRef(({ items, preview, onResizeEnd, showTimet
 
   return (
     <div className={`flex-1 md:w-[36%] md:flex-initial flex flex-col border border-gray-300 rounded-lg transition-all duration-300 ${showTimetable ? 'opacity-100 z-10' : 'opacity-0 absolute inset-0 -z-10'}`}>
+      <Weather 
+        timetables={timetables}
+        selectedDay={selectedDay}
+        travelCategoryName={travelCategoryName}
+        travelName={travelName}
+        travelId={travelId}
+      />
       <div className="h-full flex flex-col overflow-hidden relative py-4 px-5 scroll-smooth overflow-y-auto overflow-x-hidden">
         <div ref={combinedRef} className="flex-1 relative">
           

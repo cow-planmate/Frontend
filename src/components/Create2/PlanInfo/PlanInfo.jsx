@@ -3,21 +3,33 @@ import { useNavigate } from "react-router-dom";
 import usePlanStore from "../../../store/Plan";
 import useUserStore from "../../../store/Users";
 import { v4 as uuidv4 } from 'uuid';
+import { useApiClient } from "../../../hooks/useApiClient";
+import { sendRedo, sendUndo } from "../../../websocket/client";
+
+import Login from "../../auth/Login";
+import PasswordFind from "../../auth/PasswordFind";
+import Signup from "../../auth/Signup";
+import Theme from "../../auth/Theme";
+import Themestart from "../../auth/Themestart"; // 추가된 import
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faUserPlus, faInfo } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faUserPlus, faInfo, faRotateLeft, faRotateRight } from "@fortawesome/free-solid-svg-icons";
 import { faMap } from "@fortawesome/free-regular-svg-icons";
 
 import PlanInfoModal from "./PlanInfoModal";
 import ShareModal from "../../common/ShareModal";
+import MapModal from "./MapModal";
+import NoLoginSave from "./NoLoginSave";
 
 export default function PlanInfo({id}) {
   const { 
     planName, 
     transportationCategoryId, 
-    setPlanField
+    setPlanField,
+    planId
   } = usePlanStore();
   const { users } = useUserStore();
+  const { isAuthenticated } = useApiClient();
 
   const navigate = useNavigate();
 
@@ -26,11 +38,94 @@ export default function PlanInfo({id}) {
 
   const spanRef = useRef(null);
   const inputRef = useRef(null);
+  const [localName, setLocalName] = useState(planName);
   
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isMapOpen, setIsMapOpen] = useState(false);
+  
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isPasswordFindOpen, setIsPasswordFindOpen] = useState(false);
+  const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const [isThemeOpen, setIsThemeOpen] = useState(false);
+  const [isThemestartOpen, setIsThemestartOpen] = useState(false); // 추가된 state
+  const [selectedThemeKeywords, setSelectedThemeKeywords] = useState({
+    tourist: [],
+    accommodation: [],
+    restaurant: [],
+  });
+  const [isSaveOpen, setIsSaveOpen] = useState(false);
 
-  const [localName, setLocalName] = useState(planName);
+  const [step, setStep] = useState(0);
+
+  const handleLoginOpen = () => {
+    setStep(1);
+    setIsLoginOpen(true);
+  };
+
+  const handleLoginClose = () => {
+    setIsLoginOpen(false);
+  };
+
+  const handlePasswordFindOpen = () => {
+    setIsLoginOpen(false);
+    setIsPasswordFindOpen(true);
+  };
+
+  const handlePasswordFindClose = () => {
+    setIsPasswordFindOpen(false);
+    setIsLoginOpen(true);
+  };
+
+  const handleSignupOpen = () => {
+    setIsLoginOpen(false);
+    setIsSignupOpen(true);
+  };
+
+  const handleSignupClose = () => {
+    setIsSignupOpen(false);
+  };
+
+  const handleThemeOpen = () => {
+    setIsThemeOpen(true);
+  };
+
+  const handleThemeClose = () => {
+    setIsThemeOpen(false);
+  };
+
+  const handleThemeComplete = (keywords) => {
+    setSelectedThemeKeywords(keywords);
+    setIsThemeOpen(false);
+  };
+
+  // 추가된 함수들
+  const handleThemestartOpen = () => {
+    setIsThemestartOpen(true);
+  };
+
+  const handleThemestartClose = () => {
+    setIsThemestartOpen(false);
+    setStep(2);
+  };
+
+  const refreshUserProfile = () => {
+    setStep(2);
+  }
+
+  useEffect(() => {
+    if (step === 2) {
+      setIsSaveOpen(true);
+    }
+  }, [step]);
+
+  const handleSave = () => {
+    if (!isAuthenticated()) {
+      handleLoginOpen();
+      return;
+    }
+    setStep(2);
+  }
 
   useEffect(() => {
     setLocalName(planName);
@@ -57,6 +152,24 @@ export default function PlanInfo({id}) {
             value={localName}
           />
         </div>
+        {planId !== -1 && 
+          <div className="flex">
+            <button 
+              onClick={() => sendUndo(id)}
+              className="size-7 hover:bg-gray-200 rounded-full flex items-center justify-center"
+              title="되돌리기 (Ctrl+Z)"
+            >
+              <FontAwesomeIcon icon={faRotateLeft} />
+            </button>
+            <button 
+              onClick={() => sendRedo(id)}
+              className="size-7 hover:bg-gray-200 rounded-full flex items-center justify-center"
+              title="다시실행 (Ctrl+Y / Ctrl+Shift+Z)"
+            >
+              <FontAwesomeIcon icon={faRotateRight} />
+            </button>
+          </div>
+        }
         <button 
           className="block text-sm rounded-full bg-gray-300 hover:bg-gray-400 p-2 w-9"
           onClick={() => setIsInfoOpen(true)}
@@ -91,25 +204,40 @@ export default function PlanInfo({id}) {
               )
             })}
           <button 
+            onClick={() => setIsMapOpen(true)}
             className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg border border-gray-500 hover:bg-gray-100"
           >
             <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faMap} /></div>
             <div className="hidden sm:block">지도로 보기</div>
           </button>
-          <button 
-            onClick={() => setIsShareOpen(true)}
-            className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-gray-300 hover:bg-gray-400"
-          >
-            <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faUserPlus} /></div>
-            <div className="hidden sm:block">공유</div>
-          </button>
-          <button
-            onClick={() => navigate(`/complete?id=${id}`)}
-            className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-main hover:bg-mainDark text-white"
-          >
-            <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faCheck} /></div>
-            <div className="hidden sm:block">완료</div>
-          </button>
+          {planId === -1 ? 
+            <>
+              <button
+                onClick={handleSave}
+                className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-main hover:bg-mainDark text-white"
+              >
+                <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faCheck} /></div>
+                <div className="hidden sm:block">저장</div>
+              </button>
+            </> 
+          : 
+            <>
+              <button 
+                onClick={() => setIsShareOpen(true)}
+                className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-gray-300 hover:bg-gray-400"
+              >
+                <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faUserPlus} /></div>
+                <div className="hidden sm:block">공유</div>
+              </button>
+              <button
+                onClick={() => navigate(`/complete?id=${id}`)}
+                className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-main hover:bg-mainDark text-white"
+              >
+                <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faCheck} /></div>
+                <div className="hidden sm:block">완료</div>
+              </button>
+            </>
+          }
         </div>
       </div>
 
@@ -120,13 +248,53 @@ export default function PlanInfo({id}) {
         {localName}
       </span>
 
-      {isInfoOpen && <PlanInfoModal setIsInfoOpen={setIsInfoOpen}/>}
+      {isInfoOpen && <PlanInfoModal setIsInfoOpen={setIsInfoOpen} />}
 
       {isShareOpen && <ShareModal
         isOwner={true}
         setIsShareOpen={setIsShareOpen}
         id={id}
       />}
+
+      {isMapOpen && <MapModal setIsMapOpen={setIsMapOpen} />}
+      
+      {step === 1 &&
+        <>
+          <Login
+            isOpen={isLoginOpen}
+            onClose={handleLoginClose}
+            onPasswordFindOpen={handlePasswordFindOpen}
+            onSignupOpen={handleSignupOpen}
+            onLoginSuccess={refreshUserProfile} // 로그인 성공 후 프로필 새로고침
+          />
+          <PasswordFind
+            isOpen={isPasswordFindOpen}
+            onClose={handlePasswordFindClose}
+          />
+          <Signup
+            isOpen={isSignupOpen}
+            onClose={handleSignupClose}
+            onThemeOpen={handleThemestartOpen} // 추가된 prop
+            selectedThemeKeywords={selectedThemeKeywords}
+            onLoginSuccess={null}
+          />
+          <Theme
+            isOpen={isThemeOpen}
+            onClose={handleThemeClose}
+            onComplete={handleThemeComplete}
+          />
+          <Themestart
+            isOpen={isThemestartOpen}
+            onClose={handleThemestartClose}
+            onThemeOpen={handleThemeOpen}
+            selectedThemeKeywords={selectedThemeKeywords}
+          />
+        </>
+      }
+
+      {step === 2 && 
+        <NoLoginSave isOpen={isSaveOpen}/>
+      }
     </div>
   )
 }
