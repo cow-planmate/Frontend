@@ -9,6 +9,8 @@ export interface TravelPost {
   forkCount: number;
   likeCount: number;
   dislikeCount: number;
+  commentCount: number;
+  viewCount: number;
   tags: string[];
   createdAt: string;
   verified: boolean;

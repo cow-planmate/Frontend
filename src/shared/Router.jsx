@@ -17,8 +17,14 @@ const Router = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<PlanmateV2 />} />
+        <Route path="feed" element={<PlanmateV2 />} />
+        <Route path="feed/:region" element={<PlanmateV2 />} />
         <Route path="community" element={<PlanmateV2 />} />
         <Route path="community/create" element={<PlanmateV2 />} />
+        <Route path="community/create/:type" element={<PlanmateV2 />} />
+        <Route path="community/:category" element={<PlanmateV2 />} />
+        <Route path="community/:category/:id" element={<PlanmateV2 />} />
+        <Route path="travel/:id" element={<PlanmateV2 />} />
         <Route path="mypage" element={<PlanmateV2 />} />
         <Route path="plan-maker" element={<PlanmateV2 />} />
         <Route path="create-post" element={<PlanmateV2 />} />

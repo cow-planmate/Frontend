@@ -1,4 +1,4 @@
-import { ArrowLeft, Calendar, Camera, Car, ChevronDown, ChevronUp, Clock, Coffee, Copy, CornerDownRight, Heart, Landmark, MapPin, Send, Share2, ShoppingBag, ThumbsDown, Users, Utensils } from 'lucide-react';
+import { ArrowLeft, Calendar, Camera, Car, ChevronDown, ChevronUp, Clock, Coffee, Copy, CornerDownRight, Landmark, MapPin, Send, Share2, ShoppingBag, ThumbsDown, ThumbsUp, Users, Utensils } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface PostDetailProps {
@@ -189,6 +189,20 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
   const [isScheduleOpen, setIsScheduleOpen] = useState(true);
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
 
+  const isTravelPost = !!(post.destination || post.schedule || post.location);
+  const isMatePost = post.category === 'mate';
+  const isQnaPost = post.category === 'qna';
+
+  const tags = post.tags || (isTravelPost ? ['#서울여행', '#관광', '#맛집투어'] : (isMatePost ? ['#메이트찾기', '#동행'] : (isQnaPost ? ['#질문', '#도와주세요'] : ['#커뮤니티', '#소통'])));
+  const description = post.description || post.content || (isTravelPost ? '서울의 과거와 현재를 잇는 2박 3일 힐링 도심 속 여행 코스입니다.' : '내용이 없습니다.');
+  const author = post.author || '여행을사랑하는사람';
+  const authorImage = post.authorImage || post.authorAvatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop';
+  const createdAt = post.createdAt || '3시간 전';
+  const likes = (post.likes !== undefined ? post.likes : post.likeCount) || 0;
+  const dislikes = (post.dislikes !== undefined ? post.dislikes : post.dislikeCount) || 0;
+  const views = (post.views !== undefined ? post.views : post.viewCount) || 0;
+  const commentsCount = (post.comments !== undefined ? post.comments : post.commentCount) || 0;
+
   const handleLikeClick = () => {
     if (isDisliked) setIsDisliked(false);
     setIsLiked(!isLiked);
@@ -198,14 +212,6 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
     if (isLiked) setIsLiked(false);
     setIsDisliked(!isDisliked);
   };
-
-  // Default values for potentially missing props
-  const tags = post.tags || [];
-  const author = post.author || '알 수 없음';
-  const authorImage = post.authorImage || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop';
-  const description = post.description || '내용이 없습니다.';
-  const duration = post.duration || '기간 미정';
-  const createdAt = post.createdAt || '최근';
 
   const handleFork = () => {
     alert(`"${post.title}" 여행 일정을 복제했습니다! 나만의 일정으로 수정해보세요.`);
@@ -294,11 +300,11 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
   const currentSchedule = getCurrentSchedule();
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] pb-12">
+    <div className="min-h-screen bg-[#f8f9fa] pb-8">
       {/* 헤더 이미지 */}
-      <div className="relative h-[500px] overflow-hidden">
+      <div className={`relative ${isTravelPost ? 'h-[300px]' : 'h-[200px]'} overflow-hidden`}>
         <img
-          src={post.image}
+          src={post.image || 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=1200'}
           alt={post.title}
           className="w-full h-full object-cover"
         />
@@ -313,288 +319,284 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
         </button>
 
         {/* 제목 & 기본 정보 */}
-        <div className="absolute bottom-0 left-0 right-0 p-8 pb-12">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-wrap gap-2 mb-4">
+        <div className="absolute bottom-0 left-0 right-0 p-6 pb-8">
+          <div className="max-w-5xl mx-auto">
+            <div className="flex flex-wrap gap-1.5 mb-2">
               {tags.map((tag: string) => (
                 <span
                   key={tag}
-                  className="px-3 py-1 bg-white/90 backdrop-blur-sm text-[#1344FF] text-sm rounded-full font-medium"
+                  className="px-2 py-0.5 bg-white/90 backdrop-blur-sm text-[#1344FF] text-[11px] rounded-lg font-bold"
                 >
                   {tag}
                 </span>
               ))}
             </div>
-            <h1 className="text-4xl font-bold text-white mb-4 drop-shadow-lg">{post.title}</h1>
-            <p className="text-white/90 text-lg mb-4 drop-shadow-md">{description}</p>
+            <h1 className="text-2xl font-bold text-white mb-2 drop-shadow-md">{post.title}</h1>
             
             {/* 작성자 정보 */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <img
                 src={authorImage}
                 alt={author}
-                className="w-12 h-12 rounded-full border-2 border-white"
+                className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
               />
               <div>
-                <p className="text-white font-medium drop-shadow-md">{author}</p>
-                <p className="text-white/80 text-sm drop-shadow-md">{createdAt}</p>
+                <p className="text-white text-sm font-bold drop-shadow-sm">{author}</p>
+                <div className="flex items-center gap-2 text-white/80 text-[11px]">
+                  <span>{createdAt}</span>
+                  <span className="w-0.5 h-0.5 bg-white/50 rounded-full" />
+                  <span>조회 {views.toLocaleString()}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* 메인 콘텐츠 */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* 여행 정보 카드 */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-xl font-bold text-[#1a1a1a] mb-4">여행 정보</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
-                    <MapPin className="w-6 h-6 text-[#1344FF]" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-[#666666]">목적지</p>
-                    <p className="font-medium text-[#1a1a1a]">{post.destination}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
-                    <Calendar className="w-6 h-6 text-[#1344FF]" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-[#666666]">기간</p>
-                    <p className="font-medium text-[#1a1a1a]">{duration}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
-                    <Users className="w-6 h-6 text-[#1344FF]" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-[#666666]">인원</p>
-                    <p className="font-medium text-[#1a1a1a]">2명</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
-                    <Car className="w-6 h-6 text-[#1344FF]" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-[#666666]">이동수단</p>
-                    <p className="font-medium text-[#1a1a1a]">대중교통</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 일정표 (Timeline View) */}
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div 
-                className="p-6 flex items-center justify-between cursor-pointer border-b border-gray-100"
-                onClick={() => setIsScheduleOpen(!isScheduleOpen)}
-              >
-                <div>
-                  <h2 className="text-xl font-bold text-[#1a1a1a]">상세 일정</h2>
-                  <p className="text-sm text-gray-500 mt-1">총 {MOCK_SCHEDULE.reduce((acc, curr) => acc + curr.items.length, 0)}개의 장소를 방문합니다</p>
-                </div>
-                <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
-                  {isScheduleOpen ? (
-                    <ChevronUp className="w-5 h-5 text-[#666666]" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-[#666666]" />
+          <div className="lg:col-span-2 space-y-4">
+            {!isTravelPost && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+                  <h2 className="text-lg font-bold text-[#1a1a1a]">게시글 내용</h2>
+                  {isQnaPost && (
+                    post.isAnswered ? (
+                      <span className="px-2 py-0.5 bg-green-50 text-green-700 rounded-lg text-xs font-bold">답변완료</span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-gray-50 text-gray-600 rounded-lg text-xs font-bold">답변대기</span>
+                    )
                   )}
-                </button>
+                  {isMatePost && (
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 text-[#1344FF] rounded-lg text-xs font-bold">
+                      <Users className="w-3.5 h-3.5" />
+                      동행 {post.participants || 1}/{post.maxParticipants || 4}
+                    </div>
+                  )}
+                </div>
+                <div className="prose max-w-none text-[#4a4a4a] leading-relaxed text-base whitespace-pre-wrap">
+                  {description}
+                </div>
+                {isMatePost && (
+                  <div className="mt-6 pt-6 border-t border-gray-100">
+                    <button className="w-full bg-[#1344FF] text-white py-3 rounded-lg font-bold hover:bg-[#0d34cc] transition-all text-sm shadow-sm">
+                      동행 신청하기
+                    </button>
+                  </div>
+                )}
               </div>
-              
-              {isScheduleOpen && (
-                <div className="p-6 bg-gray-50/50">
-                  {/* 일차 선택 (Sticky Tabs) */}
-                  <div className="sticky top-0 z-10 bg-[#f8f9fa]/95 backdrop-blur-sm pb-4 -mx-6 px-6 border-b border-gray-200 mb-6">
-                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide pt-4">
-                      {MOCK_SCHEDULE.map((schedule) => (
-                        <button
-                          key={schedule.day}
-                          onClick={() => setSelectedDay(schedule.day)}
-                          className={`flex-shrink-0 px-5 py-2.5 rounded-full transition-all font-medium flex items-center gap-2 ${
-                            selectedDay === schedule.day
-                              ? 'bg-[#1344FF] text-white shadow-lg shadow-blue-200 transform scale-105'
-                              : 'bg-white text-[#666666] border border-[#e5e7eb] hover:bg-gray-50 hover:border-gray-300'
-                          }`}
-                        >
-                          <span className="font-bold">Day {schedule.day}</span>
-                          <span className={`text-xs ${selectedDay === schedule.day ? 'text-blue-100' : 'text-gray-400'}`}>
-                            {schedule.date}
-                          </span>
-                        </button>
-                      ))}
+            )}
+
+            {isTravelPost && (
+              <>
+                {/* 여행 정보 카드 */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-5">
+                  <h2 className="text-lg font-bold text-[#1a1a1a] mb-4">여행 정보</h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <MapPin className="w-5 h-5 text-[#1344FF]" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-[#666666]">목적지</p>
+                        <p className="text-sm font-bold text-[#1a1a1a]">{post.destination || post.location || '전국'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <Calendar className="w-5 h-5 text-[#1344FF]" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-[#666666]">기간</p>
+                        <p className="text-sm font-bold text-[#1a1a1a]">{post.duration || '1일'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <Users className="w-5 h-5 text-[#1344FF]" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-[#666666]">인원</p>
+                        <p className="text-sm font-bold text-[#1a1a1a]">2명</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <Car className="w-5 h-5 text-[#1344FF]" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-[#666666]">이동수단</p>
+                        <p className="text-sm font-bold text-[#1a1a1a]">대중교통</p>
+                      </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* 타임라인 카드 리스트 */}
-                  <div className="relative space-y-8">
-                    {/* Vertical Line */}
-                    <div className="absolute left-[92px] top-4 bottom-4 w-0.5 bg-gray-200" />
-
-                    {currentSchedule.items.map((item, index) => (
-                      <div key={index} className="relative flex gap-4 group">
-                        {/* Time Marker */}
-                        <div className="w-16 text-right pt-2 flex flex-col items-end gap-1 shrink-0">
-                          <span className="font-bold text-[#1a1a1a] text-lg leading-none">{item.time}</span>
-                          <span className="text-xs text-gray-400 font-medium">~{getEndTime(item.time, item.duration)}</span>
+                {/* 일정표 (Timeline View) */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-5">
+                  <div 
+                    className="p-4 flex items-center justify-between cursor-pointer border-b border-gray-100"
+                    onClick={() => setIsScheduleOpen(!isScheduleOpen)}
+                  >
+                    <div>
+                      <h2 className="text-lg font-bold text-[#1a1a1a]">상세 일정</h2>
+                      <p className="text-xs text-gray-500">총 {MOCK_SCHEDULE.reduce((acc, curr) => acc + curr.items.length, 0)}개의 장소</p>
+                    </div>
+                    <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                      {isScheduleOpen ? (
+                        <ChevronUp className="w-5 h-5 text-[#666666]" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-[#666666]" />
+                      )}
+                    </button>
+                  </div>
+                  
+                  {isScheduleOpen && (
+                    <div className="p-4 bg-gray-50/50">
+                      {/* 일차 선택 (Sticky Tabs) */}
+                      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm pb-3 -mx-4 px-4 border-b border-gray-100 mb-4">
+                        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide pt-3">
+                          {MOCK_SCHEDULE.map((schedule) => (
+                            <button
+                              key={schedule.day}
+                              onClick={() => setSelectedDay(schedule.day)}
+                              className={`flex-shrink-0 px-4 py-2 rounded-lg transition-all font-bold text-xs flex items-center gap-2 ${
+                                selectedDay === schedule.day
+                                  ? 'bg-[#1344FF] text-white shadow-sm'
+                                  : 'bg-white text-[#666666] border border-[#e5e7eb] hover:bg-gray-50'
+                              }`}
+                            >
+                              Day {schedule.day}
+                            </button>
+                          ))}
                         </div>
+                      </div>
 
-                        <div className="flex flex-col items-center w-6 pt-2 shrink-0 relative">
-                          <div className={`w-3 h-3 rounded-full border-2 border-white shadow-sm z-10 ${
-                             index === 0 ? 'bg-[#1344FF] w-4 h-4 -ml-0.5' : 'bg-gray-300'
-                          }`} />
-                        </div>
+                      {/* 타임라인 카드 리스트 */}
+                      <div className="relative space-y-4">
+                        {/* Vertical Line */}
+                        <div className="absolute left-[72px] top-4 bottom-4 w-0.5 bg-gray-200" />
 
-                        {/* Card Content */}
-                        <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all hover:translate-y-[-2px] group-hover:border-[#1344FF]/30">
-                          <div className="flex flex-col sm:flex-row">
-                            {/* Image Section */}
-                            <div className="sm:w-48 h-48 sm:h-auto relative shrink-0">
-                              <img 
-                                src={item.image} 
-                                alt={item.place}
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                              />
+                        {(post.schedule || currentSchedule.items).map((item: any, index: number) => (
+                          <div key={index} className="relative flex gap-3 group">
+                            {/* Time Marker */}
+                            <div className="w-14 text-right pt-2 flex flex-col items-end gap-0.5 shrink-0">
+                              <span className="font-bold text-[#1a1a1a] text-sm leading-none">{item.time}</span>
+                              <span className="text-[10px] text-gray-400 font-medium">~{getEndTime(item.time, item.duration || 2)}</span>
                             </div>
 
-                            {/* Info Section */}
-                            <div className="p-5 flex flex-col justify-between flex-1">
-                              <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className={`px-2 py-1 rounded-xl text-xs font-medium flex items-center gap-1 ${getCategoryColor(item.category || 'default')}`}>
-                                    {getCategoryIcon(item.category || 'default')}
-                                    {item.category?.toUpperCase() || 'VISIT'}
-                                  </span>
-                                  <h3 className="font-bold text-lg text-[#1a1a1a]">{item.place}</h3>
+                            <div className="flex flex-col items-center w-4 pt-2 shrink-0 relative">
+                              <div className={`w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm z-10 ${
+                                index === 0 ? 'bg-[#1344FF]' : 'bg-gray-300'
+                              }`} />
+                            </div>
+
+                            {/* Card Content */}
+                            <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all group-hover:border-[#1344FF]/30">
+                              <div className="flex flex-col sm:flex-row">
+                                {/* Image Section */}
+                                <div className="sm:w-32 h-32 sm:h-auto relative shrink-0">
+                                  <img 
+                                    src={item.image || 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=400'} 
+                                    alt={item.place || item.location}
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                  />
                                 </div>
-                                <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                                  {item.description}
-                                </p>
-                              </div>
-                              
-                              <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                                <div className="flex items-center gap-4 text-xs text-gray-500">
-                                  <span className="flex items-center gap-1">
-                                    <Clock className="w-3 h-3" />
-                                    {item.duration * 30}분 소요
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <MapPin className="w-3 h-3" />
-                                    지도보기
-                                  </span>
+
+                                {/* Info Section */}
+                                <div className="p-3 flex flex-col justify-between flex-1">
+                                  <div>
+                                    <div className="flex items-center gap-2 mb-1.5">
+                                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${getCategoryColor(item.category || 'default')}`}>
+                                        {item.category?.toUpperCase() || 'VISIT'}
+                                      </span>
+                                      <h3 className="font-bold text-sm text-[#1a1a1a]">{item.place || item.location}</h3>
+                                    </div>
+                                    <p className="text-gray-600 text-[11px] leading-relaxed line-clamp-2">
+                                      {item.description}
+                                    </p>
+                                  </div>
+                                  
+                                  <div className="flex items-center justify-between pt-2 mt-2 border-t border-gray-50">
+                                    <div className="flex items-center gap-3 text-[10px] text-gray-400">
+                                      <span className="flex items-center gap-1">
+                                        <Clock className="w-3 h-3" />
+                                        {(item.duration || 2) * 30}분
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <MapPin className="w-3 h-3" />
+                                        지도
+                                      </span>
+                                    </div>
+                                    <button className="text-[#1344FF] text-xs font-bold hover:underline">
+                                      상세
+                                    </button>
+                                  </div>
                                 </div>
-                                <button className="text-[#1344FF] text-sm font-medium hover:underline">
-                                  자세히
-                                </button>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {/* End Marker */}
-                    <div className="relative flex gap-4">
-                      <div className="w-16 shrink-0" />
-                      <div className="flex flex-col items-center w-6 shrink-0 relative">
-                        <div className="w-3 h-3 rounded-full bg-[#1a1a1a] border-2 border-white shadow-sm z-10" />
-                      </div>
-                      <div className="text-sm font-medium text-gray-400 py-1">
-                        일정 종료 ({currentSchedule.endTime})
+                        ))}
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
-              )}
-            </div>
-
-             {/* 여행기 본문 (블로그 스타일) */}
-             <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-xl font-bold text-[#1a1a1a] mb-6">여행 후기</h2>
-              <div className="prose max-w-none">
-                <p className="text-[#1a1a1a] leading-relaxed mb-4">
-                  서울 3박 4일 여행을 다녀왔습니다! 뚜벅이로 다니기 좋은 코스를 직접 짜봤는데, 
-                  생각보다 훨씬 효율적이었어요. 특히 대중교통을 이용해서 동선을 최적화했더니 
-                  시간도 절약되고 피로도도 훨씬 적었습니다.
-                </p>
-                
-                <h3 className="text-lg font-bold text-[#1a1a1a] mt-6 mb-3">첫째 날: 전통과 현대의 조화</h3>
-                <p className="text-[#666666] leading-relaxed mb-4">
-                  경복궁에서 시작한 첫날은 정말 인상 깊었어요. 수문장 교대식은 꼭 보세요! 
-                  10시에 시작하는데, 15분 전에 가서 자리 잡으시면 사진 찍기 좋습니다. 
-                  토속촌 삼계탕은 점심시간이라 웨이팅이 조금 있었지만, 맛은 정말 최고였어요.
-                </p>
-                
-                <div className="bg-[#f8f9fa] p-4 rounded-xl my-4">
-                  <p className="text-sm text-[#1344FF] font-medium mb-2">💡 여행 팁</p>
-                  <p className="text-sm text-[#666666]">
-                    경복궁은 한복을 입고 가면 무료 입장이 가능해요! 주변에 한복 대여점도 많으니 
-                    미리 예약하고 가시면 좋습니다.
-                  </p>
-                </div>
-              </div>
-            </div>
+              </>
+            )}
 
             {/* 댓글 섹션 */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-xl font-bold text-[#1a1a1a] mb-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+              <h2 className="text-lg font-bold text-[#1a1a1a] mb-5">
                 댓글 <span className="text-[#1344FF]">{comments.length}</span>
               </h2>
 
               {/* 메인 댓글 작성 */}
-              <form onSubmit={handleCommentSubmit} className="mb-6">
-                <div className="flex gap-3">
+              <form onSubmit={handleCommentSubmit} className="mb-5">
+                <div className="flex gap-2">
                   <input
                     type="text"
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     placeholder="댓글을 입력하세요..."
-                    className="flex-1 px-4 py-3 border border-[#e5e7eb] rounded-xl focus:outline-none focus:border-[#1344FF] transition-colors"
+                    className="flex-1 px-4 py-2.5 text-sm border border-[#e5e7eb] rounded-xl focus:outline-none focus:border-[#1344FF] transition-colors"
                   />
                   <button
                     type="submit"
-                    className="bg-[#1344FF] text-white px-6 py-3 rounded-xl hover:bg-[#0d34cc] transition-all shadow-sm flex items-center gap-2"
+                    className="bg-[#1344FF] text-white px-4 py-2.5 rounded-xl hover:bg-[#0d34cc] transition-all shadow-sm flex items-center justify-center"
                   >
-                    <Send className="w-5 h-5" />
+                    <Send className="w-4 h-4" />
                   </button>
                 </div>
               </form>
 
               {/* 댓글 목록 */}
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {comments.map((comment) => (
                   <div key={comment.id} className="group">
                     {/* 상위 댓글 */}
-                    <div className="flex gap-3">
+                    <div className="flex gap-2.5">
                       <img
                         src={comment.authorImage}
                         alt={comment.author}
-                        className="w-10 h-10 rounded-full object-cover"
+                        className="w-8 h-8 rounded-full object-cover"
                       />
                       <div className="flex-1">
-                        <div className="bg-[#f8f9fa] rounded-xl p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium text-[#1a1a1a]">{comment.author}</span>
-                            <span className="text-sm text-[#666666]">{comment.createdAt}</span>
+                        <div className="bg-[#f8f9fa] rounded-xl p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-xs text-[#1a1a1a]">{comment.author}</span>
+                            <span className="text-[10px] text-[#666666]">{comment.createdAt}</span>
                           </div>
-                          <p className="text-[#666666]">{comment.content}</p>
+                          <p className="text-sm text-[#444444] leading-relaxed">{comment.content}</p>
                         </div>
-                        <div className="flex items-center gap-4 mt-2">
-                          <button className="text-sm text-[#666666] hover:text-[#1344FF] flex items-center gap-1 transition-colors">
-                            <Heart className="w-4 h-4" />
+                        <div className="flex items-center gap-4 mt-1.5 ml-1">
+                          <button className="text-[11px] text-[#666666] hover:text-[#1344FF] flex items-center gap-1 transition-colors">
+                            <ThumbsUp className="w-3.5 h-3.5" />
                             추천 {comment.likes}
                           </button>
                           <button 
                             onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                            className="text-sm text-[#666666] hover:text-[#1344FF] font-medium transition-colors"
+                            className="text-[11px] text-[#666666] hover:text-[#1344FF] font-bold transition-colors"
                           >
                             답글 달기
                           </button>
@@ -604,9 +606,9 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
 
                     {/* 대댓글 입력 폼 */}
                     {replyingTo === comment.id && (
-                      <div className="ml-12 mt-4 flex gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                          <CornerDownRight className="w-4 h-4 text-gray-500" />
+                      <div className="ml-10 mt-3 flex gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                          <CornerDownRight className="w-3.5 h-3.5 text-gray-400" />
                         </div>
                         <form onSubmit={(e) => handleReplySubmit(e, comment.id)} className="flex-1 flex gap-2">
                           <input
@@ -614,12 +616,12 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
                             value={replyContent}
                             onChange={(e) => setReplyContent(e.target.value)}
                             placeholder={`@${comment.author}님에게 답글 작성...`}
-                            className="flex-1 px-4 py-2 text-sm border border-[#e5e7eb] rounded-xl focus:outline-none focus:border-[#1344FF]"
+                            className="flex-1 px-3 py-2 text-xs border border-[#e5e7eb] rounded-xl focus:outline-none focus:border-[#1344FF]"
                             autoFocus
                           />
                           <button
                             type="submit"
-                            className="bg-[#1344FF] text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-[#0d34cc]"
+                            className="bg-[#1344FF] text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-[#0d34cc]"
                           >
                             등록
                           </button>
@@ -629,24 +631,24 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
 
                     {/* 대댓글 목록 */}
                     {comment.replies && comment.replies.length > 0 && (
-                      <div className="ml-12 mt-4 space-y-4 border-l-2 border-gray-100 pl-4">
+                      <div className="ml-10 mt-3 space-y-3 border-l-2 border-gray-100 pl-3">
                         {comment.replies.map((reply) => (
-                          <div key={reply.id} className="flex gap-3">
+                          <div key={reply.id} className="flex gap-2">
                             <img
                               src={reply.authorImage}
                               alt={reply.author}
-                              className="w-8 h-8 rounded-full object-cover"
+                              className="w-7 h-7 rounded-full object-cover"
                             />
                             <div className="flex-1">
-                              <div className="bg-[#f8f9fa] rounded-xl p-3">
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="font-medium text-sm text-[#1a1a1a]">{reply.author}</span>
-                                  <span className="text-xs text-[#666666]">{reply.createdAt}</span>
+                              <div className="bg-[#f8f9fa] rounded-xl p-2.5">
+                                <div className="flex items-center justify-between mb-0.5">
+                                  <span className="font-bold text-[11px] text-[#1a1a1a]">{reply.author}</span>
+                                  <span className="text-[10px] text-[#666666]">{reply.createdAt}</span>
                                 </div>
                                 <p className="text-sm text-[#666666]">{reply.content}</p>
                               </div>
                               <button className="text-xs text-[#666666] hover:text-[#1344FF] mt-1 flex items-center gap-1">
-                                <Heart className="w-3 h-3" />
+                                <ThumbsUp className="w-3 h-3" />
                                 추천 {reply.likes}
                               </button>
                             </div>
@@ -661,75 +663,79 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
           </div>
 
           {/* 사이드바 */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* 액션 버튼 */}
-            <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
-              <button
-                onClick={handleFork}
-                className="w-full bg-[#1344FF] text-white py-4 rounded-xl hover:bg-[#0d34cc] transition-all shadow-md font-medium mb-3 flex items-center justify-center gap-2"
-              >
-                <Copy className="w-5 h-5" />
-                이 일정 가져가기
-                <span className="bg-white/20 px-2 py-0.5 rounded-full text-sm">
-                  {post.forks || 0}
-                </span>
-              </button>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sticky top-24">
+              {isTravelPost && (
+                <button
+                  onClick={handleFork}
+                  className="w-full bg-[#1344FF] text-white py-3 rounded-lg hover:bg-[#0d34cc] transition-all shadow-sm font-bold text-sm mb-3 flex items-center justify-center gap-2"
+                >
+                  <Copy className="w-4 h-4" />
+                  이 일정 가져가기
+                  <span className="bg-white/20 px-1.5 py-0.5 rounded-full text-[10px]">
+                    {post.forks || 0}
+                  </span>
+                </button>
+              )}
               
-              <div className="flex gap-2 mb-6">
+              <div className="flex gap-2 mb-4">
                 <button
                   onClick={handleLikeClick}
-                  className={`flex-1 py-3 rounded-xl border transition-all flex flex-col items-center justify-center gap-1 ${
+                  className={`flex-1 py-2.5 rounded-lg border transition-all flex flex-col items-center justify-center gap-0.5 ${
                     isLiked
-                      ? 'border-red-500 text-red-500 bg-red-50'
-                      : 'border-[#e5e7eb] text-[#666666] hover:border-red-500 hover:text-red-500'
+                      ? 'border-[#1344FF] text-[#1344FF] bg-blue-50'
+                      : 'border-[#e5e7eb] text-[#666666] hover:border-[#1344FF] hover:text-[#1344FF]'
                   }`}
                 >
-                  <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-                  <span className="text-xs font-medium">추천</span>
-                  <span className="text-xs font-bold">{(post.likes || 0) + (isLiked ? 1 : 0)}</span>
+                  <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                  <span className="text-[10px] font-bold">추천</span>
+                  <span className="text-[10px] font-bold">{(post.likes || 0) + (isLiked ? 1 : 0)}</span>
                 </button>
                 <button
                   onClick={handleDislikeClick}
-                  className={`flex-1 py-3 rounded-xl border transition-all flex flex-col items-center justify-center gap-1 ${
+                  className={`flex-1 py-2.5 rounded-lg border transition-all flex flex-col items-center justify-center gap-0.5 ${
                     isDisliked
                       ? 'border-gray-900 text-gray-900 bg-gray-50'
                       : 'border-[#e5e7eb] text-[#666666] hover:border-gray-900 hover:text-gray-900'
                   }`}
                 >
-                  <ThumbsDown className={`w-5 h-5 ${isDisliked ? 'fill-current' : ''}`} />
-                  <span className="text-xs font-medium">비추천</span>
-                  <span className="text-xs font-bold">{(post.dislikes || 0) + (isDisliked ? 1 : 0)}</span>
+                  <ThumbsDown className={`w-4 h-4 ${isDisliked ? 'fill-current' : ''}`} />
+                  <span className="text-[10px] font-bold">비추천</span>
+                  <span className="text-[10px] font-bold">{(post.dislikes || 0) + (isDisliked ? 1 : 0)}</span>
                 </button>
                 <button
                   onClick={handleShare}
-                  className="flex-1 py-3 rounded-xl border border-[#e5e7eb] text-[#666666] hover:border-[#1344FF] hover:text-[#1344FF] transition-all flex flex-col items-center justify-center gap-1"
+                  className="flex-1 py-2.5 rounded-lg border border-[#e5e7eb] text-[#666666] hover:border-[#1344FF] hover:text-[#1344FF] transition-all flex flex-col items-center justify-center gap-0.5"
                 >
-                  <Share2 className="w-5 h-5" />
-                  <span className="text-xs font-medium">공유</span>
+                  <Share2 className="w-4 h-4" />
+                  <span className="text-[10px] font-bold">공유</span>
                 </button>
               </div>
 
               {/* 통계 */}
-              <div className="border-t border-[#e5e7eb] pt-4 space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[#666666]">추천</span>
-                  <span className="font-medium text-[#1a1a1a]">{(post.likes || 0) + (isLiked ? 1 : 0)}</span>
+              <div className="border-t border-gray-100 pt-3 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-500">추천</span>
+                  <span className="font-bold text-[#1a1a1a]">{(post.likes || 0) + (isLiked ? 1 : 0)}</span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[#666666]">비추천</span>
-                  <span className="font-medium text-[#1a1a1a]">{(post.dislikes || 0) + (isDisliked ? 1 : 0)}</span>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-500">비추천</span>
+                  <span className="font-bold text-[#1a1a1a]">{(post.dislikes || 0) + (isDisliked ? 1 : 0)}</span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[#666666]">조회수</span>
-                  <span className="font-medium text-[#1a1a1a]">1,234</span>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-500">조회수</span>
+                  <span className="font-bold text-[#1a1a1a]">1,234</span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[#666666]">가져감</span>
-                  <span className="font-medium text-[#1a1a1a]">{post.forks || 0}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[#666666]">댓글</span>
-                  <span className="font-medium text-[#1a1a1a]">{comments.length}</span>
+                {isTravelPost && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-500">가져감</span>
+                    <span className="font-bold text-[#1a1a1a]">{post.forks || 0}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-500">댓글</span>
+                  <span className="font-bold text-[#1a1a1a]">{comments.length}</span>
                 </div>
               </div>
             </div>

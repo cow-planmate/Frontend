@@ -44,21 +44,21 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
   };
 
   return (
-    <nav className="bg-white border-b border-[#e5e7eb] sticky top-0 z-50 h-20 w-full">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 h-full">
+    <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 h-16 w-full">
+      <div className="max-w-5xl mx-auto px-6 h-full">
         <div className="flex justify-between items-center h-full">
           {/* 로고 */}
           <div className="flex items-center cursor-pointer group" onClick={() => onNavigate('feed')}>
-            <Logo className="h-7 sm:h-8" />
+            <Logo className="h-6" />
           </div>
 
           {/* 데스크톱 메뉴 */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-1">
             <button
               onClick={() => onNavigate('feed')}
-              className={`min-w-[120px] px-5 py-2.5 rounded-xl font-bold transition-all text-[15px] ${
+              className={`px-4 py-2 rounded-lg font-bold transition-all text-sm ${
                 currentView === 'feed'
-                  ? 'bg-[#1344FF] text-white shadow-md'
+                  ? 'bg-[#1344FF] text-white shadow-sm'
                   : 'text-[#666666] hover:bg-gray-50 hover:text-[#1344FF]'
               }`}
             >
@@ -66,9 +66,9 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
             </button>
             <button
               onClick={() => onNavigate('community')}
-              className={`min-w-[120px] px-5 py-2.5 rounded-xl font-bold transition-all text-[15px] ${
-                currentView === 'community'
-                  ? 'bg-[#1344FF] text-white shadow-md'
+              className={`px-4 py-2 rounded-lg font-bold transition-all text-sm ${
+                currentView === 'community' || currentView === 'board-list'
+                  ? 'bg-[#1344FF] text-white shadow-sm'
                   : 'text-[#666666] hover:bg-gray-50 hover:text-[#1344FF]'
               }`}
             >
@@ -76,27 +76,27 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
             </button>
             <button
               onClick={() => onNavigate('plan-maker')}
-              className={`min-w-[120px] px-5 py-2.5 rounded-xl font-bold transition-all text-[15px] ${
+              className={`px-4 py-2 rounded-lg font-bold transition-all text-sm ${
                 currentView === 'plan-maker'
-                  ? 'bg-[#1344FF] text-white shadow-md'
+                  ? 'bg-[#1344FF] text-white shadow-sm'
                   : 'text-[#666666] hover:bg-gray-50 hover:text-[#1344FF]'
               }`}
             >
-              여행 일정 생성
+              일정 생성
             </button>
 
             {isAuthenticated() ? (
-              <div className="flex items-center gap-2 ml-2 relative">
+              <div className="flex items-center gap-1.5 ml-1.5 relative">
                 <button
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                  className={`p-1 rounded-full transition-all ${
+                  className={`p-0.5 rounded-full transition-all ${
                     currentView === 'mypage' || isProfileMenuOpen
-                      ? 'ring-2 ring-[#1344FF] ring-offset-2'
+                      ? 'ring-2 ring-[#1344FF] ring-offset-1'
                       : 'hover:bg-[#f0f4ff]'
                   }`}
                 >
                   {gravatar ? (
-                    <img src={gravatar} alt="Profile" className="w-10 h-10 rounded-full" />
+                    <img src={gravatar} alt="Profile" className="w-8 h-8 rounded-full" />
                   ) : (
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                       <User className="w-6 h-6 text-[#666666]" />

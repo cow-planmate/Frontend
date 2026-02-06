@@ -1,10 +1,11 @@
-import { Award, Clock, Copy, Heart, MapPin, MessageCircle, PlusCircle, Search, SlidersHorizontal, Star, ThumbsDown, X } from 'lucide-react';
-import React, { useState } from 'react';
+import { Award, Clock, Copy, Eye, MapPin, MessageCircle, PlusCircle, Search, SlidersHorizontal, Star, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { useApiClient } from '../../hooks/useApiClient';
 import { Map, MapMarker, CustomOverlayMap } from 'react-kakao-maps-sdk';
 import useKakaoLoader from '../../hooks/useKakaoLoader';
 
 interface MainFeedProps {
+  initialRegion?: string;
   onNavigate: (view: any, data?: any) => void;
 }
 
@@ -21,6 +22,7 @@ const MOCK_POSTS = [
     likes: 342,
     dislikes: 12,
     comments: 28,
+    views: 1250,
     forks: 156,
     duration: '3박 4일',
     createdAt: '2일 전',
@@ -37,6 +39,7 @@ const MOCK_POSTS = [
     likes: 289,
     dislikes: 8,
     comments: 34,
+    views: 980,
     forks: 203,
     duration: '4박 5일',
     createdAt: '5일 전',
@@ -53,13 +56,14 @@ const MOCK_POSTS = [
     likes: 421,
     dislikes: 15,
     comments: 52,
+    views: 1520,
     forks: 278,
     duration: '2박 3일',
     createdAt: '1주 전',
   },
 ];
 
-export default function MainFeed({ onNavigate }: MainFeedProps) {
+export default function MainFeed({ initialRegion = '전체', onNavigate }: MainFeedProps) {
   useKakaoLoader();
   const { isAuthenticated } = useApiClient();
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -69,9 +73,17 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
   const [showFilters, setShowFilters] = useState(false);
   
   // 필터 상태
-  const [selectedRegion, setSelectedRegion] = useState<string>('전체');
+  const [selectedRegion, setSelectedRegion] = useState<string>(initialRegion);
   const [selectedDuration, setSelectedDuration] = useState<string>('전체');
   const [sortBy, setSortBy] = useState<string>('최신순');
+
+  // URL 파라미터와 내부 상태 동기화
+  useEffect(() => {
+    if (initialRegion) {
+      setSelectedRegion(initialRegion);
+    }
+  }, [initialRegion]);
+
   const [mapState, setMapState] = useState({
     center: { lat: 35.95, lng: 128.25 },
     level: 14
@@ -171,9 +183,11 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
   const handleRegionSelect = (regionName: string) => {
     if (selectedRegion === regionName) {
       setSelectedRegion('전체');
+      onNavigate('feed', { region: '전체' });
       setMapState({ center: { lat: 35.95, lng: 128.25 }, level: 14 });
     } else {
       setSelectedRegion(regionName);
+      onNavigate('feed', { region: regionName });
       const coords: Record<string, any> = {
         '서울': { lat: 37.5665, lng: 126.9780 },
         '부산': { lat: 35.1796, lng: 129.0756 },
@@ -187,6 +201,7 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
 
   const clearFilters = () => {
     setSelectedRegion('전체');
+    onNavigate('feed', { region: '전체' });
     setSelectedDuration('전체');
     setSortBy('최신순');
     setSelectedTag(null);
@@ -436,50 +451,38 @@ export default function MainFeed({ onNavigate }: MainFeedProps) {
                     </span>
                   </div>
 
-                  {/* 액션 버튼 */}
-                  <div className="flex items-center justify-between pt-4 border-t border-[#e5e7eb] mt-auto">
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={(e) => handleLike(post.id, e)}
-                        className={`flex items-center gap-1.5 transition-colors ${
-                          likedPosts.has(post.id)
-                            ? 'text-red-500'
-                            : 'text-[#666666] hover:text-red-500'
-                        }`}
-                      >
-                        <Heart
-                          className={`w-4 h-4 ${likedPosts.has(post.id) ? 'fill-current' : ''}`}
-                        />
-                        <span className="text-sm font-medium">{post.likes + (likedPosts.has(post.id) ? 1 : 0)}</span>
-                      </button>
-                      <button
-                        onClick={(e) => handleDislike(post.id, e)}
-                        className={`flex items-center gap-1.5 transition-colors ${
-                          dislikedPosts.has(post.id)
-                            ? 'text-gray-900'
-                            : 'text-[#666666] hover:text-gray-900'
-                        }`}
-                      >
-                        <ThumbsDown
-                          className={`w-4 h-4 ${dislikedPosts.has(post.id) ? 'fill-current' : ''}`}
-                        />
-                        <span className="text-sm font-medium">{post.dislikes + (dislikedPosts.has(post.id) ? 1 : 0)}</span>
-                      </button>
-                      <button className="flex items-center gap-1.5 text-[#666666] hover:text-[#1344FF] transition-colors">
-                        <MessageCircle className="w-4 h-4" />
-                        <span className="text-sm font-medium">{post.comments}</span>
-                      </button>
-                    </div>
+                  {/* 하단 정보 바 */}
+                  <div className="flex items-center gap-4 text-xs text-[#666666] pt-4 border-t border-[#e5e7eb] mt-auto">
                     <button
-                      onClick={(e) => handleFork(post, e)}
-                      className="flex items-center gap-1.5 bg-[#1344FF] text-white px-3 py-1.5 rounded-lg hover:bg-[#0d34cc] transition-all shadow-sm group/btn"
+                      onClick={(e) => handleLike(post.id, e)}
+                      className="flex items-center gap-1 transition-colors hover:opacity-80"
                     >
-                      <Copy className="w-3.5 h-3.5" />
-                      <span className="text-xs font-bold">가져가기</span>
-                      <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px] font-bold">
-                        {post.forks}
-                      </span>
+                      <ThumbsUp className={`w-3.5 h-3.5 ${likedPosts.has(post.id) ? 'text-[#1344FF] fill-[#1344FF]' : 'text-[#1344FF]'}`} />
+                      <span className="text-[#1344FF] font-bold">{(post.likes + (likedPosts.has(post.id) ? 1 : 0)).toLocaleString()}</span>
                     </button>
+                    <button
+                      onClick={(e) => handleDislike(post.id, e)}
+                      className="flex items-center gap-1 transition-colors hover:opacity-80"
+                    >
+                      <ThumbsDown className={`w-3.5 h-3.5 ${dislikedPosts.has(post.id) ? 'text-gray-500 fill-gray-500' : 'text-gray-500'}`} />
+                      <span className="font-bold">{(post.dislikes + (dislikedPosts.has(post.id) ? 1 : 0)).toLocaleString()}</span>
+                    </button>
+                    <span className="flex items-center gap-1">
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>{post.comments.toLocaleString()}</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>{post.views.toLocaleString()}</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>{post.forks.toLocaleString()}</span>
+                    </span>
+                    <span className="flex items-center gap-1 ml-auto">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{post.createdAt}</span>
+                    </span>
                   </div>
                 </div>
               </div>

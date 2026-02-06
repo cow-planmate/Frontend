@@ -1,54 +1,139 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import BoardList from '../components/planmate2/board-list';
-import CommunityTab from '../components/planmate2/community-tab';
 import CommunityCreate from '../components/planmate2/community-create';
 import CreatePost from '../components/planmate2/create-post';
 import MainFeed from '../components/planmate2/main-feed';
 import MyPage from '../components/planmate2/my-page';
 import Navbar from '../components/planmate2/navbar';
 import PostDetail from '../components/planmate2/post-detail';
+import RecommendDetail from '../components/planmate2/recommend-detail';
 import Home from './Home';
 
 export default function PlanmateV2() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [currentView, setCurrentView] = useState<'feed' | 'community' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker' | 'community-create'>('feed');
+  const { category, id, region } = useParams();
+
+  // URL에서 초기 뷰를 결정하는 함수
+  const getInitialView = () => {
+    const path = window.location.pathname;
+    if (path === '/mypage') return 'mypage';
+    if (path.startsWith('/community')) {
+      if (path === '/community/create') return 'community-create';
+      if (path.split('/').length > 3) return 'detail'; // /community/category/id
+      return 'board-list';
+    }
+    if (path.startsWith('/travel')) return 'detail';
+    if (path === '/plan-maker') return 'plan-maker';
+    if (path === '/create-post') return 'create';
+    return 'feed';
+  };
+
+  const ArrayBoardTypes = ['free', 'qna', 'mate', 'recommend'] as const;
+  const getInitialBoardType = () => {
+    if (category && (ArrayBoardTypes as any).includes(category)) return category as any;
+    return 'free';
+  };
+
+  const [currentView, setCurrentView] = useState<'feed' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker' | 'community-create' | 'recommend-detail'>(getInitialView() as any);
   const [selectedPost, setSelectedPost] = useState<any>(null);
-  const [selectedCommunityType, setSelectedCommunityType] = useState<string>('free');
-  const [boardType, setBoardType] = useState<'free' | 'qna' | 'mate'>('free');
+  const [boardType, setBoardType] = useState<'free' | 'qna' | 'mate' | 'recommend'>('free');
+  const [filterRegion, setFilterRegion] = useState<string>(region ? decodeURIComponent(region) : '전체');
 
   useEffect(() => {
-    if (location.pathname === '/mypage') {
+    const path = location.pathname;
+    
+    if (path === '/mypage') {
       setCurrentView('mypage');
-    } else if (location.pathname === '/community') {
-      setCurrentView('community');
-    } else if (location.pathname === '/community/create') {
-      setCurrentView('community-create');
-    } else if (location.pathname === '/plan-maker') {
-      setCurrentView('plan-maker');
-    } else if (location.pathname === '/create-post') {
-      setCurrentView('create');
-    } else if (location.pathname === '/') {
+    } else if (path.startsWith('/community')) {
+      if (path === '/community/create' || path.startsWith('/community/create/')) {
+        setCurrentView('community-create');
+        const typeFromPath = path.split('/')[3];
+        if (typeFromPath && ['free', 'qna', 'mate', 'recommend'].includes(typeFromPath)) {
+          setBoardType(typeFromPath as any);
+        }
+      } else if (category === 'recommend' && id) {
+        // 장소 추천 상세 페이지 (특수 뷰)
+        setCurrentView('recommend-detail');
+        setBoardType('recommend');
+      } else if (category && id) {
+        // 일반 커뮤니티 게시글 상세
+        setCurrentView('detail');
+        setBoardType(category as any);
+      } else if (category) {
+        if (['free', 'qna', 'mate', 'recommend'].includes(category)) {
+          setCurrentView('board-list');
+          setBoardType(category as any);
+        } else {
+          setCurrentView('board-list');
+          setBoardType('free');
+        }
+      } else {
+        setCurrentView('board-list');
+        setBoardType('free');
+      }
+    } else if (path.startsWith('/travel')) {
+      setCurrentView('detail');
+    } else if (path.startsWith('/feed')) {
       setCurrentView('feed');
+      if (region) setFilterRegion(decodeURIComponent(region));
+    } else if (path === '/plan-maker') {
+      setCurrentView('plan-maker');
+    } else if (path === '/create-post') {
+      setCurrentView('create');
+    } else if (path === '/') {
+      setCurrentView('feed');
+      setFilterRegion('전체');
     }
-  }, [location.pathname]);
+  }, [location.pathname, category, id, region]);
 
-  const handleViewChange = (view: 'feed' | 'community' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker' | 'community-create', data?: any) => {
-    setCurrentView(view);
+  const handleViewChange = (view: 'feed' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker' | 'community-create' | 'community', data?: any) => {
+    // view가 'community'인 경우 바로 'board-list'로 상태를 설정하여 이전 뷰가 보이는 현상 방지
+    const targetView = (view === 'community' ? 'board-list' : view) as 'feed' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker' | 'community-create';
+    setCurrentView(targetView);
     window.scrollTo(0, 0);
     
     // URL 업데이트
     if (view === 'mypage') navigate('/mypage');
-    else if (view === 'community') navigate('/community');
+    else if (view === 'community') {
+      setBoardType('free');
+      navigate('/community/free');
+    }
     else if (view === 'plan-maker') navigate('/plan-maker');
     else if (view === 'create') navigate('/create-post');
-    else if (view === 'feed') navigate('/');
-    else if (view === 'community-create') navigate('/community/create');
+    else if (view === 'feed') {
+      if (data?.region && data.region !== '전체') navigate(`/feed/${data.region}`);
+      else navigate('/');
+    }
+    else if (view === 'community-create') {
+      const type = data?.boardType || boardType;
+      navigate(`/community/create/${type}`);
+    }
+    else if (view === 'board-list') {
+      const type = data?.boardType || boardType;
+      navigate(`/community/${type}`);
+    }
+    else if (view === 'detail' && data?.post) {
+      setSelectedPost(data.post);
+      if (data.post.category === 'recommend') {
+        navigate(`/community/recommend/${data.post.id}`);
+      } else if (data.post.category) {
+        // 커뮤니티 게시글
+        navigate(`/community/${data.post.category}/${data.post.id}`);
+      } else {
+        // 여행 피드 게시글
+        navigate(`/travel/${data.post.id}`);
+      }
+    }
+    else if ((view as any) === 'recommend-detail' && data?.post) {
+      setSelectedPost(data.post);
+      navigate(`/community/recommend/${data.post.id}`);
+    }
     
     if (data?.post) setSelectedPost(data.post);
-    if (data?.communityType) setSelectedCommunityType(data.communityType);
     if (data?.boardType) setBoardType(data.boardType);
+    if (data?.region) setFilterRegion(data.region);
   };
 
   return (
@@ -59,24 +144,29 @@ export default function PlanmateV2() {
       />
       
       <main className="w-full">
-        {currentView === 'feed' && <MainFeed onNavigate={handleViewChange} />}
-        {currentView === 'community' && (
-          <CommunityTab 
-            initialTab={selectedCommunityType}
+        {currentView === 'feed' && (
+          <MainFeed 
+            initialRegion={filterRegion}
             onNavigate={handleViewChange} 
           />
         )}
         {currentView === 'board-list' && (
           <BoardList 
             type={boardType}
-            onBack={() => handleViewChange('community')}
+            onBack={() => handleViewChange('feed')}
             onNavigate={handleViewChange}
+          />
+        )}
+        {currentView === 'recommend-detail' && (
+          <RecommendDetail 
+            post={selectedPost}
+            onBack={() => handleViewChange('board-list', { boardType: 'recommend' })}
           />
         )}
         {currentView === 'detail' && selectedPost && (
           <PostDetail 
             post={selectedPost} 
-            onBack={() => handleViewChange('feed')} 
+            onBack={() => navigate(-1)} 
           />
         )}
         {currentView === 'create' && (
