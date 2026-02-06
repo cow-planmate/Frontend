@@ -55,7 +55,7 @@ function App() {
   const { setTimetableAll } = useTimetableStore();
   const { post, isAuthenticated } = useApiClient();
 
-  const sliderHeightClass = "h-[11rem] sm:h-[20rem] lg:h-[45rem]";
+  const sliderHeightClass = "h-[14rem] sm:h-[20rem] lg:h-[45rem]";
 
   const settings = {
     dots: true,
@@ -135,7 +135,6 @@ function App() {
   const makePlan = async () => {
     try {
       if (
-        !departureLocation ||
         !destinationLocation ||
         !dateRange[0].startDate ||
         !dateRange[0].endDate ||
@@ -147,13 +146,13 @@ function App() {
 
       const allDates = getDatesBetween(
         dateRange[0].startDate,
-        dateRange[0].endDate
+        dateRange[0].endDate,
       );
       const formattedDates = allDates.map((date) => formatDateForApi(date));
 
       if (isAuthenticated()) {
         const requestData = {
-          departure: departureLocation.name,
+          departure: "null",
           travelId: destinationLocation.id,
           dates: formattedDates,
           adultCount: Number(personCount.adults),
@@ -232,44 +231,20 @@ function App() {
         <div
           className={`absolute top-0 left-0 right-0 ${sliderHeightClass} bg-gradient-to-b from-transparent to-black/60 pointer-events-none`}
         />
-      </div>
-      <div className="absolute top-[38rem] left-0 right-0 px-4 sm:px-6 lg:px-8">
-        <div className="w-full max-w-7xl mx-auto">
-          <div className="font-pretendard bottom-0 text-white font-bold text-left text-3xl sm:text-4xl lg:text-5xl leading-tight ">
-            <div className="mb-2 sm:mb-4">나다운, 우리다운</div>
-            <div>여행의 시작</div>
+
+        <div className="absolute bottom-6 sm:bottom-12 lg:bottom-20 left-0 right-0 px-4 sm:px-6 lg:px-8 pointer-events-none">
+          <div className="w-full max-w-7xl mx-auto">
+            <div className="font-pretendard text-white font-bold text-left text-3xl sm:text-4xl lg:text-5xl leading-tight drop-shadow-md">
+              <div className="mb-2 sm:mb-4">나다운, 우리다운</div>
+              <div>여행의 시작</div>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="relative px-4 sm:px-6 lg:absolute lg:-bottom-1 lg:left-0 lg:right-0 lg:px-8">
         <div className="w-full max-w-7xl mx-auto bg-white rounded-xl shadow-2xl p-4 sm:p-6 mt-6 lg:mt-0 mb-8">
-          <div className="grid gap-4 items-end grid-cols-1 sm:grid-cols-2 lg:grid-cols-6">
-            {/* 출발지 */}
-            <div className="block relative">
-              <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
-                출발지
-              </label>
-              <input
-                type="text"
-                className="border-b-2 border-gray-300 pb-2 focus:border-blue-500 font-pretendard focus:outline-none w-full pr-8 cursor-pointer"
-                placeholder="출발지 입력"
-                value={departureLocation ? departureLocation.name : ""}
-                onClick={() => setIsDepartureOpen(true)}
-                readOnly
-              />
-              <button
-                className="absolute right-0 bottom-2"
-                onClick={() => setIsDepartureOpen(true)}
-                type="button"
-              >
-                <FontAwesomeIcon
-                  icon={faLocationDot}
-                  className="text-gray-400"
-                />
-              </button>
-            </div>
-
+          <div className="grid gap-4 items-end grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
             {/* 여행지 */}
             <div className="block relative">
               <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">

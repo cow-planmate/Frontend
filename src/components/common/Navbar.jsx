@@ -11,6 +11,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faRightFromBracket,
   faHouseUser,
+  faPencil,
 } from "@fortawesome/free-solid-svg-icons";
 import { faBell as faBellRegular } from "@fortawesome/free-regular-svg-icons";
 import useNicknameStore from "../../store/Nickname";
@@ -182,14 +183,7 @@ export default function Navbar({ onInvitationAccept }) {
               onClick={() => setisFeedbackOpen((prev) => !prev)}
               className="inline-flex items-center justify-center h-[40px] px-3 sm:px-4 py-2 bg-blue-600 ease-in-out delay-75 hover:bg-blue-700 text-white text-sm font-medium rounded-md"
             >
-              <svg
-                className="h-5 w-5 sm:mr-1 self-center items-center"
-                fill="none"
-                stroke="currentColor"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"></path>
-              </svg>
+              <FontAwesomeIcon icon={faPencil} className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">피드백하러가기</span>
             </button>
           </div>
@@ -203,20 +197,31 @@ export default function Navbar({ onInvitationAccept }) {
                   }}
                 >
                   <div className="flex items-center h-[35px]">
-                    <div 
-                      className='w-8 h-8 bg-no-repeat bg-contain rounded-full mr-2 sm:mr-3'
-                      style={ gravatar ? {
-                        backgroundImage: `url('${gravatar}')`
-                      } : {backgroundImage: "url('./src/assets/imgs/default.png')"}}
-                    >
-                    </div>
+                    <div
+                      className="w-8 h-8 bg-no-repeat bg-contain rounded-full mr-2 sm:mr-3"
+                      style={
+                        gravatar
+                          ? {
+                              backgroundImage: `url('${gravatar}')`,
+                            }
+                          : {
+                              backgroundImage:
+                                "url('./src/assets/imgs/default.png')",
+                            }
+                      }
+                    ></div>
                     <span>{nickname}님</span>
                   </div>
                 </button>
 
                 <button
                   className="relative flex items-center"
-                  onClick={() => setisInvitationOpen((prev) => !prev)}
+                  onClick={() => {
+                    setisInvitationOpen((prev) => !prev);
+                    if (!isInvitationOpen) {
+                      fetchInvitations();
+                    }
+                  }}
                 >
                   <FontAwesomeIcon
                     icon={faBellRegular}

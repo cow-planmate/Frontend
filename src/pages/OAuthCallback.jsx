@@ -8,7 +8,7 @@ const OAuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { setTokens } = useApiClient();
-  const { setNickname } = useNicknameStore();
+  const { setNickname, setGravatar } = useNicknameStore();
   const [error, setError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(true);
 
@@ -19,7 +19,6 @@ const OAuthCallback = () => {
       try {
         const status = searchParams.get("status");
 
-        // 기존 사용자 로그인 (loginCode 방식)
         if (status === "SUCCESS") {
           const code = searchParams.get("code");
 
@@ -37,7 +36,7 @@ const OAuthCallback = () => {
               headers: {
                 "Content-Type": "application/json",
               },
-            }
+            },
           );
 
           if (!response.ok) {
@@ -49,8 +48,8 @@ const OAuthCallback = () => {
 
           // 토큰 저장
           setTokens(accessToken, refreshToken);
-          localStorage.setItem("nickname", nickname);
           setNickname(nickname);
+          setGravatar(email);
 
           // userId는 JWT에서 파싱하거나 별도 API 호출
           try {
@@ -60,7 +59,7 @@ const OAuthCallback = () => {
                 headers: {
                   Authorization: `Bearer ${accessToken}`,
                 },
-              }
+              },
             );
 
             if (userResponse.ok) {
@@ -96,6 +95,18 @@ const OAuthCallback = () => {
               nickname,
             },
           });
+        } else if (status === "FAIL") {
+          const reason = searchParams.get("reason");
+
+          if (reason === "EMAIL_CONFLICT") {
+            setError(
+              "이미 해당 이메일로 가입된 계정이 있습니다. planMate 계정으로 로그인해주세요.",
+            );
+          } else {
+            setError("OAuth 로그인에 실패했습니다.");
+          }
+
+          setIsProcessing(false);
         }
         // 알 수 없는 상태
         else {
