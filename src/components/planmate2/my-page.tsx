@@ -913,7 +913,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
               {/* Weekday Headers */}
               <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
                 {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map((day, idx) => (
-                  <div key={day} className={`text-center py-2 text-[10px] font-bold ${idx === 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                  <div key={day} className={`text-center py-2 text-[10px] font-bold ${idx === 0 ? 'text-red-500' : 'text-gray-500'}`}>
                     {day[0]}
                   </div>
                 ))}
@@ -930,7 +930,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
                         key={idx} 
                         className={`
                           border-r border-b border-gray-100 p-1 relative transition-colors flex flex-col min-h-[60px] h-full
-                          ${!cell.isCurrentMonth ? 'bg-gray-50/50 text-gray-300' : 'bg-white text-gray-900'}
+                          ${!cell.isCurrentMonth ? 'bg-gray-50/50 text-gray-400' : 'bg-white text-gray-900'}
                           ${cell.day === new Date().getDate() && cell.isCurrentMonth && currentMonth === new Date().getMonth() ? 'bg-blue-50/30' : ''}
                         `}
                       >
@@ -969,7 +969,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
                                   text-[8px] h-4 flex items-center px-1 truncate relative z-10 cursor-pointer
                                   transition-colors
                                   ${event.status === '완료' 
-                                    ? 'bg-gray-100 text-gray-400 opacity-50' 
+                                    ? 'bg-gray-200 text-gray-700 font-bold' 
                                     : (event.theme === 'blue' ? 'bg-[#1344FF] text-white' : 'bg-orange-400 text-white')
                                   }
                                   ${roundedLeft} ${roundedRight}
