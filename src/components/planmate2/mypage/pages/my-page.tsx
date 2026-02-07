@@ -1,33 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApiClient } from '../../hooks/useApiClient';
-import useKakaoLoader from '../../hooks/useKakaoLoader';
-import useNicknameStore from '../../store/Nickname';
-import { LEVEL_CONFIG, REGION_COORDINATES } from './mypage/constants';
-import { useCalendar } from './mypage/hooks/useCalendar';
-import { usePlanChecklists } from './mypage/hooks/usePlanChecklists';
-import { useUserStats } from './mypage/hooks/useUserStats';
+import { useApiClient } from '../../../../hooks/useApiClient';
+import useKakaoLoader from '../../../../hooks/useKakaoLoader';
+import useNicknameStore from '../../../../store/Nickname';
+import { LEVEL_CONFIG, REGION_COORDINATES } from '../constants';
+import { useCalendar } from '../hooks/useCalendar';
+import { usePlanChecklists } from '../hooks/usePlanChecklists';
+import { useUserStats } from '../hooks/useUserStats';
 import {
   FORKED_TRAVEL_POSTS,
   LIKED_COMMUNITY_POSTS,
   LIKED_TRAVEL_POSTS,
   MY_COMMUNITY_POSTS,
   MY_TRAVEL_POSTS
-} from './mypage/mockData';
-import { CalendarSection } from './mypage/organisms/CalendarSection';
-import { CommunityActivitySection } from './mypage/organisms/CommunityActivitySection';
-import { MapSection } from './mypage/organisms/MapSection';
-import { MyPageModals } from './mypage/organisms/MyPageModals';
-import { ProfileHeader } from './mypage/organisms/ProfileHeader';
-import { TravelLogsSection } from './mypage/organisms/TravelLogsSection';
-import { TripSection } from './mypage/organisms/TripSection';
+} from '../mockData';
+import { CalendarSection } from '../organisms/CalendarSection';
+import { CommunityActivitySection } from '../organisms/CommunityActivitySection';
+import { MapSection } from '../organisms/MapSection';
+import { MyPageModals } from '../organisms/MyPageModals';
+import { ProfileHeader } from '../organisms/ProfileHeader';
+import { TravelLogsSection } from '../organisms/TravelLogsSection';
+import { TripSection } from '../organisms/TripSection';
 
 // @ts-ignore
-import gravatarUrl from "../../utils/gravatarUrl";
+import gravatarUrl from "../../../../utils/gravatarUrl";
 // @ts-ignore
-import ThemeStart from "../Mypage/changeThemeStart";
+import ThemeStart from "../../../Mypage/changeThemeStart";
 // @ts-ignore
-import Theme from "../Mypage/changeTheme";
+import Theme from "../../../Mypage/changeTheme";
 
 interface MyPageProps {
   onNavigate: (view: any, data?: any) => void;
