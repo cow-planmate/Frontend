@@ -1,4 +1,4 @@
-import { ArrowLeft, Eye, HelpCircle, MapPin, MessageCircle, MessageSquare, PenTool, Search, Star, ThumbsDown, ThumbsUp, TrendingUp, Users } from 'lucide-react';
+import { ArrowLeft, Eye, HelpCircle, MapPin, MessageCircle, MessageSquare, PenTool, Search, Star, ThumbsUp, TrendingUp, Users } from 'lucide-react';
 import { useState } from 'react';
 
 interface BoardListProps {
@@ -153,7 +153,7 @@ export default function BoardList({ type, onBack, onNavigate }: BoardListProps) 
   const hotPosts = [...posts].sort((a, b) => b.likes - a.likes).slice(0, 3);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 min-h-screen">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 min-h-screen">
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
         <button 

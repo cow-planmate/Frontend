@@ -1,7 +1,7 @@
 import { Award, Clock, Copy, Eye, MapPin, MessageCircle, PlusCircle, Search, SlidersHorizontal, Star, ThumbsDown, ThumbsUp, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { CustomOverlayMap, Map } from 'react-kakao-maps-sdk';
 import { useApiClient } from '../../hooks/useApiClient';
-import { Map, MapMarker, CustomOverlayMap } from 'react-kakao-maps-sdk';
 import useKakaoLoader from '../../hooks/useKakaoLoader';
 
 interface MainFeedProps {
@@ -217,7 +217,7 @@ export default function MainFeed({ initialRegion = '전체', onNavigate }: MainF
     (selectedTag ? 1 : 0);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* 헤더 섹션 */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <div>

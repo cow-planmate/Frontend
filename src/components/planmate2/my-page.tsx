@@ -548,7 +548,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ProfileHeader 
           dummyUser={dummyUser}
           userStats={userStats}
