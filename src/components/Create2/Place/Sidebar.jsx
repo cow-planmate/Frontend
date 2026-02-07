@@ -174,7 +174,7 @@ export default function Sidebar({
               }
             />
           ))}
-          {selectedTab === "custom" && customPlaces[planId].length === 0 && (
+          {selectedTab === "custom" && (currentPlaces?.length === 0 || !currentPlaces) && (
             <div className="text-center py-8 text-gray-500 text-sm">
               위 입력란에 장소 이름을 입력한 뒤 &quot;추가&quot; 버튼을 누르면
               리스트에 추가됩니다. 추가된 항목을 드래그하여 시간표에 넣어보세요.
