@@ -7,10 +7,12 @@ interface BestPlannersSectionProps {
     name: string;
     forkCount: number;
     avatar: string;
+    userId: string;
   }>;
+  onNavigate: (view: any, data?: any) => void;
 }
 
-export const BestPlannersSection: React.FC<BestPlannersSectionProps> = ({ planners }) => {
+export const BestPlannersSection: React.FC<BestPlannersSectionProps> = ({ planners, onNavigate }) => {
   return (
     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
       <div className="max-w-5xl mx-auto px-4 py-5">
@@ -20,7 +22,7 @@ export const BestPlannersSection: React.FC<BestPlannersSectionProps> = ({ planne
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {planners.map((planner) => (
-            <BestPlannerCard key={planner.name} {...planner} />
+            <BestPlannerCard key={planner.name} {...planner} onNavigate={onNavigate} />
           ))}
         </div>
       </div>

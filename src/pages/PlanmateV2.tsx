@@ -13,12 +13,12 @@ import Home from './Home';
 export default function PlanmateV2() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { category, id, region } = useParams();
+  const { category, id, region, userId } = useParams();
 
   // URL에서 초기 뷰를 결정하는 함수
   const getInitialView = () => {
     const path = window.location.pathname;
-    if (path === '/mypage') return 'mypage';
+    if (path.startsWith('/mypage')) return 'mypage';
     if (path.startsWith('/community')) {
       if (path === '/community/create') return 'community-create';
       if (path.split('/').length > 3) return 'detail'; // /community/category/id
@@ -95,7 +95,10 @@ export default function PlanmateV2() {
     window.scrollTo(0, 0);
     
     // URL 업데이트
-    if (view === 'mypage') navigate('/mypage');
+    if (view === 'mypage') {
+      if (data?.userId) navigate(`/mypage/${data.userId}`);
+      else navigate('/mypage');
+    }
     else if (view === 'community') {
       setBoardType('free');
       navigate('/community/free');
@@ -161,12 +164,14 @@ export default function PlanmateV2() {
           <RecommendDetail 
             post={selectedPost}
             onBack={() => handleViewChange('board-list', { boardType: 'recommend' })}
+            onNavigate={handleViewChange}
           />
         )}
         {currentView === 'detail' && selectedPost && (
           <PostDetail 
             post={selectedPost} 
             onBack={() => navigate(-1)} 
+            onNavigate={handleViewChange}
           />
         )}
         {currentView === 'create' && (
@@ -176,7 +181,7 @@ export default function PlanmateV2() {
           />
         )}
         {currentView === 'mypage' && (
-          <MyPage onNavigate={handleViewChange} />
+          <MyPage onNavigate={handleViewChange} userId={userId} />
         )}
         {currentView === 'community-create' && (
           <CommunityCreate 

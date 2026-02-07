@@ -5,9 +5,10 @@ import { FeedPostCard } from '../molecules/FeedPostCard';
 interface PostsGridProps {
   posts: TravelPost[];
   onViewPost: (post: TravelPost) => void;
+  onNavigate: (view: any, data?: any) => void;
 }
 
-export const PostsGrid: React.FC<PostsGridProps> = ({ posts, onViewPost }) => {
+export const PostsGrid: React.FC<PostsGridProps> = ({ posts, onViewPost, onNavigate }) => {
   if (posts.length === 0) {
     return (
       <div className="text-center py-16">
@@ -24,6 +25,7 @@ export const PostsGrid: React.FC<PostsGridProps> = ({ posts, onViewPost }) => {
           key={post.id} 
           post={post} 
           onClick={onViewPost} 
+          onNavigate={onNavigate}
         />
       ))}
     </div>

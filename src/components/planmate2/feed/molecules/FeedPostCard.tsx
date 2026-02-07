@@ -7,9 +7,10 @@ import { TagBadge } from '../atoms/TagBadge';
 interface FeedPostCardProps {
   post: TravelPost;
   onClick: (post: TravelPost) => void;
+  onNavigate?: (view: any, data?: any) => void;
 }
 
-export const FeedPostCard: React.FC<FeedPostCardProps> = ({ post, onClick }) => {
+export const FeedPostCard: React.FC<FeedPostCardProps> = ({ post, onClick, onNavigate }) => {
   return (
     <div
       onClick={() => onClick(post)}
@@ -56,7 +57,15 @@ export const FeedPostCard: React.FC<FeedPostCardProps> = ({ post, onClick }) => 
         </div>
 
         {/* Author */}
-        <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-50">
+        <div 
+          className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-50 hover:opacity-70 transition-opacity"
+          onClick={(e) => {
+            if (onNavigate) {
+              e.stopPropagation();
+              onNavigate('mypage', { userId: post.userId });
+            }
+          }}
+        >
           <div className="w-5 h-5 bg-blue-50 rounded-full flex items-center justify-center text-[#1344FF] font-bold text-[10px]">
             {post.author[0]}
           </div>

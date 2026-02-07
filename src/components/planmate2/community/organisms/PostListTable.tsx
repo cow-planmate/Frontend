@@ -15,6 +15,7 @@ export const PostListTable = ({ posts, type, onNavigate }: PostListTableProps) =
             key={post.id} 
             post={post}
             type={type}
+            onNavigate={onNavigate}
             onClick={() => onNavigate(type === 'recommend' ? 'recommend-detail' : 'detail', { post: { ...post, category: type } })}
           />
         ))}

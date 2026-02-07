@@ -5,10 +5,11 @@ import React from 'react';
 interface ProfileHeaderProps {
   dummyUser: any;
   userStats: any;
-  onEditProfile: () => void;
+  onEditProfile?: () => void;
   onViewLevel: () => void;
   myPlansCount: number;
   editablePlansCount: number;
+  isOtherUser?: boolean;
 }
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
@@ -18,6 +19,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onViewLevel,
   myPlansCount,
   editablePlansCount,
+  isOtherUser = false,
 }) => {
   return (
     <div className="bg-white rounded-xl shadow-md p-8 mb-8">
@@ -40,13 +42,15 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <Camera className="w-8 h-8 text-white drop-shadow-lg" />
             </div>
           </div>
-          <button 
-            onClick={onEditProfile}
-            className="absolute bottom-0 right-0 bg-[#1344FF] text-white p-2.5 rounded-full hover:bg-[#0d34cc] transition-all shadow-lg hover:scale-110"
-            title="프로필 수정"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
+          {!isOtherUser && (
+            <button 
+              onClick={onEditProfile}
+              className="absolute bottom-0 right-0 bg-[#1344FF] text-white p-2.5 rounded-full hover:bg-[#0d34cc] transition-all shadow-lg hover:scale-110"
+              title="프로필 수정"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* 프로필 정보 */}

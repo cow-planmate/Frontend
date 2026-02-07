@@ -5,12 +5,13 @@ interface PostListItemProps {
   post: any;
   type: string;
   onClick: () => void;
+  onNavigate: (view: any, data?: any) => void;
 }
 
-export const PostListItem = ({ post, type, onClick }: PostListItemProps) => {
+export const PostListItem = ({ post, type, onClick, onNavigate }: PostListItemProps) => {
   return (
     <div 
-      className="p-4 hover:bg-[#f8f9fa] transition-colors cursor-pointer flex justify-between gap-4"
+      className="p-4 hover:bg-[#f8f9fa] transition-colors cursor-pointer flex justify-between gap-4 group"
       onClick={onClick}
     >
       <div className="flex-1">
@@ -55,7 +56,15 @@ export const PostListItem = ({ post, type, onClick }: PostListItemProps) => {
         
         <div className="flex items-center justify-between text-[11px] text-[#666666]">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-[#1a1a1a]">{post.author}</span>
+            <button 
+              className="font-medium text-[#1a1a1a] hover:text-[#1344FF] hover:underline transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onNavigate('mypage', { userId: post.userId });
+              }}
+            >
+              {post.author}
+            </button>
             <LevelBadge level={post.level} />
             <span className="text-gray-200">|</span>
             <span>{post.createdAt}</span>

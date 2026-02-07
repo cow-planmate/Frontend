@@ -26,6 +26,7 @@ const Router = () => {
         <Route path="community/:category/:id" element={<PlanmateV2 />} />
         <Route path="travel/:id" element={<PlanmateV2 />} />
         <Route path="mypage" element={<PlanmateV2 />} />
+        <Route path="mypage/:userId" element={<PlanmateV2 />} />
         <Route path="plan-maker" element={<PlanmateV2 />} />
         <Route path="create-post" element={<PlanmateV2 />} />
         <Route path="legacy-home" element={<Home />} />

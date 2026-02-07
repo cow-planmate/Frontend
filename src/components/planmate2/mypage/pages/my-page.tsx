@@ -31,11 +31,17 @@ import Theme from "../../../Mypage/changeTheme";
 
 interface MyPageProps {
   onNavigate: (view: any, data?: any) => void;
+  userId?: string;
 }
 
-export default function MyPage({ onNavigate }: MyPageProps) {
+export default function MyPage({ onNavigate, userId }: MyPageProps) {
   useKakaoLoader();
   const navigate = useNavigate();
+  
+  // 현재 로그인한 사용자인지 확인
+  const currentLoggedInUserId = localStorage.getItem('userId');
+  const isOtherUser = userId && userId !== currentLoggedInUserId;
+
   // Tabs State
   const [travelTab, setTravelTab] = useState<'created' | 'forked' | 'liked'>('created');
   const [communityTab, setCommunityTab] = useState<'my_posts' | 'liked_posts'>('my_posts');
@@ -339,10 +345,27 @@ export default function MyPage({ onNavigate }: MyPageProps) {
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      if (isAuthenticated()) {
+      if (isAuthenticated() || isOtherUser) {
         try {
           setLoading(true);
-          const profileData = await get(`${BASE_URL}/api/user/profile`);
+          const endpoint = isOtherUser ? `${BASE_URL}/api/user/profile/${userId}` : `${BASE_URL}/api/user/profile`;
+          
+          let profileData;
+          try {
+            profileData = await get(endpoint);
+          } catch (err) {
+            if (isOtherUser) {
+              profileData = {
+                nickname: `사용자${userId}`,
+                email: `user${userId}@example.com`,
+                myPlanVOs: [],
+                editablePlanVOs: [],
+                preferredThemes: []
+              };
+            } else {
+              throw err;
+            }
+          }
           
           if (!profileData) {
             console.error("No profile data received");
@@ -374,7 +397,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
       }
     };
     fetchUserProfile();
-  }, [isAuthenticated, get]);
+  }, [userId, isOtherUser, isAuthenticated, get]);
 
   // userProfile이 변경될 때마다 테마 선택 상태 동기화
   useEffect(() => {
@@ -563,49 +586,54 @@ export default function MyPage({ onNavigate }: MyPageProps) {
           onViewLevel={() => setActiveModal('level')}
           myPlansCount={myPlans.length}
           editablePlansCount={editablePlans.length}
+          isOtherUser={isOtherUser}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <CalendarSection
-            currentYear={currentYear}
-            currentMonth={currentMonth}
-            onSetDate={setDate}
-            onPrevMonth={handlePrevMonth}
-            onNextMonth={handleNextMonth}
-            onToday={() => setDate(new Date())}
-            gridCells={gridCells}
-            getEventsForDate={getEventsForDate}
-            onEventClick={(event) => {
-              setSelectedCalendarEvent(event);
-              setActiveModal('eventDetail');
-            }}
-          />
+        {!isOtherUser && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+              <CalendarSection
+                currentYear={currentYear}
+                currentMonth={currentMonth}
+                onSetDate={setDate}
+                onPrevMonth={handlePrevMonth}
+                onNextMonth={handleNextMonth}
+                onToday={() => setDate(new Date())}
+                gridCells={gridCells}
+                getEventsForDate={getEventsForDate}
+                onEventClick={(event) => {
+                  setSelectedCalendarEvent(event);
+                  setActiveModal('eventDetail');
+                }}
+              />
 
-          <MapSection
-            allPlansCount={allPlans.length}
-            groupedPlansByRegion={groupedPlansByRegion}
-          />
-        </div>
+              <MapSection
+                allPlansCount={allPlans.length}
+                groupedPlansByRegion={groupedPlansByRegion}
+              />
+            </div>
 
-        <TripSection
-          isDeleteMode={isDeleteMode}
-          selectedPlanIds={selectedPlanIds}
-          toggleSelectAll={toggleSelectAll}
-          allPlans={allPlans}
-          handleBulkDelete={handleBulkDelete}
-          setIsDeleteMode={setIsDeleteMode}
-          ongoingPlans={ongoingPlans}
-          upcomingPlans={upcomingPlans}
-          pastPlans={pastPlans}
-          togglePlanSelection={togglePlanSelection}
-          handleDeletePlan={handleDeletePlan}
-          handleToggleChecklist={handleToggleChecklist}
-          handleUpdateChecklistText={handleUpdateChecklistText}
-          handleDeleteChecklistItem={handleDeleteChecklistItem}
-          handleAddChecklistItem={handleAddChecklistItem}
-          onNavigateTrip={(id: number) => navigate(`/complete?id=${id}`)}
-          onNavigateToPlanMaker={() => onNavigate('plan-maker')}
-        />
+            <TripSection
+              isDeleteMode={isDeleteMode}
+              selectedPlanIds={selectedPlanIds}
+              toggleSelectAll={toggleSelectAll}
+              allPlans={allPlans}
+              handleBulkDelete={handleBulkDelete}
+              setIsDeleteMode={setIsDeleteMode}
+              ongoingPlans={ongoingPlans}
+              upcomingPlans={upcomingPlans}
+              pastPlans={pastPlans}
+              togglePlanSelection={togglePlanSelection}
+              handleDeletePlan={handleDeletePlan}
+              handleToggleChecklist={handleToggleChecklist}
+              handleUpdateChecklistText={handleUpdateChecklistText}
+              handleDeleteChecklistItem={handleDeleteChecklistItem}
+              handleAddChecklistItem={handleAddChecklistItem}
+              onNavigateTrip={(id: number) => navigate(`/complete?id=${id}`)}
+              onNavigateToPlanMaker={() => onNavigate('plan-maker')}
+            />
+          </>
+        )}
 
         <TravelLogsSection
           travelTab={travelTab}

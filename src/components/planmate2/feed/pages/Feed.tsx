@@ -9,6 +9,7 @@ import { TagsFilter } from '../organisms/TagsFilter';
 
 type FeedProps = {
   onViewPost: (post: TravelPost) => void;
+  onNavigate: (view: any, data?: any) => void;
 };
 
 const TAGS = [
@@ -20,12 +21,12 @@ const TAGS = [
 ];
 
 const BEST_PLANNERS = [
-  { name: '제주러버', forkCount: 234, avatar: '🏝️' },
-  { name: '부산토박이', forkCount: 189, avatar: '🌊' },
-  { name: '서울워커', forkCount: 156, avatar: '🏙️' },
+  { name: '제주러버', forkCount: 234, avatar: '🏝️', userId: 'user1' },
+  { name: '부산토박이', forkCount: 189, avatar: '🌊', userId: 'user2' },
+  { name: '서울워커', forkCount: 156, avatar: '🏙️', userId: 'user3' },
 ];
 
-export function Feed({ onViewPost }: FeedProps) {
+export function Feed({ onViewPost, onNavigate }: FeedProps) {
   const {
     selectedTag,
     setSelectedTag,
@@ -45,7 +46,7 @@ export function Feed({ onViewPost }: FeedProps) {
         onSearchChange={setSearchQuery} 
       />
 
-      <BestPlannersSection planners={BEST_PLANNERS} />
+      <BestPlannersSection planners={BEST_PLANNERS} onNavigate={onNavigate} />
 
       <HotStaysSection 
         hotPosts={hotPosts} 
@@ -62,6 +63,7 @@ export function Feed({ onViewPost }: FeedProps) {
         <PostsGrid 
           posts={filteredPosts} 
           onViewPost={onViewPost} 
+          onNavigate={onNavigate}
         />
       </div>
     </div>

@@ -1,6 +1,7 @@
 export const MAIN_FEED_MOCK_POSTS = [
   {
     id: 1,
+    userId: 101,
     author: '여행러버',
     authorImage: 'https://images.unsplash.com/photo-1640960543409-dbe56ccc30e2?w=100&h=100&fit=crop',
     destination: '서울',
@@ -18,6 +19,7 @@ export const MAIN_FEED_MOCK_POSTS = [
   },
   {
     id: 2,
+    userId: 102,
     author: '제주도마스터',
     authorImage: 'https://images.unsplash.com/photo-1640960543409-dbe56ccc30e2?w=100&h=100&fit=crop',
     destination: '제주도',
@@ -35,6 +37,7 @@ export const MAIN_FEED_MOCK_POSTS = [
   },
   {
     id: 3,
+    userId: 103,
     author: '부산여행가',
     authorImage: 'https://images.unsplash.com/photo-1640960543409-dbe56ccc30e2?w=100&h=100&fit=crop',
     destination: '부산',

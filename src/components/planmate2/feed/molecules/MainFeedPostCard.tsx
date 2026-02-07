@@ -35,10 +35,16 @@ export const MainFeedPostCard: React.FC<MainFeedPostCardProps> = ({
       </div>
 
       <div className="p-5 flex-1 flex flex-col">
-        <div className="flex items-center mb-3">
-          <img src={post.authorImage} alt={post.author} className="w-8 h-8 rounded-full mr-2" />
+        <div 
+          className="flex items-center mb-3 group/author"
+          onClick={(e) => {
+            e.stopPropagation();
+            onNavigate('mypage', { userId: post.userId });
+          }}
+        >
+          <img src={post.authorImage} alt={post.author} className="w-8 h-8 rounded-full mr-2 group-hover/author:ring-2 group-hover/author:ring-[#1344FF] transition-all" />
           <div>
-            <p className="text-sm font-bold text-[#1a1a1a] leading-none mb-1">{post.author}</p>
+            <p className="text-sm font-bold text-[#1a1a1a] leading-none mb-1 group-hover/author:text-[#1344FF] transition-colors">{post.author}</p>
             <p className="text-[11px] text-[#666666]">{post.createdAt}</p>
           </div>
         </div>

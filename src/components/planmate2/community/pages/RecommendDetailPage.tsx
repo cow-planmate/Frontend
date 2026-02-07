@@ -6,13 +6,15 @@ import { RecommendSidebar } from '../molecules/RecommendSidebar';
 interface RecommendDetailPageProps {
   post: any;
   onBack: () => void;
+  onNavigate?: (view: any, data?: any) => void;
 }
 
-export const RecommendDetailPage = ({ post: initialPost, onBack }: RecommendDetailPageProps) => {
+export const RecommendDetailPage = ({ post: initialPost, onBack, onNavigate }: RecommendDetailPageProps) => {
   const post = initialPost || {
     id: 1,
     title: '[제주] 분위기 좋은 애월 카페 추천합니다!',
     author: '추천왕1',
+    userId: 'user1',
     content: '여기는 정말 제가 아껴둔 곳인데 공유합니다. 노을이 보일 때 가면 정말 환상적이에요. 커피 맛도 일품이고 사장님이 친절하셔서 더 기분이 좋아지는 곳입니다. 애월 해안도로 따라 쭉 가다 보면 있어요!',
     image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop',
     location: '제주도 애월읍',
@@ -43,8 +45,10 @@ export const RecommendDetailPage = ({ post: initialPost, onBack }: RecommendDeta
 
         <RecommendInfo 
           author={post.author}
+          userId={post.userId}
           createdAt={post.createdAt}
           views={post.views}
+          onNavigate={onNavigate}
         />
 
         <div className="p-8">

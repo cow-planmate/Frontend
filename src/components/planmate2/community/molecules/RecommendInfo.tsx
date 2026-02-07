@@ -2,15 +2,20 @@ import { Bookmark, Share2 } from 'lucide-react';
 
 interface RecommendInfoProps {
   author: string;
+  userId?: string;
   createdAt: string;
   views: number;
+  onNavigate?: (view: any, data?: any) => void;
 }
 
-export const RecommendInfo = ({ author, createdAt, views }: RecommendInfoProps) => {
+export const RecommendInfo = ({ author, userId, createdAt, views, onNavigate }: RecommendInfoProps) => {
   return (
     <div className="p-8 border-b border-gray-50">
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-3">
+        <div 
+          className="flex items-center gap-3 cursor-pointer hover:opacity-70 transition-opacity"
+          onClick={() => onNavigate && userId && onNavigate('mypage', { userId })}
+        >
           <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-[#1344FF] text-xl font-bold">
             {author[0]}
           </div>

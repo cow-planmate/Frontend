@@ -5,9 +5,10 @@ interface HotPostCardProps {
   index: number;
   type: string;
   onClick: () => void;
+  onNavigate: (view: any, data?: any) => void;
 }
 
-export const HotPostCard = ({ post, index, type, onClick }: HotPostCardProps) => {
+export const HotPostCard = ({ post, index, type, onClick, onNavigate }: HotPostCardProps) => {
   return (
     <div 
       onClick={onClick}
@@ -57,9 +58,15 @@ export const HotPostCard = ({ post, index, type, onClick }: HotPostCardProps) =>
           </h3>
 
           <div className="flex items-center justify-between pt-2 border-t border-gray-50">
-            <div className="flex items-center gap-1.5">
+            <div 
+              className="flex items-center gap-1.5 hover:opacity-70 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                onNavigate('mypage', { userId: post.userId });
+              }}
+            >
               <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-500">
-                {post.author[0]}
+                {post.author?.[0] || 'U'}
               </div>
               <span className="text-[11px] font-bold text-gray-600">{post.author}</span>
             </div>

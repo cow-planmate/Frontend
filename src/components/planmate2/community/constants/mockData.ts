@@ -1,6 +1,7 @@
 export const MOCK_POSTS = {
   free: Array.from({ length: 15 }).map((_, i) => ({
     id: i + 1,
+    userId: 200 + i,
     title: `자유게시판 게시글 ${i + 1}`,
     author: `사용자${i + 1}`,
     level: Math.floor(Math.random() * 5) + 1,
@@ -21,6 +22,7 @@ export const MOCK_POSTS = {
   })),
   qna: Array.from({ length: 15 }).map((_, i) => ({
     id: i + 1,
+    userId: 300 + i,
     title: `질문있습니다 ${i + 1}`,
     author: `질문자${i + 1}`,
     level: Math.floor(Math.random() * 3) + 1,
@@ -40,6 +42,7 @@ export const MOCK_POSTS = {
   })),
   mate: Array.from({ length: 15 }).map((_, i) => ({
     id: i + 1,
+    userId: 400 + i,
     title: `동행 구합니다 ${i + 1}`,
     author: `동행자${i + 1}`,
     level: Math.floor(Math.random() * 5) + 1,
@@ -61,6 +64,7 @@ export const MOCK_POSTS = {
   })),
   recommend: Array.from({ length: 15 }).map((_, i) => ({
     id: i + 1,
+    userId: 500 + i,
     title: `[${['제주', '서울', '부산', '강릉'][Math.floor(Math.random() * 4)]}] ${['진짜 맛있는 횟집', '분위기 좋은 카페', '노을 명소', '숨겨진 야경포인트'][Math.floor(Math.random() * 4)]} 추천합니다!`,
     author: `추천왕${i + 1}`,
     level: Math.floor(Math.random() * 5) + 1,

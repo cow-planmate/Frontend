@@ -4,12 +4,14 @@ import React, { useState } from 'react';
 interface PostDetailProps {
   post: any;
   onBack: () => void;
+  onNavigate: (view: any, data?: any) => void;
 }
 
 interface Comment {
   id: number;
   author: string;
   authorImage: string;
+  userId?: string; // Add userId to comment for profile navigation
   content: string;
   createdAt: string;
   likes: number;
@@ -144,6 +146,7 @@ const MOCK_COMMENTS: Comment[] = [
     id: 1,
     author: '여행매니아',
     authorImage: 'https://images.unsplash.com/photo-1640960543409-dbe56ccc30e2?w=100&h=100&fit=crop',
+    userId: 'user1',
     content: '와 일정이 정말 알차네요! 가져가서 제 일정으로 사용하고 싶어요. 혹시 경복궁 입장료는 얼마였나요?',
     createdAt: '2시간 전',
     likes: 5,
@@ -152,6 +155,7 @@ const MOCK_COMMENTS: Comment[] = [
         id: 11,
         author: '작성자',
         authorImage: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
+        userId: 'planmate-author',
         content: '성인은 3000원인데 한복 입고 가면 무료예요! 꼭 한복 대여해서 가보세요 ㅎㅎ',
         createdAt: '1시간 전',
         likes: 2,
@@ -163,6 +167,7 @@ const MOCK_COMMENTS: Comment[] = [
     id: 2,
     author: '서울러버',
     authorImage: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop',
+    userId: 'user2',
     content: '북촌한옥마을 정말 좋죠! 저도 다녀왔는데 사진 찍기 좋더라구요. 주말엔 사람이 많으니 평일 추천드려요.',
     createdAt: '5시간 전',
     likes: 3,
@@ -172,6 +177,7 @@ const MOCK_COMMENTS: Comment[] = [
     id: 3,
     author: '처음서울',
     authorImage: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=100&h=100&fit=crop',
+    userId: 'user3',
     content: '서울 처음 가는데 이 일정 그대로 따라가면 될까요? 대중교통으로도 이동 가능한가요?',
     createdAt: '1일 전',
     likes: 2,
@@ -179,7 +185,7 @@ const MOCK_COMMENTS: Comment[] = [
   },
 ];
 
-export default function PostDetail({ post, onBack }: PostDetailProps) {
+export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
   const [comment, setComment] = useState('');
@@ -334,7 +340,10 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
             <h1 className="text-2xl font-bold text-white mb-2 drop-shadow-md">{post.title}</h1>
             
             {/* 작성자 정보 */}
-            <div className="flex items-center gap-2">
+            <div 
+              className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => onNavigate('mypage', { userId: post.userId })}
+            >
               <img
                 src={authorImage}
                 alt={author}
@@ -579,12 +588,18 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
                       <img
                         src={comment.authorImage}
                         alt={comment.author}
-                        className="w-8 h-8 rounded-full object-cover"
+                        className="w-8 h-8 rounded-full object-cover cursor-pointer hover:opacity-80"
+                        onClick={() => comment.userId && onNavigate('mypage', { userId: comment.userId })}
                       />
                       <div className="flex-1">
                         <div className="bg-[#f8f9fa] rounded-xl p-3">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-bold text-xs text-[#1a1a1a]">{comment.author}</span>
+                            <span 
+                              className="font-bold text-xs text-[#1a1a1a] cursor-pointer hover:text-[#1344FF]"
+                              onClick={() => comment.userId && onNavigate('mypage', { userId: comment.userId })}
+                            >
+                              {comment.author}
+                            </span>
                             <span className="text-[10px] text-[#666666]">{comment.createdAt}</span>
                           </div>
                           <p className="text-sm text-[#444444] leading-relaxed">{comment.content}</p>
@@ -637,12 +652,18 @@ export default function PostDetail({ post, onBack }: PostDetailProps) {
                             <img
                               src={reply.authorImage}
                               alt={reply.author}
-                              className="w-7 h-7 rounded-full object-cover"
+                              className="w-7 h-7 rounded-full object-cover cursor-pointer hover:opacity-80"
+                              onClick={() => reply.userId && onNavigate('mypage', { userId: reply.userId })}
                             />
                             <div className="flex-1">
                               <div className="bg-[#f8f9fa] rounded-xl p-2.5">
                                 <div className="flex items-center justify-between mb-0.5">
-                                  <span className="font-bold text-[11px] text-[#1a1a1a]">{reply.author}</span>
+                                  <span 
+                                    className="font-bold text-[11px] text-[#1a1a1a] cursor-pointer hover:text-[#1344FF]"
+                                    onClick={() => reply.userId && onNavigate('mypage', { userId: reply.userId })}
+                                  >
+                                    {reply.author}
+                                  </span>
                                   <span className="text-[10px] text-[#666666]">{reply.createdAt}</span>
                                 </div>
                                 <p className="text-sm text-[#666666]">{reply.content}</p>
