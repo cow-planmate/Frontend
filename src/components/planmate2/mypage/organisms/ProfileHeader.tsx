@@ -1,4 +1,4 @@
-import { Award, Camera, Settings, User } from 'lucide-react';
+import { Award, Camera, MessageSquare, Settings, User, UserPlus } from 'lucide-react';
 import React from 'react';
 // @ts-ignore
 
@@ -7,6 +7,8 @@ interface ProfileHeaderProps {
   userStats: any;
   onEditProfile?: () => void;
   onViewLevel: () => void;
+  onAddFriend?: () => void;
+  onSendMessage?: () => void;
   myPlansCount: number;
   editablePlansCount: number;
   isOtherUser?: boolean;
@@ -17,6 +19,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   userStats,
   onEditProfile,
   onViewLevel,
+  onAddFriend,
+  onSendMessage,
   myPlansCount,
   editablePlansCount,
   isOtherUser = false,
@@ -55,8 +59,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
         {/* 프로필 정보 */}
         <div className="flex-1 text-center md:text-left">
-          <div className="flex items-center justify-center md:justify-start gap-4 mb-2">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-center md:justify-start gap-4 mb-2">
+            <div className="flex items-center justify-center md:justify-start gap-3">
               <h1 className="text-4xl font-black text-[#1a1a1a] tracking-tight">{dummyUser.nickName}</h1>
               <button 
                 onClick={onViewLevel}
@@ -68,6 +72,25 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 <span className="text-xs font-bold">{userStats.level}</span>
               </button>
             </div>
+
+            {isOtherUser && (
+              <div className="flex items-center justify-center md:justify-start gap-2">
+                <button 
+                  onClick={onAddFriend}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#1344FF] text-white rounded-xl text-sm font-bold hover:bg-[#0d34cc] transition-all shadow-sm active:scale-95"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  친구 추가
+                </button>
+                <button 
+                  onClick={onSendMessage}
+                  className="flex items-center gap-2 px-4 py-2 bg-white text-[#1344FF] border border-[#1344FF] rounded-xl text-sm font-bold hover:bg-blue-50 transition-all shadow-sm active:scale-95"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  채팅하기
+                </button>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center justify-center md:justify-start gap-2 mb-4">

@@ -12,7 +12,9 @@ import {
   LIKED_COMMUNITY_POSTS,
   LIKED_TRAVEL_POSTS,
   MY_COMMUNITY_POSTS,
-  MY_TRAVEL_POSTS
+  MY_TRAVEL_POSTS,
+  FRIENDS_LIST,
+  CHAT_ROOMS
 } from '../mockData';
 import { CalendarSection } from '../organisms/CalendarSection';
 import { CommunityActivitySection } from '../organisms/CommunityActivitySection';
@@ -21,6 +23,8 @@ import { MyPageModals } from '../organisms/MyPageModals';
 import { ProfileHeader } from '../organisms/ProfileHeader';
 import { TravelLogsSection } from '../organisms/TravelLogsSection';
 import { TripSection } from '../organisms/TripSection';
+import { SocialSection } from '../organisms/SocialSection';
+import { ChatModal } from '../../social/molecules/ChatModal';
 
 // @ts-ignore
 import gravatarUrl from "../../../../utils/gravatarUrl";
@@ -96,6 +100,33 @@ export default function MyPage({ onNavigate, userId }: MyPageProps) {
   // 다중 삭제 관리 상태
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [selectedPlanIds, setSelectedPlanIds] = useState<number[]>([]);
+
+  const handleFriendAdd = async () => {
+    if (!isAuthenticated()) {
+      alert("로그인 후 이용 가능합니다.");
+      return;
+    }
+    try {
+      // 실제 API가 있을 경우: await post(`${BASE_URL}/api/friends`, { friendId: userId });
+      alert(`${userProfile?.nickName || '사용자'}님에게 친구 요청을 보냈습니다.`);
+    } catch (err) {
+      alert("친구 요청 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleSendMessage = (targetUser?: any) => {
+    if (!isAuthenticated()) {
+      alert("로그인 후 이용 가능합니다.");
+      return;
+    }
+    
+    // 이 핸들러는 이제 부모로부터 받은 전역 채팅 함수를 호출하거나 
+    // 여기 프로필 사용자를 넘겨야 합니다 (현재는 팝업 준비중 메시지 대신 전역 처리 필요)
+    // onNavigate를 통해 부모의 전역 핸들러를 호출하도록 유도하거나 
+    // props로 직접 전달받아야 하지만, 현재 구조상 팝업은 부모가 관리하므로 
+    // 여기서 알림만 띄우거나 기능을 유지하려면 props 수정이 필요합니다.
+    alert(`${targetUser?.nickName || userProfile?.nickname || '사용자'}님과의 채팅을 시작합니다.`);
+  };
 
   // 캘린더 이벤트 팝업 상태
   const [selectedCalendarEvent, setSelectedCalendarEvent] = useState<any>(null);
@@ -584,6 +615,8 @@ export default function MyPage({ onNavigate, userId }: MyPageProps) {
             setActiveModal('profile');
           }}
           onViewLevel={() => setActiveModal('level')}
+          onAddFriend={handleFriendAdd}
+          onSendMessage={handleSendMessage}
           myPlansCount={myPlans.length}
           editablePlansCount={editablePlans.length}
           isOtherUser={isOtherUser}

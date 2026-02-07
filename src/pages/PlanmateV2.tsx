@@ -7,6 +7,8 @@ import CreatePost from '../components/planmate2/create-feed/pages/CreatePostPage
 import PostDetail from '../components/planmate2/feed/pages/FeedDetailPage';
 import MainFeed from '../components/planmate2/feed/pages/MainFeed';
 import MyPage from '../components/planmate2/mypage/pages/my-page';
+import { SocialPage } from '../components/planmate2/social/pages/SocialPage';
+import { ChatModal } from '../components/planmate2/social/molecules/ChatModal';
 import Navbar from '../components/planmate2/navbar';
 import Home from './Home';
 
@@ -19,6 +21,7 @@ export default function PlanmateV2() {
   const getInitialView = () => {
     const path = window.location.pathname;
     if (path.startsWith('/mypage')) return 'mypage';
+    if (path === '/social') return 'social';
     if (path.startsWith('/community')) {
       if (path === '/community/create') return 'community-create';
       if (path.split('/').length > 3) return 'detail'; // /community/category/id
@@ -36,16 +39,26 @@ export default function PlanmateV2() {
     return 'free';
   };
 
-  const [currentView, setCurrentView] = useState<'feed' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker' | 'community-create' | 'recommend-detail'>(getInitialView() as any);
+  const [currentView, setCurrentView] = useState<'feed' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker' | 'community-create' | 'recommend-detail' | 'social'>(getInitialView() as any);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [boardType, setBoardType] = useState<'free' | 'qna' | 'mate' | 'recommend'>('free');
   const [filterRegion, setFilterRegion] = useState<string>(region ? decodeURIComponent(region) : '전체');
+
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [selectedChatUser, setSelectedChatUser] = useState<any>(null);
+
+  const handleGlobalChat = (user: any) => {
+    setSelectedChatUser(user);
+    setIsChatModalOpen(true);
+  };
 
   useEffect(() => {
     const path = location.pathname;
     
     if (path === '/mypage') {
       setCurrentView('mypage');
+    } else if (path === '/social') {
+      setCurrentView('social');
     } else if (path.startsWith('/community')) {
       if (path === '/community/create' || path.startsWith('/community/create/')) {
         setCurrentView('community-create');
@@ -88,9 +101,9 @@ export default function PlanmateV2() {
     }
   }, [location.pathname, category, id, region]);
 
-  const handleViewChange = (view: 'feed' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker' | 'community-create' | 'community', data?: any) => {
+  const handleViewChange = (view: 'feed' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker' | 'community-create' | 'community' | 'social', data?: any) => {
     // view가 'community'인 경우 바로 'board-list'로 상태를 설정하여 이전 뷰가 보이는 현상 방지
-    const targetView = (view === 'community' ? 'board-list' : view) as 'feed' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker' | 'community-create';
+    const targetView = (view === 'community' ? 'board-list' : view) as 'feed' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker' | 'community-create' | 'social';
     setCurrentView(targetView);
     window.scrollTo(0, 0);
     
@@ -98,6 +111,9 @@ export default function PlanmateV2() {
     if (view === 'mypage') {
       if (data?.userId) navigate(`/mypage/${data.userId}`);
       else navigate('/mypage');
+    }
+    else if (view === 'social') {
+      navigate('/social');
     }
     else if (view === 'community') {
       setBoardType('free');
@@ -183,6 +199,9 @@ export default function PlanmateV2() {
         {currentView === 'mypage' && (
           <MyPage onNavigate={handleViewChange} userId={userId} />
         )}
+        {currentView === 'social' && (
+          <SocialPage onOpenChat={handleGlobalChat} />
+        )}
         {currentView === 'community-create' && (
           <CommunityCreate 
             type={boardType}
@@ -194,6 +213,15 @@ export default function PlanmateV2() {
           <Home hideNavbar={true} />
         )}
       </main>
+
+      <ChatModal 
+        isOpen={isChatModalOpen} 
+        onClose={() => {
+          setIsChatModalOpen(false);
+          setSelectedChatUser(null);
+        }} 
+        otherUser={selectedChatUser} 
+      />
     </div>
   );
 }

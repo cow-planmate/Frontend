@@ -112,6 +112,16 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
               커뮤니티
             </button>
             <button
+              onClick={() => onNavigate('social' as any)}
+              className={`px-4 py-2 rounded-lg font-bold transition-all text-sm ${
+                currentView === 'social'
+                  ? 'bg-[#1344FF] text-white shadow-sm'
+                  : 'text-[#666666] hover:bg-gray-50 hover:text-[#1344FF]'
+              }`}
+            >
+              소셜
+            </button>
+            <button
               onClick={() => onNavigate('plan-maker')}
               className={`px-4 py-2 rounded-lg font-bold transition-all text-sm ${
                 currentView === 'plan-maker'

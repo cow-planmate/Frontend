@@ -120,3 +120,57 @@ export const LIKED_COMMUNITY_POSTS = [
     author: '몽골러'
   }
 ];
+
+export const FRIENDS_LIST = [
+  {
+    id: 1,
+    nickName: '여행하는곰',
+    profileLogo: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop',
+    status: 'online',
+    lastSeen: '현재 접속 중'
+  },
+  {
+    id: 2,
+    nickName: '서울토박이',
+    profileLogo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+    status: 'offline',
+    lastSeen: '2시간 전'
+  },
+  {
+    id: 3,
+    nickName: '제주바람',
+    profileLogo: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=100&h=100&fit=crop',
+    status: 'online',
+    lastSeen: '현재 접속 중'
+  },
+  {
+    id: 4,
+    nickName: '맛집사냥꾼',
+    profileLogo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop',
+    status: 'offline',
+    lastSeen: '1일 전'
+  }
+];
+
+export const CHAT_ROOMS = [
+  {
+    id: 1,
+    otherUser: {
+      nickName: '여행하는곰',
+      profileLogo: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop',
+    },
+    lastMessage: '네, 내일 명동에서 뵐게요!',
+    time: '오후 3:45',
+    unreadCount: 2
+  },
+  {
+    id: 2,
+    otherUser: {
+      nickName: '서울토박이',
+      profileLogo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+    },
+    lastMessage: '서울 맛집 리스트 공유해주셔서 감사합니다.',
+    time: '어제',
+    unreadCount: 0
+  }
+];
