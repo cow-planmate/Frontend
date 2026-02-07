@@ -108,7 +108,7 @@ export default function MyPage({ onNavigate }: MyPageProps) {
     }
   }, [newNickname, userProfile?.nickname]);
 
-  const BASE_URL = import.meta.env.VITE_API_URL;
+  const BASE_URL = (import.meta as any).env.VITE_API_URL;
   const setStoreNickname = useNicknameStore((state: any) => (state as any).setNickname);
 
   // User Level & EXP Hook
@@ -594,7 +594,6 @@ export default function MyPage({ onNavigate }: MyPageProps) {
           allPlans={allPlans}
           handleBulkDelete={handleBulkDelete}
           setIsDeleteMode={setIsDeleteMode}
-          setSelectedPlanIds={setSelectedPlanIds}
           ongoingPlans={ongoingPlans}
           upcomingPlans={upcomingPlans}
           pastPlans={pastPlans}
@@ -604,8 +603,8 @@ export default function MyPage({ onNavigate }: MyPageProps) {
           handleUpdateChecklistText={handleUpdateChecklistText}
           handleDeleteChecklistItem={handleDeleteChecklistItem}
           handleAddChecklistItem={handleAddChecklistItem}
-          onNavigateDetail={(id) => navigate(`/complete?id=${id}`)}
-          onNavigatePlanMaker={() => onNavigate('plan-maker')}
+          onNavigateTrip={(id: number) => navigate(`/complete?id=${id}`)}
+          onNavigateToPlanMaker={() => onNavigate('plan-maker')}
         />
 
         <TravelLogsSection
