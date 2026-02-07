@@ -1,5 +1,5 @@
-import { LogOut, Menu, User, X } from 'lucide-react';
-import { useState } from 'react';
+import { Bell, LogOut, Menu, User, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useApiClient } from '../../hooks/useApiClient';
 import useNicknameStore from '../../store/Nickname';
 // @ts-ignore
@@ -25,13 +25,50 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   
   // 인증 관련 상태
-  const { isAuthenticated, logout } = useApiClient();
-  const { gravatar } = useNicknameStore();
+  const { get, post, isAuthenticated, logout } = useApiClient();
+  const { gravatar, nickname } = useNicknameStore();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [isPasswordFindOpen, setIsPasswordFindOpen] = useState(false);
   const [isThemeOpen, setIsThemeOpen] = useState(false);
   const [isThemestartOpen, setIsThemestartOpen] = useState(false);
+
+  // 알림(초대) 관련 상태
+  const [isInvitationOpen, setIsInvitationOpen] = useState(false);
+  const [invitations, setInvitations] = useState<any[]>([]);
+
+  const fetchInvitations = async () => {
+    if (isAuthenticated()) {
+      try {
+        const response = await get(`${import.meta.env.VITE_API_URL}/api/collaboration-requests/pending`);
+        setInvitations(response.pendingRequests || []);
+      } catch (err) {
+        console.error("초대 목록을 가져오는데 실패했습니다:", err);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchInvitations();
+  }, [nickname]);
+
+  const acceptRequest = async (requestId: number) => {
+    try {
+      await post(`${import.meta.env.VITE_API_URL}/api/collaboration-requests/${requestId}/accept`, {});
+      await fetchInvitations();
+    } catch (err) {
+      console.error("초대 수락 실패:", err);
+    }
+  };
+
+  const rejectRequest = async (requestId: number) => {
+    try {
+      await post(`${import.meta.env.VITE_API_URL}/api/collaboration-requests/${requestId}/reject`, {});
+      await fetchInvitations();
+    } catch (err) {
+      console.error("초대 거절 실패:", err);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -86,23 +123,93 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
             </button>
 
             {isAuthenticated() ? (
-              <div className="flex items-center gap-1.5 ml-1.5 relative">
+              <div className="flex items-center gap-2 ml-1.5 relative">
+                {/* Profile Button */}
                 <button
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                  className={`p-0.5 rounded-full transition-all ${
+                  className={`flex items-center gap-2 p-1 pr-3 rounded-full transition-all ${
                     currentView === 'mypage' || isProfileMenuOpen
-                      ? 'ring-2 ring-[#1344FF] ring-offset-1'
-                      : 'hover:bg-[#f0f4ff]'
+                      ? 'bg-blue-50 ring-1 ring-blue-100'
+                      : 'hover:bg-gray-50'
                   }`}
                 >
                   {gravatar ? (
-                    <img src={gravatar} alt="Profile" className="w-8 h-8 rounded-full" />
+                    <img src={gravatar} alt="Profile" className="w-8 h-8 rounded-full border border-gray-100 shadow-sm" />
                   ) : (
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                      <User className="w-6 h-6 text-[#666666]" />
+                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-[#666666]" />
                     </div>
                   )}
+                  <span className="text-sm font-bold text-gray-700">{nickname}님</span>
                 </button>
+
+                {/* Notification Bell */}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setIsInvitationOpen(!isInvitationOpen);
+                      if (!isInvitationOpen) fetchInvitations();
+                    }}
+                    className={`p-2 rounded-full transition-all relative ${
+                      isInvitationOpen ? 'bg-gray-100 text-[#1344FF]' : 'text-[#666666] hover:bg-gray-50'
+                    }`}
+                  >
+                    <Bell className="w-6 h-6" />
+                    {invitations.length > 0 && (
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                    )}
+                  </button>
+
+                  {/* Invitation Dropdown */}
+                  {isInvitationOpen && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-10" 
+                        onClick={() => setIsInvitationOpen(false)}
+                      ></div>
+                      <div className="absolute top-12 right-0 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 z-20 animate-in fade-in slide-in-from-top-2">
+                        <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
+                          <h3 className="text-lg font-bold text-gray-900">초대 알람</h3>
+                          <button onClick={() => setIsInvitationOpen(false)} className="text-gray-400 hover:text-gray-600">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                          {invitations.length > 0 ? (
+                            invitations.map((invitation) => (
+                              <div key={invitation.requestId} className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                                <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                                  <span className="font-bold text-gray-900">{invitation.senderNickname}</span>님이 
+                                  <br />
+                                  <span className="font-bold text-[#1344FF]">'{invitation.planName}'</span> 협업 초대를 보냈습니다.
+                                </p>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => acceptRequest(invitation.requestId)}
+                                    className="flex-1 bg-[#1344FF] text-white py-2 rounded-lg text-xs font-bold hover:bg-[#0031E6] transition-colors"
+                                  >
+                                    수락
+                                  </button>
+                                  <button
+                                    onClick={() => rejectRequest(invitation.requestId)}
+                                    className="flex-1 bg-white text-gray-600 py-2 rounded-lg text-xs font-bold border border-gray-200 hover:bg-gray-100 transition-colors"
+                                  >
+                                    거절
+                                  </button>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="py-8 text-center">
+                              <Bell className="w-8 h-8 text-gray-300 mx-auto mb-2 opacity-50" />
+                              <p className="text-sm text-gray-400">새로운 알람이 없습니다.</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
 
                 {/* Profile Dropdown Menu */}
                 {isProfileMenuOpen && (
@@ -147,7 +254,20 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
           </div>
 
           {/* 모바일 메뉴 버튼 */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center gap-2">
+            {isAuthenticated() && (
+              <div className="relative">
+                <Bell 
+                  className={`w-6 h-6 ${invitations.length > 0 ? 'text-[#1344FF]' : 'text-[#666666]'}`} 
+                  onClick={() => {
+                    onNavigate('mypage');
+                  }}
+                />
+                {invitations.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                )}
+              </div>
+            )}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="text-[#666666] hover:text-[#1344FF] p-2"
