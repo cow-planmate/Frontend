@@ -4,7 +4,7 @@ import React from 'react';
 interface ModalFrameProps {
   isOpen: boolean;
   onClose: () => void;
-  title?: string;
+  title?: React.ReactNode;
   subtitle?: string;
   children: React.ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg';
@@ -50,7 +50,11 @@ export const ModalFrame: React.FC<ModalFrameProps> = ({
           title && (
             <div className="p-8 pb-0 flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-black text-[#1a1a1a]">{title}</h2>
+                {typeof title === 'string' ? (
+                  <h2 className="text-2xl font-black text-[#1a1a1a]">{title}</h2>
+                ) : (
+                  <div className="text-2xl font-black text-[#1a1a1a]">{title}</div>
+                )}
                 {subtitle && <p className="text-gray-400 text-sm font-medium mt-1">{subtitle}</p>}
               </div>
               <button 

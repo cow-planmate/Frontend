@@ -569,9 +569,10 @@ export default function MyPage({ onNavigate }: MyPageProps) {
           <CalendarSection
             currentYear={currentYear}
             currentMonth={currentMonth}
-            setDate={setDate}
-            handlePrevMonth={handlePrevMonth}
-            handleNextMonth={handleNextMonth}
+            onSetDate={setDate}
+            onPrevMonth={handlePrevMonth}
+            onNextMonth={handleNextMonth}
+            onToday={() => setDate(new Date())}
             gridCells={gridCells}
             getEventsForDate={getEventsForDate}
             onEventClick={(event) => {
