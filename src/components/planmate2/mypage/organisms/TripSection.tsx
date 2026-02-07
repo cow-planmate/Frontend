@@ -142,16 +142,6 @@ export const TripSection: React.FC<TripSectionProps> = ({
                           <p className="text-sm font-bold">{trip.dateStr}</p>
                         </div>
                       </div>
-
-                      <div className="flex flex-col gap-2 mt-auto">
-                        <div className="flex justify-between items-end text-xs font-black">
-                          <span className="text-gray-400 uppercase tracking-widest">Travel Progress</span>
-                          <span className="text-[#1344FF] text-lg">{trip.progress}%</span>
-                        </div>
-                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden border border-gray-100">
-                          <div className="h-full bg-gradient-to-r from-[#1344FF] to-[#4B70FF] transition-all duration-1000 shadow-[0_0_10px_rgba(19,68,255,0.3)]" style={{ width: `${trip.progress}%` }} />
-                        </div>
-                      </div>
                     </div>
 
                     <div className="bg-gray-50/50 rounded-2xl p-4 border border-blue-100/30 flex flex-col">
@@ -276,12 +266,6 @@ export const TripSection: React.FC<TripSectionProps> = ({
                           <CalendarIcon className="w-4 h-4 opacity-40" />
                           <p className="text-sm font-bold">{trip.dateStr}</p>
                         </div>
-                      </div>
-
-                      <div className="mt-auto pt-4 flex gap-2">
-                        <div className={`h-1 flex-1 rounded-full ${trip.theme === 'blue' ? 'bg-blue-100' : 'bg-orange-100'}`} />
-                        <div className={`h-1 flex-1 rounded-full opacity-30 ${trip.theme === 'blue' ? 'bg-blue-100' : 'bg-orange-100'}`} />
-                        <div className={`h-1 flex-1 rounded-full opacity-10 ${trip.theme === 'blue' ? 'bg-blue-100' : 'bg-orange-100'}`} />
                       </div>
                     </div>
 
