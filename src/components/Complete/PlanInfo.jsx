@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faUserPlus, faInfo } from "@fortawesome/free-solid-svg-icons";
-import { faMap } from "@fortawesome/free-regular-svg-icons";
+import { faCheck, faUserPlus, faInfo, faPen } from "@fortawesome/free-solid-svg-icons";
 
 import PlanInfoModal from "./PlanInfoModal";
 import ShareModal from "../common/ShareModal";
@@ -37,7 +36,7 @@ export default function PlanInfo({planFrame}) {
             onClick={() => navigate(`/create?id=${id}`)}
             className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg border border-gray-500 hover:bg-gray-100"
           >
-            <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faMap} /></div>
+            <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faPen} /></div>
             <div className="hidden sm:block">수정</div>
           </button>
           <button 

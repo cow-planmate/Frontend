@@ -10,6 +10,9 @@ import useItemsStore from "../../../store/Schedules";
 import { getClient } from '../../../websocket/client';
 import usePlanStore from '../../../store/Plan';
 
+import { faCalendar, faMapPin } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 export default function Main() {
   const client = getClient();
 
@@ -202,11 +205,11 @@ export default function Main() {
       {/* Mobile Bottom Tab */}
       {isMobile && (
         <nav className="mt-4 bg-white border-t h-16 flex shadow-lg">
-          <button onClick={() => setActiveTab('timetable')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'timetable' ? 'text-blue-600' : 'text-gray-400'}`}>
-            <span className="text-xl">📅</span><span className="text-xs font-medium">시간표</span>
+          <button onClick={() => setActiveTab('timetable')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'timetable' ? 'text-main' : 'text-gray-400'}`}>
+            <span className="text-xl"><FontAwesomeIcon icon={faCalendar}/></span><span className="text-xs font-medium">시간표</span>
           </button>
-          <button onClick={() => setActiveTab('recommend')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'recommend' ? 'text-blue-600' : 'text-gray-400'}`}>
-            <span className="text-xl">📍</span><span className="text-xs font-medium">추천 장소</span>
+          <button onClick={() => setActiveTab('recommend')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'recommend' ? 'text-main' : 'text-gray-400'}`}>
+            <span className="text-xl"><FontAwesomeIcon icon={faMapPin}/></span><span className="text-xs font-medium">추천 장소</span>
           </button>
         </nav>
       )}
@@ -214,7 +217,7 @@ export default function Main() {
       {/* Global Drag Overlay */}
       <DragOverlay dropAnimation={null}>
         {activeId ? (
-          <div className="p-3 bg-blue-600 text-white rounded-lg shadow-2xl w-48 opacity-90 scale-105 cursor-grabbing font-bold flex items-center justify-center">
+          <div className="p-3 bg-main text-white rounded-lg shadow-2xl w-48 opacity-90 scale-105 cursor-grabbing font-bold flex items-center justify-center">
              이동 중...
           </div>
         ) : null}

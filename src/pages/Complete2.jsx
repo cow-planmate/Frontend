@@ -3,6 +3,9 @@ import { useSearchParams } from "react-router-dom";
 import { useApiClient } from "../hooks/useApiClient";
 import { getTimeSlotIndex } from "../utils/createUtils";
 
+import { faCalendar, faMap } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 import Navbar from "../components/common/Navbar";
 import Loading from "../components/common/Loading";
 import PlanInfo from "../components/Complete/PlanInfo";
@@ -194,11 +197,11 @@ function App() {
             </div>
             {isMobile && (
               <nav className="mt-4 bg-white border-t h-16 flex shadow-lg">
-                <button onClick={() => setActiveTab('timetable')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'timetable' ? 'text-blue-600' : 'text-gray-400'}`}>
-                  <span className="text-xl">📅</span><span className="text-xs font-medium">시간표</span>
+                <button onClick={() => setActiveTab('timetable')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'timetable' ? 'text-main' : 'text-gray-400'}`}>
+                  <span className="text-xl"><FontAwesomeIcon icon={faCalendar}/></span><span className="text-xs font-medium">시간표</span>
                 </button>
-                <button onClick={() => setActiveTab('recommend')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'recommend' ? 'text-blue-600' : 'text-gray-400'}`}>
-                  <span className="text-xl">📍</span><span className="text-xs font-medium">지도로 보기</span>
+                <button onClick={() => setActiveTab('recommend')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'recommend' ? 'text-main' : 'text-gray-400'}`}>
+                  <span className="text-xl"><FontAwesomeIcon icon={faMap}/></span><span className="text-xs font-medium">지도로 보기</span>
                 </button>
               </nav>
             )}
