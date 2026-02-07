@@ -1,12 +1,12 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import { useCreatePostLogic } from './create-feed/hooks/useCreatePostLogic';
-import { CreatePostHeader } from './create-feed/molecules/CreatePostHeader';
-import { BasicInfoSection } from './create-feed/organisms/BasicInfoSection';
-import { PlanSelectionModal } from './create-feed/organisms/PlanSelectionModal';
-import { PostEditorSection } from './create-feed/organisms/PostEditorSection';
-import { SchedulePreview } from './create-feed/organisms/SchedulePreview';
-import { TravelDetailsSection } from './create-feed/organisms/TravelDetailsSection';
+import { useCreatePostLogic } from '../hooks/useCreatePostLogic';
+import { CreatePostHeader } from '../molecules/CreatePostHeader';
+import { BasicInfoSection } from '../organisms/BasicInfoSection';
+import { PlanSelectionModal } from '../organisms/PlanSelectionModal';
+import { PostEditorSection } from '../organisms/PostEditorSection';
+import { SchedulePreview } from '../organisms/SchedulePreview';
+import { TravelDetailsSection } from '../organisms/TravelDetailsSection';
 
 interface CreatePostProps {
   onBack: () => void;

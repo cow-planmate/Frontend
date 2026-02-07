@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import BoardList from '../components/planmate2/community';
-import CommunityCreate from '../components/planmate2/community-create';
-import CreatePost from '../components/planmate2/create-post';
+import { CommunityCreatePage as CommunityCreate } from '../components/planmate2/community/pages/CommunityCreatePage';
+import { CommunityPage as BoardList } from '../components/planmate2/community/pages/CommunityPage';
+import { RecommendDetailPage as RecommendDetail } from '../components/planmate2/community/pages/RecommendDetailPage';
+import CreatePost from '../components/planmate2/create-feed/pages/CreatePostPage';
+import PostDetail from '../components/planmate2/feed/pages/FeedDetailPage';
 import MainFeed from '../components/planmate2/feed/pages/MainFeed';
 import MyPage from '../components/planmate2/mypage/pages/my-page';
 import Navbar from '../components/planmate2/navbar';
-import PostDetail from '../components/planmate2/feed-detail';
-import RecommendDetail from '../components/planmate2/recommend-detail';
 import Home from './Home';
 
 export default function PlanmateV2() {
