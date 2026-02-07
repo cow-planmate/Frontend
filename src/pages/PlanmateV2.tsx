@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import BoardList from '../components/planmate2/board-list';
+import BoardList from '../components/planmate2/community';
 import CommunityCreate from '../components/planmate2/community-create';
 import CreatePost from '../components/planmate2/create-post';
 import MainFeed from '../components/planmate2/feed/pages/MainFeed';
