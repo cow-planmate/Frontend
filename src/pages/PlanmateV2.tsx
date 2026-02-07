@@ -6,7 +6,7 @@ import CreatePost from '../components/planmate2/create-post';
 import MainFeed from '../components/planmate2/feed/pages/MainFeed';
 import MyPage from '../components/planmate2/mypage/pages/my-page';
 import Navbar from '../components/planmate2/navbar';
-import PostDetail from '../components/planmate2/post-detail';
+import PostDetail from '../components/planmate2/feed-detail';
 import RecommendDetail from '../components/planmate2/recommend-detail';
 import Home from './Home';
 
