@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { CustomOverlayMap, Map } from 'react-kakao-maps-sdk';
 import { useNavigate } from 'react-router-dom';
 import { useApiClient } from '../../hooks/useApiClient';
+import useKakaoLoader from '../../hooks/useKakaoLoader';
 import useNicknameStore from '../../store/Nickname';
 // @ts-ignore
 import gravatarUrl from "../../utils/gravatarUrl";
@@ -182,6 +183,7 @@ const REGION_COORDINATES: Record<string, { lat: number; lng: number }> = {
 };
 
 export default function MyPage({ onNavigate }: MyPageProps) {
+  useKakaoLoader();
   const navigate = useNavigate();
   // Tabs State
   const [travelTab, setTravelTab] = useState<'created' | 'forked' | 'liked'>('created');
