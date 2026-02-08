@@ -10,16 +10,17 @@ import Login from "../../auth/Login";
 import PasswordFind from "../../auth/PasswordFind";
 import Signup from "../../auth/Signup";
 import Theme from "../../auth/Theme";
-import Themestart from "../../auth/Themestart"; // 추가된 import
+import Themestart from "../../auth/Themestart";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faUserPlus, faInfo, faRotateLeft, faRotateRight } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faUserPlus, faInfo, faRotateLeft, faRotateRight, faUsers } from "@fortawesome/free-solid-svg-icons";
 import { faMap } from "@fortawesome/free-regular-svg-icons";
 
 import PlanInfoModal from "./PlanInfoModal";
 import ShareModal from "../../common/ShareModal";
 import MapModal from "./MapModal";
 import NoLoginSave from "./NoLoginSave";
+import UsersModal from "./UsersModal";
 
 export default function PlanInfo({id}) {
   const { 
@@ -39,8 +40,10 @@ export default function PlanInfo({id}) {
   const spanRef = useRef(null);
   const inputRef = useRef(null);
   const [localName, setLocalName] = useState(planName);
+  const [inputWidth, setInputWidth] = useState('auto');
   
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isUsersOpen, setIsUsersOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
   
@@ -48,7 +51,7 @@ export default function PlanInfo({id}) {
   const [isPasswordFindOpen, setIsPasswordFindOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [isThemeOpen, setIsThemeOpen] = useState(false);
-  const [isThemestartOpen, setIsThemestartOpen] = useState(false); // 추가된 state
+  const [isThemestartOpen, setIsThemestartOpen] = useState(false);
   const [selectedThemeKeywords, setSelectedThemeKeywords] = useState({
     tourist: [],
     accommodation: [],
@@ -99,7 +102,6 @@ export default function PlanInfo({id}) {
     setIsThemeOpen(false);
   };
 
-  // 추가된 함수들
   const handleThemestartOpen = () => {
     setIsThemestartOpen(true);
   };
@@ -132,23 +134,27 @@ export default function PlanInfo({id}) {
   }, [planName]);
 
   useEffect(() => {
-    if (spanRef.current && inputRef.current) {
+    if (spanRef.current) {
       const spanWidth = spanRef.current.getBoundingClientRect().width;
-      inputRef.current.style.width = `${spanWidth}px`;
+      setInputWidth(`${Math.max(spanWidth, 8)}px`);
     }
   }, [localName]);
 
   return (
     <div className={`mx-auto min-[1464px]:w-[1416px] min-[1464px]:px-0 md:px-6 md:pt-6 p-4 pb-0 ${flexCenter} justify-between w-full`}>
-      <div className={`${flexCenter} space-x-3`}>
-        <div>
+      <div className={`${flexCenter} sm:space-x-3 space-x-1 min-w-0 flex-1`}>
+        <div className="min-w-0 flex-shrink">
           <input
             ref={inputRef}
             type="text"
-            className={`${infoButton} box-content text-lg font-semibold`}
+            className={`${infoButton} box-content text-lg font-semibold max-w-full`}
             onChange={(e) => setLocalName(e.target.value)}
             onBlur={() => setPlanField("planName", localName)}
-            style={{ minWidth: '1ch' }}
+            style={{ 
+              width: inputWidth,
+              minWidth: '8px',
+              maxWidth: '100%'
+            }}
             value={localName}
           />
         </div>
@@ -156,14 +162,14 @@ export default function PlanInfo({id}) {
           <div className="flex">
             <button 
               onClick={() => sendUndo(id)}
-              className="size-7 hover:bg-gray-200 rounded-full flex items-center justify-center"
+              className="sm:size-7 size-5 hover:bg-gray-200 bg-white rounded-full flex items-center justify-center"
               title="되돌리기 (Ctrl+Z)"
             >
               <FontAwesomeIcon icon={faRotateLeft} />
             </button>
             <button 
               onClick={() => sendRedo(id)}
-              className="size-7 hover:bg-gray-200 rounded-full flex items-center justify-center"
+              className="sm:size-7 size-5 hover:bg-gray-200 bg-white rounded-full flex items-center justify-center"
               title="다시실행 (Ctrl+Y / Ctrl+Shift+Z)"
             >
               <FontAwesomeIcon icon={faRotateRight} />
@@ -176,7 +182,7 @@ export default function PlanInfo({id}) {
         >
           <div className="w-5"><FontAwesomeIcon icon={faInfo} /></div>
         </button>
-        <div className={`hidden md:block ${flexCenter} py-2 px-3 border border-gray-300 rounded-full`}>
+        <div className={`hidden md:flex whitespace-nowrap flex-shrink-0 ${flexCenter} py-2 px-3 border border-gray-300 rounded-full`}>
           <span className="text-gray-500 mr-1 text-sm">이동수단</span>
           <select value={transportationCategoryId} onChange={(e) => setPlanField("transportationCategoryId", e.target.value)}>
             <option value='0'>대중교통</option>
@@ -185,12 +191,13 @@ export default function PlanInfo({id}) {
         </div>
       </div>
       <div className={`${flexCenter} mx-2 sm:w-auto`}>
-        <div className={`space-x-2 sm:space-x-3 ${flexCenter}`}>
-            {users && users.map((user) => {
+        <div className={`space-x-1 sm:space-x-3 ${flexCenter}`}>
+          <div className="-space-x-2 hidden sm:flex sm:items-center">
+            {users?.slice(0, 2).map((user) => {
               return (
                 <div
                   key={uuidv4()}
-                  className="rounded-full w-10 h-10 bg-contain bg-no-repeat"
+                  className="rounded-full size-10 border-2 border-white bg-contain bg-no-repeat"
                   style={
                     user.userInfo.email ? {
                       backgroundImage: `url('${user.userInfo.email}')`
@@ -203,6 +210,21 @@ export default function PlanInfo({id}) {
                 </div>
               )
             })}
+            {users && users.length > 2 && (
+              <button
+                className="text-sm rounded-full bg-gray-300 hover:bg-gray-400 p-2 size-9"
+                onClick={() => setIsUsersOpen(true)}
+              >
+                +{users.length - 2}
+              </button>
+            )}
+          </div>
+          <button 
+            className="flex items-center sm:hidden text-sm rounded-full border border-main hover:bg-gray-100 p-2 size-9"
+            onClick={() => setIsUsersOpen(true)}
+          >
+            <div className="w-5 text-main"><FontAwesomeIcon icon={faUsers} /></div>
+          </button>
           <button 
             onClick={() => setIsMapOpen(true)}
             className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg border border-gray-500 hover:bg-gray-100"
@@ -243,12 +265,14 @@ export default function PlanInfo({id}) {
 
       <span
         ref={spanRef}
-        className="invisible absolute whitespace-pre text-base md:text-lg"
+        className="invisible absolute whitespace-pre text-lg font-semibold"
       >
         {localName}
       </span>
 
       {isInfoOpen && <PlanInfoModal setIsInfoOpen={setIsInfoOpen} />}
+
+      {isUsersOpen && <UsersModal setIsUsersOpen={setIsUsersOpen} />}
 
       {isShareOpen && <ShareModal
         isOwner={true}
@@ -265,7 +289,7 @@ export default function PlanInfo({id}) {
             onClose={handleLoginClose}
             onPasswordFindOpen={handlePasswordFindOpen}
             onSignupOpen={handleSignupOpen}
-            onLoginSuccess={refreshUserProfile} // 로그인 성공 후 프로필 새로고침
+            onLoginSuccess={refreshUserProfile}
           />
           <PasswordFind
             isOpen={isPasswordFindOpen}
@@ -274,7 +298,7 @@ export default function PlanInfo({id}) {
           <Signup
             isOpen={isSignupOpen}
             onClose={handleSignupClose}
-            onThemeOpen={handleThemestartOpen} // 추가된 prop
+            onThemeOpen={handleThemestartOpen}
             selectedThemeKeywords={selectedThemeKeywords}
             onLoginSuccess={null}
           />
