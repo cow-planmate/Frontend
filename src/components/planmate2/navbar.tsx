@@ -1,4 +1,4 @@
-import { Bell, LogOut, Menu, User, X } from 'lucide-react';
+import { Bell, LogOut, Menu, User, Users, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useApiClient } from '../../hooks/useApiClient';
 import useNicknameStore from '../../store/Nickname';
@@ -17,7 +17,7 @@ import Themestart from '../auth/Themestart';
 
 interface NavbarProps {
   currentView: string;
-  onNavigate: (view: 'feed' | 'community' | 'create' | 'mypage' | 'create') => void;
+  onNavigate: (view: 'feed' | 'community' | 'create' | 'mypage' | 'create' | 'social') => void;
 }
 
 export default function Navbar({ currentView, onNavigate }: NavbarProps) {
@@ -110,16 +110,6 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
               }`}
             >
               커뮤니티
-            </button>
-            <button
-              onClick={() => onNavigate('social' as any)}
-              className={`px-4 py-2 rounded-lg font-bold transition-all text-sm ${
-                currentView === 'social'
-                  ? 'bg-[#1344FF] text-white shadow-sm'
-                  : 'text-[#666666] hover:bg-gray-50 hover:text-[#1344FF]'
-              }`}
-            >
-              소셜
             </button>
             <button
               onClick={() => onNavigate('plan-maker')}
@@ -241,6 +231,16 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
                       </button>
                       <button
                         onClick={() => {
+                          onNavigate('social');
+                          setIsProfileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-[#1344FF] transition-colors"
+                      >
+                        <Users className="w-4 h-4" />
+                        소셜
+                      </button>
+                      <button
+                        onClick={() => {
                           handleLogout();
                           setIsProfileMenuOpen(false);
                         }}
@@ -349,6 +349,20 @@ export default function Navbar({ currentView, onNavigate }: NavbarProps) {
                     <User className="w-5 h-5" />
                   )}
                   마이페이지
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigate('social');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-3 rounded-xl font-medium transition-all flex items-center gap-3 ${
+                    currentView === 'social'
+                      ? 'bg-[#1344FF] text-white'
+                      : 'text-[#666666] hover:bg-[#f0f4ff] hover:text-[#1344FF]'
+                  }`}
+                >
+                  <Users className="w-5 h-5" />
+                  소셜
                 </button>
               </>
             ) : (

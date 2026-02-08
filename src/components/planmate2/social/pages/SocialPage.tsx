@@ -1,14 +1,27 @@
-import React from 'react';
-import { FRIENDS_LIST, CHAT_ROOMS } from '../../mypage/mockData';
-import { FriendSection } from '../organisms/FriendSection';
+import { Award, Footprints, Heart, Map, MessageCircle, Sparkles, UserPlus, Users, Utensils } from 'lucide-react';
+import React, { useState } from 'react';
+import { CHAT_ROOMS, FRIENDS_LIST } from '../../mypage/mockData';
 import { ChatSection } from '../organisms/ChatSection';
-import { Award, Bell, Search, UserPlus, Users, MessageCircle, Heart } from 'lucide-react';
+import { FriendSection } from '../organisms/FriendSection';
 
 interface SocialPageProps {
   onOpenChat: (user: any) => void;
+  onNavigate: (view: string, data?: any) => void;
 }
 
-export const SocialPage: React.FC<SocialPageProps> = ({ onOpenChat }) => {
+export const SocialPage: React.FC<SocialPageProps> = ({ onOpenChat, onNavigate }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredFriends = FRIENDS_LIST.filter(friend => 
+    friend.nickName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const BADGES = [
+    { icon: Utensils, label: '맛집 사냥꾼', color: 'text-orange-500', bg: 'bg-orange-50' },
+    { icon: Footprints, label: '걷기 왕', color: 'text-green-500', bg: 'bg-green-50' },
+    { icon: Map, label: '전국구 플래너', color: 'text-blue-500', bg: 'bg-blue-50' },
+  ];
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] pb-20 animate-in fade-in duration-500">
       <div className="max-w-[1200px] mx-auto px-4 py-8">
@@ -24,17 +37,9 @@ export const SocialPage: React.FC<SocialPageProps> = ({ onOpenChat }) => {
           </div>
           
           <div className="flex items-center gap-3">
-            <div className="relative group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#1344FF] transition-colors" />
-              <input 
-                type="text" 
-                placeholder="닉네임으로 친구 찾기..." 
-                className="pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-sm focus:ring-2 focus:ring-[#1344FF] focus:border-transparent outline-none shadow-sm w-[280px] transition-all"
-              />
-            </div>
-            <button className="flex items-center gap-2 px-5 py-3 bg-[#1344FF] text-white rounded-2xl font-bold hover:bg-[#0d34cc] transition-all shadow-lg hover:shadow-blue-200 active:scale-95">
+            <button className="flex items-center gap-2 px-6 py-3.5 bg-[#1344FF] text-white rounded-2xl font-bold hover:bg-[#0d34cc] transition-all shadow-lg hover:shadow-blue-200 active:scale-95">
               <UserPlus className="w-5 h-5" />
-              <span className="hidden sm:inline">친구 추가</span>
+              <span>친구 추가</span>
             </button>
           </div>
         </div>
@@ -45,9 +50,37 @@ export const SocialPage: React.FC<SocialPageProps> = ({ onOpenChat }) => {
             { label: '내 친구', value: FRIENDS_LIST.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
             { label: '활성 대화', value: CHAT_ROOMS.length, icon: MessageCircle, color: 'text-purple-600', bg: 'bg-purple-50' },
             { label: '받은 좋아요', value: '1.2k', icon: Heart, color: 'text-pink-600', bg: 'bg-pink-50' },
-            { label: '소셜 랭킹', value: 'TOP 5%', icon: Award, color: 'text-amber-600', bg: 'bg-amber-50' },
+            { 
+              label: '소셜 랭킹', 
+              value: 'TOP 5%', 
+              icon: Award, 
+              color: 'text-amber-600', 
+              bg: 'bg-amber-50',
+              isRanking: true 
+            },
           ].map((stat, idx) => (
-            <div key={idx} className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+            <div 
+              key={idx} 
+              className={`bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group relative overflow-hidden ${stat.isRanking ? 'cursor-help' : ''}`}
+            >
+              {stat.isRanking && (
+                <div className="absolute inset-0 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-300 p-4">
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    <span className="text-xs font-black text-gray-900">활동 배지</span>
+                  </div>
+                  <div className="flex gap-2">
+                    {BADGES.map((badge, bIdx) => (
+                      <div key={bIdx} className={`w-9 h-9 ${badge.bg} rounded-xl flex items-center justify-center group/badge relative`}>
+                        <badge.icon className={`w-5 h-5 ${badge.color}`} />
+                        <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover/badge:opacity-100 transition-opacity whitespace-nowrap pointer-events-none font-bold">
+                          {badge.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className={`w-12 h-12 ${stat.bg} ${stat.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                 <stat.icon className="w-6 h-6" />
               </div>
@@ -59,7 +92,13 @@ export const SocialPage: React.FC<SocialPageProps> = ({ onOpenChat }) => {
 
         {/* Main Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          <FriendSection friends={FRIENDS_LIST} onOpenChat={onOpenChat} />
+          <FriendSection 
+            friends={filteredFriends} 
+            onOpenChat={onOpenChat} 
+            onNavigate={onNavigate}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
           <ChatSection chatRooms={CHAT_ROOMS} onOpenChat={onOpenChat} />
         </div>
         

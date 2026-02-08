@@ -1,5 +1,5 @@
-import React from 'react';
 import { MessageCircle } from 'lucide-react';
+import React from 'react';
 
 interface ChatSectionProps {
   chatRooms: any[];
@@ -40,7 +40,7 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chatRooms, onOpenChat 
                 <span className="text-[10px] text-gray-400 font-medium">{room.time}</span>
               </div>
               <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500 truncate">{room.lastMessage}</p>
+                <p className="text-sm text-gray-500 truncate font-medium">{room.lastMessage}</p>
                 {room.unreadCount > 0 && (
                   <span className="bg-[#1344FF] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm">
                     {room.unreadCount}
@@ -51,9 +51,12 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chatRooms, onOpenChat 
           </div>
         ))}
         {chatRooms.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400 opacity-50">
-             <MessageCircle className="w-12 h-12 mb-2" />
-             <p className="text-sm">참여 중인 채팅방이 없습니다.</p>
+          <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-300">
+            <div className="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mb-4">
+              <MessageCircle className="w-8 h-8 text-purple-200" />
+            </div>
+            <p className="text-gray-900 font-bold text-base mb-1">최근 대화가 없어요</p>
+            <p className="text-gray-400 text-xs px-10">친구들에게 먼저 인사를 건네보세요!</p>
           </div>
         )}
       </div>

@@ -7,9 +7,9 @@ import CreatePost from '../components/planmate2/create-feed/pages/CreatePostPage
 import PostDetail from '../components/planmate2/feed/pages/FeedDetailPage';
 import MainFeed from '../components/planmate2/feed/pages/MainFeed';
 import MyPage from '../components/planmate2/mypage/pages/my-page';
-import { SocialPage } from '../components/planmate2/social/pages/SocialPage';
-import { ChatModal } from '../components/planmate2/social/molecules/ChatModal';
 import Navbar from '../components/planmate2/navbar';
+import { ChatModal } from '../components/planmate2/social/molecules/ChatModal';
+import { SocialPage } from '../components/planmate2/social/pages/SocialPage';
 import Home from './Home';
 
 export default function PlanmateV2() {
@@ -55,7 +55,7 @@ export default function PlanmateV2() {
   useEffect(() => {
     const path = location.pathname;
     
-    if (path === '/mypage') {
+    if (path.startsWith('/mypage')) {
       setCurrentView('mypage');
     } else if (path === '/social') {
       setCurrentView('social');
@@ -99,7 +99,7 @@ export default function PlanmateV2() {
       setCurrentView('feed');
       setFilterRegion('전체');
     }
-  }, [location.pathname, category, id, region]);
+  }, [location.pathname, category, id, region, userId]);
 
   const handleViewChange = (view: 'feed' | 'detail' | 'create' | 'mypage' | 'board-list' | 'plan-maker' | 'community-create' | 'community' | 'social', data?: any) => {
     // view가 'community'인 경우 바로 'board-list'로 상태를 설정하여 이전 뷰가 보이는 현상 방지
@@ -200,7 +200,10 @@ export default function PlanmateV2() {
           <MyPage onNavigate={handleViewChange} userId={userId} />
         )}
         {currentView === 'social' && (
-          <SocialPage onOpenChat={handleGlobalChat} />
+          <SocialPage 
+            onOpenChat={handleGlobalChat} 
+            onNavigate={handleViewChange}
+          />
         )}
         {currentView === 'community-create' && (
           <CommunityCreate 
