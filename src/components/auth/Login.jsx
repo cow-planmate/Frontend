@@ -233,8 +233,7 @@ export default function Login({
                 <div>
                   <p className="font-bold mb-1">2. 수집하는 개인정보 항목</p>
                   <ul className="list-disc pl-4 space-y-0.5">
-                    <li>필수 항목: 이름, 비밀번호, 이메일</li>
-                    <li>선택 항목: 나이, 성별</li>
+                    <li>필수 항목: 이메일, 비밀번호, 닉네임, 나이, 성별</li>
                     <li>
                       SNS 계정 로그인 시: 이메일 주소, 프로필 정보(닉네임,
                       프로필 이미지 등) 및 서비스 제공에 필요한 최소한의 계정
