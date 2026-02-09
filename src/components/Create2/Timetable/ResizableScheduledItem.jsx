@@ -10,6 +10,8 @@ import useItemsStore from '../../../store/Schedules';
 import usePlanStore from '../../../store/Plan';
 import { useSearchParams } from 'react-router-dom';
 import DetailPopup from "./DetailPopup";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt, faTimes } from "@fortawesome/free-solid-svg-icons";
 
 export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
   const client = getClient();
@@ -202,7 +204,6 @@ export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
         >
           <div
             {...listeners}
-            onClick={() => setIsDetailOpen(true)}
             className={`w-full h-full ${tripColor1[place.categoryId]} border-l-4 ${tripColor3[place.categoryId]} rounded shadow-sm overflow-hidden select-none hover:${tripColor2[place.categoryId]} transition-colors cursor-move
               ${isDragging ? "shadow-xl ring-2 ring-blue-300" : ""}
               ${localState.height <= 80 ? "flex flex-col items-start justify-center px-5" : "p-5"}`}
@@ -227,17 +228,30 @@ export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
                 </div>
               </div>
 
-              <button
-                className={`w-8 h-8 shrink-0 hover:bg-white hover:bg-opacity-50 rounded-full ${tripColor5[place.categoryId]} text-lg pointer-events-auto`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteItem(item.id, getTimeTableId(timetables, selectedDay));
-                  const block = exportBlock(getTimeTableId(timetables, selectedDay), place, item.start, item.duration, item.id);
-                  sendWebsocket(block);
-                }}
-              >
-                ×
-              </button>
+              <div className="flex shrink-0 gap-1 mt-[-4px]">
+                <button
+                  className={`w-7 h-7 hover:bg-white hover:bg-opacity-50 rounded-full ${tripColor5[place.categoryId]} text-xs pointer-events-auto flex items-center justify-center transition-colors`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDetailOpen(true);
+                  }}
+                  title="수정"
+                >
+                  <FontAwesomeIcon icon={faPencilAlt} />
+                </button>
+                <button
+                  className={`w-7 h-7 hover:bg-white hover:bg-opacity-50 rounded-full ${tripColor5[place.categoryId]} text-sm pointer-events-auto flex items-center justify-center transition-colors`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteItem(item.id, getTimeTableId(timetables, selectedDay));
+                    const block = exportBlock(getTimeTableId(timetables, selectedDay), place, item.start, item.duration, item.id);
+                    sendWebsocket(block);
+                  }}
+                  title="삭제"
+                >
+                  <FontAwesomeIcon icon={faTimes} />
+                </button>
+              </div>
             </div>
             {item.memo && localState.height > 80 && (
               <div className={`mt-2 text-xs ${tripColor4[place.categoryId]} line-clamp-2 italic pointer-events-none`}>
