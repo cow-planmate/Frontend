@@ -91,7 +91,7 @@ const DetailPopup = ({ isOpen, onClose, item, onUpdateMemo }) => {
           <div className="space-y-2">
             <label className="block text-sm font-bold text-gray-700">메모</label>
             <textarea
-              className="w-full h-24 p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-main/50 resize-none text-sm"
+              className="w-full h-64 p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-main/50 resize-none text-sm"
               placeholder="일정에 대한 메모를 남겨보세요."
               value={memo}
               onChange={(e) => {
