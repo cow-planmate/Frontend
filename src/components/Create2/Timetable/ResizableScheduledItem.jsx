@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { Resizable } from "react-resizable";
 import { CSS } from "@dnd-kit/utilities";
@@ -25,6 +25,13 @@ export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
   const id = searchParams.get("id");
   
   const place = item?.place;
+  const memoDebounceRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (memoDebounceRef.current) clearTimeout(memoDebounceRef.current);
+    };
+  }, []);
 
   const { attributes, listeners, setNodeRef, isDragging, transform } =
     useDraggable({
@@ -161,18 +168,25 @@ export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
   }
 
   const handleUpdateMemo = (newMemo) => {
+    // 1. 즉시 로컬 스토어 업데이트 (사용자 경험 유지)
     updateItemMemo(getTimeTableId(timetables, selectedDay), item.id, newMemo);
-    const block = exportBlock(
-      getTimeTableId(timetables, selectedDay), 
-      place, 
-      item.start, 
-      item.duration, 
-      item.id, 
-      false, 
-      null, 
-      newMemo
-    );
-    sendWebsocket(block, "update");
+    
+    // 2. 웹소켓 전송 디바운스 (서버 부하 감소: 500ms 대기)
+    if (memoDebounceRef.current) clearTimeout(memoDebounceRef.current);
+    
+    memoDebounceRef.current = setTimeout(() => {
+      const block = exportBlock(
+        getTimeTableId(timetables, selectedDay), 
+        place, 
+        item.start, 
+        item.duration, 
+        item.id, 
+        false, 
+        null, 
+        newMemo
+      );
+      sendWebsocket(block, "update");
+    }, 500);
   };
 
   return (
@@ -254,7 +268,7 @@ export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
               </div>
             </div>
             {item.memo && localState.height > 80 && (
-              <div className={`mt-2 text-xs ${tripColor4[place.categoryId]} line-clamp-2 italic pointer-events-none`}>
+              <div className="mt-2 text-xs text-black line-clamp-2 pointer-events-none">
                 {item.memo}
               </div>
             )}

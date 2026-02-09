@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faStar, faMapMarkerAlt, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 
-const DetailPopup = ({ isOpen, onClose, item, onUpdateMemo }) => {
+const DetailPopup = ({ isOpen, onClose, item, onUpdateMemo, readOnly = false }) => {
   const [memo, setMemo] = useState(item?.memo || "");
   const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -91,10 +91,12 @@ const DetailPopup = ({ isOpen, onClose, item, onUpdateMemo }) => {
           <div className="space-y-2">
             <label className="block text-sm font-bold text-gray-700">메모</label>
             <textarea
-              className="w-full h-64 p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-main/50 resize-none text-sm"
-              placeholder="일정에 대한 메모를 남겨보세요."
+              className={`w-full h-64 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-main/50 resize-none text-sm ${readOnly ? 'bg-gray-100 cursor-not-allowed text-gray-500' : 'bg-gray-50'}`}
+              placeholder={readOnly ? "메모가 없습니다." : "일정에 대한 메모를 남겨보세요."}
               value={memo}
+              readOnly={readOnly}
               onChange={(e) => {
+                if (readOnly) return;
                 const newMemo = e.target.value;
                 setMemo(newMemo);
                 onUpdateMemo(newMemo);

@@ -100,6 +100,11 @@ export const ScheduledItem = ({ item, START_HOUR }) => {
               </button>
             </div>
           </div>
+          {item.memo && localState.height > 80 && (
+            <div className="mt-2 text-xs text-black line-clamp-2 pointer-events-none">
+              {item.memo}
+            </div>
+          )}
         </div>
 
       {isDetailOpen && (
@@ -107,7 +112,8 @@ export const ScheduledItem = ({ item, START_HOUR }) => {
           isOpen={isDetailOpen}
           onClose={() => setIsDetailOpen(false)}
           item={item}
-          onUpdateMemo={() => {}} // 완성 페이지에서는 일단 정적 표시만
+          readOnly={true}
+          onUpdateMemo={() => {}}
         />
       )}
     </div>

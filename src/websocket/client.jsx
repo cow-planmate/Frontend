@@ -76,7 +76,8 @@ const timetableplaceblock = (body) => {
         break;
       case "delete":
         data.map((item) => {
-          useItemsStore.getState().deleteItem(item.placeTheme, item.timeTableId);
+          const deleteId = item.timetablePlaceBlockId || item.blockId || item.placeTheme;
+          useItemsStore.getState().deleteItem(deleteId, item.timeTableId);
         })
         break;
     }
