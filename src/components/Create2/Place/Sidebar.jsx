@@ -175,7 +175,7 @@ export default function Sidebar({
             />
           ))}
           {selectedTab === "custom" && (currentPlaces?.length === 0 || !currentPlaces) && (
-            <div className="text-center py-8 text-gray-500 text-sm">
+            <div className="text-center p-8 text-gray-500 text-sm break-keep">
               위 입력란에 장소 이름을 입력한 뒤 &quot;추가&quot; 버튼을 누르면
               리스트에 추가됩니다. 추가된 항목을 드래그하여 시간표에 넣어보세요.
               <br/>
@@ -183,7 +183,7 @@ export default function Sidebar({
             </div>
           )}
           {selectedTab !== "custom" &&
-            (selectedTab !== "search" || search.length !== 0) && (
+            ((selectedTab !== "search" || search.length !== 0) && store[`${selectedTab}Next`].length > 0 ) && (
               <div className="text-center py-3">
                 <button
                   className="text-3xl text-main hover:text-mainDark"
