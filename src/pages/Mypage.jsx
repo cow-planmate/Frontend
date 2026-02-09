@@ -27,6 +27,7 @@ function App() {
       if (isAuthenticated()) {
         try {
           const profileData = await get(`${BASE_URL}/api/user/profile`);
+          console.log("프로필 데이터:", profileData);
           setUserProfile(profileData);
           setMyPlans(profileData.myPlanVOs || []);
           setEditablePlans(profileData.editablePlanVOs || []);

@@ -102,7 +102,7 @@ export default function Profile({ userProfile, setUserProfile }) {
               change={true}
               iconColor="text-gray-700"
             />
-            {userProfile.isSocialLogin === false && (
+            {userProfile.socialLogin === false && (
               <ProfileText
                 icon={faLock}
                 title="비밀번호"

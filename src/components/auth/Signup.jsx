@@ -309,8 +309,8 @@ export default function Signup({
       console.log(registerData.isRegistered, registerData.message);
 
       if (
-        registerData.isRegistered ||
-        registerData.message === "성공적으로 회원가입하였습니다"
+        registerData.registered === true ||
+        registerData.message === "User registered successfully"
       ) {
         alert("회원가입이 완료되었습니다!");
 
@@ -381,16 +381,15 @@ export default function Signup({
 
   // 회원가입 버튼 활성화 조건
   const isSignupDisabled =
-    !formData.age || // 나이 미입력
-    !formData.nickname || // 닉네임 미입력
-    !isEmailVerified || // 이메일 인증 안됨
-    !isNicknameVerified || // 닉네임 중복검사 안됨
+    !formData.age ||
+    !formData.nickname ||
+    !isEmailVerified ||
+    !isNicknameVerified ||
     !passwordValidation.hasMinLength ||
     !passwordValidation.hasMaxLength ||
     !passwordValidation.hasAllRequired ||
-    !passwordMatch;
-  !isAgreed;
-
+    !passwordMatch ||
+    !isAgreed;
   // 비밀번호 재입력 필드 활성화 조건
   const isConfirmPasswordDisabled =
     !passwordValidation.hasMinLength ||
@@ -743,8 +742,7 @@ export default function Signup({
                   <div>
                     <p className="font-bold mb-1">2. 수집하는 개인정보 항목</p>
                     <ul className="list-disc pl-4 space-y-0.5">
-                      <li>필수 항목: 이름, 비밀번호, 이메일</li>
-                      <li>선택 항목: 나이, 성별</li>
+                      <li>필수 항목: 이메일, 비밀번호, 닉네임, 나이, 성별</li>
                     </ul>
                   </div>
 

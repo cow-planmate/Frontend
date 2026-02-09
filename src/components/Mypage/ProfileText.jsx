@@ -220,9 +220,16 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
     성별: `${BASE_URL}/api/user/gender`,
   };
 
-  const handleChange = (e) => {
-    const numericValue = e.target.value.replace(/[^0-9]/g, "");
-    setSelected(numericValue);
+  const handleAgeChange = (e) => {
+    const value = e.target.value;
+
+    if (value === "") {
+      setSelected("");
+      return;
+    }
+    if (/^\d+$/.test(value) && value !== "0") {
+      setSelected(value);
+    }
   };
 
   const age = (
@@ -231,9 +238,9 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
       <input
         className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
         value={selected}
-        type="number"
+        type="text"
         min={1}
-        onChange={handleChange}
+        onChange={handleAgeChange}
         placeholder="나이를 입력하세요"
       />
     </div>
@@ -351,8 +358,8 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
           isValid
             ? "text-green-600"
             : isError
-            ? "text-red-600"
-            : "text-gray-500"
+              ? "text-red-600"
+              : "text-gray-500"
         }
       >
         {text}
@@ -392,51 +399,50 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
     setWrongRe(false);
     const BASE_URL = import.meta.env.VITE_API_URL;
 
-    if (isAuthenticated()) {
-      if (rePassword != "" && password == rePassword) {
-        if (prevPassword != "") {
-          try {
-            const passwordVerified = await post(
-              `${BASE_URL}/api/auth/password/verify`,
-              {
-                password: prevPassword,
-              }
-            );
+    if (!isAuthenticated()) return;
 
-            if (passwordVerified.passwordVerified) {
-              try {
-                await patch(`${BASE_URL}/api/auth/password`, {
-                  password: password,
-                  confirmPassword: rePassword,
-                });
-                setIsPasswordOpen(false);
-                alert("비밀번호가 변경되었습니다!");
-              } catch (err) {
-                console.error(
-                  "비밀번호를 변경하는 과정에서 오류가 발생했습니다:",
-                  err
-                );
-                alert("비밀번호를 변경하는 과정에서 오류가 발생했습니다");
-              }
-            } else {
-              setWrongPrev(true);
-            }
-          } catch (err) {
-            console.error(
-              "현재 비밀번호를 검증하는 과정에서 오류가 발생했습니다",
-              err
-            );
-            alert("비밀번호를 변경하는 과정에서 오류가 발생했습니다");
-          }
-        } else {
-          setWrongPrev(true);
-        }
-      } else {
-        setWrongRe(true);
+    if (
+      !passwordValidation.hasMinLength ||
+      !passwordValidation.hasMaxLength ||
+      !passwordValidation.hasAllRequired
+    ) {
+      alert("비밀번호 조건을 만족하지 않습니다.");
+      return;
+    }
+
+    if (password !== rePassword) {
+      setWrongRe(true);
+      return;
+    }
+
+    if (!prevPassword) {
+      setWrongPrev(true);
+      return;
+    }
+
+    try {
+      const passwordVerified = await post(
+        `${BASE_URL}/api/auth/password/verify`,
+        { password: prevPassword },
+      );
+
+      if (!passwordVerified.passwordVerified) {
+        setWrongPrev(true);
+        return;
       }
+
+      await patch(`${BASE_URL}/api/auth/password`, {
+        password,
+        confirmPassword: rePassword,
+      });
+
+      alert("비밀번호가 변경되었습니다!");
+      setIsPasswordOpen(false);
+    } catch (err) {
+      console.error("비밀번호 변경 오류:", err);
+      alert("비밀번호 변경 중 오류가 발생했습니다");
     }
   };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white p-6 rounded-2xl shadow-2xl w-96 border border-gray-100">

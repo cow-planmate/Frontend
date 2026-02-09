@@ -38,7 +38,7 @@ function App() {
   const [isDepartureOpen, setIsDepartureOpen] = useState(false);
   const [isDestinationOpen, setIsDestinationOpen] = useState(false);
 
-  const [personCount, setPersonCount] = useState({ adults: 0, children: 0 });
+  const [personCount, setPersonCount] = useState({ adults: 1, children: 0 });
   const [selectedTransport, setSelectedTransport] = useState("bus");
   const [departureLocation, setDepartureLocation] = useState(null);
   const [destinationLocation, setDestinationLocation] = useState(null);
@@ -169,7 +169,8 @@ function App() {
         }
       } else {
         setPlanAll({
-          planName: destinationLocation?.name.split(" ")[1] || "제목을 입력하세요",
+          planName:
+            destinationLocation?.name.split(" ")[1] || "제목을 입력하세요",
           planId: -1,
           travelCategoryName: destinationLocation?.name.split(" ")[0] || "",
           travelName: destinationLocation?.name.split(" ")[1] || "",
