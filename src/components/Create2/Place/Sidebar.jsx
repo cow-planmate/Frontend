@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SidebarItem } from "./SidebarItem";
 import { useApiClient } from "../../../hooks/useApiClient";
 import usePlacesStore from "../../../store/Places";
@@ -23,6 +23,10 @@ export default function Sidebar({
   const [searchText, setSearchText] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [nextLoading, setNextLoading] = useState(false);
+  
+  const [hasSearched, setHasSearched] = useState(false);
+  const searchTimerRef = useRef(null);
+  const lastSearchRef = useRef("");
 
   const tabSelectedClass = {
     tour: "bg-lime-700 text-white",
@@ -55,24 +59,53 @@ export default function Sidebar({
     setCustomPlaceName("");
   };
 
-  const doSearch = async () => {
+  useEffect(() => {
+    if (selectedTab !== "search") return;
+
     const q = searchText.trim();
-    if (!q || !planId) return;
-    try {
-      setSearchLoading(true);
-      const res = await get(
-        `${BASE_URL}/api/plan/${planId}/place/${encodeURIComponent(q)}`,
-      );
-      setAddSearch({
-        search: Array.isArray(res?.places) ? res.places : [],
-        searchNext: res.nextPageTokens,
-      });
-    } catch (err) {
-      console.error("검색 실패:", err);
-    } finally {
-      setSearchLoading(false);
+
+    // 🔐 API 보호
+    if (!q || q.length < 2 || !planId) {
+      setHasSearched(false);
+      setAddSearch({ search: [], searchNext: [] });
+      return;
     }
-  };
+
+    // debounce
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+
+    searchTimerRef.current = setTimeout(async () => {
+      if (lastSearchRef.current === q) return;
+      lastSearchRef.current = q;
+
+      try {
+        setSearchLoading(true);
+
+        const res = await get(
+          `${BASE_URL}/api/plan/${planId}/place/${encodeURIComponent(q)}`
+        );
+
+        setAddSearch({
+          search: Array.isArray(res?.places) ? res.places : [],
+          searchNext: res.nextPageTokens,
+        });
+
+        setHasSearched(true); // ✅ 실제 검색 완료
+      } catch (err) {
+        console.error("검색 실패:", err);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 400);
+
+    return () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
+    };
+  }, [searchText, selectedTab, planId]);
 
   const handleNext = async () => {
     const currentTab = selectedTab;
@@ -117,21 +150,12 @@ export default function Sidebar({
             <div className="flex items-center space-x-2">
               <input
                 type="text"
-                placeholder="장소를 입력하세요"
+                placeholder="장소를 입력하세요 (2글자 이상)"
                 className="flex-1 border rounded-md px-3 py-2"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") doSearch();
-                }}
               />
-              <button
-                className="px-4 py-2 rounded-md bg-main text-white font-semibold disabled:opacity-60 hover:bg-mainDark"
-                onClick={doSearch}
-                disabled={searchLoading}
-              >
-                {searchLoading ? "검색 중..." : "검색"}
-              </button>
+              {searchLoading && <LoadingRing className="w-6 h-6" />}
             </div>
           </div>
         )}
@@ -181,6 +205,14 @@ export default function Sidebar({
               <br/>
               그리고 추가된 장소 목록은 현재 접속하고 있는 기기에만 저장돼요.
             </div>
+          )}
+          {selectedTab === "search" &&
+            hasSearched &&
+            !searchLoading &&
+            search.length === 0 && (
+              <div className="text-center p-8 text-gray-700 break-keep">
+                검색 결과가 없습니다.
+              </div>
           )}
           {selectedTab !== "custom" &&
             ((selectedTab !== "search" || search.length !== 0) && store[`${selectedTab}Next`].length > 0 ) && (
