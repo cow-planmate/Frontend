@@ -45,7 +45,7 @@ export default function NoLoginSave({isOpen}) {
             timetablePlaceBlocks: exportBlocks
           });
           console.log(res.message);
-          navigate(`/mypage`);
+          navigate(`/complete?id=${res.planId}`);
         } catch(err) {
           console.error("요청에 실패했습니다.", err);
         }
