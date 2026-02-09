@@ -169,7 +169,7 @@ function App() {
         }
       } else {
         setPlanAll({
-          planName: "비로그인 생성 프로젝트",
+          planName: destinationLocation?.name.split(" ")[1] || "제목을 입력하세요",
           planId: -1,
           travelCategoryName: destinationLocation?.name.split(" ")[0] || "",
           travelName: destinationLocation?.name.split(" ")[1] || "",

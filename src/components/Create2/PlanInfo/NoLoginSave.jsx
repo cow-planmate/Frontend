@@ -11,7 +11,7 @@ export default function NoLoginSave({isOpen}) {
   const BASE_URL = import.meta.env.VITE_API_URL;
   const { isAuthenticated, post } = useApiClient();
   const { 
-    departure, transportationCategoryId, travelId, adultCount, childCount,
+    planName, departure, transportationCategoryId, travelId, adultCount, childCount,
   } = usePlanStore();
   const { timetables } = useTimetableStore();
   const { items } = useItemsStore();
@@ -34,6 +34,7 @@ export default function NoLoginSave({isOpen}) {
         try {
           const res = await post(`${BASE_URL}/api/plan/create`, {
             planFrame: {
+              planName: planName,
               departure: departure,
               transportationCategoryId: transportationCategoryId,
               travelId: travelId,
