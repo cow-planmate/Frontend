@@ -154,10 +154,6 @@ export const useApiClient = () => {
         throw new Error("접근 권한이 없습니다.");
       }
 
-      if (response.status === 409) {
-        throw new Error("409");
-      }
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         const errorMessage =

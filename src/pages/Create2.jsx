@@ -75,7 +75,7 @@ function App() {
           });
         } catch(err) {
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
-          if (err.message == '409') {
+          if (err.message == '요청 권한이 없습니다') {
             setNoACL(true);
           }
         }
