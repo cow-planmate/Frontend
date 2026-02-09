@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Map, MapMarker } from "react-kakao-maps-sdk"
+import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk"
 import useKakaoLoader from "../../hooks/useKakaoLoader"
 
 export default function MapComponent({schedule}) {
@@ -8,15 +8,17 @@ export default function MapComponent({schedule}) {
   const [map, setMap] = useState();
 
   const sortedSchedule = [...schedule].sort((a, b) => a.start - b.start);
+  
+  const isValidPosition = (place) =>
+    place?.ylocation != null && place?.xlocation != null;
 
-  const positions = sortedSchedule.length > 0
-  ? sortedSchedule.map(item => ({
-      lat: item.place.ylocation,
-      lng: item.place.xlocation,
+  const positions = sortedSchedule
+    .map((item, index) => ({
+      index, // ← 원래 순서 번호 유지용
+      lat: isValidPosition(item.place) ? item.place.ylocation : null,
+      lng: isValidPosition(item.place) ? item.place.xlocation : null,
     }))
-  : [
-      { lat: 37.5665, lng: 126.9780 } // 기본 좌표 (예: 서울 시청)
-    ];
+    .filter(pos => pos.lat != null && pos.lng != null);
 
   // useEffect를 사용하여 map 인스턴스가 생성된 후 한 번만 실행되도록 설정
   useEffect(() => {
@@ -33,54 +35,72 @@ export default function MapComponent({schedule}) {
   }, [map]);
 
   return (
-    <Map // 지도를 표시할 Container
-      id="map"
-      center={{
-        // 지도의 중심좌표
-        lat: 33.452278,
-        lng: 126.567803,
-      }}
-      style={{
-        // 지도의 크기
-        width: "100%",
-        height: "100%",
-      }}
-      level={3} // 지도의 확대 레벨
-      onCreate={setMap}
-    >
-      {(sortedSchedule || []).map((item, index) => {
-        return (
-          <MapMarker // 인포윈도우를 생성하고 지도에 표시합니다
-            key={item.id}
-            position={{
-              // 인포윈도우가 표시될 위치입니다
-              lat: item.place.ylocation,
-              lng: item.place.xlocation,
-            }}
-          >
-            <div
-              className="p-2 w-[159px]"
-              style={{ borderRadius: "4rem" }}
+    sortedSchedule && sortedSchedule.length > 0 ? (
+      <Map // 지도를 표시할 Container
+        id="map"
+        center={{
+          // 지도의 중심좌표
+          lat: 33.452278,
+          lng: 126.567803,
+        }}
+        style={{
+          // 지도의 크기
+          width: "100%",
+          height: "100%",
+        }}
+        level={3} // 지도의 확대 레벨
+        onCreate={setMap}
+      >
+        {sortedSchedule.map((item, index) => {
+          if (!isValidPosition(item.place)) return null;
+
+          return (
+            <MapMarker
+              key={item.id}
+              position={{
+                lat: item.place.ylocation,
+                lng: item.place.xlocation,
+              }}
             >
-              <p className="text-lg font-semibold truncate">
-                {item.place.name}
-              </p>
-              <div className="flex items-center space-x-1">
-                <div className="text-sm w-[22px] h-[22px] border border-main text-main font-semibold rounded-full flex items-center justify-center">{index+1}</div>
-                <a
-                  href={item.place.url}
-                  style={{ color: "blue" }}
-                  className="text-sm hover:underline"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  장소 정보 보기
-                </a>
+              <div className="p-2 w-[159px]" style={{ borderRadius: "4rem" }}>
+                <p className="text-lg font-semibold truncate">
+                  {item.place.name}
+                </p>
+                <div className="flex items-center space-x-1">
+                  <div className="text-sm w-[22px] h-[22px] border border-main text-main font-semibold rounded-full flex items-center justify-center">
+                    {index + 1}
+                  </div>
+                  <a
+                    href={item.place.url}
+                    className="text-sm hover:underline"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    장소 정보 보기
+                  </a>
+                </div>
               </div>
-            </div>
-          </MapMarker>
-        );
-      })}
-    </Map>
+            </MapMarker>
+          );
+        })}
+        {positions.length > 1 && (
+          <Polyline
+            path={positions.map(pos => ({
+              lat: pos.lat,
+              lng: pos.lng,
+            }))}
+            strokeWeight={4}
+            strokeColor="#1344FF"
+            strokeOpacity={0.5}
+            strokeStyle="dash"
+          />
+        )}
+      </Map>
+    ) : (
+      <div className="w-full h-full flex-col flex items-center justify-center space-y-2 p-5">
+        <p className="text-main text-3xl font-bold">일차에 블록 없음</p>
+        <p className="text-lg">블록을 추가하면 지도가 보여요.</p>
+      </div>
+    )
   )
 }
