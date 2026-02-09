@@ -18,6 +18,7 @@ export default function Main() {
 
   const {
     items,
+    getNextId,
     addItemFromDrag,
     moveItem,
     resizeItem,
@@ -119,8 +120,10 @@ export default function Main() {
       const itemId = type === 'schedule' ? active.id : null;
       if (checkOverlap(newStart, duration, items[getTimeTableId(timetables, selectedDay)], itemId)) return; 
 
+      const timeTableId = getTimeTableId(timetables, selectedDay);
+
       if (type === 'sidebar') {
-        const blockId = `item-${Date.now()}`;
+        const blockId = getNextId(timeTableId, newStart);
         addItemFromDrag({
           timetables,
           selectedDay,
@@ -129,17 +132,17 @@ export default function Main() {
           duration,
           blockId,
         });
-        const block = exportBlock(getTimeTableId(timetables, selectedDay), place, newStart, duration, blockId)
+        const block = exportBlock(timeTableId, place, newStart, duration, blockId)
         sendWebsocket("create", block);
       } else if (type === 'schedule') {
+        const item = active.data.current;
         moveItem({
           timetables,
           selectedDay,
           activeId: active.id,
           newStart,
         });
-        const memo = active.data.current.memo;
-        const block = exportBlock(getTimeTableId(timetables, selectedDay), place, newStart, duration, active.id, false, null, memo)
+        const block = exportBlock(timeTableId, place, newStart, duration, active.id, false, null, item.memo)
         sendWebsocket("update", block);
       }
     }
@@ -160,12 +163,13 @@ export default function Main() {
   };
 
   const handleMobileAdd = (place) => {
-    const emptySlot = findEmptySlot(4, items[getTimeTableId(timetables, selectedDay)]);
+    const timeTableId = getTimeTableId(timetables, selectedDay);
+    const emptySlot = findEmptySlot(4, items[timeTableId]);
     if (emptySlot === -1) {
       alert('빈 시간이 없습니다!');
       return;
     }
-    const blockId = `item-${Date.now()}`;
+    const blockId = getNextId(timeTableId, emptySlot);
     addItemMobile({
       timetables,
       selectedDay,
@@ -173,7 +177,7 @@ export default function Main() {
       emptySlot,
       blockId,
     });
-    const block = exportBlock(getTimeTableId(timetables, selectedDay), place, emptySlot, 4, blockId)
+    const block = exportBlock(timeTableId, place, emptySlot, 4, blockId)
     sendWebsocket("create", block);
     
     setActiveTab('timetable');

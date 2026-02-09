@@ -8,11 +8,16 @@ import { useApiClient } from "../hooks/useApiClient";
 function App() {
   const navigate = useNavigate();
   const [refreshTrigger, setRefreshTrigger] = useState(false);
-  const { get, isAuthenticated } = useApiClient();
+  const { get, isAuthenticated, logout } = useApiClient();
   const BASE_URL = import.meta.env.VITE_API_URL;
   const [userProfile, setUserProfile] = useState(null);
   const [myPlans, setMyPlans] = useState([]);
   const [editablePlans, setEditablePlans] = useState([]);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
 
   useEffect(() => {
     if (!isAuthenticated()) {

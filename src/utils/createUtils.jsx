@@ -1,7 +1,6 @@
 import usePlanStore from "../store/Plan";
 import useTimetableStore from "../store/Timetables";
 import usePlacesStore from "../store/Places";
-import useItemsStore from "../store/Schedules";
 
 export const formatTime = (slotIndex) => {
   const { START_HOUR } = useTimetableStore.getState();
@@ -63,16 +62,14 @@ export function exportBlock(timeTableId, place, newStart, duration, blockId, noL
   
   const BASE_URL = import.meta.env.VITE_API_URL;
 
-  // blockId가 숫자면 DB ID로 간주
-  const isDbId = typeof blockId === 'number';
-
   // photoUrl이 null일 경우 백엔드 이미지 프록시 URL로 대체
   const photoUrl = place.photoUrl || (place.placeId ? `${BASE_URL}/image/place/${encodeURIComponent(place.placeId)}` : null);
 
+  // blockId가 'temp-'로 시작하는 문자열이면 백엔드 전송 시 null로 보냄 (새로 생성하는 항목)
+  const finalBlockId = (typeof blockId === 'string' && blockId.startsWith('temp-')) ? null : blockId;
+
   const block = {
-    blockId: isDbId ? blockId : null,
-    timetablePlaceBlockId: isDbId ? blockId : null,
-    placeTheme: isDbId ? (place.placeTheme || "") : blockId,
+    blockId: finalBlockId,
     placeName: place.name,
     placeRating: place.rating,
     placeAddress: place.formatted_address,
@@ -123,14 +120,13 @@ export function convertBlock(block) {
   const start = getTimeSlotIndex(timeTableStartTime, startTime);
   const duration = getTimeSlotIndex(startTime, endTime);
   
-  // DB ID가 있으면 그것을 사용, 없으면 placeTheme(임시 ID)을 사용
-  const blockId = block.timetablePlaceBlockId || block.blockId || block.placeTheme;
+  // blockId를 프론트엔드 아이템의 id로 사용
+  const blockId = block.blockId;
   const memo = block.memo;
 
   const place = {
     placeId: block.placeId,
     categoryId: block.placeCategoryId,
-    placeTheme: block.placeTheme,
     url: block.placeLink,
     name: block.placeName,
     formatted_address: block.placeAddress,
@@ -141,12 +137,11 @@ export function convertBlock(block) {
     yLocation: block.yLocation || block.ylocation,
   }
 
-  return {timeTableId, place, start, duration, blockId, memo};
+  return { timeTableId, place, start, duration, blockId, memo };
 }
 
 export const resetAllStores = () => {
   usePlanStore.getState().resetPlan();
   useTimetableStore.getState().resetTimetable();
   usePlacesStore.getState().resetPlaces();
-  useItemsStore.getState().resetItems();
 };
