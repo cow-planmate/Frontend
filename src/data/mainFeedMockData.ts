@@ -16,6 +16,12 @@ export const MAIN_FEED_MOCK_POSTS = [
     forks: 156,
     duration: '3박 4일',
     createdAt: '2일 전',
+    coords: { lat: 37.5665, lng: 126.9780 },
+    route: [
+      { lat: 37.5796, lng: 126.9770, name: '경복궁' },
+      { lat: 37.5829, lng: 126.9835, name: '북촌한옥마을' },
+      { lat: 37.5636, lng: 126.9842, name: '명동' }
+    ]
   },
   {
     id: 2,
@@ -34,6 +40,12 @@ export const MAIN_FEED_MOCK_POSTS = [
     forks: 203,
     duration: '4박 5일',
     createdAt: '5일 전',
+    coords: { lat: 33.4996, lng: 126.5312 },
+    route: [
+      { lat: 33.4507, lng: 126.5706, name: '카페 공백' },
+      { lat: 33.4581, lng: 126.9426, name: '성산일출봉' },
+      { lat: 33.2462, lng: 126.5621, name: '정방폭포' }
+    ]
   },
   {
     id: 3,
@@ -52,5 +64,11 @@ export const MAIN_FEED_MOCK_POSTS = [
     forks: 278,
     duration: '2박 3일',
     createdAt: '1주 전',
+    coords: { lat: 35.1796, lng: 129.0756 },
+    route: [
+      { lat: 35.1587, lng: 129.1604, name: '해운대해수욕장' },
+      { lat: 35.1532, lng: 129.1189, name: '광안리해수욕장' },
+      { lat: 35.1786, lng: 129.1997, name: '송정해수욕장' }
+    ]
   },
 ];

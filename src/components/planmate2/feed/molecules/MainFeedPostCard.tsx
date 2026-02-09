@@ -1,5 +1,6 @@
 import { Clock, Copy, Eye, MessageCircle, ThumbsDown, ThumbsUp } from 'lucide-react';
-import React from 'react';
+import React, { useState } from 'react';
+import { RoutePreview } from './RoutePreview';
 
 interface MainFeedPostCardProps {
   post: any;
@@ -18,18 +19,27 @@ export const MainFeedPostCard: React.FC<MainFeedPostCardProps> = ({
   onLike,
   onDislike
 }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
     <div
       onClick={() => onNavigate('detail', { post })}
-      className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all cursor-pointer flex flex-col"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="relative bg-white rounded-xl shadow-md hover:shadow-xl transition-all cursor-pointer flex flex-col"
     >
-      <div className="relative h-48 overflow-hidden">
+      {/* Route Preview Popup */}
+      {isHovered && post.route && (
+        <RoutePreview route={post.route} title={post.title} />
+      )}
+
+      <div className="relative h-48 overflow-hidden rounded-t-xl">
         <img
           src={post.image}
           alt={post.title}
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
         />
-        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-[#1344FF] shadow-sm">
+        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-[#1344FF] shadow-sm z-10">
           {post.destination}
         </div>
       </div>

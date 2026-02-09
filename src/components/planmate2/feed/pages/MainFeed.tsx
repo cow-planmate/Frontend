@@ -3,9 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { MAIN_FEED_MOCK_POSTS } from '../../../../data/mainFeedMockData';
 import { useApiClient } from '../../../../hooks/useApiClient';
 import useKakaoLoader from '../../../../hooks/useKakaoLoader';
+import { ViewToggle } from '../atoms/ViewToggle';
 import { useMainFeedFilters } from '../hooks/useMainFeedLogic';
 import { SearchBar } from '../molecules/SearchBar';
 import { DetailFilterPanel } from '../organisms/DetailFilterPanel';
+import { FeedMapView } from '../organisms/FeedMapView';
 import { MainFeedHeader } from '../organisms/MainFeedHeader';
 import { MainFeedSidebar } from '../organisms/MainFeedSidebar';
 import { MainPostsGrid } from '../organisms/MainPostsGrid';
@@ -20,6 +22,7 @@ export default function MainFeed({ initialRegion = '전체', onNavigate }: MainF
   const { isAuthenticated } = useApiClient();
   const { filters, setters, filteredPosts } = useMainFeedFilters(MAIN_FEED_MOCK_POSTS, initialRegion, onNavigate);
   
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
   const [dislikedPosts, setDislikedPosts] = useState<Set<number>>(new Set());
   const [mapState, setMapState] = useState({
@@ -98,6 +101,7 @@ export default function MainFeed({ initialRegion = '전체', onNavigate }: MainF
               placeholder="제목, 지역, 작성자로 검색..." 
             />
           </div>
+          <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
           <button
             onClick={() => setters.setShowFilters(!filters.showFilters)}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl border transition-all font-medium ${
@@ -170,15 +174,23 @@ export default function MainFeed({ initialRegion = '전체', onNavigate }: MainF
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <MainPostsGrid 
-          posts={filteredPosts}
-          onNavigate={onNavigate}
-          likedPosts={likedPosts}
-          dislikedPosts={dislikedPosts}
-          onLike={handleLike}
-          onDislike={handleDislike}
-          onClearFilters={setters.clearFilters}
-        />
+        {viewMode === 'grid' ? (
+          <MainPostsGrid 
+            posts={filteredPosts}
+            onNavigate={onNavigate}
+            likedPosts={likedPosts}
+            dislikedPosts={dislikedPosts}
+            onLike={handleLike}
+            onDislike={handleDislike}
+            onClearFilters={setters.clearFilters}
+          />
+        ) : (
+          <FeedMapView 
+            posts={filteredPosts}
+            mapState={mapState}
+            onNavigate={onNavigate}
+          />
+        )}
 
         <MainFeedSidebar 
           mapState={mapState}

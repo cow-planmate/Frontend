@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { MOCK_POSTS } from '../constants/mockData';
+import { ViewToggle } from '../../feed/atoms/ViewToggle';
+import { FeedMapView } from '../../feed/organisms/FeedMapView';
 import { SearchBar } from '../molecules/SearchBar';
 import { BoardHeader } from '../organisms/BoardHeader';
 import { HotPostsGrid } from '../organisms/HotPostsGrid';
@@ -14,6 +16,7 @@ interface CommunityPageProps {
 
 export const CommunityPage = ({ type, onBack, onNavigate }: CommunityPageProps) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
 
   const getTitle = () => {
     switch (type) {
@@ -52,24 +55,45 @@ export const CommunityPage = ({ type, onBack, onNavigate }: CommunityPageProps) 
         onNavigate={onNavigate}
       />
 
-      <SearchBar 
-        title={getTitle()}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onWriteClick={() => onNavigate('community-create')}
-      />
+      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between mb-4">
+        <div className="flex-1 w-full">
+          <SearchBar 
+            title={getTitle()}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onWriteClick={() => onNavigate('community-create')}
+          />
+        </div>
+        {type === 'recommend' && (
+          <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+        )}
+      </div>
 
-      <HotPostsGrid 
-        hotPosts={hotPosts}
-        type={type}
-        onNavigate={onNavigate}
-      />
+      {viewMode === 'grid' ? (
+        <>
+          <HotPostsGrid 
+            hotPosts={hotPosts}
+            type={type}
+            onNavigate={onNavigate}
+          />
 
-      <PostListTable 
-        posts={posts}
-        type={type}
-        onNavigate={onNavigate}
-      />
+          <PostListTable 
+            posts={posts}
+            type={type}
+            onNavigate={onNavigate}
+          />
+        </>
+      ) : (
+        <div className="mt-6">
+          <FeedMapView 
+            posts={posts}
+            mapState={{ center: { lat: 35.95, lng: 128.25 }, level: 13 }}
+            onNavigate={onNavigate}
+            className="w-full"
+          />
+        </div>
+      )}
     </div>
   );
 };
+

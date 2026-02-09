@@ -81,6 +81,12 @@ export const MOCK_POSTS = {
     ][Math.floor(Math.random() * 4)]}?w=400&auto=format&fit=crop`,
     location: ['제주도', '서울특별시', '부산광역시', '강원도'][Math.floor(Math.random() * 4)],
     rating: (Math.random() * 1.5 + 3.5).toFixed(1),
-    content: '여기는 정말 제가 아껴둔 곳인데 공유합니다. 꼭 가보세요!'
+    content: '여기는 정말 제가 아껴둔 곳인데 공유합니다. 꼭 가보세요!',
+    coords: [
+      { lat: 33.450701, lng: 126.570667 }, // 제주
+      { lat: 37.5665, lng: 126.9780 },   // 서울
+      { lat: 35.1796, lng: 129.0756 },   // 부산
+      { lat: 37.7512, lng: 128.8762 }    // 강릉
+    ][i % 4]
   }))
 };
