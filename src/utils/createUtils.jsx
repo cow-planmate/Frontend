@@ -56,7 +56,7 @@ export function slotIndexToTime(START_HOUR, newStart, intervalMinutes = 15) {
   return `${h}:${m}:00`;
 }
 
-export function exportBlock(timeTableId, place, newStart, duration, blockId, noLogin = false, date = null) {
+export function exportBlock(timeTableId, place, newStart, duration, blockId, noLogin = false, date = null, memo = "") {
   const { START_HOUR } = useTimetableStore.getState();
   const blockStartTime = slotIndexToTime(START_HOUR, newStart);
   const blockEndTime = slotIndexToTime(START_HOUR, newStart + duration);
@@ -76,7 +76,8 @@ export function exportBlock(timeTableId, place, newStart, duration, blockId, noL
       placeCategoryId: place.categoryId,
       timeTableId: timeTableId,
       placePhotoId: place.placeId,
-      date: date
+      date: date,
+      memo: memo
     }
   } else {
     block = {
@@ -93,6 +94,7 @@ export function exportBlock(timeTableId, place, newStart, duration, blockId, noL
       placeCategoryId: place.categoryId,
       timeTableId: timeTableId,
       placePhotoId: place.placeId,
+      memo: memo
     }
   }
   return block;
@@ -119,22 +121,24 @@ export function convertBlock(block) {
   const start = getTimeSlotIndex(timeTableStartTime, block.blockStartTime);
   const duration = getTimeSlotIndex(block.blockStartTime, block.blockEndTime);
   const blockId = block.placeTheme;
+  const memo = block.memo;
   console.log(start)
   console.log(duration)
 
   const place = {
-    placeId: block.placePhotoId,
+    placeId: block.placeId || block.placePhotoId,
     categoryId: block.placeCategoryId,
     url: block.placeLink,
     name: block.placeName,
     formatted_address: block.placeAddress,
     rating: block.placeRating,
+    photoUrl: block.photoUrl,
     iconUrl: "./src/assets/imgs/default.png",
     xlocation: block.xLocation || block.xlocation,
     ylocation: block.yLocation || block.ylocation,
   }
 
-  return {timeTableId, place, start, duration, blockId};
+  return {timeTableId, place, start, duration, blockId, memo};
 }
 
 export const resetAllStores = () => {

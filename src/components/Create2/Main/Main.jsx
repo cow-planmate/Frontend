@@ -138,7 +138,8 @@ export default function Main() {
           activeId: active.id,
           newStart,
         });
-        const block = exportBlock(getTimeTableId(timetables, selectedDay), place, newStart, duration, active.id)
+        const memo = active.data.current.memo;
+        const block = exportBlock(getTimeTableId(timetables, selectedDay), place, newStart, duration, active.id, false, null, memo)
         sendWebsocket("update", block);
       }
     }
@@ -154,7 +155,7 @@ export default function Main() {
       newDuration,
       TOTAL_SLOTS,
     });
-    const block = exportBlock(getTimeTableId(timetables, selectedDay), item, newStart, newDuration, id)
+    const block = exportBlock(getTimeTableId(timetables, selectedDay), item.place, newStart, newDuration, id, false, null, item.memo)
     sendWebsocket("update", block);
   };
 

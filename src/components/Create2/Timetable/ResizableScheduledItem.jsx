@@ -9,13 +9,15 @@ import { getClient } from '../../../websocket/client';
 import useItemsStore from '../../../store/Schedules';
 import usePlanStore from '../../../store/Plan';
 import { useSearchParams } from 'react-router-dom';
+import DetailPopup from "./DetailPopup";
 
 export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
   const client = getClient();
   const { eventId } = usePlanStore();
   const { SLOT_HEIGHT, TOTAL_SLOTS, timetables, selectedDay } = useTimetableStore();
-  const { deleteItem } = useItemsStore();
+  const { deleteItem, updateItemMemo } = useItemsStore();
   const [isResizing, setIsResizing] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
@@ -138,11 +140,11 @@ export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
     4: "text-gray-900",
   };
 
-  const sendWebsocket = (block) => {
+  const sendWebsocket = (block, action = "delete") => {
     if (client && client.connected) {
       const msg = {
         eventId: eventId,
-        action: "delete",
+        action: action,
         entity: "timetableplaceblock",
         timeTablePlaceBlockDtos: [
           block
@@ -156,72 +158,101 @@ export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
     }
   }
 
+  const handleUpdateMemo = (newMemo) => {
+    updateItemMemo(getTimeTableId(timetables, selectedDay), item.id, newMemo);
+    const block = exportBlock(
+      getTimeTableId(timetables, selectedDay), 
+      place, 
+      item.start, 
+      item.duration, 
+      item.id, 
+      false, 
+      null, 
+      newMemo
+    );
+    sendWebsocket(block, "update");
+  };
+
   return (
-    <div
-      ref={setNodeRef}
-      style={{
-        top: localState.top,
-        height: localState.height,
-        position: "absolute",
-        left: "4rem",
-        right: "8px",
-        ...dragStyle,
-      }}
-      className="absolute touch-none"
-      {...attributes}
-    >
-      <Resizable
-        height={localState.height}
-        width={200}
-        axis="y"
-        resizeHandles={["s", "n"]}
-        onResizeStart={onResizeStart}
-        onResize={onResize}
-        onResizeStop={onResizeStop}
-        minConstraints={[100, SLOT_HEIGHT]}
-        maxConstraints={[100, SLOT_HEIGHT * TOTAL_SLOTS]}
-        handle={(h, ref) => <ResizeHandle ref={ref} handleAxis={h} />}
+    <>
+      <div
+        ref={setNodeRef}
+        style={{
+          top: localState.top,
+          height: localState.height,
+          position: "absolute",
+          left: "4rem",
+          right: "8px",
+          ...dragStyle,
+        }}
+        className="absolute touch-none"
+        {...attributes}
       >
-        <div
-          {...listeners}
-          className={`w-full h-full ${tripColor1[place.categoryId]} border-l-4 ${tripColor3[place.categoryId]} rounded shadow-sm overflow-hidden select-none hover:${tripColor2[place.categoryId]} transition-colors cursor-move
-            ${isDragging ? "shadow-xl ring-2 ring-blue-300" : ""}
-            ${localState.height <= 80 ? "flex flex-col items-start justify-center px-5" : "p-5"}`}
+        <Resizable
+          height={localState.height}
+          width={200}
+          axis="y"
+          resizeHandles={["s", "n"]}
+          onResizeStart={onResizeStart}
+          onResize={onResize}
+          onResizeStop={onResizeStop}
+          minConstraints={[100, SLOT_HEIGHT]}
+          maxConstraints={[100, SLOT_HEIGHT * TOTAL_SLOTS]}
+          handle={(h, ref) => <ResizeHandle ref={ref} handleAxis={h} />}
         >
-          <div className="w-full flex items-center gap-2 min-w-0">
-            <div className="flex-1 min-w-0">
-              <div
-                className={`font-bold text-lg ${tripColor5[place.categoryId]} truncate pointer-events-none`}
-              >
-                {place.name}
+          <div
+            {...listeners}
+            onClick={() => setIsDetailOpen(true)}
+            className={`w-full h-full ${tripColor1[place.categoryId]} border-l-4 ${tripColor3[place.categoryId]} rounded shadow-sm overflow-hidden select-none hover:${tripColor2[place.categoryId]} transition-colors cursor-move
+              ${isDragging ? "shadow-xl ring-2 ring-blue-300" : ""}
+              ${localState.height <= 80 ? "flex flex-col items-start justify-center px-5" : "p-5"}`}
+          >
+            <div className="w-full flex items-center gap-2 min-w-0">
+              <div className="flex-1 min-w-0">
+                <div
+                  className={`font-bold text-lg ${tripColor5[place.categoryId]} truncate pointer-events-none`}
+                >
+                  {place.name}
+                </div>
+
+                <div
+                  className={`text-xs ${tripColor4[place.categoryId]} font-medium pointer-events-none`}
+                >
+                  <p>
+                    {tripCategory[place.categoryId]} | {formatTime(item.start)} -{" "}
+                    {formatTime(
+                      item.start + Math.round(localState.height / SLOT_HEIGHT),
+                    )}
+                  </p>
+                </div>
               </div>
 
-              <div
-                className={`text-xs ${tripColor4[place.categoryId]} font-medium pointer-events-none`}
+              <button
+                className={`w-8 h-8 shrink-0 hover:bg-white hover:bg-opacity-50 rounded-full ${tripColor5[place.categoryId]} text-lg pointer-events-auto`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteItem(item.id, getTimeTableId(timetables, selectedDay));
+                  const block = exportBlock(getTimeTableId(timetables, selectedDay), place, item.start, item.duration, item.id);
+                  sendWebsocket(block);
+                }}
               >
-                <p>
-                  {tripCategory[place.categoryId]} | {formatTime(item.start)} -{" "}
-                  {formatTime(
-                    item.start + Math.round(localState.height / SLOT_HEIGHT),
-                  )}
-                </p>
-              </div>
+                ×
+              </button>
             </div>
-
-            <button
-              className={`w-8 h-8 shrink-0 hover:bg-white hover:bg-opacity-50 rounded-full ${tripColor5[place.categoryId]} text-lg`}
-              onClick={(e) => {
-                e.stopPropagation();
-                deleteItem(item.id, getTimeTableId(timetables, selectedDay));
-                const block = exportBlock(getTimeTableId(timetables, selectedDay), place, item.start, item.duration, item.id);
-                sendWebsocket(block);
-              }}
-            >
-              ×
-            </button>
+            {item.memo && localState.height > 80 && (
+              <div className={`mt-2 text-xs ${tripColor4[place.categoryId]} line-clamp-2 italic pointer-events-none`}>
+                {item.memo}
+              </div>
+            )}
           </div>
-        </div>
-      </Resizable>
-    </div>
+        </Resizable>
+      </div>
+      <DetailPopup 
+        isOpen={isDetailOpen} 
+        onClose={() => setIsDetailOpen(false)} 
+        item={item} 
+        onUpdateMemo={handleUpdateMemo}
+      />
+    </>
   );
 };

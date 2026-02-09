@@ -25,7 +25,7 @@ export default function NoLoginSave({isOpen}) {
       const date = timetables.find((t) => t.timeTableId === Number(key))?.date;
       console.log(date);
       return day.map(item => 
-        exportBlock(key, item.place, item.start, item.duration, item.id, true, date)
+        exportBlock(key, item.place, item.start, item.duration, item.id, true, date, item.memo)
       )
     });
 

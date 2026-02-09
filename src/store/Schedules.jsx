@@ -19,6 +19,7 @@ const useItemsStore = create((set) => ({
               place: active.data.current.place,
               start: newStart,
               duration,
+              memo: "",
             },
           ],
         },
@@ -107,7 +108,7 @@ const useItemsStore = create((set) => ({
       };
     }),
 
-  addItemFromWebsocket: ({ timeTableId, place, start, duration, blockId }) =>
+  addItemFromWebsocket: ({ timeTableId, place, start, duration, blockId, memo }) =>
     set((state) => {
       console.log(start);
       return {
@@ -120,20 +121,21 @@ const useItemsStore = create((set) => ({
               place: place,
               start: start,
               duration,
+              memo: memo,
             },
           ],
         },
       };
     }),
 
-  moveItemFromWebsocket: ({ timeTableId, place, start, duration, blockId }) =>
+  moveItemFromWebsocket: ({ timeTableId, place, start, duration, blockId, memo }) =>
     set((state) => {
       return {
         items: {
           ...state.items,
           [timeTableId]: (state.items[timeTableId] || []).map((item) =>
             item.id === blockId
-              ? { ...item, start: start, duration: duration }
+              ? { ...item, place: place, start: start, duration: duration, memo: memo }
               : item
           ),
         },
@@ -154,6 +156,16 @@ const useItemsStore = create((set) => ({
         },
       }
     }),
+
+  updateItemMemo: (timeTableId, blockId, memo) =>
+    set((state) => ({
+      items: {
+        ...state.items,
+        [timeTableId]: (state.items[timeTableId] || []).map((item) =>
+          item.id === blockId ? { ...item, memo } : item
+        ),
+      },
+    })),
 
   resetItems: () =>
     set({
