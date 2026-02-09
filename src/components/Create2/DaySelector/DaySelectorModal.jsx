@@ -209,9 +209,9 @@ const DaySelectorModal = ({setIsModalOpen}) => {
           moveItemFromWebsocket({timeTableId, place, start, duration, blockId});
         })
       });
-
-      if (selectedDay > merged.length) {
-        setSelectedDay(merged.length);
+      
+      if (selectedDay >= merged.length) {
+        setSelectedDay(merged.length - 1);
       } else {
         setSelectedDay(selectedDay);
       }
