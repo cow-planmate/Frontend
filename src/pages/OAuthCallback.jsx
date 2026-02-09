@@ -18,19 +18,6 @@ const OAuthCallback = () => {
     const handleCallback = async () => {
       try {
         const status = searchParams.get("status");
-        const success = searchParams.get("success");
-        const message = searchParams.get("message");
-
-        // 기존 사용자 로그인 (loginCode 방식)
-        if (success === "false") {
-          setError(
-            message
-              ? decodeURIComponent(message)
-              : "OAuth 로그인에 실패했습니다.",
-          );
-          setIsProcessing(false);
-          return;
-        }
 
         if (status === "SUCCESS") {
           const code = searchParams.get("code");
@@ -108,6 +95,18 @@ const OAuthCallback = () => {
               nickname,
             },
           });
+        } else if (status === "FAIL") {
+          const reason = searchParams.get("reason");
+
+          if (reason === "EMAIL_CONFLICT") {
+            setError(
+              "이미 해당 이메일로 가입된 계정이 있습니다. planMate 계정으로 로그인해주세요.",
+            );
+          } else {
+            setError("OAuth 로그인에 실패했습니다.");
+          }
+
+          setIsProcessing(false);
         }
         // 알 수 없는 상태
         else {

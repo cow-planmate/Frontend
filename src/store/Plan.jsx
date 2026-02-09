@@ -29,7 +29,21 @@ const usePlanStore = create((set) => ({
     set((state) => ({
       ...state,
       eventId: uuidv4(),
-    }))
+    })),
+
+  resetPlan: () =>
+    set({
+      planName: "",
+      travelCategoryName: "",
+      travelName: "",
+      travelId: 0,
+      departure: "",
+      transportationCategoryId: 0,
+      adultCount: 0,
+      childCount: 0,
+      planId: 0,
+      eventId: "",
+    }),
 }));
 
 export default usePlanStore;

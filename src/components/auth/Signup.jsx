@@ -310,7 +310,7 @@ export default function Signup({
 
       if (
         registerData.isRegistered ||
-        registerData.message === "User registered successfully"
+        registerData.message === "성공적으로 회원가입하였습니다"
       ) {
         alert("회원가입이 완료되었습니다!");
 

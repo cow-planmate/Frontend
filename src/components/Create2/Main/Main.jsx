@@ -4,11 +4,26 @@ import { useSearchParams } from 'react-router-dom';
 import TimetableGrid from '../Timetable/TimetableGrid';
 import Sidebar from '../Place/Sidebar';
 import useTimetableStore from "../../../store/Timetables";
-import { formatTime, checkOverlap, findEmptySlot, getTimeTableId } from "../../../utils/createUtils";
+import { formatTime, checkOverlap, findEmptySlot, getTimeTableId, exportBlock } from "../../../utils/createUtils";
 import { resizeStyles } from '../Timetable/ResizeHandle'; // 스타일 문자열 import
+import useItemsStore from "../../../store/Schedules";
+import { getClient } from '../../../websocket/client';
+import usePlanStore from '../../../store/Plan';
+
+import { faCalendar, faMapPin } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export default function Main() {
-  const [items, setItems] = useState([]);
+  const client = getClient();
+
+  const {
+    items,
+    addItemFromDrag,
+    moveItem,
+    resizeItem,
+    addItemMobile,
+  } = useItemsStore();
+
   const [activeTab, setActiveTab] = useState('timetable');
   const [preview, setPreview] = useState(null); 
   const [activeId, setActiveId] = useState(null);
@@ -17,6 +32,7 @@ export default function Main() {
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
   
+  const { eventId } = usePlanStore();
   const { TOTAL_SLOTS, SLOT_HEIGHT, selectedDay, timetables } = useTimetableStore();
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -30,6 +46,24 @@ export default function Main() {
   useEffect(() => {
     console.log(items)
   }, [items])
+
+  const sendWebsocket = (action, block) => {
+    if (client && client.connected) {
+      const msg = {
+        eventId: eventId,
+        action: action,
+        entity: "timetableplaceblock",
+        timeTablePlaceBlockDtos: [
+          block
+        ]
+      };
+      client.publish({
+        destination: `/app/${id}`,
+        body: JSON.stringify(msg),
+      });
+      console.log("🚀 메시지 전송:", msg);
+    }
+  }
 
   // --- DnD Handlers ---
   useDndMonitor({
@@ -77,6 +111,7 @@ export default function Main() {
 
       const type = active.data.current.type;
       const duration = active.data.current.duration || 4;
+      const place = active.data.current.place;
 
       if (newStart < 0) newStart = 0;
       if (newStart + duration > TOTAL_SLOTS) newStart = TOTAL_SLOTS - duration;
@@ -85,64 +120,42 @@ export default function Main() {
       if (checkOverlap(newStart, duration, items[getTimeTableId(timetables, selectedDay)], itemId)) return; 
 
       if (type === 'sidebar') {
-        setItems(prev => ({
-          ...prev,
-          [getTimeTableId(timetables, selectedDay)]: [
-            ...(prev[getTimeTableId(timetables, selectedDay)] || []),
-            {
-              id: `item-${Date.now()}`,
-              place: active.data.current.place,
-              start: newStart,
-              duration,
-            }
-          ]
-        }));
+        const blockId = `item-${Date.now()}`;
+        addItemFromDrag({
+          timetables,
+          selectedDay,
+          active,
+          newStart,
+          duration,
+          blockId,
+        });
+        const block = exportBlock(getTimeTableId(timetables, selectedDay), place, newStart, duration, blockId)
+        sendWebsocket("create", block);
       } else if (type === 'schedule') {
-        setItems(prev => ({
-          ...prev,
-          [getTimeTableId(timetables, selectedDay)]: (prev[getTimeTableId(timetables, selectedDay)] || []).map(item =>
-            item.id === active.id
-              ? { ...item, start: newStart }
-              : item
-          )
-        }));
+        moveItem({
+          timetables,
+          selectedDay,
+          activeId: active.id,
+          newStart,
+        });
+        const block = exportBlock(getTimeTableId(timetables, selectedDay), place, newStart, duration, active.id)
+        sendWebsocket("update", block);
       }
     }
   });
 
-  const handleResizeEnd = (id, newStart, newDuration) => {
-    setItems(prev => {
-      const dayItems = prev[getTimeTableId(timetables, selectedDay)] || [];
-
-      const target = dayItems.find(i => i.id === id);
-      if (!target) return prev;
-
-      let safeStart = newStart;
-      let safeDuration = newDuration;
-
-      if (safeDuration < 1) safeDuration = 1;
-      if (safeStart < 0) {
-        safeDuration += safeStart;
-        safeStart = 0;
-      }
-      if (safeStart + safeDuration > TOTAL_SLOTS) {
-        safeDuration = TOTAL_SLOTS - safeStart;
-      }
-
-      // ⚠️ overlap 체크도 해당 day 기준
-      if (checkOverlap(safeStart, safeDuration, dayItems, id)) {
-        return prev;
-      }
-
-      return {
-        ...prev,
-        [getTimeTableId(timetables, selectedDay)]: dayItems.map(i =>
-          i.id === id
-            ? { ...i, start: safeStart, duration: safeDuration }
-            : i
-        )
-      };
+  const handleResizeEnd = (item, newStart, newDuration) => {
+    const id = item.id;
+    resizeItem({
+      timetables,
+      selectedDay,
+      id,
+      newStart,
+      newDuration,
+      TOTAL_SLOTS,
     });
+    const block = exportBlock(getTimeTableId(timetables, selectedDay), item, newStart, newDuration, id)
+    sendWebsocket("update", block);
   };
 
   const handleMobileAdd = (place) => {
@@ -151,18 +164,17 @@ export default function Main() {
       alert('빈 시간이 없습니다!');
       return;
     }
-    setItems(prev => ({
-      ...prev,
-      [getTimeTableId(timetables, selectedDay)]: [
-        ...(prev[getTimeTableId(timetables, selectedDay)] || []),
-        {
-          id: `item-${Date.now()}`,
-          place,
-          start: emptySlot,
-          duration: 4
-        }
-      ]
-    }));
+    const blockId = `item-${Date.now()}`;
+    addItemMobile({
+      timetables,
+      selectedDay,
+      place,
+      emptySlot,
+      blockId,
+    });
+    const block = exportBlock(getTimeTableId(timetables, selectedDay), place, emptySlot, 4, blockId)
+    sendWebsocket("create", block);
+    
     setActiveTab('timetable');
   };
 
@@ -193,11 +205,11 @@ export default function Main() {
       {/* Mobile Bottom Tab */}
       {isMobile && (
         <nav className="mt-4 bg-white border-t h-16 flex shadow-lg">
-          <button onClick={() => setActiveTab('timetable')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'timetable' ? 'text-blue-600' : 'text-gray-400'}`}>
-            <span className="text-xl">📅</span><span className="text-xs font-medium">시간표</span>
+          <button onClick={() => setActiveTab('timetable')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'timetable' ? 'text-main' : 'text-gray-400'}`}>
+            <span className="text-xl"><FontAwesomeIcon icon={faCalendar}/></span><span className="text-xs font-medium">시간표</span>
           </button>
-          <button onClick={() => setActiveTab('recommend')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'recommend' ? 'text-blue-600' : 'text-gray-400'}`}>
-            <span className="text-xl">📍</span><span className="text-xs font-medium">추천 장소</span>
+          <button onClick={() => setActiveTab('recommend')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'recommend' ? 'text-main' : 'text-gray-400'}`}>
+            <span className="text-xl"><FontAwesomeIcon icon={faMapPin}/></span><span className="text-xs font-medium">추천 장소</span>
           </button>
         </nav>
       )}
@@ -205,7 +217,7 @@ export default function Main() {
       {/* Global Drag Overlay */}
       <DragOverlay dropAnimation={null}>
         {activeId ? (
-          <div className="p-3 bg-blue-600 text-white rounded-lg shadow-2xl w-48 opacity-90 scale-105 cursor-grabbing font-bold flex items-center justify-center">
+          <div className="p-3 bg-main text-white rounded-lg shadow-2xl w-48 opacity-90 scale-105 cursor-grabbing font-bold flex items-center justify-center">
              이동 중...
           </div>
         ) : null}
