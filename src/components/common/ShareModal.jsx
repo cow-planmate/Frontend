@@ -42,13 +42,11 @@ const ShareModal = ({ setIsShareOpen, id, isOwner }) => {
       });
       console.log(response);
       setreceiverNickname("");
-      alert("초대를 보냈습니다!");
+      alert(response.message);
     } catch (err) {
       console.error("초대에 실패했습니다:", err);
 
-      const errorMessage =
-        err.response?.data?.message ||
-        "초대에 실패했습니다. 다시 시도해주세요.";
+      const errorMessage = err.message;
       alert(errorMessage);
     }
   };

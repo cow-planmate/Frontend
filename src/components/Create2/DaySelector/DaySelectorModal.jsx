@@ -137,9 +137,13 @@ const DaySelectorModal = ({setIsModalOpen}) => {
     }
 
     const isDeleteDay = deleteTime.some(item => items[item.timeTableId]);
+    let realDelete = true;
 
     if (isDeleteDay) {
-      alert("지우려는 일정에 블록이 존재합니다. 블록을 완전히 삭제한 후 다시 시도해주세요.");
+      realDelete = confirm("지우려는 일정에 블록이 존재합니다. 삭제하려는게 맞나요?");
+    }
+
+    if (!realDelete) {
       return;
     }
 
