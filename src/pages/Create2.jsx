@@ -1,6 +1,6 @@
 // 목표: 최대한 간결하고 작동 잘 되게
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useBlocker } from "react-router-dom";
 import { 
   DndContext,
   useSensor,
@@ -39,7 +39,7 @@ function App() {
     travelCategoryName, travelName, travelId
   } = usePlanStore();
   const { setTimetableAll, setSelectedDay } = useTimetableStore();
-  const { addItemFromWebsocket } = useItemsStore();
+  const { addItemFromWebsocket, resetItems } = useItemsStore();
   const { setPlacesAll, tour, lodging, restaurant } = usePlacesStore();
   const { lastSelectedDay } = useNicknameStore();
   const { setUserAll } = useUserStore();
@@ -48,7 +48,23 @@ function App() {
   useEffect(() => {
     return () => {
       resetAllStores();
+      resetItems();
     }
+  }, []);
+
+  useEffect(() => {
+    if (planId !== -1) return;
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = ""; // 이거 필수 (크롬 기준)
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
   }, []);
 
   // 초기 데이터 로딩

@@ -18,7 +18,6 @@ function isDifferentEventId(eventId) {
 
 const plan = (body) => {
   const eventId = body.eventId;
-  console.log("📩 수신된 메시지:", body);
   const data = body.planDtos || body.plans;
   if (!data) return;
 
@@ -58,9 +57,8 @@ const timetableplaceblock = (body) => {
   const data = body.timeTablePlaceBlockDtos || body.timetableplaceblocks;
   const isUndoRedo = body.isUndoRedo;
 
-  if ((isDifferentEventId(eventId) || isUndoRedo) && data) {
-    console.log("📩 수신된 메시지:", body);
-    
+  // "create" 액션은 내가 보낸 것이라도 서버가 할당한 실제 ID를 받아와야 하므로 eventId 체크를 제외함
+  if ((isDifferentEventId(eventId) || isUndoRedo || action === "create") && data) {
     switch(action) {
       case "create":
         data.map((item) => {
@@ -76,7 +74,8 @@ const timetableplaceblock = (body) => {
         break;
       case "delete":
         data.map((item) => {
-          useItemsStore.getState().deleteItem(item.placeTheme, item.timeTableId);
+          const deleteId = item.blockId;
+          useItemsStore.getState().deleteItem(deleteId, item.timeTableId);
         })
         break;
     }

@@ -1,7 +1,6 @@
 import usePlanStore from "../store/Plan";
 import useTimetableStore from "../store/Timetables";
 import usePlacesStore from "../store/Places";
-import useItemsStore from "../store/Schedules";
 
 export const formatTime = (slotIndex) => {
   const { START_HOUR } = useTimetableStore.getState();
@@ -56,52 +55,50 @@ export function slotIndexToTime(START_HOUR, newStart, intervalMinutes = 15) {
   return `${h}:${m}:00`;
 }
 
-export function exportBlock(timeTableId, place, newStart, duration, blockId, noLogin = false, date = null) {
+export function exportBlock(timeTableId, place, newStart, duration, blockId, noLogin = false, date = null, memo = "") {
   const { START_HOUR } = useTimetableStore.getState();
-  const blockStartTime = slotIndexToTime(START_HOUR, newStart);
-  const blockEndTime = slotIndexToTime(START_HOUR, newStart + duration);
-  let block;
+  const startTime = slotIndexToTime(START_HOUR, newStart);
+  const endTime = slotIndexToTime(START_HOUR, newStart + duration);
+  
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
+  // photoUrl이 null일 경우 백엔드 이미지 프록시 URL로 대체
+  const photoUrl = place.photoUrl || (place.placeId ? `${BASE_URL}/image/place/${encodeURIComponent(place.placeId)}` : null);
+
+  // blockId가 'temp-'로 시작하는 문자열이면 백엔드 전송 시 null로 보냄 (새로 생성하는 항목)
+  const finalBlockId = (typeof blockId === 'string' && blockId.startsWith('temp-')) ? null : blockId;
+
+  const block = {
+    blockId: finalBlockId,
+    placeName: place.name,
+    placeRating: place.rating,
+    placeAddress: place.formatted_address,
+    placeLink: place.url,
+    blockStartTime: startTime,
+    blockEndTime: endTime,
+    startTime: startTime,
+    endTime: endTime,
+    xLocation: place.xLocation || place.xlocation,
+    yLocation: place.yLocation || place.ylocation,
+    placeCategoryId: place.categoryId,
+    timeTableId: timeTableId,
+    photoUrl: photoUrl,
+    placeId: place.placeId,
+    memo: memo
+  };
+
   if (noLogin) {
-    block = {
-      blockId: Math.random(),
-      placeName: place.name,
-      placeTheme: blockId,
-      placeRating: place.rating,
-      placeAddress: place.formatted_address,
-      placeLink: place.url,
-      startTime: blockStartTime,
-      endTime: blockEndTime,
-      xLocation: place.xlocation,
-      yLocation: place.ylocation,
-      placeCategoryId: place.categoryId,
-      timeTableId: timeTableId,
-      placePhotoId: place.placeId,
-      date: date
-    }
-  } else {
-    block = {
-      blockId: Math.random(),
-      placeName: place.name,
-      placeTheme: blockId,
-      placeRating: place.rating,
-      placeAddress: place.formatted_address,
-      placeLink: place.url,
-      blockStartTime: blockStartTime,
-      blockEndTime: blockEndTime,
-      xLocation: place.xlocation,
-      yLocation: place.ylocation,
-      placeCategoryId: place.categoryId,
-      timeTableId: timeTableId,
-      placePhotoId: place.placeId,
-    }
+    block.date = date;
   }
+
   return block;
 }
 
 export function getTimeSlotIndex(timeTableStartTime, time, intervalMinutes = 15) {
+  if (!time) return 0;
   const toMinutes = (t) => {
     const [h, m, s] = t.split(':').map(Number);
-    return h * 60 + m + s / 60;
+    return h * 60 + m + (s || 0) / 60;
   };
 
   const startMinutes = toMinutes(timeTableStartTime);
@@ -115,31 +112,36 @@ export function convertBlock(block) {
   const { timetables } = useTimetableStore.getState();
   const timeTableStartTime = timetables.find(
     (t) => t.timeTableId === timeTableId
-  )?.timeTableStartTime;
-  const start = getTimeSlotIndex(timeTableStartTime, block.blockStartTime);
-  const duration = getTimeSlotIndex(block.blockStartTime, block.blockEndTime);
-  const blockId = block.placeTheme;
-  console.log(start)
-  console.log(duration)
+  )?.timeTableStartTime || "00:00:00";
+
+  const startTime = block.startTime || block.blockStartTime;
+  const endTime = block.endTime || block.blockEndTime;
+
+  const start = getTimeSlotIndex(timeTableStartTime, startTime);
+  const duration = getTimeSlotIndex(startTime, endTime);
+  
+  // blockId를 프론트엔드 아이템의 id로 사용
+  const blockId = block.blockId;
+  const memo = block.memo;
 
   const place = {
-    placeId: block.placePhotoId,
+    placeId: block.placeId,
     categoryId: block.placeCategoryId,
     url: block.placeLink,
     name: block.placeName,
     formatted_address: block.placeAddress,
     rating: block.placeRating,
+    photoUrl: block.photoUrl,
     iconUrl: "./src/assets/imgs/default.png",
-    xlocation: block.xLocation || block.xlocation,
-    ylocation: block.yLocation || block.ylocation,
+    xLocation: block.xLocation || block.xlocation,
+    yLocation: block.yLocation || block.ylocation,
   }
 
-  return {timeTableId, place, start, duration, blockId};
+  return { timeTableId, place, start, duration, blockId, memo };
 }
 
 export const resetAllStores = () => {
   usePlanStore.getState().resetPlan();
   useTimetableStore.getState().resetTimetable();
   usePlacesStore.getState().resetPlaces();
-  useItemsStore.getState().resetItems();
 };

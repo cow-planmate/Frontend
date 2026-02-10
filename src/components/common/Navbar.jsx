@@ -50,8 +50,8 @@ export default function Navbar({ onInvitationAccept }) {
   const BASE_URL = import.meta.env.VITE_API_URL;
 
   // 로그아웃 처리 함수
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
 
     window.location.href = "/";
   };

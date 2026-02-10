@@ -97,13 +97,29 @@ const TravelPlannerApp = () => {
         ylocation: place.ylocation || 0,
         timeSlot: timeSlot,
         duration: duration,
+        memo: place.memo,
       };
       const targetTimetableId = place.timetableId ?? place.timeTableId;
       if (result[targetTimetableId]) {
-        result[targetTimetableId].push(transformedPlace);
+        result[targetTimetableId].push({
+          place: transformedPlace,
+          start: getTimeSlotIndex(timetables.find(t => t.timetableId === targetTimetableId).startTime, place.startTime),
+          duration: duration,
+          memo: place.memo
+        });
       }
     });
     return result;
+  };
+
+  const getTimeSlotIndex = (timeTableStartTime, time) => {
+    const toMinutes = (t) => {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    };
+    const startMinutes = toMinutes(timeTableStartTime);
+    const targetMinutes = toMinutes(time);
+    return Math.floor((targetMinutes - startMinutes) / 15);
   };
 
   useEffect(() => {

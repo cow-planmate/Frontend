@@ -55,26 +55,28 @@ function App() {
     console.log(timeTableStartTime)
     const start = getTimeSlotIndex(timeTableStartTime, block?.blockStartTime);
     const duration = getTimeSlotIndex(block?.blockStartTime, block?.blockEndTime);
-    const blockId = block.placeTheme;
+    const blockId = block.blockId;
     console.log(start)
     console.log(duration)
 
     const place = {
-      placeId: block.placePhotoId,
+      placeId: block.placeId,
       categoryId: block.placeCategoryId,
       url: block.placeLink,
       name: block.placeName,
       formatted_address: block.placeAddress,
       rating: block.placeRating,
-      iconUrl: "./src/assets/imgs/default.png",
+      iconUrl: block.photoUrl || "./src/assets/imgs/default.png",
+      photoUrl: block.photoUrl,
       xlocation: block.xLocation || block.xlocation,
       ylocation: block.yLocation || block.ylocation,
+      memo: block.memo,
     }
 
-    return {timeTableId, place, start, duration, blockId};
+    return {timeTableId, place, start, duration, blockId, memo: block.memo};
   }
 
-  const addPlaceBlock = ({ timeTableId, place, start, duration, blockId }) => {
+  const addPlaceBlock = ({ timeTableId, place, start, duration, blockId, memo }) => {
     setPlaceBlocks((prev) => ({
       ...prev,
       [timeTableId]: [
@@ -84,6 +86,7 @@ function App() {
           place,
           start,
           duration,
+          memo,
         },
       ],
     }));
