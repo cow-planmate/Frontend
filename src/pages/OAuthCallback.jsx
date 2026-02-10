@@ -145,10 +145,10 @@ const OAuthCallback = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">로그인 실패</h2>
           <p className="text-red-600 mb-6">{error}</p>
           <button
-            onClick={() => navigate("/logintest")}
+            onClick={() => navigate("/")}
             className="w-full py-3 bg-main text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
           >
-            로그인 페이지로 돌아가기
+            돌아가기
           </button>
         </div>
       </div>
