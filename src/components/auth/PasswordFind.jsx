@@ -110,14 +110,14 @@ export default function PasswordFind({ isOpen, onClose }) {
             verificationCode: formData.verificationCode,
             purpose: "RESET_PASSWORD",
           }),
-        }
+        },
       );
 
       const data = await response.json();
       console.log("서버 응답:", data);
 
       if (
-        !data.emailVerified ||
+        data.emailVerified ||
         data.message === "Verification completed successfully"
       ) {
         alert("인증 성공! ");
@@ -166,7 +166,7 @@ export default function PasswordFind({ isOpen, onClose }) {
 
       if (data.message === "Temp password sent") {
         alert(
-          "임시 비밀번호가 이메일로 발송되었습니다. 로그인 후 마이페이지에서 변경해주세요"
+          "임시 비밀번호가 이메일로 발송되었습니다. 로그인 후 마이페이지에서 변경해주세요",
         );
         onClose();
       } else {
