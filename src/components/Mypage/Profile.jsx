@@ -144,7 +144,7 @@ const DeleteModal = ({ setIsDeleteOpen }) => {
     if (isAuthenticated() && realDelete) {
       try {
         await del(`${BASE_URL}/api/user/account`);
-        logout();
+        await logout();
         setIsDeleteOpen(false);
         navigate("/");
         alert("탈퇴되었습니다.");

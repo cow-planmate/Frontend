@@ -256,11 +256,20 @@ export const useApiClient = () => {
     [post, setTokens, BASE_URL]
   );
 
-  const logout = useCallback(() => {
-    clearAuth();
-    // 필요하다면, 로그아웃 후 로그인 페이지로 이동하는 로직을 추가할 수 있습니다.
-    // window.location.href = '/login';
-  }, [clearAuth]);
+  const logout = useCallback(async () => {
+    const refreshToken = getRefreshToken();
+    try {
+      if (refreshToken) {
+        await post(`${BASE_URL}/api/auth/logout`, {
+          refreshToken,
+        });
+      }
+    } catch (err) {
+      console.error("로그아웃 API 호출 실패:", err.message);
+    } finally {
+      clearAuth();
+    }
+  }, [post, getRefreshToken, clearAuth, BASE_URL]);
 
   const isAuthenticated = useCallback(() => {
     return !!getAccessToken();

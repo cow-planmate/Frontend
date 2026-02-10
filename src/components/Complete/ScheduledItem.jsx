@@ -1,4 +1,10 @@
+import { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
+import DetailPopup from "../Create2/Timetable/DetailPopup";
+
 export const ScheduledItem = ({ item, START_HOUR }) => {
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const SLOT_HEIGHT = 40;
   
   const place = item?.place;
@@ -83,8 +89,33 @@ export const ScheduledItem = ({ item, START_HOUR }) => {
                 </p>
               </div>
             </div>
+
+            <div className="flex shrink-0 gap-1 mt-[-4px]">
+              <button
+                className={`w-7 h-7 hover:bg-white hover:bg-opacity-50 rounded-full ${tripColor5[place.categoryId]} text-xs flex items-center justify-center transition-colors pointer-events-auto`}
+                onClick={() => setIsDetailOpen(true)}
+                title="상세보기"
+              >
+                <FontAwesomeIcon icon={faPencilAlt} />
+              </button>
+            </div>
           </div>
+          {item.memo && localState.height > 80 && (
+            <div className="mt-2 text-xs text-black line-clamp-2 pointer-events-none">
+              {item.memo}
+            </div>
+          )}
         </div>
+
+      {isDetailOpen && (
+        <DetailPopup
+          isOpen={isDetailOpen}
+          onClose={() => setIsDetailOpen(false)}
+          item={item}
+          readOnly={true}
+          onUpdateMemo={() => {}}
+        />
+      )}
     </div>
   );
 };

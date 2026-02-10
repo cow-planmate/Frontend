@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { Resizable } from "react-resizable";
 import { CSS } from "@dnd-kit/utilities";
@@ -9,18 +9,29 @@ import { getClient } from '../../../websocket/client';
 import useItemsStore from '../../../store/Schedules';
 import usePlanStore from '../../../store/Plan';
 import { useSearchParams } from 'react-router-dom';
+import DetailPopup from "./DetailPopup";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt, faTimes } from "@fortawesome/free-solid-svg-icons";
 
 export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
   const client = getClient();
   const { eventId } = usePlanStore();
   const { SLOT_HEIGHT, TOTAL_SLOTS, timetables, selectedDay } = useTimetableStore();
-  const { deleteItem } = useItemsStore();
+  const { deleteItem, updateItemMemo } = useItemsStore();
   const [isResizing, setIsResizing] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
   
   const place = item?.place;
+  const memoDebounceRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (memoDebounceRef.current) clearTimeout(memoDebounceRef.current);
+    };
+  }, []);
 
   const { attributes, listeners, setNodeRef, isDragging, transform } =
     useDraggable({
@@ -138,11 +149,11 @@ export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
     4: "text-gray-900",
   };
 
-  const sendWebsocket = (block) => {
+  const sendWebsocket = (block, action = "delete") => {
     if (client && client.connected) {
       const msg = {
         eventId: eventId,
-        action: "delete",
+        action: action,
         entity: "timetableplaceblock",
         timeTablePlaceBlockDtos: [
           block
@@ -156,72 +167,120 @@ export const ResizableScheduledItem = ({ item, onResizeEnd }) => {
     }
   }
 
+  const handleUpdateMemo = (newMemo) => {
+    // 1. 즉시 로컬 스토어 업데이트 (사용자 경험 유지)
+    updateItemMemo(getTimeTableId(timetables, selectedDay), item.id, newMemo);
+    
+    // 2. 웹소켓 전송 디바운스 (서버 부하 감소: 500ms 대기)
+    if (memoDebounceRef.current) clearTimeout(memoDebounceRef.current);
+    
+    memoDebounceRef.current = setTimeout(() => {
+      const block = exportBlock(
+        getTimeTableId(timetables, selectedDay), 
+        place, 
+        item.start, 
+        item.duration, 
+        item.id, 
+        false, 
+        null, 
+        newMemo
+      );
+      sendWebsocket(block, "update");
+    }, 500);
+  };
+
   return (
-    <div
-      ref={setNodeRef}
-      style={{
-        top: localState.top,
-        height: localState.height,
-        position: "absolute",
-        left: "4rem",
-        right: "8px",
-        ...dragStyle,
-      }}
-      className="absolute touch-none"
-      {...attributes}
-    >
-      <Resizable
-        height={localState.height}
-        width={200}
-        axis="y"
-        resizeHandles={["s", "n"]}
-        onResizeStart={onResizeStart}
-        onResize={onResize}
-        onResizeStop={onResizeStop}
-        minConstraints={[100, SLOT_HEIGHT]}
-        maxConstraints={[100, SLOT_HEIGHT * TOTAL_SLOTS]}
-        handle={(h, ref) => <ResizeHandle ref={ref} handleAxis={h} />}
+    <>
+      <div
+        ref={setNodeRef}
+        style={{
+          top: localState.top,
+          height: localState.height,
+          position: "absolute",
+          left: "4rem",
+          right: "8px",
+          ...dragStyle,
+        }}
+        className="absolute touch-none"
+        {...attributes}
       >
-        <div
-          {...listeners}
-          className={`w-full h-full ${tripColor1[place.categoryId]} border-l-4 ${tripColor3[place.categoryId]} rounded shadow-sm overflow-hidden select-none hover:${tripColor2[place.categoryId]} transition-colors cursor-move
-            ${isDragging ? "shadow-xl ring-2 ring-blue-300" : ""}
-            ${localState.height <= 80 ? "flex flex-col items-start justify-center px-5" : "p-5"}`}
+        <Resizable
+          height={localState.height}
+          width={200}
+          axis="y"
+          resizeHandles={["s", "n"]}
+          onResizeStart={onResizeStart}
+          onResize={onResize}
+          onResizeStop={onResizeStop}
+          minConstraints={[100, SLOT_HEIGHT]}
+          maxConstraints={[100, SLOT_HEIGHT * TOTAL_SLOTS]}
+          handle={(h, ref) => <ResizeHandle ref={ref} handleAxis={h} />}
         >
-          <div className="w-full flex items-center gap-2 min-w-0">
-            <div className="flex-1 min-w-0">
-              <div
-                className={`font-bold text-lg ${tripColor5[place.categoryId]} truncate pointer-events-none`}
-              >
-                {place.name}
+          <div
+            {...listeners}
+            className={`w-full h-full ${tripColor1[place.categoryId]} border-l-4 ${tripColor3[place.categoryId]} rounded shadow-sm overflow-hidden select-none hover:${tripColor2[place.categoryId]} transition-colors cursor-move
+              ${isDragging ? "shadow-xl ring-2 ring-blue-300" : ""}
+              ${localState.height <= 80 ? "flex flex-col items-start justify-center px-5" : "p-5"}`}
+          >
+            <div className="w-full flex items-center gap-2 min-w-0">
+              <div className="flex-1 min-w-0">
+                <div
+                  className={`font-bold text-lg ${tripColor5[place.categoryId]} truncate pointer-events-none`}
+                >
+                  {place.name}
+                </div>
+
+                <div
+                  className={`text-xs ${tripColor4[place.categoryId]} font-medium pointer-events-none`}
+                >
+                  <p>
+                    {tripCategory[place.categoryId]} | {formatTime(item.start)} -{" "}
+                    {formatTime(
+                      item.start + Math.round(localState.height / SLOT_HEIGHT),
+                    )}
+                  </p>
+                </div>
               </div>
 
-              <div
-                className={`text-xs ${tripColor4[place.categoryId]} font-medium pointer-events-none`}
-              >
-                <p>
-                  {tripCategory[place.categoryId]} | {formatTime(item.start)} -{" "}
-                  {formatTime(
-                    item.start + Math.round(localState.height / SLOT_HEIGHT),
-                  )}
-                </p>
+              <div className="flex shrink-0 gap-1 mt-[-4px]">
+                <button
+                  className={`w-7 h-7 hover:bg-white hover:bg-opacity-50 rounded-full ${tripColor5[place.categoryId]} text-xs pointer-events-auto flex items-center justify-center transition-colors`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDetailOpen(true);
+                  }}
+                  title="수정"
+                >
+                  <FontAwesomeIcon icon={faPencilAlt} />
+                </button>
+                <button
+                  className={`w-7 h-7 hover:bg-white hover:bg-opacity-50 rounded-full ${tripColor5[place.categoryId]} text-sm pointer-events-auto flex items-center justify-center transition-colors`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteItem(item.id, getTimeTableId(timetables, selectedDay));
+                    const block = exportBlock(getTimeTableId(timetables, selectedDay), place, item.start, item.duration, item.id);
+                    sendWebsocket(block);
+                  }}
+                  title="삭제"
+                >
+                  <FontAwesomeIcon icon={faTimes} />
+                </button>
               </div>
             </div>
-
-            <button
-              className={`w-8 h-8 shrink-0 hover:bg-white hover:bg-opacity-50 rounded-full ${tripColor5[place.categoryId]} text-lg`}
-              onClick={(e) => {
-                e.stopPropagation();
-                deleteItem(item.id, getTimeTableId(timetables, selectedDay));
-                const block = exportBlock(getTimeTableId(timetables, selectedDay), place, item.start, item.duration, item.id);
-                sendWebsocket(block);
-              }}
-            >
-              ×
-            </button>
+            {item.memo && localState.height > 80 && (
+              <div className="mt-2 text-xs text-black line-clamp-2 pointer-events-none">
+                {item.memo}
+              </div>
+            )}
           </div>
-        </div>
-      </Resizable>
-    </div>
+        </Resizable>
+      </div>
+      <DetailPopup 
+        isOpen={isDetailOpen} 
+        onClose={() => setIsDetailOpen(false)} 
+        item={item} 
+        onUpdateMemo={handleUpdateMemo}
+      />
+    </>
   );
 };

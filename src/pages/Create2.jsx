@@ -39,7 +39,7 @@ function App() {
     travelCategoryName, travelName, travelId
   } = usePlanStore();
   const { setTimetableAll, setSelectedDay } = useTimetableStore();
-  const { addItemFromWebsocket } = useItemsStore();
+  const { addItemFromWebsocket, resetItems } = useItemsStore();
   const { setPlacesAll, tour, lodging, restaurant } = usePlacesStore();
   const { lastSelectedDay } = useNicknameStore();
   const { setUserAll } = useUserStore();
@@ -48,6 +48,7 @@ function App() {
   useEffect(() => {
     return () => {
       resetAllStores();
+      resetItems();
     }
   }, []);
 
