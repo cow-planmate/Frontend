@@ -10,13 +10,13 @@ export default function MapComponent({schedule}) {
   const sortedSchedule = [...schedule].sort((a, b) => a.start - b.start);
   
   const isValidPosition = (place) =>
-    place?.ylocation != null && place?.xlocation != null;
+    (place?.yLocation != null || place?.ylocation != null) && (place?.xLocation != null || place?.xlocation != null);
 
   const positions = sortedSchedule
     .map((item, index) => ({
       index, // ← 원래 순서 번호 유지용
-      lat: isValidPosition(item.place) ? item.place.ylocation : null,
-      lng: isValidPosition(item.place) ? item.place.xlocation : null,
+      lat: isValidPosition(item.place) ? (item.place.yLocation ?? item.place.ylocation) : null,
+      lng: isValidPosition(item.place) ? (item.place.xLocation ?? item.place.xlocation) : null,
     }))
     .filter(pos => pos.lat != null && pos.lng != null);
 
@@ -58,8 +58,8 @@ export default function MapComponent({schedule}) {
             <MapMarker
               key={item.id}
               position={{
-                lat: item.place.ylocation,
-                lng: item.place.xlocation,
+                lat: item.place.yLocation || item.place.ylocation,
+                lng: item.place.xLocation || item.place.xlocation,
               }}
             >
               <div className="p-2 w-[159px]" style={{ borderRadius: "4rem" }}>
