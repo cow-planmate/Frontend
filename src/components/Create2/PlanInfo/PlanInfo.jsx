@@ -13,7 +13,7 @@ import Theme from "../../auth/Theme";
 import Themestart from "../../auth/Themestart";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faUserPlus, faInfo, faRotateLeft, faRotateRight, faUsers } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faUserPlus, faInfo, faRotateLeft, faRotateRight, faUsers, faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
 import { faMap } from "@fortawesome/free-regular-svg-icons";
 
 import PlanInfoModal from "./PlanInfoModal";
@@ -22,10 +22,10 @@ import MapModal from "./MapModal";
 import NoLoginSave from "./NoLoginSave";
 import UsersModal from "./UsersModal";
 
-export default function PlanInfo({id}) {
-  const { 
-    planName, 
-    transportationCategoryId, 
+export default function PlanInfo({ id }) {
+  const {
+    planName,
+    transportationCategoryId,
     setPlanField,
     planId
   } = usePlanStore();
@@ -41,12 +41,12 @@ export default function PlanInfo({id}) {
   const inputRef = useRef(null);
   const [localName, setLocalName] = useState(planName);
   const [inputWidth, setInputWidth] = useState('auto');
-  
+
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isUsersOpen, setIsUsersOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
-  
+
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isPasswordFindOpen, setIsPasswordFindOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
@@ -150,7 +150,7 @@ export default function PlanInfo({id}) {
             className={`${infoButton} box-content text-lg font-semibold max-w-full`}
             onChange={(e) => setLocalName(e.target.value)}
             onBlur={() => setPlanField("planName", localName)}
-            style={{ 
+            style={{
               width: inputWidth,
               minWidth: '8px',
               maxWidth: '100%'
@@ -158,16 +158,16 @@ export default function PlanInfo({id}) {
             value={localName}
           />
         </div>
-        {planId !== -1 && 
+        {planId !== -1 &&
           <div className="flex">
-            <button 
+            <button
               onClick={() => sendUndo(id)}
               className="sm:size-7 size-5 hover:bg-gray-200 bg-white rounded-full flex items-center justify-center"
               title="되돌리기 (Ctrl+Z)"
             >
               <FontAwesomeIcon icon={faRotateLeft} />
             </button>
-            <button 
+            <button
               onClick={() => sendRedo(id)}
               className="sm:size-7 size-5 hover:bg-gray-200 bg-white rounded-full flex items-center justify-center"
               title="다시실행 (Ctrl+Y / Ctrl+Shift+Z)"
@@ -176,7 +176,7 @@ export default function PlanInfo({id}) {
             </button>
           </div>
         }
-        <button 
+        <button
           className="block text-sm rounded-full bg-gray-300 hover:bg-gray-400 p-2 w-9"
           onClick={() => setIsInfoOpen(true)}
         >
@@ -219,32 +219,34 @@ export default function PlanInfo({id}) {
               </button>
             )}
           </div>
-          <button 
-            className="flex items-center sm:hidden text-sm rounded-full border border-main hover:bg-gray-100 p-2 size-9"
-            onClick={() => setIsUsersOpen(true)}
-          >
-            <div className="w-5 text-main"><FontAwesomeIcon icon={faUsers} /></div>
-          </button>
-          <button 
+          {planId !== -1 &&
+            <button
+              className="flex items-center sm:hidden text-sm rounded-full border border-main hover:bg-gray-100 p-2 size-9"
+              onClick={() => setIsUsersOpen(true)}
+            >
+              <div className="w-5 text-main"><FontAwesomeIcon icon={faUsers} /></div>
+            </button>
+          }
+          <button
             onClick={() => setIsMapOpen(true)}
             className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg border border-gray-500 hover:bg-gray-100"
           >
             <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faMap} /></div>
             <div className="hidden sm:block">지도로 보기</div>
           </button>
-          {planId === -1 ? 
+          {planId === -1 ?
             <>
               <button
                 onClick={handleSave}
                 className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-main hover:bg-mainDark text-white"
               >
-                <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faCheck} /></div>
+                <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faFloppyDisk} /></div>
                 <div className="hidden sm:block">저장</div>
               </button>
-            </> 
-          : 
+            </>
+            :
             <>
-              <button 
+              <button
                 onClick={() => setIsShareOpen(true)}
                 className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-gray-300 hover:bg-gray-400"
               >
@@ -281,7 +283,7 @@ export default function PlanInfo({id}) {
       />}
 
       {isMapOpen && <MapModal setIsMapOpen={setIsMapOpen} />}
-      
+
       {step === 1 &&
         <>
           <Login
@@ -316,8 +318,8 @@ export default function PlanInfo({id}) {
         </>
       }
 
-      {step === 2 && 
-        <NoLoginSave isOpen={isSaveOpen}/>
+      {step === 2 &&
+        <NoLoginSave isOpen={isSaveOpen} />
       }
     </div>
   )
