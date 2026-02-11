@@ -16,6 +16,7 @@ import {
 import { faBell as faBellRegular } from "@fortawesome/free-regular-svg-icons";
 import useNicknameStore from "../../store/Nickname";
 import FeedbackModal from "../common/Feedback";
+import { hasTempPlan, clearTempPlan } from "../../utils/tempPlanStorage"; // Import util
 
 export default function Navbar({ onInvitationAccept }) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -23,6 +24,7 @@ export default function Navbar({ onInvitationAccept }) {
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [isThemeOpen, setIsThemeOpen] = useState(false);
   const [isThemestartOpen, setIsThemestartOpen] = useState(false); // 추가된 state
+  const [hasTemp, setHasTemp] = useState(false); // 임시 저장 여부
   const [selectedThemeKeywords, setSelectedThemeKeywords] = useState({
     tourist: [],
     accommodation: [],
@@ -32,6 +34,7 @@ export default function Navbar({ onInvitationAccept }) {
   const [isInvitationOpen, setisInvitationOpen] = useState(false);
   const [invitations, setInvitations] = useState([]);
   const [isFeedbackOpen, setisFeedbackOpen] = useState(false);
+  const [isTempPlanModalOpen, setIsTempPlanModalOpen] = useState(false);
 
   const { nickname, gravatar } = useNicknameStore();
 
@@ -167,6 +170,35 @@ export default function Navbar({ onInvitationAccept }) {
     fetchInvitations();
   }, [nickname]);
 
+  // 임시 저장 확인
+  useEffect(() => {
+    const checkTempPlan = () => {
+      setHasTemp(hasTempPlan());
+    };
+
+    checkTempPlan();
+
+    window.addEventListener('tempPlanUpdated', checkTempPlan);
+    return () => window.removeEventListener('tempPlanUpdated', checkTempPlan);
+  }, []);
+
+  const handleTempPlanClick = () => {
+    setIsTempPlanModalOpen(true);
+  };
+
+  const handleTempPlanContinue = () => {
+    setIsTempPlanModalOpen(false);
+    navigate('/create');
+  };
+
+  const handleTempPlanDiscard = () => {
+    clearTempPlan();
+    setIsTempPlanModalOpen(false);
+    if (location.pathname === '/create') {
+      window.location.reload();
+    }
+  };
+
   return (
     <div className="border-b border-gray-200 ">
       <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8 bg-white flex justify-between py-4 items-center">
@@ -202,12 +234,12 @@ export default function Navbar({ onInvitationAccept }) {
                       style={
                         gravatar
                           ? {
-                              backgroundImage: `url('${gravatar}')`,
-                            }
+                            backgroundImage: `url('${gravatar}')`,
+                          }
                           : {
-                              backgroundImage:
-                                "url('./src/assets/imgs/default.png')",
-                            }
+                            backgroundImage:
+                              "url('./src/assets/imgs/default.png')",
+                          }
                       }
                     ></div>
                     <span>{nickname}님</span>
@@ -319,7 +351,33 @@ export default function Navbar({ onInvitationAccept }) {
               )}
             </div>
           ) : (
-            <div className="h-[35px] flex items-center">
+            <div className="h-[35px] flex items-center gap-2">
+              {hasTemp && (
+                <div className="relative">
+                  <button
+                    onClick={handleTempPlanClick}
+                    className="text-sm text-main font-semibold hover:underline animate-pulse mr-2"
+                  >
+                    임시 일정 있음
+                  </button>
+                  {isTempPlanModalOpen && (
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+                      <button
+                        onClick={handleTempPlanContinue}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        마저 편집하기
+                      </button>
+                      <button
+                        onClick={handleTempPlanDiscard}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      >
+                        버리기
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
               <button
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100"
                 onClick={handleLoginOpen}
@@ -365,6 +423,6 @@ export default function Navbar({ onInvitationAccept }) {
         isOpen={isFeedbackOpen}
         onClose={() => setisFeedbackOpen(false)}
       />
-    </div>
+    </div >
   );
 }
