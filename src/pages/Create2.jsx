@@ -1,6 +1,6 @@
 // 목표: 최대한 간결하고 작동 잘 되게
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams, useBlocker } from "react-router-dom";
+import { useNavigate, useSearchParams, useBlocker, useLocation } from "react-router-dom";
 import {
   DndContext,
   useSensor,
@@ -41,6 +41,7 @@ function App() {
     planName, departure, transportationCategoryId, adultCount, childCount
   } = usePlanStore();
   const { setTimetableAll, setSelectedDay, timetables } = useTimetableStore(); // Add timetables
+  const location = useLocation(); // Add useLocation
   const { addItemFromWebsocket, resetItems, items } = useItemsStore(); // Add items
   const { setPlacesAll, tour, lodging, restaurant } = usePlacesStore();
   const { lastSelectedDay } = useNicknameStore();
@@ -195,6 +196,15 @@ function App() {
 
   // 임시 저장 - Load Prompt & Initial Check
   useEffect(() => {
+    // Check if we came from Global Modal with intent to load
+    if (location.state?.loadTemp) {
+      loadTempPlan();
+      // Clear state so it doesn't re-trigger on refresh if state persists (though navigation usually clears it unless replaced)
+      // Actually navigate replaces state, but let's just handle it.
+      // We don't need to clear state explicitly if we just run loadTempPlan which sets isTempLoaded to true.
+      return;
+    }
+
     const temp = getTempPlan();
     if (temp && (!isAuthenticated() || temp.plan.planId === -1)) {
       // 현재 페이지가 create 페이지이고, 임시 데이터가 있는 경우
@@ -205,7 +215,7 @@ function App() {
     }
     // If no temp plan or not applicable, allow auto-save immediately
     setIsTempLoaded(true);
-  }, [id, isAuthenticated]);
+  }, [id, isAuthenticated, location.state]);
 
   // 임시 저장 - Auto Save
   useEffect(() => {
