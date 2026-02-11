@@ -167,6 +167,8 @@ export default function Navbar({ onInvitationAccept }) {
     fetchInvitations();
   }, [nickname]);
 
+
+
   return (
     <div className="border-b border-gray-200 ">
       <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8 bg-white flex justify-between py-4 items-center">
@@ -202,12 +204,12 @@ export default function Navbar({ onInvitationAccept }) {
                       style={
                         gravatar
                           ? {
-                              backgroundImage: `url('${gravatar}')`,
-                            }
+                            backgroundImage: `url('${gravatar}')`,
+                          }
                           : {
-                              backgroundImage:
-                                "url('./src/assets/imgs/default.png')",
-                            }
+                            backgroundImage:
+                              "url('./src/assets/imgs/default.png')",
+                          }
                       }
                     ></div>
                     <span>{nickname}님</span>
@@ -319,7 +321,8 @@ export default function Navbar({ onInvitationAccept }) {
               )}
             </div>
           ) : (
-            <div className="h-[35px] flex items-center">
+            <div className="h-[35px] flex items-center gap-2">
+
               <button
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100"
                 onClick={handleLoginOpen}
@@ -365,6 +368,6 @@ export default function Navbar({ onInvitationAccept }) {
         isOpen={isFeedbackOpen}
         onClose={() => setisFeedbackOpen(false)}
       />
-    </div>
+    </div >
   );
 }
