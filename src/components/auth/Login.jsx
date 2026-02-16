@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useApiClient } from "../../hooks/useApiClient";
 import google from "../../assets/imgs/googleicon.png";
+import { useLocation } from "react-router-dom";
 
 export default function Login({
   isOpen,
@@ -10,6 +11,8 @@ export default function Login({
   onSignupOpen,
   onLoginSuccess,
 }) {
+  const location = useLocation();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -86,6 +89,8 @@ export default function Login({
   };
 
   const handleSNSLogin = (provider) => {
+    sessionStorage.setItem("redirectAfterLogin", location.pathname);
+
     window.location.href = `${API_BASE_URL}/api/oauth/${provider}`;
   };
 
