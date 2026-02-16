@@ -199,6 +199,7 @@ export default function PlanList({
                   lst={lst}
                   onPlanDeleted={removePlanFromState}
                   isOwner={false}
+                  onResignEditorSuccess={removeEditablePlanFromState}
                 />
               ))}
             </div>
