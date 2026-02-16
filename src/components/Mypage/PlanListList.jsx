@@ -91,6 +91,24 @@ export default function PlanListList({
     onPlanSelect?.(lst.planId, e.target.checked);
   };
 
+  const resignEditorAccess = async () => {
+    if (!confirm("편집 권한을 포기하시겠습니까?")) return;
+
+    try {
+      const res = await del(`${BASE_URL}/api/plan/${lst.planId}/editor/me`);
+      console.log("편집권한 포기 응답", res);
+
+      alert("편집 권한을 포기했습니다.");
+
+      // 부모에서 상태 제거
+      onResignEditorSuccess?.(lst.planId);
+
+      setToggleModal(false);
+    } catch (err) {
+      console.error("편집 권한 포기 실패:", err);
+      alert("편집 권한 포기에 실패했습니다.");
+    }
+  };
   return (
     <div
       className={`relative bg-gray-50 hover:bg-blue-50 rounded-xl p-4 transition-all duration-200 cursor-pointer border ${
@@ -202,6 +220,23 @@ export default function PlanListList({
                 공유 및 초대
               </span>
             </button>
+            {!isOwner && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  resignEditorAccess();
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left border-t border-gray-100"
+              >
+                <FontAwesomeIcon
+                  icon={faTrash}
+                  className="w-4 h-4 text-red-500"
+                />
+                <span className="text-sm font-medium text-red-600">
+                  편집 권한 포기하기
+                </span>
+              </button>
+            )}
           </div>
         )}
       </div>
