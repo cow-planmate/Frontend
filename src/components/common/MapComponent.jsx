@@ -2,15 +2,17 @@ import { useEffect, useState } from "react";
 import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk"
 import useKakaoLoader from "../../hooks/useKakaoLoader"
 
-export default function MapComponent({schedule}) {
+export default function MapComponent({ schedule }) {
   useKakaoLoader()
 
   const [map, setMap] = useState();
 
-  const sortedSchedule = [...schedule].sort((a, b) => a.start - b.start);
-  
   const isValidPosition = (place) =>
     (place?.yLocation != null || place?.ylocation != null) && (place?.xLocation != null || place?.xlocation != null);
+
+  const sortedSchedule = [...schedule]
+    .sort((a, b) => a.start - b.start)
+    .filter((item) => isValidPosition(item.place));
 
   const positions = sortedSchedule
     .map((item, index) => ({
@@ -52,8 +54,6 @@ export default function MapComponent({schedule}) {
         onCreate={setMap}
       >
         {sortedSchedule.map((item, index) => {
-          if (!isValidPosition(item.place)) return null;
-
           return (
             <MapMarker
               key={item.id}
@@ -98,8 +98,8 @@ export default function MapComponent({schedule}) {
       </Map>
     ) : (
       <div className="w-full h-full flex-col flex items-center justify-center space-y-2 p-5">
-        <p className="text-main text-3xl font-bold">일차에 블록 없음</p>
-        <p className="text-lg">블록을 추가하면 지도가 보여요.</p>
+        <p className="text-main text-3xl font-bold">표시할 블록 없음</p>
+        <p className="text-lg">직접추가가 아닌 블록을 추가하면 지도가 보여요.</p>
       </div>
     )
   )
