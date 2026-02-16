@@ -10,7 +10,7 @@ const useUserStore = create((set) => ({
         ...user,
         userInfo: {
           ...user.userInfo,
-          email: gravatarUrl(user.userInfo.email),
+          email: user.userInfo.email ? gravatarUrl(user.userInfo.email) : './src/assets/imgs/default.png',
         }
       }))
     }))

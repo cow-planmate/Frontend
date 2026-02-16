@@ -31,7 +31,7 @@ const timetable = (body) => {
   const data = body.timeTableDtos || body.timetables;
   if (!data) return;
 
-  switch(action) {
+  switch (action) {
     case "create":
       data.map((item) => {
         console.log(item)
@@ -59,7 +59,7 @@ const timetableplaceblock = (body) => {
 
   // "create" 액션은 내가 보낸 것이라도 서버가 할당한 실제 ID를 받아와야 하므로 eventId 체크를 제외함
   if ((isDifferentEventId(eventId) || isUndoRedo || action === "create") && data) {
-    switch(action) {
+    switch (action) {
       case "create":
         data.map((item) => {
           const convert = convertBlock(item);
@@ -132,8 +132,8 @@ export const initStompClient = (id) => {
         const body = JSON.parse(message.body);
         console.log("📩 [WebSocket] 수신 데이터 (Topic):", body);
         const entity = body.entity;
-        
-        switch(entity) {
+
+        switch (entity) {
           case "plan":
             plan(body);
             break;

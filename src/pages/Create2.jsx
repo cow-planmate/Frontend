@@ -11,6 +11,7 @@ import {
 import { useApiClient } from "../hooks/useApiClient";
 import { disconnectStompClient, initStompClient, sendRedo, sendUndo } from "../websocket/client";
 import { saveTempPlan, getTempPlan, clearTempPlan } from "../utils/tempPlanStorage"; // Import util
+import { getClient } from "../websocket/client";
 
 import usePlanStore from "../store/Plan";
 import useTimetableStore from "../store/Timetables";
@@ -28,6 +29,7 @@ import useNicknameStore from "../store/Nickname";
 
 function App() {
   const BASE_URL = import.meta.env.VITE_API_URL;
+  const client = getClient();
 
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
@@ -306,7 +308,7 @@ function App() {
     }
   };
 
-  if (!planId || tour.length === 0 || lodging.length === 0 || restaurant.length === 0) {
+  if (!planId || tour.length === 0 || lodging.length === 0 || restaurant.length === 0 || (isAuthenticated() && (!client || !client.connected))) {
     return (
       <div className="font-pretendard h-screen">
         <Navbar />
