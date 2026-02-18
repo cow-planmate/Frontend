@@ -159,7 +159,7 @@ function App() {
   }, [travelCategoryName, travelName, travelId, isTempLoaded, isAuthenticated])
 
   useEffect(() => {
-    if (id && isAuthenticated() && planId) {
+    if (id && isAuthenticated() && planId && planId !== -1) {
       initStompClient(id);
 
       return () => {
@@ -308,7 +308,7 @@ function App() {
     }
   };
 
-  if (!planId || tour.length === 0 || lodging.length === 0 || restaurant.length === 0 || (isAuthenticated() && (!client || !client.connected))) {
+  if (!planId || tour.length === 0 || lodging.length === 0 || restaurant.length === 0 || (planId !== -1 && isAuthenticated() && (!client || !client.connected))) {
     return (
       <div className="font-pretendard h-screen">
         <Navbar />
