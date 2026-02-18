@@ -20,7 +20,7 @@ export default function PlanList({
   const removePlanFromState = (planId) => {
     setMyPlans((prevPlans) => prevPlans.filter((p) => p.planId !== planId));
     setEditablePlans((prevPlans) =>
-      prevPlans.filter((p) => p.planId !== planId)
+      prevPlans.filter((p) => p.planId !== planId),
     );
   };
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -199,6 +199,7 @@ export default function PlanList({
                   lst={lst}
                   onPlanDeleted={removePlanFromState}
                   isOwner={false}
+                  onResignEditorSuccess={removeEditablePlanFromState}
                 />
               ))}
             </div>

@@ -28,9 +28,8 @@ const OAuthAdditionalInfo = () => {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // state가 없으면 로그인 페이지로 리다이렉트
   if (!provider || !providerId) {
-    navigate("/logintest", { replace: true });
+    navigate("/", { replace: true });
     return null;
   }
 
@@ -109,8 +108,11 @@ const OAuthAdditionalInfo = () => {
       setNickname(nickname);
       setGravatar(email);
 
-      // 메인 페이지로 이동
-      navigate("/", { replace: true });
+      const redirectPath = sessionStorage.getItem("redirectAfterLogin") || "/";
+
+      sessionStorage.removeItem("redirectAfterLogin");
+
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       console.error("추가 정보 등록 실패:", err);
       setError(err.message || "추가 정보 등록에 실패했습니다.");

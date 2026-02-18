@@ -70,8 +70,12 @@ const OAuthCallback = () => {
             console.error("사용자 정보 조회 실패:", err);
           }
 
-          // 메인 페이지로 이동
-          navigate("/", { replace: true });
+          const redirectPath =
+            sessionStorage.getItem("redirectAfterLogin") || "/";
+
+          sessionStorage.removeItem("redirectAfterLogin");
+
+          navigate(redirectPath, { replace: true });
         }
         // 신규 사용자 - 추가 정보 입력 필요
         else if (status === "NEED_ADDITIONAL_INFO") {
@@ -145,7 +149,14 @@ const OAuthCallback = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">로그인 실패</h2>
           <p className="text-red-600 mb-6">{error}</p>
           <button
-            onClick={() => navigate("/")}
+            onClick={() => {
+              const redirectPath =
+                sessionStorage.getItem("redirectAfterLogin") || "/";
+
+              sessionStorage.removeItem("redirectAfterLogin");
+
+              navigate(redirectPath, { replace: true });
+            }}
             className="w-full py-3 bg-main text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
           >
             돌아가기
