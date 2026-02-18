@@ -1,9 +1,11 @@
 import { Search } from 'lucide-react';
 import React from 'react';
+import { CompactPostCard } from '../molecules/CompactPostCard';
 import { MainFeedPostCard } from '../molecules/MainFeedPostCard';
 
 interface MainPostsGridProps {
   posts: any[];
+  viewMode: 'grid' | 'list';
   onNavigate: (view: any, data?: any) => void;
   likedPosts: Set<number>;
   dislikedPosts: Set<number>;
@@ -14,6 +16,7 @@ interface MainPostsGridProps {
 
 export const MainPostsGrid: React.FC<MainPostsGridProps> = ({
   posts,
+  viewMode,
   onNavigate,
   likedPosts,
   dislikedPosts,
@@ -38,17 +41,27 @@ export const MainPostsGrid: React.FC<MainPostsGridProps> = ({
   }
 
   return (
-    <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6 h-fit">
+    <div className={`lg:col-span-2 h-fit ${viewMode === 'list' ? 'bg-white rounded-xl shadow-md overflow-hidden flex flex-col' : 'grid grid-cols-1 sm:grid-cols-2 gap-6'}`}>
       {posts.map(post => (
-        <MainFeedPostCard
-          key={post.id}
-          post={post}
-          onNavigate={onNavigate}
-          liked={likedPosts.has(post.id)}
-          disliked={dislikedPosts.has(post.id)}
-          onLike={onLike}
-          onDislike={onDislike}
-        />
+        viewMode === 'grid' ? (
+          <MainFeedPostCard
+            key={post.id}
+            post={post}
+            onNavigate={onNavigate}
+            liked={likedPosts.has(post.id)}
+            disliked={dislikedPosts.has(post.id)}
+            onLike={onLike}
+            onDislike={onDislike}
+          />
+        ) : (
+          <CompactPostCard
+            key={post.id}
+            post={post}
+            onNavigate={onNavigate}
+            liked={likedPosts.has(post.id)}
+            onLike={onLike}
+          />
+        )
       ))}
     </div>
   );

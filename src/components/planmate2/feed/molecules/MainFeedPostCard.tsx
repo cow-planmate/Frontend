@@ -1,6 +1,5 @@
 import { Clock, Copy, Eye, MessageCircle, ThumbsDown, ThumbsUp } from 'lucide-react';
 import React, { useState } from 'react';
-import { RoutePreview } from './RoutePreview';
 
 interface MainFeedPostCardProps {
   post: any;
@@ -28,11 +27,6 @@ export const MainFeedPostCard: React.FC<MainFeedPostCardProps> = ({
       onMouseLeave={() => setIsHovered(false)}
       className="relative bg-white rounded-xl shadow-md hover:shadow-xl transition-all cursor-pointer flex flex-col"
     >
-      {/* Route Preview Popup */}
-      {isHovered && post.route && (
-        <RoutePreview route={post.route} title={post.title} />
-      )}
-
       <div className="relative h-48 overflow-hidden rounded-t-xl">
         <img
           src={post.image}
@@ -45,7 +39,7 @@ export const MainFeedPostCard: React.FC<MainFeedPostCardProps> = ({
       </div>
 
       <div className="p-5 flex-1 flex flex-col">
-        <div 
+        <div
           className="flex items-center mb-3 group/author"
           onClick={(e) => {
             e.stopPropagation();

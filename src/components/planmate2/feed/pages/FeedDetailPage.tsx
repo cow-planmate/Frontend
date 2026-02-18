@@ -1,5 +1,7 @@
 import { ArrowLeft, Calendar, Camera, Car, ChevronDown, ChevronUp, Clock, Coffee, Copy, CornerDownRight, Landmark, MapPin, Send, Share2, ShoppingBag, ThumbsDown, ThumbsUp, Users, Utensils } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Map, MapMarker, Polyline } from 'react-kakao-maps-sdk';
+import useKakaoLoader from '../../../../hooks/useKakaoLoader';
 
 interface PostDetailProps {
   post: any;
@@ -25,45 +27,55 @@ const MOCK_SCHEDULE = [
     startTime: '09:00',
     endTime: '21:00',
     items: [
-      { 
-        time: '10:00', 
-        place: '경복궁', 
-        description: '조선시대 궁궐 관람, 수문장 교대식 필수!', 
+      {
+        time: '10:00',
+        place: '경복궁',
+        description: '조선시대 궁궐 관람, 수문장 교대식 필수!',
         duration: 8,
         image: 'https://images.unsplash.com/photo-1693928105595-b323b02791ff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400',
-        category: 'sightseeing'
+        category: 'sightseeing',
+        lat: 37.5796,
+        lng: 126.9770
       },
-      { 
-        time: '12:30', 
-        place: '토속촌 삼계탕', 
-        description: '점심식사, 인삼 가득한 보양식', 
+      {
+        time: '12:30',
+        place: '토속촌 삼계탕',
+        description: '점심식사, 인삼 가득한 보양식',
         duration: 4,
         image: 'https://images.unsplash.com/photo-1714317609749-d8a7927ceda6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400',
-        category: 'food'
+        category: 'food',
+        lat: 37.5778,
+        lng: 126.9712
       },
-      { 
-        time: '14:00', 
-        place: '북촌한옥마을', 
-        description: '전통 한옥 거리 산책 및 사진 촬영', 
+      {
+        time: '14:00',
+        place: '북촌한옥마을',
+        description: '전통 한옥 거리 산책 및 사진 촬영',
         duration: 8,
         image: 'https://images.unsplash.com/photo-1630135199928-55a43e87350d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400',
-        category: 'photo'
+        category: 'photo',
+        lat: 37.5828,
+        lng: 126.9836
       },
-      { 
-        time: '16:30', 
-        place: '인사동', 
-        description: '전통 공예품 쇼핑 및 카페', 
+      {
+        time: '16:30',
+        place: '인사동',
+        description: '전통 공예품 쇼핑 및 카페',
         duration: 6,
         image: 'https://images.unsplash.com/photo-1709983075478-4ec7b791329a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400',
-        category: 'shopping'
+        category: 'shopping',
+        lat: 37.5744,
+        lng: 126.9856
       },
-      { 
-        time: '18:30', 
-        place: '명동', 
-        description: '저녁식사 및 쇼핑', 
+      {
+        time: '18:30',
+        place: '명동',
+        description: '저녁식사 및 쇼핑',
         duration: 10,
         image: 'https://images.unsplash.com/photo-1667494398891-dd00bad6e8d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400',
-        category: 'food'
+        category: 'food',
+        lat: 37.5635,
+        lng: 126.9863
       },
     ],
   },
@@ -73,37 +85,45 @@ const MOCK_SCHEDULE = [
     startTime: '10:00',
     endTime: '20:00',
     items: [
-      { 
-        time: '10:30', 
-        place: '코엑스 별마당 도서관', 
-        description: '포토존 및 카페', 
+      {
+        time: '10:30',
+        place: '코엑스 별마당 도서관',
+        description: '포토존 및 카페',
         duration: 6,
         image: 'https://images.unsplash.com/photo-1659243013574-3b0ffb781fe4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400',
-        category: 'photo'
+        category: 'photo',
+        lat: 37.5117,
+        lng: 127.0583
       },
-      { 
-        time: '12:30', 
-        place: '강남역 맛집 거리', 
-        description: '점심식사', 
+      {
+        time: '12:30',
+        place: '강남역 맛집 거리',
+        description: '점심식사',
         duration: 4,
         image: 'https://images.unsplash.com/photo-1722084426182-b88c8e217f10?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400',
-        category: 'food'
+        category: 'food',
+        lat: 37.4979,
+        lng: 127.0276
       },
-      { 
-        time: '14:00', 
-        place: '가로수길', 
-        description: '카페 투어 및 쇼핑', 
+      {
+        time: '14:00',
+        place: '가로수길',
+        description: '카페 투어 및 쇼핑',
         duration: 8,
         image: 'https://images.unsplash.com/photo-1634028281608-d636a88abc09?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400',
-        category: 'cafe'
+        category: 'cafe',
+        lat: 37.5208,
+        lng: 127.0227
       },
-      { 
-        time: '17:00', 
-        place: '한강공원', 
-        description: '자전거 대여 및 피크닉', 
+      {
+        time: '17:00',
+        place: '한강공원',
+        description: '자전거 대여 및 피크닉',
         duration: 12,
         image: 'https://images.unsplash.com/photo-1652172176566-5d69fc9d9961?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400',
-        category: 'activity'
+        category: 'activity',
+        lat: 37.5110,
+        lng: 127.0057
       },
     ],
   },
@@ -113,29 +133,35 @@ const MOCK_SCHEDULE = [
     startTime: '11:00',
     endTime: '20:00',
     items: [
-      { 
-        time: '11:00', 
-        place: '홍대 거리', 
-        description: '브런치 및 거리 공연 관람', 
+      {
+        time: '11:00',
+        place: '홍대 거리',
+        description: '브런치 및 거리 공연 관람',
         duration: 8,
         image: 'https://images.unsplash.com/photo-1748696009709-ffd507a4ef61?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400',
-        category: 'activity'
+        category: 'activity',
+        lat: 37.5565,
+        lng: 126.9238
       },
-      { 
-        time: '14:00', 
-        place: '망원한강공원', 
-        description: '한강 카페 거리', 
+      {
+        time: '14:00',
+        place: '망원한강공원',
+        description: '한강 카페 거리',
         duration: 8,
         image: 'https://images.unsplash.com/photo-1652172176566-5d69fc9d9961?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400',
-        category: 'cafe'
+        category: 'cafe',
+        lat: 37.5513,
+        lng: 126.8967
       },
-      { 
-        time: '17:00', 
-        place: '이태원', 
-        description: '다국적 음식 및 루프탑 바', 
+      {
+        time: '17:00',
+        place: '이태원',
+        description: '다국적 음식 및 루프탑 바',
         duration: 12,
         image: 'https://images.unsplash.com/photo-1719661665369-ac1205e478ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400',
-        category: 'food'
+        category: 'food',
+        lat: 37.5345,
+        lng: 126.9945
       },
     ],
   },
@@ -186,6 +212,8 @@ const MOCK_COMMENTS: Comment[] = [
 ];
 
 export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps) {
+  useKakaoLoader();
+  const [map, setMap] = useState<any>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
   const [comment, setComment] = useState('');
@@ -284,7 +312,7 @@ export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps
       default: return <Landmark className="w-4 h-4 text-blue-500" />;
     }
   };
-  
+
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'food': return 'bg-orange-50 border-orange-200 text-orange-700';
@@ -305,6 +333,27 @@ export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps
 
   const currentSchedule = getCurrentSchedule();
 
+  // 지도의 중심과 경계 설정을 위한 효과
+  useEffect(() => {
+    if (!map || !currentSchedule.items.length) return;
+
+    const bounds = new window.kakao.maps.LatLngBounds();
+    let hasCoords = false;
+
+    currentSchedule.items.forEach((item: any) => {
+      const lat = item.lat || item.ylocation;
+      const lng = item.lng || item.xlocation;
+      if (lat && lng) {
+        bounds.extend(new window.kakao.maps.LatLng(lat, lng));
+        hasCoords = true;
+      }
+    });
+
+    if (hasCoords) {
+      map.setBounds(bounds);
+    }
+  }, [map, selectedDay, currentSchedule]);
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] pb-8">
       {/* 헤더 이미지 */}
@@ -315,7 +364,7 @@ export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/80" />
-        
+
         {/* 뒤로가기 버튼 */}
         <button
           onClick={onBack}
@@ -338,9 +387,9 @@ export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps
               ))}
             </div>
             <h1 className="text-2xl font-bold text-white mb-2 drop-shadow-md">{post.title}</h1>
-            
+
             {/* 작성자 정보 */}
-            <div 
+            <div
               className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => onNavigate('mypage', { userId: post.userId })}
             >
@@ -442,9 +491,17 @@ export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps
                   </div>
                 </div>
 
+                {/* 블로그형 글 내용 추가 */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-5">
+                  <h2 className="text-lg font-bold text-[#1a1a1a] mb-4 border-b border-gray-100 pb-3">여행기</h2>
+                  <div className="prose max-w-none text-[#4a4a4a] leading-relaxed text-base whitespace-pre-wrap">
+                    {description}
+                  </div>
+                </div>
+
                 {/* 일정표 (Timeline View) */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-5">
-                  <div 
+                  <div
                     className="p-4 flex items-center justify-between cursor-pointer border-b border-gray-100"
                     onClick={() => setIsScheduleOpen(!isScheduleOpen)}
                   >
@@ -460,7 +517,7 @@ export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps
                       )}
                     </button>
                   </div>
-                  
+
                   {isScheduleOpen && (
                     <div className="p-4 bg-gray-50/50">
                       {/* 일차 선택 (Sticky Tabs) */}
@@ -470,15 +527,64 @@ export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps
                             <button
                               key={schedule.day}
                               onClick={() => setSelectedDay(schedule.day)}
-                              className={`flex-shrink-0 px-4 py-2 rounded-lg transition-all font-bold text-xs flex items-center gap-2 ${
-                                selectedDay === schedule.day
+                              className={`flex-shrink-0 px-4 py-2 rounded-lg transition-all font-bold text-xs flex items-center gap-2 ${selectedDay === schedule.day
                                   ? 'bg-[#1344FF] text-white shadow-sm'
                                   : 'bg-white text-[#666666] border border-[#e5e7eb] hover:bg-gray-50'
-                              }`}
+                                }`}
                             >
                               Day {schedule.day}
                             </button>
                           ))}
+                        </div>
+                      </div>
+
+                      {/* 지도 섹션 추가 */}
+                      <div className="mb-6 h-[300px] w-full rounded-xl overflow-hidden border border-gray-200 shadow-inner relative group">
+                        <Map
+                          center={{ lat: 37.5665, lng: 126.9780 }}
+                          level={5}
+                          style={{ width: '100%', height: '100%' }}
+                          onCreate={setMap}
+                        >
+                          {currentSchedule.items.map((item: any, idx: number) => {
+                            const lat = item.lat || item.ylocation;
+                            const lng = item.lng || item.xlocation;
+                            if (!lat || !lng) return null;
+
+                            return (
+                              <MapMarker
+                                key={idx}
+                                position={{ lat, lng }}
+                                image={{
+                                  src: 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
+                                  size: { width: 24, height: 35 }
+                                }}
+                              >
+                                <div className="p-1 px-2 text-[10px] font-bold text-[#1344FF] bg-white rounded border border-[#1344FF] -mt-10">
+                                  {idx + 1}. {item.place || item.location}
+                                </div>
+                              </MapMarker>
+                            );
+                          })}
+
+                          <Polyline
+                            path={currentSchedule.items
+                              .map((item: any) => ({
+                                lat: item.lat || item.ylocation,
+                                lng: item.lng || item.xlocation
+                              }))
+                              .filter((p: any) => p.lat && p.lng)
+                            }
+                            strokeWeight={3}
+                            strokeColor="#1344FF"
+                            strokeOpacity={0.6}
+                            strokeStyle="shortdashdot"
+                          />
+                        </Map>
+
+                        {/* Map Overlay Info */}
+                        <div className="absolute bottom-2 right-2 z-10 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md text-[9px] font-bold text-gray-500 shadow-sm border border-gray-100 uppercase tracking-tighter">
+                          Day {selectedDay} Route Map
                         </div>
                       </div>
 
@@ -496,9 +602,8 @@ export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps
                             </div>
 
                             <div className="flex flex-col items-center w-4 pt-2 shrink-0 relative">
-                              <div className={`w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm z-10 ${
-                                index === 0 ? 'bg-[#1344FF]' : 'bg-gray-300'
-                              }`} />
+                              <div className={`w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm z-10 ${index === 0 ? 'bg-[#1344FF]' : 'bg-gray-300'
+                                }`} />
                             </div>
 
                             {/* Card Content */}
@@ -506,8 +611,8 @@ export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps
                               <div className="flex flex-col sm:flex-row">
                                 {/* Image Section */}
                                 <div className="sm:w-32 h-32 sm:h-auto relative shrink-0">
-                                  <img 
-                                    src={item.image || 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=400'} 
+                                  <img
+                                    src={item.image || 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=400'}
                                     alt={item.place || item.location}
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                   />
@@ -526,7 +631,7 @@ export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps
                                       {item.description}
                                     </p>
                                   </div>
-                                  
+
                                   <div className="flex items-center justify-between pt-2 mt-2 border-t border-gray-50">
                                     <div className="flex items-center gap-3 text-[10px] text-gray-400">
                                       <span className="flex items-center gap-1">
@@ -594,7 +699,7 @@ export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps
                       <div className="flex-1">
                         <div className="bg-[#f8f9fa] rounded-xl p-3">
                           <div className="flex items-center justify-between mb-1">
-                            <span 
+                            <span
                               className="font-bold text-xs text-[#1a1a1a] cursor-pointer hover:text-[#1344FF]"
                               onClick={() => comment.userId && onNavigate('mypage', { userId: comment.userId })}
                             >
@@ -609,7 +714,7 @@ export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps
                             <ThumbsUp className="w-3.5 h-3.5" />
                             추천 {comment.likes}
                           </button>
-                          <button 
+                          <button
                             onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
                             className="text-[11px] text-[#666666] hover:text-[#1344FF] font-bold transition-colors"
                           >
@@ -658,7 +763,7 @@ export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps
                             <div className="flex-1">
                               <div className="bg-[#f8f9fa] rounded-xl p-2.5">
                                 <div className="flex items-center justify-between mb-0.5">
-                                  <span 
+                                  <span
                                     className="font-bold text-[11px] text-[#1a1a1a] cursor-pointer hover:text-[#1344FF]"
                                     onClick={() => reply.userId && onNavigate('mypage', { userId: reply.userId })}
                                   >
@@ -699,15 +804,14 @@ export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps
                   </span>
                 </button>
               )}
-              
+
               <div className="flex gap-2 mb-4">
                 <button
                   onClick={handleLikeClick}
-                  className={`flex-1 py-2.5 rounded-lg border transition-all flex flex-col items-center justify-center gap-0.5 ${
-                    isLiked
-                      ? 'border-[#1344FF] text-[#1344FF] bg-blue-50'
-                      : 'border-[#e5e7eb] text-[#666666] hover:border-[#1344FF] hover:text-[#1344FF]'
-                  }`}
+                  className={`flex-1 py-2.5 rounded-lg border transition-all flex flex-col items-center justify-center gap-0.5 ${isLiked
+                    ? 'border-[#1344FF] text-[#1344FF] bg-blue-50'
+                    : 'border-[#e5e7eb] text-[#666666] hover:border-[#1344FF] hover:text-[#1344FF]'
+                    }`}
                 >
                   <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
                   <span className="text-[10px] font-bold">추천</span>
@@ -715,11 +819,10 @@ export default function PostDetail({ post, onBack, onNavigate }: PostDetailProps
                 </button>
                 <button
                   onClick={handleDislikeClick}
-                  className={`flex-1 py-2.5 rounded-lg border transition-all flex flex-col items-center justify-center gap-0.5 ${
-                    isDisliked
-                      ? 'border-gray-900 text-gray-900 bg-gray-50'
-                      : 'border-[#e5e7eb] text-[#666666] hover:border-gray-900 hover:text-gray-900'
-                  }`}
+                  className={`flex-1 py-2.5 rounded-lg border transition-all flex flex-col items-center justify-center gap-0.5 ${isDisliked
+                    ? 'border-gray-900 text-gray-900 bg-gray-50'
+                    : 'border-[#e5e7eb] text-[#666666] hover:border-gray-900 hover:text-gray-900'
+                    }`}
                 >
                   <ThumbsDown className={`w-4 h-4 ${isDisliked ? 'fill-current' : ''}`} />
                   <span className="text-[10px] font-bold">비추천</span>

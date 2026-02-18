@@ -1,13 +1,11 @@
-import { SlidersHorizontal } from 'lucide-react';
+import { LayoutGrid, List, SlidersHorizontal } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { MAIN_FEED_MOCK_POSTS } from '../../../../data/mainFeedMockData';
 import { useApiClient } from '../../../../hooks/useApiClient';
 import useKakaoLoader from '../../../../hooks/useKakaoLoader';
-import { ViewToggle } from '../atoms/ViewToggle';
 import { useMainFeedFilters } from '../hooks/useMainFeedLogic';
 import { SearchBar } from '../molecules/SearchBar';
 import { DetailFilterPanel } from '../organisms/DetailFilterPanel';
-import { FeedMapView } from '../organisms/FeedMapView';
 import { MainFeedHeader } from '../organisms/MainFeedHeader';
 import { MainFeedSidebar } from '../organisms/MainFeedSidebar';
 import { MainPostsGrid } from '../organisms/MainPostsGrid';
@@ -21,8 +19,8 @@ export default function MainFeed({ initialRegion = '전체', onNavigate }: MainF
   useKakaoLoader();
   const { isAuthenticated } = useApiClient();
   const { filters, setters, filteredPosts } = useMainFeedFilters(MAIN_FEED_MOCK_POSTS, initialRegion, onNavigate);
-  
-  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
   const [dislikedPosts, setDislikedPosts] = useState<Set<number>>(new Set());
   const [mapState, setMapState] = useState({
@@ -43,9 +41,9 @@ export default function MainFeed({ initialRegion = '전체', onNavigate }: MainF
       '전체': { lat: 35.95, lng: 128.25 }
     };
     if (coords[filters.selectedRegion]) {
-      setMapState({ 
-        center: coords[filters.selectedRegion], 
-        level: filters.selectedRegion === '전체' ? 14 : 11 
+      setMapState({
+        center: coords[filters.selectedRegion],
+        level: filters.selectedRegion === '전체' ? 14 : 11
       });
     }
   }, [filters.selectedRegion]);
@@ -86,29 +84,52 @@ export default function MainFeed({ initialRegion = '전체', onNavigate }: MainF
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <MainFeedHeader 
-        onNavigate={onNavigate} 
-        isAuthenticated={isAuthenticated()} 
+      <MainFeedHeader
+        onNavigate={onNavigate}
+        isAuthenticated={isAuthenticated()}
       />
 
       {/* 검색 & 필터 바 */}
       <div className="mb-6">
         <div className="flex gap-3">
           <div className="relative flex-1">
-            <SearchBar 
-              value={filters.searchQuery} 
-              onChange={setters.setSearchQuery} 
-              placeholder="제목, 지역, 작성자로 검색..." 
+            <SearchBar
+              value={filters.searchQuery}
+              onChange={setters.setSearchQuery}
+              placeholder="제목, 지역, 작성자로 검색..."
             />
           </div>
-          <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+
+          {/* 뷰 모드 토글 (그리드 / 리스트) */}
+          <div className="flex bg-white rounded-xl border border-[#e5e7eb] p-1 shadow-sm">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-bold text-sm ${viewMode === 'grid'
+                  ? 'bg-blue-50 text-[#1344FF]'
+                  : 'text-[#666666] hover:bg-gray-50'
+                }`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span>그리드</span>
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-bold text-sm ${viewMode === 'list'
+                  ? 'bg-blue-50 text-[#1344FF]'
+                  : 'text-[#666666] hover:bg-gray-50'
+                }`}
+            >
+              <List className="w-4 h-4" />
+              <span>리스트</span>
+            </button>
+          </div>
+
           <button
             onClick={() => setters.setShowFilters(!filters.showFilters)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl border transition-all font-medium ${
-              filters.showFilters || filters.activeFilterCount > 0
-                ? 'bg-[#1344FF] text-white border-[#1344FF] shadow-md'
-                : 'bg-white text-[#666666] border-[#e5e7eb] hover:border-[#1344FF]'
-            }`}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl border transition-all font-medium ${filters.showFilters || filters.activeFilterCount > 0
+              ? 'bg-[#1344FF] text-white border-[#1344FF] shadow-md'
+              : 'bg-white text-[#666666] border-[#e5e7eb] hover:border-[#1344FF]'
+              }`}
           >
             <SlidersHorizontal className="w-5 h-5" />
             <span>필터</span>
@@ -122,7 +143,7 @@ export default function MainFeed({ initialRegion = '전체', onNavigate }: MainF
       </div>
 
       {filters.showFilters && (
-        <DetailFilterPanel 
+        <DetailFilterPanel
           onClear={setters.clearFilters}
           regions={regions}
           durations={durations}
@@ -141,11 +162,10 @@ export default function MainFeed({ initialRegion = '전체', onNavigate }: MainF
         <div className="flex gap-3">
           <button
             onClick={() => setters.setSelectedTag(null)}
-            className={`px-4 py-2 rounded-full transition-all whitespace-nowrap ${
-              filters.selectedTag === null
-                ? 'bg-[#1344FF] text-white shadow-md'
-                : 'bg-white text-[#666666] border border-[#e5e7eb] hover:border-[#1344FF]'
-            }`}
+            className={`px-4 py-2 rounded-full transition-all whitespace-nowrap ${filters.selectedTag === null
+              ? 'bg-[#1344FF] text-white shadow-md'
+              : 'bg-white text-[#666666] border border-[#e5e7eb] hover:border-[#1344FF]'
+              }`}
           >
             전체
           </button>
@@ -153,11 +173,10 @@ export default function MainFeed({ initialRegion = '전체', onNavigate }: MainF
             <button
               key={tag}
               onClick={() => setters.setSelectedTag(tag)}
-              className={`px-4 py-2 rounded-full transition-all whitespace-nowrap ${
-                filters.selectedTag === tag
-                  ? 'bg-[#1344FF] text-white shadow-md'
-                  : 'bg-white text-[#666666] border border-[#e5e7eb] hover:border-[#1344FF]'
-              }`}
+              className={`px-4 py-2 rounded-full transition-all whitespace-nowrap ${filters.selectedTag === tag
+                ? 'bg-[#1344FF] text-white shadow-md'
+                : 'bg-white text-[#666666] border border-[#e5e7eb] hover:border-[#1344FF]'
+                }`}
             >
               {tag}
             </button>
@@ -174,9 +193,10 @@ export default function MainFeed({ initialRegion = '전체', onNavigate }: MainF
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {viewMode === 'grid' ? (
-          <MainPostsGrid 
+        <div className="lg:col-span-2">
+          <MainPostsGrid
             posts={filteredPosts}
+            viewMode={viewMode}
             onNavigate={onNavigate}
             likedPosts={likedPosts}
             dislikedPosts={dislikedPosts}
@@ -184,15 +204,9 @@ export default function MainFeed({ initialRegion = '전체', onNavigate }: MainF
             onDislike={handleDislike}
             onClearFilters={setters.clearFilters}
           />
-        ) : (
-          <FeedMapView 
-            posts={filteredPosts}
-            mapState={mapState}
-            onNavigate={onNavigate}
-          />
-        )}
+        </div>
 
-        <MainFeedSidebar 
+        <MainFeedSidebar
           mapState={mapState}
           onRegionSelect={setters.handleRegionSelect}
           selectedRegion={filters.selectedRegion}
