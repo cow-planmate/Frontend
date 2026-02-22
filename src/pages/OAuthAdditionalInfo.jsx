@@ -135,23 +135,24 @@ const OAuthAdditionalInfo = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* 이메일 입력 */}
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              이메일 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required={needEmail}
-              disabled={!needEmail}
-            />
-          </div>
+          {needEmail && (
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                이메일 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          )}
 
           {/* 나이 입력 */}
           <div>
