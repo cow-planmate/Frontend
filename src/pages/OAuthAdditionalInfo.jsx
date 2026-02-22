@@ -40,15 +40,21 @@ const OAuthAdditionalInfo = () => {
   };
 
   const validateForm = () => {
-    if (!formData.email || !formData.age || formData.gender === "") {
+    if (
+      (needEmail && !formData.email) ||
+      !formData.age ||
+      formData.gender === ""
+    ) {
       setError("모든 필드를 입력해주세요.");
       return false;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError("올바른 이메일 형식을 입력해주세요.");
-      return false;
+    if (needEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        setError("올바른 이메일 형식을 입력해주세요.");
+        return false;
+      }
     }
 
     const age = parseInt(formData.age);
@@ -84,7 +90,7 @@ const OAuthAdditionalInfo = () => {
         },
         body: JSON.stringify({
           signupId,
-          email: formData.email,
+          email: needEmail ? formData.email : null,
           age: parseInt(formData.age),
           gender: parseInt(formData.gender),
         }),
