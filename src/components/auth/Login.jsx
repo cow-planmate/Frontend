@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useApiClient } from "../../hooks/useApiClient";
 import google from "../../assets/imgs/googleicon.png";
+import naver from "../../assets/imgs/navericon.png";
 import { useLocation } from "react-router-dom";
 
 export default function Login({
@@ -153,13 +154,25 @@ export default function Login({
               className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
-          <div className="flex justify-center py-2">
+          <div className="flex justify-center py-2 gap-4">
             <button
               onClick={() => handleSNSLogin("google")}
               disabled={isLoading}
               title="구글 로그인"
             >
-              <img src={google} alt="Google Logo" className=" w-7 h-7" />
+              <img src={google} alt="Google Logo" className="w-7 h-7" />
+            </button>
+
+            <button
+              onClick={() => handleSNSLogin("naver")}
+              disabled={isLoading}
+              title="네이버 로그인"
+            >
+              <img
+                src={naver}
+                alt="Naver Logo"
+                className="w-7 h-7 rounded-full"
+              />
             </button>
           </div>
           <div className="flex justify-center -mt-2 mb-2">
