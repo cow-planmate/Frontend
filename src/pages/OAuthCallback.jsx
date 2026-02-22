@@ -1,10 +1,11 @@
 // pages/OAuthCallback.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApiClient } from "../hooks/useApiClient";
 import useNicknameStore from "../store/Nickname";
 
 const OAuthCallback = () => {
+  const hasRun = useRef(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { setTokens } = useApiClient();
@@ -15,7 +16,11 @@ const OAuthCallback = () => {
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
+    if (hasRun.current) return;
+    hasRun.current = true;
+
     const handleCallback = async () => {
+      console.log("OAuth callback params:", Object.fromEntries(searchParams));
       try {
         const status = searchParams.get("status");
 
@@ -33,9 +38,6 @@ const OAuthCallback = () => {
             `${API_BASE_URL}/api/oauth/exchange?code=${code}`,
             {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
             },
           );
 
@@ -79,26 +81,19 @@ const OAuthCallback = () => {
         }
         // 신규 사용자 - 추가 정보 입력 필요
         else if (status === "NEED_ADDITIONAL_INFO") {
-          const provider = searchParams.get("provider");
-          const providerId = searchParams.get("providerId");
-          const email = searchParams.get("email");
-          const nickname = searchParams.get("nickname");
+          const signupId = searchParams.get("signupId");
+          const needEmail = searchParams.get("needEmail") === "true";
 
-          if (!provider || !providerId) {
-            setError("필수 정보가 누락되었습니다.");
+          if (!signupId) {
+            setError("가입 세션이 올바르지 않습니다.");
             setIsProcessing(false);
             return;
           }
 
-          navigate("/oauth/additional-info", {
-            replace: true,
-            state: {
-              provider,
-              providerId,
-              email: email || "",
-              nickname,
-            },
-          });
+          navigate(
+            `/oauth/additional-info?signupId=${signupId}&needEmail=${needEmail}`,
+            { replace: true },
+          );
         } else if (status === "FAIL") {
           const reason = searchParams.get("reason");
 
@@ -125,7 +120,7 @@ const OAuthCallback = () => {
     };
 
     handleCallback();
-  }, [searchParams, navigate, setTokens, setNickname, API_BASE_URL]);
+  }, []);
 
   if (error) {
     return (

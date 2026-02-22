@@ -1,6 +1,6 @@
 // pages/OAuthAdditionalInfo.jsx
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useApiClient } from "../hooks/useApiClient";
 import useNicknameStore from "../store/Nickname";
 
@@ -9,18 +9,15 @@ const OAuthAdditionalInfo = () => {
   const navigate = useNavigate();
   const { setTokens } = useApiClient();
   const { setNickname, setGravatar } = useNicknameStore();
+  const [searchParams] = useSearchParams();
 
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-  const {
-    provider,
-    providerId,
-    email: initialEmail,
-    nickname: initialNickname,
-  } = location.state || {};
+  const signupId = searchParams.get("signupId");
+  const needEmail = searchParams.get("needEmail") === "true";
 
   const [formData, setFormData] = useState({
-    email: initialEmail || "",
+    email: "",
     age: "",
     gender: "",
   });
@@ -28,7 +25,7 @@ const OAuthAdditionalInfo = () => {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!provider || !providerId) {
+  if (!signupId) {
     navigate("/", { replace: true });
     return null;
   }
@@ -86,8 +83,7 @@ const OAuthAdditionalInfo = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          provider,
-          providerId,
+          signupId,
           email: formData.email,
           age: parseInt(formData.age),
           gender: parseInt(formData.gender),
@@ -133,9 +129,6 @@ const OAuthAdditionalInfo = () => {
 
         {/* 닉네임 표시 */}
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-gray-700 mb-1">
-            <strong>닉네임:</strong> {initialNickname}
-          </p>
           <p className="text-xs text-gray-500">
             닉네임은 마이페이지에서 변경할 수 있습니다.
           </p>
@@ -152,14 +145,11 @@ const OAuthAdditionalInfo = () => {
             </label>
             <input
               type="email"
-              id="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="example@email.com"
-              required
-              disabled={initialEmail !== ""}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              required={needEmail}
+              disabled={!needEmail}
             />
           </div>
 
