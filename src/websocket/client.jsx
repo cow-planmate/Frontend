@@ -4,6 +4,7 @@ import usePlanStore from "../store/Plan";
 import useItemsStore from "../store/Schedules";
 import useTimetableStore from "../store/Timetables";
 import useUserStore from "../store/Users";
+import useSocketStore from "../store/Socket";
 import { convertBlock } from "../utils/createUtils";
 
 let client;
@@ -106,6 +107,7 @@ export const disconnectStompClient = () => {
   if (client) {
     console.log("🔌 WebSocket 연결 종료 중...");
     client.deactivate();
+    useSocketStore.getState().setDisconnected();
   }
 };
 
@@ -127,6 +129,7 @@ export const initStompClient = (id) => {
     reconnectDelay: 3000,
     onConnect: (frame) => {
       console.log("✅ WebSocket 연결 완료:", frame);
+      useSocketStore.getState().setConnected();
 
       client.subscribe(`/topic/${id}`, (message) => {
         const body = JSON.parse(message.body);
@@ -156,6 +159,7 @@ export const initStompClient = (id) => {
     onStompError: (frame) => {
       console.error("❌ STOMP 에러:", frame.headers["message"]);
       client.deactivate();
+      useSocketStore.getState().setDisconnected();
     },
 
     // onWebSocketClose: () => {
