@@ -42,7 +42,7 @@ function App() {
   const [selectedTransport, setSelectedTransport] = useState("bus");
   const [departureLocation, setDepartureLocation] = useState(null);
   const [destinationLocation, setDestinationLocation] = useState(null);
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [dateRange, setDateRange] = useState([
     {
       startDate: new Date(),
@@ -133,7 +133,11 @@ function App() {
   };
 
   const makePlan = async () => {
+    if (isSubmitting) return; // 이미 요청 중이면 무시
+
     try {
+      setIsSubmitting(true);
+
       if (
         !destinationLocation ||
         !dateRange[0].startDate ||
@@ -193,6 +197,8 @@ function App() {
     } catch (err) {
       console.error("에러, 다시시도해주세요", err);
       alert("에러, 다시시도 해주세요");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -343,12 +349,14 @@ function App() {
             {/* 버튼 */}
             <div className="block">
               <button
-                className="cursor-pointer transition-all bg-[#1344FF] text-white px-4 py-3 rounded-lg
-                border-[#1344FF] active:translate-y-[2px] hover:bg-blue-600 shadow-lg w-full font-pretendard whitespace-nowrap"
+                disabled={isSubmitting}
+                className={`cursor-pointer transition-all 
+    ${isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-[#1344FF] hover:bg-blue-600"} 
+    text-white px-4 py-3 rounded-lg shadow-lg w-full font-pretendard`}
                 onClick={makePlan}
                 type="button"
               >
-                일정생성
+                {isSubmitting ? "생성중..." : "일정생성"}
               </button>
             </div>
           </div>
