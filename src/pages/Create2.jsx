@@ -17,6 +17,7 @@ import usePlanStore from "../store/Plan";
 import useTimetableStore from "../store/Timetables";
 import usePlacesStore from "../store/Places";
 import useUserStore from "../store/Users";
+import useSocketStore from "../store/Socket";
 
 import Loading from "../components/common/Loading";
 import Navbar from "../components/common/Navbar";
@@ -48,6 +49,7 @@ function App() {
   const { setPlacesAll, tour, lodging, restaurant } = usePlacesStore();
   const { lastSelectedDay } = useNicknameStore();
   const { setUserAll } = useUserStore();
+  const { isConnected } = useSocketStore();
   const [noACL, setNoACL] = useState(false);
   const [showTempPlanPrompt, setShowTempPlanPrompt] = useState(false); // Alert state
   const [isTempLoaded, setIsTempLoaded] = useState(false); // Prevent auto-save until loaded
@@ -308,7 +310,11 @@ function App() {
     }
   };
 
-  if (!planId || tour.length === 0 || lodging.length === 0 || restaurant.length === 0 || (planId !== -1 && isAuthenticated() && (!client || !client.connected))) {
+  useEffect(() => {
+    console.log("클라이언트 연결", isConnected)
+  }, [isConnected])
+
+  if (!planId || tour.length === 0 || lodging.length === 0 || restaurant.length === 0 || (planId !== -1 && isAuthenticated() && !isConnected)) {
     return (
       <div className="font-pretendard h-screen">
         <Navbar />
