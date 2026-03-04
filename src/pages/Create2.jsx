@@ -16,7 +16,6 @@ import { getClient } from "../websocket/client";
 import usePlanStore from "../store/Plan";
 import useTimetableStore from "../store/Timetables";
 import usePlacesStore from "../store/Places";
-import useUserStore from "../store/Users";
 import useSocketStore from "../store/Socket";
 
 import Loading from "../components/common/Loading";
@@ -48,7 +47,6 @@ function App() {
   const { addItemFromWebsocket, resetItems, items } = useItemsStore(); // Add items
   const { setPlacesAll, tour, lodging, restaurant } = usePlacesStore();
   const { lastSelectedDay } = useNicknameStore();
-  const { setUserAll } = useUserStore();
   const { isConnected } = useSocketStore();
   const [noACL, setNoACL] = useState(false);
   const [showTempPlanPrompt, setShowTempPlanPrompt] = useState(false); // Alert state
@@ -61,20 +59,20 @@ function App() {
     }
   }, []);
 
-  useEffect(() => {
-    if (planId !== -1) return;
+  // useEffect(() => {
+  //   if (planId !== -1) return;
 
-    const handleBeforeUnload = (e) => {
-      e.preventDefault();
-      e.returnValue = ""; // 이거 필수 (크롬 기준)
-    };
+  //   const handleBeforeUnload = (e) => {
+  //     e.preventDefault();
+  //     e.returnValue = ""; // 이거 필수 (크롬 기준)
+  //   };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
+  //   window.addEventListener("beforeunload", handleBeforeUnload);
 
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, []);
+  //   return () => {
+  //     window.removeEventListener("beforeunload", handleBeforeUnload);
+  //   };
+  // }, []);
 
   // 초기 데이터 로딩
   useEffect(() => {

@@ -86,9 +86,6 @@ function App() {
 
   const handleDestinationLocationSelect = (location) => {
     setDestinationLocation(location);
-    setPlanField("travelName", location?.name ?? "");
-    setPlanField("travelId", location?.id ?? null);
-    setPlanField("travelCategoryName", location?.name ?? "");
   };
 
   const handlePersonCountChange = (count) => {
