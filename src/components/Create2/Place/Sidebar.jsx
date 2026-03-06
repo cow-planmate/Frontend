@@ -23,7 +23,7 @@ export default function Sidebar({
   const [searchText, setSearchText] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [nextLoading, setNextLoading] = useState(false);
-  
+
   const [hasSearched, setHasSearched] = useState(false);
   const searchTimerRef = useRef(null);
   const lastSearchRef = useRef("");
@@ -129,24 +129,23 @@ export default function Sidebar({
       className={`flex-1 w-full flex flex-col min-h-0 overflow-hidden transition-transform duration-300 absolute inset-0 md:relative md:transform-none z-20 
       ${showSidebar ? "translate-x-0" : "translate-x-full md:translate-x-0"}`}
     >
-      <div className="flex space-x-1 overflow-x-auto shrink-0">
+      <div className="flex space-x-1 overflow-x-auto shrink-0 px-5 md:px-0">
         {["tour", "lodging", "restaurant", "custom", "search"].map((tab) => (
           <button
             key={tab}
-            className={`px-4 py-2 rounded-t-lg text-nowrap ${
-              selectedTab === tab
-                ? tabSelectedClass[tab]
-                : "bg-gray-200 text-gray-700"
-            }`}
+            className={`px-4 py-2 rounded-lg md:rounded-none md:rounded-t-lg text-sm md:text-base text-nowrap ${selectedTab === tab
+              ? tabSelectedClass[tab]
+              : "bg-gray-200 text-gray-700"
+              }`}
             onClick={() => setSelectedTab(tab)}
           >
             {koreanName[tab]}
           </button>
         ))}
       </div>
-      <div className="flex-1 min-h-0 flex flex-col border border-gray-300 rounded-lg rounded-tl-none divide-y divide-gray-300 md:min-h-0">
+      <div className="flex-1 min-h-0 flex flex-col md:border md:border-gray-300 rounded-lg rounded-tl-none divide-y divide-gray-300 md:min-h-0">
         {selectedTab === "search" && (
-          <div className="px-3 py-2 shrink-0">
+          <div className="px-5 py-2 shrink-0">
             <div className="flex items-center space-x-2">
               <input
                 type="text"
@@ -160,12 +159,12 @@ export default function Sidebar({
           </div>
         )}
         {selectedTab === "custom" && (
-          <div className="px-3 py-2 shrink-0">
+          <div className="px-5 py-2 shrink-0">
             <div className="flex items-center space-x-2">
               <input
                 type="text"
                 placeholder="장소 이름을 입력하세요"
-                className="flex-1 border rounded-md px-3 py-2"
+                className="flex-1 border rounded-md px-3 py-2 min-w-0"
                 value={customPlaceName}
                 onChange={(e) => setCustomPlaceName(e.target.value)}
                 onKeyDown={(e) => {
@@ -202,7 +201,7 @@ export default function Sidebar({
             <div className="text-center p-8 text-gray-500 text-sm break-keep">
               위 입력란에 장소 이름을 입력한 뒤 &quot;추가&quot; 버튼을 누르면
               리스트에 추가됩니다. 추가된 항목을 드래그하여 시간표에 넣어보세요.
-              <br/>
+              <br />
               그리고 추가된 장소 목록은 현재 접속하고 있는 기기에만 저장돼요.
             </div>
           )}
@@ -213,9 +212,9 @@ export default function Sidebar({
               <div className="text-center p-8 text-gray-700 break-keep">
                 검색 결과가 없습니다.
               </div>
-          )}
+            )}
           {selectedTab !== "custom" &&
-            ((selectedTab !== "search" || search.length !== 0) && store[`${selectedTab}Next`].length > 0 ) && (
+            ((selectedTab !== "search" || search.length !== 0) && store[`${selectedTab}Next`].length > 0) && (
               <div className="text-center py-3">
                 <button
                   className="text-3xl text-main hover:text-mainDark"
@@ -230,6 +229,7 @@ export default function Sidebar({
               </div>
             )}
         </div>
+        <div className="h-12 block md:hidden" />
       </div>
     </div>
   );

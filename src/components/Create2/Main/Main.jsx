@@ -26,18 +26,21 @@ export default function Main() {
   } = useItemsStore();
 
   const [activeTab, setActiveTab] = useState('timetable');
-  const [preview, setPreview] = useState(null); 
+  const [preview, setPreview] = useState(null);
   const [activeId, setActiveId] = useState(null);
   const gridRef = useRef(null);
 
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
-  
+
   const { eventId } = usePlanStore();
   const { TOTAL_SLOTS, SLOT_HEIGHT, selectedDay, timetables } = useTimetableStore();
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  
+
+  const [touchStartPos, setTouchStartPos] = useState({ x: null, y: null });
+  const [touchEndPos, setTouchEndPos] = useState({ x: null, y: null });
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
@@ -75,9 +78,9 @@ export default function Main() {
       const { active, over } = event;
       if (over && over.id === 'timetable-area' && gridRef.current) {
         const gridRect = gridRef.current.getBoundingClientRect();
-        const currentY = active.rect.current?.translated 
-          ? active.rect.current.translated.top 
-          : event.activatorEvent.clientY; 
+        const currentY = active.rect.current?.translated
+          ? active.rect.current.translated.top
+          : event.activatorEvent.clientY;
 
         const relativeY = currentY - gridRect.top + gridRef.current.scrollTop;
         let targetSlot = Math.round(relativeY / SLOT_HEIGHT);
@@ -101,7 +104,7 @@ export default function Main() {
     onDragEnd(event) {
       setPreview(null);
       setActiveId(null);
-      
+
       const { active, over } = event;
       if (!over || over.id !== 'timetable-area') return;
 
@@ -118,7 +121,7 @@ export default function Main() {
       if (newStart + duration > TOTAL_SLOTS) newStart = TOTAL_SLOTS - duration;
 
       const itemId = type === 'schedule' ? active.id : null;
-      if (checkOverlap(newStart, duration, items[getTimeTableId(timetables, selectedDay)], itemId)) return; 
+      if (checkOverlap(newStart, duration, items[getTimeTableId(timetables, selectedDay)], itemId)) return;
 
       const timeTableId = getTimeTableId(timetables, selectedDay);
 
@@ -179,27 +182,72 @@ export default function Main() {
     });
     const block = exportBlock(timeTableId, place, emptySlot, 4, blockId)
     sendWebsocket("create", block);
-    
+
     setActiveTab('timetable');
+  };
+
+  // --- Swipe Handlers ---
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEndPos({ x: null, y: null });
+    setTouchStartPos({
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY,
+    });
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEndPos({
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY,
+    });
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStartPos.x || !touchEndPos.x) return;
+
+    const distanceX = touchStartPos.x - touchEndPos.x;
+    const distanceY = touchStartPos.y - touchEndPos.y;
+
+    // 가로 스와이프가 세로 스크롤보다 클 때만 동작하도록 확인
+    if (Math.abs(distanceX) > Math.abs(distanceY)) {
+      const isLeftSwipe = distanceX > minSwipeDistance;
+      const isRightSwipe = distanceX < -minSwipeDistance;
+
+      if (isMobile) {
+        if (isLeftSwipe && activeTab === 'timetable') {
+          setActiveTab('recommend');
+        }
+        if (isRightSwipe && activeTab === 'recommend') {
+          setActiveTab('timetable');
+        }
+      }
+    }
   };
 
   const showTimetable = !isMobile || activeTab === 'timetable';
   const showSidebar = !isMobile || activeTab === 'recommend';
 
   return (
-    <div className="flex flex-1 flex-col h-full overflow-hidden select-none">
+    <div
+      className="flex flex-1 flex-col h-full overflow-hidden select-none"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
       <style>{resizeStyles}</style>
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden relative md:space-x-6">
-        <TimetableGrid 
+        <TimetableGrid
           ref={gridRef}
           items={items}
           preview={preview}
           onResizeEnd={handleResizeEnd}
           showTimetable={showTimetable}
         />
-        <Sidebar 
+        <Sidebar
           planId={id}
           isMobile={isMobile}
           showSidebar={showSidebar}
@@ -209,12 +257,12 @@ export default function Main() {
 
       {/* Mobile Bottom Tab */}
       {isMobile && (
-        <nav className="mt-4 bg-white border-t h-16 flex shadow-lg">
+        <nav className="fixed left-0 right-0 bottom-0 z-40 bg-white border-t h-16 flex">
           <button onClick={() => setActiveTab('timetable')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'timetable' ? 'text-main' : 'text-gray-400'}`}>
-            <span className="text-xl"><FontAwesomeIcon icon={faCalendar}/></span><span className="text-xs font-medium">시간표</span>
+            <span className="text-xl"><FontAwesomeIcon icon={faCalendar} /></span><span className="text-xs font-medium">시간표</span>
           </button>
           <button onClick={() => setActiveTab('recommend')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'recommend' ? 'text-main' : 'text-gray-400'}`}>
-            <span className="text-xl"><FontAwesomeIcon icon={faMapPin}/></span><span className="text-xs font-medium">추천 장소</span>
+            <span className="text-xl"><FontAwesomeIcon icon={faMapPin} /></span><span className="text-xs font-medium">추천 장소</span>
           </button>
         </nav>
       )}
@@ -223,7 +271,7 @@ export default function Main() {
       <DragOverlay dropAnimation={null}>
         {activeId ? (
           <div className="p-3 bg-main text-white rounded-lg shadow-2xl w-48 opacity-90 scale-105 cursor-grabbing font-bold flex items-center justify-center">
-             이동 중...
+            이동 중...
           </div>
         ) : null}
       </DragOverlay>

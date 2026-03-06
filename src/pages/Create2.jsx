@@ -315,7 +315,9 @@ function App() {
   if (!planId || tour.length === 0 || lodging.length === 0 || restaurant.length === 0 || (planId !== -1 && isAuthenticated() && !isConnected)) {
     return (
       <div className="font-pretendard h-screen">
-        <Navbar />
+        <div className="hidden md:block">
+          <Navbar />
+        </div>
         {showTempPlanPrompt && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
@@ -370,14 +372,17 @@ function App() {
 
   return (
     <div className="font-pretendard h-screen">
-      <Navbar />
+      <div className="hidden md:block">
+        <Navbar />
+      </div>
       <PlanInfo id={id} />
       <div
         className="
           min-[1464px]:w-[1400px] min-[1464px]:px-0
-          md:px-8 md:py-6 px-6 py-3
+          md:px-8 md:py-6 py-3
           mx-auto
-          h-[calc(100vh-140px)]
+          md:h-[calc(100vh-140px)]
+          h-[calc(100vh-48px)]
         "
       >
         <div className="flex md:flex-row flex-col md:space-x-6 space-y-4 md:space-y-0 h-full">

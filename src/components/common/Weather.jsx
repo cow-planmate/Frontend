@@ -12,7 +12,7 @@ import Snowy from "../../assets/imgs/weather/snowy-6.svg";               // 눈
 import Sonagi from "../../assets/imgs/weather/sonagi.svg";               // 소나기
 import Thunderstorms from "../../assets/imgs/weather/thunderstorms.svg"; // 뇌우
 
-export default function Weather({timetables, selectedDay, travelCategoryName, travelName, travelId}) {
+export default function Weather({ timetables, selectedDay, travelCategoryName, travelName, travelId }) {
   const BASE_URL = import.meta.env.VITE_API_URL;
 
   const { post } = useApiClient();
@@ -37,7 +37,7 @@ export default function Weather({timetables, selectedDay, travelCategoryName, tr
     const loadWeather = async () => {
       const startDate = timetables?.[0]?.date;
       const endDate = timetables?.[timetables.length - 1]?.date;
-      
+
       if (timetables && travelCategoryName && travelName && travelId) {
         try {
           const weatherData = await post(`${BASE_URL}/api/weather/recommendations`, {
@@ -53,7 +53,7 @@ export default function Weather({timetables, selectedDay, travelCategoryName, tr
     }
     loadWeather();
   }, [timetables, travelCategoryName, travelName, travelId])
-  
+
   useEffect(() => {
     const dayWeather = weather.weather?.[selectedDay];
     if (dayWeather) setNowWeather(dayWeather);
@@ -61,21 +61,30 @@ export default function Weather({timetables, selectedDay, travelCategoryName, tr
 
   useEffect(() => {
     console.log(nowWeather)
-    if(nowWeather) console.log(true);
+    if (nowWeather) console.log(true);
     else console.log(false);
   }, [nowWeather])
 
   return (
-    <div className="border-b p-4 flex items-center justify-between">
+    <div className="
+      mx-5 md:m-0
+      rounded-2xl md:rounded-none 
+      border md:border-0
+      md:border-b 
+      px-4 py-2 md:py-4 
+      absolute left-0 right-0 md:static z-30
+      flex items-center justify-between
+      bg-white md:bg-transparent bg-clip-padding backdrop-filter backdrop-blur-md md:backdrop-blur-none bg-opacity-10
+    ">
       <div className="flex items-center">
         <div
-          className={nowWeather.description ? 'right-0 w-14 h-12 bg-no-repeat bg-center' : 'size-12 bg-gray-300 mr-2 rounded-lg'}
+          className={nowWeather.description ? 'right-0 w-12 h-10 md:w-14 md:h-12 bg-no-repeat bg-center' : 'w-12 h-10 md:w-14 md:h-12 bg-gray-300 mr-2 rounded-lg'}
           style={{ backgroundImage: `url(${weatherIcons[nowWeather?.description]})` }}
         />
         <div className="-space-y-1">
-          <p className="text-xs text-gray-500">{selectedDay+1}일차</p>
-          {nowWeather.description ? 
-            <p className="text-lg font-semibold">{nowWeather?.description}</p> :
+          <p className="text-xs text-gray-500">{selectedDay + 1}일차</p>
+          {nowWeather.description ?
+            <p className="text-base md:text-lg font-semibold">{nowWeather?.description}</p> :
             <div className="bg-gray-300 rounded-lg w-9 h-6"></div>
           }
         </div>
@@ -83,22 +92,22 @@ export default function Weather({timetables, selectedDay, travelCategoryName, tr
       <div className="flex space-x-4 items-center">
         <div className="-space-y-1">
           <p className="text-xs text-gray-500">최저</p>
-          {nowWeather.temp_min != null ? 
-            <p className="text-lg font-semibold text-blue-600">{nowWeather?.temp_min}℃</p> :
+          {nowWeather.temp_min != null ?
+            <p className="text-base md:text-lg font-semibold text-blue-600">{nowWeather?.temp_min}℃</p> :
             <div className="bg-gray-300 rounded-lg w-9 h-6"></div>
           }
         </div>
         <div className="-space-y-1">
           <p className="text-xs text-gray-500">최고</p>
-          {nowWeather.temp_max != null ? 
-            <p className="text-lg font-semibold text-red-600">{nowWeather?.temp_max}℃</p> :
+          {nowWeather.temp_max != null ?
+            <p className="text-base md:text-lg font-semibold text-red-600">{nowWeather?.temp_max}℃</p> :
             <div className="bg-gray-300 rounded-lg w-9 h-6"></div>
           }
         </div>
         <div className="-space-y-1">
           <p className="text-xs text-gray-500">체감</p>
-          {nowWeather.feels_like != null ? 
-            <p className="text-lg font-semibold">{nowWeather?.feels_like}℃</p> :
+          {nowWeather.feels_like != null ?
+            <p className="text-base md:text-lg font-semibold">{nowWeather?.feels_like}℃</p> :
             <div className="bg-gray-300 rounded-lg w-9 h-6"></div>
           }
         </div>

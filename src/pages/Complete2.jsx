@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApiClient } from "../hooks/useApiClient";
 import { getTimeSlotIndex } from "../utils/createUtils";
 
@@ -16,6 +16,7 @@ import MapArea from "../components/Complete/MapArea";
 function App() {
   const BASE_URL = import.meta.env.VITE_API_URL;
 
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
   const token = searchParams.get("token");
@@ -30,7 +31,10 @@ function App() {
 
   const [activeTab, setActiveTab] = useState('timetable');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  
+
+  const [touchStartPos, setTouchStartPos] = useState({ x: null, y: null });
+  const [touchEndPos, setTouchEndPos] = useState({ x: null, y: null });
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
@@ -40,11 +44,51 @@ function App() {
   const showTimetable = !isMobile || activeTab === 'timetable';
   const showSidebar = !isMobile || activeTab === 'recommend';
 
+  // --- Swipe Handlers ---
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEndPos({ x: null, y: null });
+    setTouchStartPos({
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY,
+    });
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEndPos({
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY,
+    });
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStartPos.x || !touchEndPos.x) return;
+
+    const distanceX = touchStartPos.x - touchEndPos.x;
+    const distanceY = touchStartPos.y - touchEndPos.y;
+
+    // 가로 스와이프가 세로 스크롤보다 클 때만 동작하도록 확인
+    if (Math.abs(distanceX) > Math.abs(distanceY)) {
+      const isLeftSwipe = distanceX > minSwipeDistance;
+      const isRightSwipe = distanceX < -minSwipeDistance;
+
+      if (isMobile) {
+        if (isLeftSwipe && activeTab === 'timetable') {
+          setActiveTab('recommend');
+        }
+        if (isRightSwipe && activeTab === 'recommend') {
+          setActiveTab('timetable');
+        }
+      }
+    }
+  };
+
   const sortByDate = (list) =>
     [...list].sort(
       (a, b) => new Date(a.date) - new Date(b.date)
     );
-  
+
   function convertBlock(block) {
     const timeTableId = block?.timeTableId;
     const timeTableStartTime = timetables?.find(
@@ -73,7 +117,7 @@ function App() {
       memo: block.memo,
     }
 
-    return {timeTableId, place, start, duration, blockId, memo: block.memo};
+    return { timeTableId, place, start, duration, blockId, memo: block.memo };
   }
 
   const addPlaceBlock = ({ timeTableId, place, start, duration, blockId, memo }) => {
@@ -91,15 +135,15 @@ function App() {
       ],
     }));
   };
-  
+
   const [prevPlaces, setPrevPlaces] = useState(null);
 
   useEffect(() => {
     const addPlaceBlocks = () => {
       prevPlaces.map((item) => {
         console.log(item)
-        const convert = convertBlock(item); 
-        addPlaceBlock(convert); 
+        const convert = convertBlock(item);
+        addPlaceBlock(convert);
       });
     }
     console.log(timetables, prevPlaces)
@@ -112,15 +156,18 @@ function App() {
   useEffect(() => {
     const fetchUserProfile = async () => {
       let planData = null;
-      if (id && isAuthenticated()) {
-        try {
-          planData = await get(`${BASE_URL}/api/plan/${id}/complete`);
-        } catch (err) {
-          console.error("일정 정보를 가져오는데 실패했습니다:", err);
-        }
-      } else if (token) {
+      if (token) {
         try {
           planData = await get(`${BASE_URL}/api/plan/${id}/complete?token=${token}`);
+        } catch (err) {
+          console.error("일정 정보를 가져오는데 실패했습니다:", err);
+          alert("잘못된 접근입니다.");
+          navigate("/");
+          return;
+        }
+      } else if (id && isAuthenticated()) {
+        try {
+          planData = await get(`${BASE_URL}/api/plan/${id}/complete`);
         } catch (err) {
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
           alert("잘못된 접근입니다.");
@@ -158,7 +205,9 @@ function App() {
   if (!finishLoading) {
     return (
       <div className="font-pretendard h-screen">
-        <Navbar />
+        <div className="md:block hidden">
+          <Navbar />
+        </div>
         <Loading />
       </div>
     )
@@ -166,23 +215,31 @@ function App() {
 
   return (
     <div className="font-pretendard h-screen">
-      <Navbar />
+      <div className="md:block hidden">
+        <Navbar />
+      </div>
       <PlanInfo planFrame={planFrame} />
       <div
         className="
           min-[1464px]:w-[1400px] min-[1464px]:px-0
-          md:px-8 md:py-6 px-6 py-3
+          md:px-8 md:py-6 py-3
           mx-auto
-          h-[calc(100vh-140px)]
+          md:h-[calc(100vh-140px)]
+          h-[calc(100vh-48px)]
         "
       >
         <div className="flex md:flex-row flex-col md:space-x-6 space-y-4 md:space-y-0 h-full">
-          <DaySelector 
+          <DaySelector
             timetables={timetables}
             selectedDay={selectedDay}
             setSelectedDay={setSelectedDay}
           />
-          <div className="flex flex-1 flex-col h-full overflow-hidden select-none">
+          <div
+            className="flex flex-1 flex-col h-full overflow-hidden select-none"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
             <div className="flex-1 flex overflow-hidden relative md:space-x-6">
               <TimetableGrid
                 planFrame={planFrame}
@@ -191,7 +248,7 @@ function App() {
                 timetables={timetables}
                 showTimetable={showTimetable}
               />
-              <MapArea 
+              <MapArea
                 placeBlocks={placeBlocks}
                 timetables={timetables}
                 selectedDay={selectedDay}
@@ -199,12 +256,12 @@ function App() {
               />
             </div>
             {isMobile && (
-              <nav className="mt-4 bg-white border-t h-16 flex shadow-lg">
+              <nav className="fixed left-0 right-0 bottom-0 z-40 bg-white border-t h-16 flex">
                 <button onClick={() => setActiveTab('timetable')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'timetable' ? 'text-main' : 'text-gray-400'}`}>
-                  <span className="text-xl"><FontAwesomeIcon icon={faCalendar}/></span><span className="text-xs font-medium">시간표</span>
+                  <span className="text-xl"><FontAwesomeIcon icon={faCalendar} /></span><span className="text-xs font-medium">시간표</span>
                 </button>
                 <button onClick={() => setActiveTab('recommend')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'recommend' ? 'text-main' : 'text-gray-400'}`}>
-                  <span className="text-xl"><FontAwesomeIcon icon={faMap}/></span><span className="text-xs font-medium">지도로 보기</span>
+                  <span className="text-xl"><FontAwesomeIcon icon={faMap} /></span><span className="text-xs font-medium">지도로 보기</span>
                 </button>
               </nav>
             )}

@@ -22,6 +22,9 @@ import MapModal from "./MapModal";
 import NoLoginSave from "./NoLoginSave";
 import UsersModal from "./UsersModal";
 
+import UndoIcon from "../../../assets/imgs/undo.svg?react";
+import RedoIcon from "../../../assets/imgs/redo.svg?react";
+
 export default function PlanInfo({ id }) {
   const {
     planName,
@@ -141,7 +144,7 @@ export default function PlanInfo({ id }) {
   }, [localName]);
 
   return (
-    <div className={`mx-auto min-[1464px]:w-[1416px] min-[1464px]:px-0 md:px-6 md:pt-6 p-4 pb-0 ${flexCenter} justify-between w-full`}>
+    <div className={`mx-auto min-[1464px]:w-[1416px] min-[1464px]:px-0 md:px-6 md:pt-6 p-3 pb-0 ${flexCenter} justify-between w-full`}>
       <div className={`${flexCenter} sm:space-x-3 space-x-1 min-w-0 flex-1`}>
         <div className="min-w-0 flex-shrink">
           <input
@@ -165,22 +168,22 @@ export default function PlanInfo({ id }) {
               className="sm:size-7 size-5 hover:bg-gray-200 bg-white rounded-full flex items-center justify-center"
               title="되돌리기 (Ctrl+Z)"
             >
-              <FontAwesomeIcon icon={faRotateLeft} />
+              <UndoIcon />
             </button>
             <button
               onClick={() => sendRedo(id)}
               className="sm:size-7 size-5 hover:bg-gray-200 bg-white rounded-full flex items-center justify-center"
               title="다시실행 (Ctrl+Y / Ctrl+Shift+Z)"
             >
-              <FontAwesomeIcon icon={faRotateRight} />
+              <RedoIcon />
             </button>
           </div>
         }
         <button
-          className="block text-sm rounded-full bg-gray-300 hover:bg-gray-400 p-2 w-9"
+          className="flex items-center justify-center text-sm rounded-full bg-gray-300 hover:bg-gray-400 size-7 md:size-9"
           onClick={() => setIsInfoOpen(true)}
         >
-          <div className="w-5"><FontAwesomeIcon icon={faInfo} /></div>
+          <div className="text-sm"><FontAwesomeIcon icon={faInfo} /></div>
         </button>
         <div className={`hidden md:flex whitespace-nowrap flex-shrink-0 ${flexCenter} py-2 px-3 border border-gray-300 rounded-full`}>
           <span className="text-gray-500 mr-1 text-sm">이동수단</span>
@@ -221,26 +224,26 @@ export default function PlanInfo({ id }) {
           </div>
           {planId !== -1 &&
             <button
-              className="flex items-center sm:hidden text-sm rounded-full border border-main hover:bg-gray-100 p-2 size-9"
+              className="flex items-center justify-center sm:hidden text-sm rounded-full border border-main hover:bg-gray-100 size-7"
               onClick={() => setIsUsersOpen(true)}
             >
-              <div className="w-5 text-main"><FontAwesomeIcon icon={faUsers} /></div>
+              <div className="text-sm text-main"><FontAwesomeIcon icon={faUsers} /></div>
             </button>
           }
           <button
             onClick={() => setIsMapOpen(true)}
-            className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg border border-gray-500 hover:bg-gray-100"
+            className="flex items-center justify-center text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg border border-gray-500 hover:bg-gray-100 sm:size-auto size-7"
           >
-            <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faMap} /></div>
+            <div className="block sm:hidden"><FontAwesomeIcon icon={faMap} /></div>
             <div className="hidden sm:block">지도로 보기</div>
           </button>
           {planId === -1 ?
             <>
               <button
                 onClick={handleSave}
-                className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-main hover:bg-mainDark text-white"
+                className="flex items-center justify-center text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-main hover:bg-mainDark text-white sm:size-auto size-7"
               >
-                <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faFloppyDisk} /></div>
+                <div className="block sm:hidden"><FontAwesomeIcon icon={faFloppyDisk} /></div>
                 <div className="hidden sm:block">저장</div>
               </button>
             </>
@@ -248,16 +251,16 @@ export default function PlanInfo({ id }) {
             <>
               <button
                 onClick={() => setIsShareOpen(true)}
-                className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-gray-300 hover:bg-gray-400"
+                className="flex items-center justify-center text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-gray-300 hover:bg-gray-400 sm:size-auto size-7"
               >
-                <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faUserPlus} /></div>
+                <div className="block sm:hidden"><FontAwesomeIcon icon={faUserPlus} /></div>
                 <div className="hidden sm:block">공유</div>
               </button>
               <button
                 onClick={() => navigate(`/complete?id=${id}`)}
-                className="text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-main hover:bg-mainDark text-white"
+                className="flex items-center justify-center text-sm sm:text-base sm:px-4 p-2 rounded-full sm:rounded-lg bg-main hover:bg-mainDark text-white sm:size-auto size-7"
               >
-                <div className="block sm:hidden w-5"><FontAwesomeIcon icon={faCheck} /></div>
+                <div className="block sm:hidden"><FontAwesomeIcon icon={faCheck} /></div>
                 <div className="hidden sm:block">완료</div>
               </button>
             </>
