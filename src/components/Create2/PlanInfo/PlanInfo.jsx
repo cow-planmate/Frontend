@@ -200,7 +200,7 @@ export default function PlanInfo({ id }) {
               return (
                 <div
                   key={uuidv4()}
-                  className="rounded-full size-10 border-2 border-white bg-contain bg-no-repeat"
+                  className="rounded-full size-10 border-2 border-white bg-contain bg-no-repeat group/tooltip relative cursor-pointer"
                   style={
                     user.userInfo.email ? {
                       backgroundImage: `url('${user.userInfo.email}')`
@@ -208,14 +208,16 @@ export default function PlanInfo({ id }) {
                       backgroundImage: "url('./src/assets/imgs/default.png')"
                     }
                   }
-                  title={user.userInfo.nickname}
                 >
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max max-w-[200px] bg-gray-800 text-white text-xs rounded-md px-3 py-2 z-50 hidden group-hover/tooltip:block whitespace-normal break-keep shadow-lg after:content-[''] after:absolute after:bottom-full after:left-1/2 after:-translate-x-1/2 after:border-4 after:border-transparent after:border-b-gray-800 text-center">
+                    {user.userInfo.nickname}
+                  </div>
                 </div>
               )
             })}
             {users && users.length > 2 && (
               <button
-                className="text-sm rounded-full bg-gray-300 hover:bg-gray-400 p-2 size-9"
+                className="text-sm rounded-full bg-gray-300 hover:bg-gray-400 p-2 size-10 border-2 border-white"
                 onClick={() => setIsUsersOpen(true)}
               >
                 +{users.length - 2}
