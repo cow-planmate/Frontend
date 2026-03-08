@@ -102,6 +102,9 @@ function App() {
             setNoACL(true);
           }
         }
+      } else if (id) {
+        alert("로그인 후 이용해주세요.");
+        navigate("/");
       } else { // 비로그인 걸러내기
         setSelectedDay(0);
       }
