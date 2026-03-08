@@ -19,6 +19,7 @@ export default function Weather({ timetables, selectedDay, travelCategoryName, t
 
   const [weather, setWeather] = useState({});
   const [nowWeather, setNowWeather] = useState({});
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
 
   const weatherIcons = {
     "맑음": Sunny,
@@ -72,15 +73,39 @@ export default function Weather({ timetables, selectedDay, travelCategoryName, t
       border md:border-0
       md:border-b 
       px-4 py-2 md:py-4 
-      absolute left-0 right-0 md:static z-30
+      absolute left-0 right-0 md:relative z-30
       flex items-center justify-between
       bg-white md:bg-transparent bg-clip-padding backdrop-filter backdrop-blur-md md:backdrop-blur-none bg-opacity-10
     ">
+      {weather?.recommendation === "날씨 정보를 가져올 수 없어 시즌 평균 기온으로 대체합니다." &&
+        <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2 group/tooltip z-50">
+          <div
+            className="size-3 md:size-4 rounded-full bg-red-500 text-white flex items-center justify-center text-[.5rem] md:text-xs font-semibold shadow-sm cursor-pointer hover:bg-red-600 transition-colors"
+            onClick={() => {
+              if (window.innerWidth < 768) {
+                setIsTooltipOpen(!isTooltipOpen);
+              }
+            }}
+          >
+            !
+          </div>
+          <div className={`
+            ${isTooltipOpen ? 'block' : 'hidden'} 
+            md:group-hover/tooltip:block 
+            absolute top-full right-0 mt-2 w-max max-w-[260px] bg-gray-800 text-white text-xs rounded-md px-3 py-2 z-50 whitespace-normal break-keep shadow-lg 
+            after:content-[''] after:absolute after:bottom-full after:right-2 after:border-4 after:border-transparent after:border-b-gray-800 text-center
+          `}>
+            날씨 정보를 가져올 수 없어<br />시즌 평균 기온으로 대체합니다.
+          </div>
+        </div>
+      }
       <div className="flex items-center">
-        <div
-          className={nowWeather.description ? 'right-0 w-12 h-10 md:w-14 md:h-12 bg-no-repeat bg-center' : 'w-12 h-10 md:w-14 md:h-12 bg-gray-300 mr-2 rounded-lg'}
-          style={{ backgroundImage: `url(${weatherIcons[nowWeather?.description]})` }}
-        />
+        {weatherIcons[nowWeather?.description] &&
+          <div
+            className={nowWeather.description ? 'right-0 w-12 h-10 md:w-14 md:h-12 bg-no-repeat bg-center' : 'w-12 h-10 md:w-14 md:h-12 bg-gray-300 mr-2 rounded-lg'}
+            style={{ backgroundImage: `url(${weatherIcons[nowWeather?.description]})` }}
+          />
+        }
         <div className="-space-y-1">
           <p className="text-xs text-gray-500">{selectedDay + 1}일차</p>
           {nowWeather.description ?
