@@ -1,6 +1,9 @@
 import React from 'react';
 
 const Maintenance = () => {
+  const day = import.meta.env.VITE_MAINTENANCE_DAY;
+  const content = import.meta.env.VITE_MAINTENANCE_CONTENT;
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 font-pretendard">
       <div className="max-w-md w-full text-center">
@@ -40,11 +43,11 @@ const Maintenance = () => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-4 text-left">
           <div className="flex gap-4 text-sm">
             <span className="font-semibold text-gray-900 min-w-[60px]">점검 일시</span>
-            <span className="text-gray-600 font-medium">202X년 X월 X일 00:00 ~ 00:00</span>
+            <span className="text-gray-600 font-medium">{day}</span>
           </div>
           <div className="flex gap-4 text-sm">
             <span className="font-semibold text-gray-900 min-w-[60px]">점검 내용</span>
-            <span className="text-gray-600">시스템 안정화 및 업데이트</span>
+            <span className="text-gray-600">{content}</span>
           </div>
         </div>
       </div>
