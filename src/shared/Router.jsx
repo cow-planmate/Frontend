@@ -12,7 +12,6 @@ import Create2 from "../pages/Create2";
 import Complete2 from "../pages/Complete2";
 import OAuthCallback from "../pages/OAuthCallback";
 import OAuthAdditionalInfo from "../pages/OAuthAdditionalInfo";
-import Maintenance from "../pages/Maintenance";
 
 import GlobalTempPlanModal from "../components/common/GlobalTempPlanModal";
 
@@ -33,8 +32,6 @@ const Router = () => {
 
         <Route path="oauth/callback" element={<OAuthCallback />} />
         <Route path="oauth/additional-info" element={<OAuthAdditionalInfo />} />
-
-        <Route path="maintenance" element={<Maintenance />} />
 
         {/* <Route path="create" element={<Create />} /> */}
         {/* <Route path="complete" element={<Complete />} /> */}
