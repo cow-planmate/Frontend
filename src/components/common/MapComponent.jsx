@@ -99,7 +99,7 @@ export default function MapComponent({ schedule }) {
     ) : (
       <div className="w-full h-full flex-col flex items-center justify-center space-y-2 p-5">
         <p className="text-main text-3xl font-bold">표시할 블록 없음</p>
-        <p className="text-lg">직접추가가 아닌 블록을 추가하면 지도가 보여요.</p>
+        <p className="text-lg text-center break-keep">직접추가가 아닌 블록을 추가하면 지도가 보여요.</p>
       </div>
     )
   )
