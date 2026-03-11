@@ -92,7 +92,7 @@ export default function MapComponent({ schedule }) {
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-main/10 text-main">
             ⌖
           </span>
-          {isLocating ? "현재 위치 찾는 중..." : "내 위치"}
+          {isLocating ? "현재 위치 찾는 중..." : "현재 위치"}
         </button>
 
         {locationError && (
@@ -148,8 +148,10 @@ export default function MapComponent({ schedule }) {
           })}
           {currentLocation && (
             <MapMarker position={currentLocation}>
-              <div className="rounded-full bg-main px-3 py-1 text-xs font-semibold text-white shadow-md">
-                내 위치
+              <div className="p-1 w-[159px]" style={{ borderRadius: "4rem" }}>
+                <p className="text-lg font-semibold truncate pl-9">
+                  현재 위치
+                </p>
               </div>
             </MapMarker>
           )}
