@@ -254,19 +254,21 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setSelected("남자")}
-            className={`py-3 px-4 rounded-xl border-2 font-medium transition-all duration-200 ${selected === "남자"
-              ? "bg-main text-white hover:bg-blue-800"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+            className={`py-3 px-4 rounded-xl border-2 font-medium transition-all duration-200 ${
+              selected === "남자"
+                ? "bg-main text-white hover:bg-blue-800"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
           >
             남자
           </button>
           <button
             onClick={() => setSelected("여자")}
-            className={`py-3 px-4 rounded-xl border-2 font-medium transition-all duration-200 ${selected === "여자"
-              ? "bg-main text-white hover:bg-blue-800"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+            className={`py-3 px-4 rounded-xl border-2 font-medium transition-all duration-200 ${
+              selected === "여자"
+                ? "bg-main text-white hover:bg-blue-800"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
           >
             여자
           </button>

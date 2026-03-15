@@ -4,15 +4,19 @@ import PlanList from "../components/Mypage/PlanList";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useApiClient } from "../hooks/useApiClient";
+import LoadingOverlay from "../components/common/LoadingOverlay";
 
 function App() {
   const navigate = useNavigate();
   const [refreshTrigger, setRefreshTrigger] = useState(false);
   const { get, isAuthenticated, logout } = useApiClient();
+
   const BASE_URL = import.meta.env.VITE_API_URL;
+
   const [userProfile, setUserProfile] = useState(null);
   const [myPlans, setMyPlans] = useState([]);
   const [editablePlans, setEditablePlans] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const handleLogout = async () => {
     await logout();
@@ -29,27 +33,27 @@ function App() {
 
   useEffect(() => {
     const fetchUserProfile = async () => {
+      setLoading(true);
+
       if (isAuthenticated()) {
         try {
           const profileData = await get(`${BASE_URL}/api/user/profile`);
-          console.log("프로필 데이터:", profileData);
+
           setUserProfile(profileData);
           setMyPlans(profileData.myPlanVOs || []);
           setEditablePlans(profileData.editablePlanVOs || []);
         } catch (err) {
           console.error("프로필 정보를 가져오는데 실패했습니다:", err);
-          setMyPlans([]);
-          setEditablePlans([]);
+
           if (err.message.includes("인증이 만료")) {
             handleLogout();
           }
+        } finally {
+          setLoading(false);
         }
-      } else {
-        setUserProfile(null);
-        setMyPlans([]);
-        setEditablePlans([]);
       }
     };
+
     fetchUserProfile();
   }, [isAuthenticated, get, refreshTrigger]);
 
@@ -59,6 +63,8 @@ function App() {
 
   return (
     <div className="font-pretendard min-h-screen">
+      {loading && <LoadingOverlay />}
+
       <Navbar onInvitationAccept={handlePlanListRefresh} />
 
       <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">

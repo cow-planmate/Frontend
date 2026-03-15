@@ -27,7 +27,7 @@ export default function Theme({ isOpen, onClose, onComplete }) {
       const restoredIndexes = [];
       previousSelections.forEach((selectedItem) => {
         const index = keywordsByStep[currentStep].findIndex(
-          (item) => item.preferredThemeId === selectedItem.preferredThemeId
+          (item) => item.preferredThemeId === selectedItem.preferredThemeId,
         );
         if (index !== -1) {
           restoredIndexes.push(index);
@@ -93,8 +93,8 @@ export default function Theme({ isOpen, onClose, onComplete }) {
       prev.includes(index)
         ? prev.filter((i) => i !== index)
         : prev.length < 5
-        ? [...prev, index]
-        : prev
+          ? [...prev, index]
+          : prev,
     );
   };
 

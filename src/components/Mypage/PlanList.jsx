@@ -137,7 +137,7 @@ export default function PlanList({
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto px-6 pb-6">
+          <div className="flex-1 overflow-y-auto px-6 py-4">
             {myPlans.length > 0 ? (
               <div className="space-y-4">
                 {myPlans.map((lst) => (
@@ -190,7 +190,7 @@ export default function PlanList({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div className="flex-1 overflow-y-auto px-6 py-4">
           {editablePlans.length > 0 ? (
             <div className="space-y-4">
               {editablePlans.map((lst) => (
