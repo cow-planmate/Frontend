@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { SidebarItem } from "./SidebarItem";
 import { useApiClient } from "../../../hooks/useApiClient";
 import usePlacesStore from "../../../store/Places";
-import { faCirclePlus } from "@fortawesome/free-solid-svg-icons";
+import { faCirclePlus, faUmbrellaBeach, faBed, faUtensils, faPenNib, faMagnifyingGlass, faLightbulb } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import LoadingRing from "../../../assets/imgs/ring-resize.svg?react";
 import useNicknameStore from "../../../store/Nickname";
@@ -198,23 +198,62 @@ export default function Sidebar({
             />
           ))}
           {selectedTab === "custom" && (currentPlaces?.length === 0 || !currentPlaces) && (
-            <div className="text-center p-8 text-gray-500 text-sm break-keep">
-              위 입력란에 장소 이름을 입력한 뒤 &quot;추가&quot; 버튼을 누르면
-              리스트에 추가됩니다. 추가된 항목을 드래그하여 시간표에 넣어보세요.
-              <br />
-              그리고 추가된 장소 목록은 현재 접속하고 있는 기기에만 저장돼요.
+            <div className="flex flex-col items-center justify-center py-16 px-6 text-center break-keep mt-4">
+              <div className="text-5xl mb-5 opacity-90 drop-shadow-sm text-violet-500">
+                <FontAwesomeIcon icon={faPenNib} />
+              </div>
+              <p className="text-gray-600 text-[15px] leading-relaxed font-medium mb-1">
+                위 입력란에 장소 이름을 입력하고 <br />
+                <span className="text-violet-600 font-bold">&quot;추가&quot;</span> 버튼을 눌러보세요.
+              </p>
+              <p className="text-gray-500 text-xs mt-4 bg-gray-100 px-3 py-1.5 rounded-full inline-block">
+                <FontAwesomeIcon icon={faLightbulb} className="mr-1" /> 추가된 장소는 현재 기기에만 저장돼요
+              </p>
             </div>
           )}
+          {["tour", "lodging", "restaurant"].includes(selectedTab) &&
+            currentPlaces?.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 px-6 text-center break-keep mt-4">
+                <div className={`
+                  text-5xl mb-5 opacity-90 drop-shadow-sm 
+                  ${selectedTab === "tour" ? "text-lime-500" : selectedTab === "lodging" ? "text-orange-500" : "text-blue-500"}
+                `}>
+                  <FontAwesomeIcon
+                    icon={
+                      selectedTab === "tour"
+                        ? faUmbrellaBeach
+                        : selectedTab === "lodging"
+                          ? faBed
+                          : faUtensils
+                    }
+                  />
+                </div>
+                <p className="text-gray-600 text-[15px] font-medium">
+                  {koreanName[selectedTab]} 추천장소가 존재하지 않아요.
+                </p>
+                <p className="text-gray-400 text-xs mt-3">
+                  검색 탭에서 장소를 직접 찾아볼 수 있어요!
+                </p>
+              </div>
+            )}
           {selectedTab === "search" &&
             hasSearched &&
             !searchLoading &&
             search.length === 0 && (
-              <div className="text-center p-8 text-gray-700 break-keep">
-                검색 결과가 없습니다.
+              <div className="flex flex-col items-center justify-center py-16 px-6 text-center break-keep mt-4">
+                <div className="text-5xl mb-5 opacity-90 drop-shadow-sm text-gray-400">
+                  <FontAwesomeIcon icon={faMagnifyingGlass} />
+                </div>
+                <p className="text-gray-600 text-[15px] font-medium">
+                  검색 결과가 없습니다.
+                </p>
+                <p className="text-gray-400 text-xs mt-3">
+                  다른 키워드로 장소를 다시 찾아보세요.
+                </p>
               </div>
             )}
           {selectedTab !== "custom" &&
-            ((selectedTab !== "search" || search.length !== 0) && store[`${selectedTab}Next`].length > 0) && (
+            ((selectedTab !== "search" || search.length !== 0) && store[`${selectedTab}Next`]?.length > 0) && (
               <div className="text-center py-3">
                 <button
                   className="text-3xl text-main hover:text-mainDark"
