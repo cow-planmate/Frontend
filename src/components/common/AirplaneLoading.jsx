@@ -1,7 +1,7 @@
 
 const AirplaneLoading = () => {
   return (
-    <div className="flex flex-col items-center justify-center h-full md:h-[calc(100vh-125px)] w-full relative overflow-hidden bg-sky-50">
+    <div className="flex flex-col items-center justify-center h-full md:h-[calc(100vh-75px)] w-full relative overflow-hidden bg-sky-50">
       <style>
         {`
           @keyframes fly {
@@ -12,10 +12,10 @@ const AirplaneLoading = () => {
             100% { transform: translate(0px, 0px) rotate(0deg); }
           }
           @keyframes cloudMove {
-            0% { transform: translateX(100%); opacity: 0; }
+            0% { transform: translateX(100vw); opacity: 0; }
             10% { opacity: 0.8; }
             90% { opacity: 0.8; }
-            100% { transform: translateX(-100%); opacity: 0; }
+            100% { transform: translateX(-100vw); opacity: 0; }
           }
           .animate-fly {
             animation: fly 4s ease-in-out infinite;
@@ -72,9 +72,9 @@ const AirplaneLoading = () => {
         <div className="cloud cloud-3"></div>
       </div>
 
-      {/* Airplane */}
-      <div className="z-10 flex flex-col items-center">
-        <div className="animate-fly -rotate-12">
+      {/* Airplane and Text */}
+      <div className="flex flex-col items-center">
+        <div className="z-10 relative animate-fly -rotate-12">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 576 512"
@@ -85,10 +85,10 @@ const AirplaneLoading = () => {
             <path d="M482.3 192c34.2 0 93.7 29 93.7 64c0 36-59.5 64-93.7 64l-116.6 0L265.2 495.9c-5.7 10-16.3 16.1-27.8 16.1l-56.2 0c-10.6 0-18.3-10.2-15.4-20.4l49-171.6L112 320 68.8 377.6c-3 4-8 6.4-13.4 6.4l-42 0c-7.8 0-13.6-7.3-11.7-14.8L35.6 256 1.7 142.8C-.2 135.3 5.6 128 13.4 128l42 0c5.4 0 10.4 2.4 13.4 6.4L112 192l102.9 0-49-171.6C162.9 10.2 170.6 0 181.2 0l56.2 0c11.5 0 22.1 6.2 27.8 16.1L365.7 192l116.6 0z"/>
           </svg>
         </div>
-        <div className="mt-8 text-2xl font-bold text-gray-700 tracking-wide z-30">
+        <div className="z-30 relative mt-8 text-2xl font-bold text-gray-700 tracking-wide">
           일정 정보를 불러오는 중...
         </div>
-        <div className="mt-2 text-sm text-gray-500 font-medium z-30">
+        <div className="z-30 relative mt-2 text-sm text-gray-500 font-medium">
           PlanMate가 당신의 완벽한 여행을 그리고 있어요
         </div>
       </div>
