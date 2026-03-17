@@ -64,9 +64,21 @@ export default function PlanListList({
     if (toggleModal && buttonRef.current) {
       const buttonRect = buttonRef.current.getBoundingClientRect();
       const modalWidth = 176;
+      const modalHeight = 200;
+
+      const spaceBelow = window.innerHeight - buttonRect.bottom;
+      const spaceAbove = buttonRect.top;
+
+      let top;
+
+      if (spaceBelow < modalHeight && spaceAbove > modalHeight) {
+        top = buttonRect.top - modalHeight - 8;
+      } else {
+        top = buttonRect.bottom + 8;
+      }
 
       setModalPosition({
-        top: buttonRect.bottom + 8,
+        top: top,
         left: buttonRect.right - modalWidth,
       });
     }

@@ -78,7 +78,7 @@ export default function Login({
     } catch (err) {
       // 에러는 useApiClient에서 자동으로 설정됨
       console.error("로그인 실패:", err);
-      alert("이메일 또는 비밀번호가 일치하지 않습니다 ");
+      alert(err);
     }
   };
 

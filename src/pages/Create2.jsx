@@ -50,6 +50,7 @@ function App() {
   const [noACL, setNoACL] = useState(false);
   const [showTempPlanPrompt, setShowTempPlanPrompt] = useState(false); // Alert state
   const [isTempLoaded, setIsTempLoaded] = useState(false); // Prevent auto-save until loaded
+  const [isPlaceLoading, setIsPlaceLoading] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -132,6 +133,8 @@ function App() {
             restaurant: restaurantData.places,
             restaurantNext: restaurantData.nextPageTokens
           });
+
+          setIsPlaceLoading(true);
         } catch (err) {
           console.error("추천 장소를 가져오는데 실패했습니다:", err);
         }
@@ -151,6 +154,8 @@ function App() {
             restaurant: restaurantData.places,
             restaurantNext: restaurantData.nextPageTokens
           });
+
+          setIsPlaceLoading(true);
         } catch (err) {
           console.error("추천 장소를 가져오는데 실패했습니다:", err);
         }
@@ -314,7 +319,7 @@ function App() {
     console.log("클라이언트 연결", isConnected)
   }, [isConnected])
 
-  if (!planId || tour.length === 0 || lodging.length === 0 || restaurant.length === 0 || (planId !== -1 && isAuthenticated() && !isConnected)) {
+  if (!planId || !isPlaceLoading || (planId !== -1 && isAuthenticated() && !isConnected)) {
     return (
       <div className="font-pretendard h-screen">
         <div className="hidden md:block">
