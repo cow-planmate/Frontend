@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useApiClient } from "../../hooks/useApiClient";
 
-export default function Theme({ isOpen, onClose, onComplete }) {
+export default function Theme({
+  isOpen,
+  onClose,
+  onComplete,
+  initialSelected,
+}) {
   const [selectedKeywords, setSelectedKeywords] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [allSelectedKeywords, setAllSelectedKeywords] = useState({});
@@ -14,11 +19,16 @@ export default function Theme({ isOpen, onClose, onComplete }) {
     if (isOpen) {
       setCurrentStep(0);
       setSelectedKeywords([]);
-      setAllSelectedKeywords({});
+
+      if (initialSelected && Object.keys(initialSelected).length > 0) {
+        setAllSelectedKeywords(initialSelected);
+      } else {
+        setAllSelectedKeywords({});
+      }
+
       getPreferredTheme();
     }
-  }, [isOpen]);
-
+  }, [isOpen, initialSelected]);
   useEffect(() => {
     if (categories.length > 0 && keywordsByStep[currentStep]) {
       const currentCategoryId = categories[currentStep].id;
@@ -79,7 +89,18 @@ export default function Theme({ isOpen, onClose, onComplete }) {
         categoryList.forEach((cat) => {
           initialSelected[cat.id] = [];
         });
-        setAllSelectedKeywords(initialSelected);
+        setAllSelectedKeywords((prev) => {
+          const hasInitial =
+            prev && Object.values(prev).some((arr) => arr && arr.length > 0);
+
+          if (hasInitial) return prev;
+
+          const empty = {};
+          categoryList.forEach((cat) => {
+            empty[cat.id] = [];
+          });
+          return empty;
+        });
       } else {
         console.error("API 응답 형식이 올바르지 않습니다:", res);
       }

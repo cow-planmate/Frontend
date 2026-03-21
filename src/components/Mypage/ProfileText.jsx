@@ -1,5 +1,5 @@
 // ProfileText.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useApiClient } from "../../hooks/useApiClient";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ThemeStart from "./changeThemeStart";
@@ -30,12 +30,20 @@ export default function ProfileText({
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [naeyong, setNaeyong] = useState(content);
   const [isThemestartOpen, setIsThemestartOpen] = useState(false);
-  const [selectedThemeKeywords, setSelectedThemeKeywords] = useState({
-    tourist: [],
-    accommodation: [],
-    restaurant: [],
-  });
+  const [selectedThemeKeywords, setSelectedThemeKeywords] = useState({});
   const [isThemeOpen, setIsThemeOpen] = useState(false);
+
+  useEffect(() => {
+    if (title === "선호테마" && Array.isArray(content)) {
+      const grouped = content.reduce((acc, theme) => {
+        const id = theme.preferredThemeCategoryId;
+        if (!acc[id]) acc[id] = [];
+        acc[id].push(theme);
+        return acc;
+      }, {});
+      setSelectedThemeKeywords(grouped);
+    }
+  }, [content, title]);
 
   // 성별 아이콘 결정 함수
   const getGenderIcon = (genderText) => {
@@ -153,8 +161,8 @@ export default function ProfileText({
 
         <Theme
           isOpen={isThemeOpen}
-          onClose={handleThemeClose}
           onComplete={handleThemeComplete}
+          initialSelected={selectedThemeKeywords}
         />
       </div>
     );

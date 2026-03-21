@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { useApiClient } from "../../hooks/useApiClient";
 
 export default function Themestart({
@@ -14,10 +16,13 @@ export default function Themestart({
     2: "식당",
   };
   const BASE_URL = import.meta.env.VITE_API_URL;
+  const [isSaving, setIsSaving] = useState(false);
 
   if (!isOpen) return null;
 
   const changePreferredTheme = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
     try {
       const selectedData = Object.values(selectedThemeKeywords)
         .flat()
@@ -32,17 +37,12 @@ export default function Themestart({
           return acc;
         }, {});
 
-      // 구조 확인
-      console.log("grouped:", selectedData);
-
       const finalData = Object.entries(selectedData).map(
         ([categoryId, themeIds]) => ({
           preferredThemeCategoryId: parseInt(categoryId),
           preferredThemeIds: themeIds,
-        })
+        }),
       );
-
-      console.log("보낼 데이터:", finalData);
 
       for (const data of finalData) {
         await patch(`${BASE_URL}/api/user/preferredThemes`, data);
@@ -54,13 +54,15 @@ export default function Themestart({
       }
     } catch (err) {
       console.error("선호 테마 저장 실패:", err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const getThemeSelectionText = () => {
     const totalSelected = Object.values(selectedThemeKeywords).reduce(
       (sum, arr) => sum + arr.length,
-      0
+      0,
     );
     return totalSelected === 0 ? "선호테마 선택하기" : "선호테마 재선택하기";
   };
@@ -80,7 +82,7 @@ export default function Themestart({
 
         <div className="space-y-4">
           {Object.values(selectedThemeKeywords).some(
-            (arr) => arr.length > 0
+            (arr) => arr.length > 0,
           ) && (
             <div className="p-3 border bg-gray-100 border-blue-200 rounded-xl text-sm font-medium text-gray-600 shadow-sm">
               <div className="text-sm font-bold mb-2 text-gray-800">
@@ -98,7 +100,7 @@ export default function Themestart({
                           {keywords.map((k) => k.preferredThemeName).join(", ")}
                         </span>
                       </div>
-                    ) : null
+                    ) : null,
                 )}
               </div>
             </div>
@@ -109,7 +111,7 @@ export default function Themestart({
               onClick={onThemeOpen}
               className={`flex-1 py-2 px-3 text-sm font-medium rounded-lg border transition-colors ${
                 Object.values(selectedThemeKeywords).some(
-                  (arr) => arr.length > 0
+                  (arr) => arr.length > 0,
                 )
                   ? "bg-main text-white border-main"
                   : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
@@ -119,9 +121,14 @@ export default function Themestart({
             </button>
             <button
               onClick={changePreferredTheme}
-              className="bg-main text-white px-4 py-2 text-sm font-medium rounded-lg hover:bg-main/90 transition-colors"
+              disabled={isSaving}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                isSaving
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-main text-white hover:bg-main/90"
+              }`}
             >
-              완료
+              {isSaving ? "저장 중..." : "완료"}
             </button>
           </div>
         </div>

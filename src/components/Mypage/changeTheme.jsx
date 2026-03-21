@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useApiClient } from "../../hooks/useApiClient";
 
-export default function Theme({ isOpen, onClose, onComplete }) {
+export default function Theme({
+  isOpen,
+  onComplete,
+  initialSelected = {},
+}) {
   const [selectedKeywords, setSelectedKeywords] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [allSelectedKeywords, setAllSelectedKeywords] = useState({});
@@ -10,42 +14,9 @@ export default function Theme({ isOpen, onClose, onComplete }) {
   const { get } = useApiClient();
   const BASE_URL = import.meta.env.VITE_API_URL;
 
-  useEffect(() => {
-    if (isOpen) {
-      setCurrentStep(0);
-      setSelectedKeywords([]);
-      setAllSelectedKeywords({});
-      getPreferredTheme();
-    }
-  }, [isOpen]);
-
-  // currentStep이 변경될 때마다 해당 step의 이전 선택사항을 복원
-  useEffect(() => {
-    if (categories.length > 0 && keywordsByStep[currentStep]) {
-      const currentCategoryId = categories[currentStep].id;
-      const previousSelections = allSelectedKeywords[currentCategoryId] || [];
-
-      // 이전에 선택된 키워드들의 인덱스를 찾아서 복원
-      const restoredIndexes = [];
-      previousSelections.forEach((selectedItem) => {
-        const index = keywordsByStep[currentStep].findIndex(
-          (item) => item.preferredThemeId === selectedItem.preferredThemeId
-        );
-        if (index !== -1) {
-          restoredIndexes.push(index);
-        }
-      });
-
-      setSelectedKeywords(restoredIndexes);
-    }
-  }, [currentStep, categories, keywordsByStep, allSelectedKeywords]);
-
-  if (!isOpen) return null;
-
-  const getPreferredTheme = async () => {
+  const getPreferredTheme = useCallback(async () => {
     try {
       const res = await get(`${BASE_URL}/api/user/preferredTheme`);
-      console.log("API 응답:", res); // 디버깅용
 
       const themeList = res.preferredThemes || [];
 
@@ -77,18 +48,63 @@ export default function Theme({ isOpen, onClose, onComplete }) {
         setCategories(categoryList);
         setKeywordsByStep(categorizedKeywords);
 
-        const initialSelected = {};
-        categoryList.forEach((cat) => {
-          initialSelected[cat.id] = [];
+        setAllSelectedKeywords((prev) => {
+          const hasInitial =
+            prev && Object.values(prev).some((arr) => arr && arr.length > 0);
+
+          if (hasInitial) return prev;
+
+          const emptySelections = {};
+          categoryList.forEach((cat) => {
+            emptySelections[cat.id] = [];
+          });
+          return emptySelections;
         });
-        setAllSelectedKeywords(initialSelected);
       } else {
         console.error("API 응답 형식이 올바르지 않습니다:", res);
       }
     } catch (err) {
       console.error("선호 테마 가져오기 실패:", err.message);
     }
-  };
+  }, [BASE_URL, get]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentStep(0);
+      setSelectedKeywords([]);
+
+      if (initialSelected && Object.keys(initialSelected).length > 0) {
+        setAllSelectedKeywords(initialSelected);
+      } else {
+        setAllSelectedKeywords({});
+      }
+
+      getPreferredTheme();
+    }
+  }, [isOpen, initialSelected, getPreferredTheme]);
+
+  // currentStep이 변경될 때마다 해당 step의 이전 선택사항을 복원
+  useEffect(() => {
+    if (categories.length > 0 && keywordsByStep[currentStep]) {
+      const currentCategoryId = categories[currentStep].id;
+      const previousSelections = allSelectedKeywords[currentCategoryId] || [];
+
+      // 이전에 선택된 키워드들의 인덱스를 찾아서 복원
+      const restoredIndexes = [];
+      previousSelections.forEach((selectedItem) => {
+        const index = keywordsByStep[currentStep].findIndex(
+          (item) => item.preferredThemeId === selectedItem.preferredThemeId
+        );
+        if (index !== -1) {
+          restoredIndexes.push(index);
+        }
+      });
+
+      setSelectedKeywords(restoredIndexes);
+    }
+  }, [currentStep, categories, keywordsByStep, allSelectedKeywords]);
+
+  if (!isOpen) return null;
 
   const toggleKeyword = (index) => {
     setSelectedKeywords((prev) =>
@@ -107,16 +123,15 @@ export default function Theme({ isOpen, onClose, onComplete }) {
     const currentStepKeywords = keywordsByStep[currentStep];
     const selected = selectedKeywords
       .map((i) => currentStepKeywords[i])
-      .filter((item) => !!item); // null/undefined 제거
+      .filter((item) => !!item);
 
     setAllSelectedKeywords((prev) => ({
       ...prev,
-      [currentCategoryId]: selected, // 객체 배열로 저장
+      [currentCategoryId]: selected,
     }));
 
     if (currentStep < categories.length - 1) {
       setCurrentStep(currentStep + 1);
-      // selectedKeywords는 useEffect에서 자동으로 복원됨
     } else {
       const final = {
         ...allSelectedKeywords,
@@ -137,7 +152,6 @@ export default function Theme({ isOpen, onClose, onComplete }) {
 
     if (currentStep < categories.length - 1) {
       setCurrentStep(currentStep + 1);
-      // selectedKeywords는 useEffect에서 자동으로 복원됨
     } else {
       const final = {
         ...allSelectedKeywords,
@@ -148,7 +162,6 @@ export default function Theme({ isOpen, onClose, onComplete }) {
   };
 
   const goToPreviousStep = () => {
-    // 현재 선택사항을 저장하고 이전 단계로
     const currentCategoryId = categories[currentStep].id;
     const currentStepKeywords = keywordsByStep[currentStep];
     const selected = selectedKeywords
@@ -161,7 +174,6 @@ export default function Theme({ isOpen, onClose, onComplete }) {
     }));
 
     setCurrentStep(currentStep - 1);
-    // selectedKeywords는 useEffect에서 자동으로 복원됨
   };
 
   const currentKeywords = keywordsByStep[currentStep];
