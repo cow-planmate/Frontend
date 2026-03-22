@@ -1,31 +1,30 @@
 // 목표: 최대한 간결하고 작동 잘 되게
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams, useBlocker, useLocation } from "react-router-dom";
 import {
   DndContext,
-  useSensor,
-  useSensors,
   MouseSensor,
   TouchSensor,
+  useSensor,
+  useSensors,
 } from '@dnd-kit/core';
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useApiClient } from "../hooks/useApiClient";
-import { disconnectStompClient, initStompClient, sendRedo, sendUndo } from "../websocket/client";
-import { saveTempPlan, getTempPlan, clearTempPlan } from "../utils/tempPlanStorage"; // Import util
-import { getClient } from "../websocket/client";
+import { clearTempPlan, getTempPlan, saveTempPlan } from "../utils/tempPlanStorage"; // Import util
+import { disconnectStompClient, getClient, initStompClient, sendRedo, sendUndo } from "../websocket/client";
 
-import usePlanStore from "../store/Plan";
-import useTimetableStore from "../store/Timetables";
 import usePlacesStore from "../store/Places";
+import usePlanStore from "../store/Plan";
 import useSocketStore from "../store/Socket";
+import useTimetableStore from "../store/Timetables";
 
-import Loading from "../components/common/Loading";
+import AirplaneLoading from "../components/common/AirplaneLoading";
 import Navbar from "../components/common/Navbar";
-import PlanInfo from "../components/Create2/PlanInfo/PlanInfo";
 import DaySelector from "../components/Create2/DaySelector/DaySelector";
 import Main from "../components/Create2/Main/Main";
+import PlanInfo from "../components/Create2/PlanInfo/PlanInfo";
+import useNicknameStore from "../store/Nickname";
 import useItemsStore from "../store/Schedules";
 import { convertBlock, resetAllStores } from "../utils/createUtils";
-import useNicknameStore from "../store/Nickname";
 
 function App() {
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -352,7 +351,7 @@ function App() {
           </div>
         )}
         {noACL ? (
-          <div className="space-y-3 h-[calc(100vh-75px)] flex items-center justify-center flex-col">
+          <div className="space-y-3 h-[calc(100vh-69px)] flex items-center justify-center flex-col">
             <div className="text-3xl">
               <span className="text-main font-bold">편집 권한</span>이 없습니다.
             </div>
@@ -372,7 +371,7 @@ function App() {
             </div>
           </div>
         ) : (
-          <Loading />
+          <AirplaneLoading />
         )}
       </div>
     )
@@ -389,7 +388,7 @@ function App() {
           min-[1464px]:w-[1400px] min-[1464px]:px-0
           md:px-8 md:py-6 py-3
           mx-auto
-          md:h-[calc(100vh-140px)]
+          md:h-[calc(100vh-134px)]
           h-[calc(100vh-48px)]
         "
       >
