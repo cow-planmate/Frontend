@@ -1,7 +1,7 @@
 
 const AirplaneLoading = () => {
   return (
-    <div className="flex flex-col items-center justify-center h-full md:h-[calc(100vh-75px)] w-full relative overflow-hidden bg-sky-50">
+    <div className="flex flex-col items-center justify-center h-full md:h-[calc(100vh-69px)] w-full relative overflow-hidden bg-sky-50">
       <style>
         {`
           @keyframes fly {
@@ -82,7 +82,7 @@ const AirplaneLoading = () => {
             fill="currentColor"
             style={{ filter: "drop-shadow(0px 10px 10px rgba(0,0,0,0.15))" }}
           >
-            <path d="M482.3 192c34.2 0 93.7 29 93.7 64c0 36-59.5 64-93.7 64l-116.6 0L265.2 495.9c-5.7 10-16.3 16.1-27.8 16.1l-56.2 0c-10.6 0-18.3-10.2-15.4-20.4l49-171.6L112 320 68.8 377.6c-3 4-8 6.4-13.4 6.4l-42 0c-7.8 0-13.6-7.3-11.7-14.8L35.6 256 1.7 142.8C-.2 135.3 5.6 128 13.4 128l42 0c5.4 0 10.4 2.4 13.4 6.4L112 192l102.9 0-49-171.6C162.9 10.2 170.6 0 181.2 0l56.2 0c11.5 0 22.1 6.2 27.8 16.1L365.7 192l116.6 0z"/>
+            <path d="M482.3 192c34.2 0 93.7 29 93.7 64c0 36-59.5 64-93.7 64l-116.6 0L265.2 495.9c-5.7 10-16.3 16.1-27.8 16.1l-56.2 0c-10.6 0-18.3-10.2-15.4-20.4l49-171.6L112 320 68.8 377.6c-3 4-8 6.4-13.4 6.4l-42 0c-7.8 0-13.6-7.3-11.7-14.8L35.6 256 1.7 142.8C-.2 135.3 5.6 128 13.4 128l42 0c5.4 0 10.4 2.4 13.4 6.4L112 192l102.9 0-49-171.6C162.9 10.2 170.6 0 181.2 0l56.2 0c11.5 0 22.1 6.2 27.8 16.1L365.7 192l116.6 0z" />
           </svg>
         </div>
         <div className="z-30 relative mt-8 text-2xl font-bold text-gray-700 tracking-wide">

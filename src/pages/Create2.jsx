@@ -351,7 +351,7 @@ function App() {
           </div>
         )}
         {noACL ? (
-          <div className="space-y-3 h-[calc(100vh-75px)] flex items-center justify-center flex-col">
+          <div className="space-y-3 h-[calc(100vh-69px)] flex items-center justify-center flex-col">
             <div className="text-3xl">
               <span className="text-main font-bold">편집 권한</span>이 없습니다.
             </div>
@@ -388,7 +388,7 @@ function App() {
           min-[1464px]:w-[1400px] min-[1464px]:px-0
           md:px-8 md:py-6 py-3
           mx-auto
-          md:h-[calc(100vh-140px)]
+          md:h-[calc(100vh-134px)]
           h-[calc(100vh-48px)]
         "
       >
