@@ -5,6 +5,7 @@ import './App.css'
 import ServerDownPage from "./pages/ServerDownPage";
 import useServerStatusStore from "./store/ServerStatus";
 import Maintenance from "./pages/Maintenance";
+import ConfirmModal from "./components/common/ConfirmModal";
 
 function App() {
   const { isServerDown } = useServerStatusStore();
@@ -17,6 +18,7 @@ function App() {
   return (
     <>
       <Router />
+      <ConfirmModal />
       {isServerDown && <ServerDownPage />}
     </>
   )

@@ -4,7 +4,7 @@ import { useApiClient } from "../../hooks/useApiClient";
 import { Check, X } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-import LoadingRing from "../../assets/imgs/ring-resize.svg?react";
+import { ErrorToast, SuccessToast } from "../common/Toast";
 
 const PasswordModal = ({ setIsPasswordOpen }) => {
   const { post, patch, isAuthenticated } = useApiClient();
@@ -94,7 +94,7 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
       !passwordValidation.hasMaxLength ||
       !passwordValidation.hasAllRequired
     ) {
-      alert("비밀번호 조건을 만족하지 않습니다.");
+      ErrorToast("비밀번호 조건을 만족하지 않습니다.");
       return;
     }
 
@@ -124,11 +124,11 @@ const PasswordModal = ({ setIsPasswordOpen }) => {
 
       console.log(passwordChanged)
 
-      alert("비밀번호가 변경되었습니다!");
+      SuccessToast("비밀번호가 변경되었습니다!");
       setIsPasswordOpen(false);
     } catch (err) {
       console.error("비밀번호 변경 오류:", err);
-      alert(err.message);
+      ErrorToast(err.message);
     } finally {
       setIsLoading(false);
     }

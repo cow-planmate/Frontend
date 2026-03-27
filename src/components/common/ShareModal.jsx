@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useApiClient } from "../../hooks/useApiClient";
+import { ErrorToast, SuccessToast } from "./Toast";
+import useConfirmStore from "../../store/Confirm";
 
 const ShareModal = ({ setIsShareOpen, id, isOwner }) => {
   const { post, get, del } = useApiClient();
@@ -7,6 +9,7 @@ const ShareModal = ({ setIsShareOpen, id, isOwner }) => {
   const [receiverNickname, setreceiverNickname] = useState("");
   const [shareURL, setShareURL] = useState("");
   const BASE_URL = import.meta.env.VITE_API_URL;
+  const { showConfirm } = useConfirmStore();
 
   useEffect(() => {
     getShareLink();
@@ -42,12 +45,12 @@ const ShareModal = ({ setIsShareOpen, id, isOwner }) => {
       });
       console.log(response);
       setreceiverNickname("");
-      alert(response.message);
+      SuccessToast(response.message);
     } catch (err) {
       console.error("초대에 실패했습니다:", err);
 
       const errorMessage = err.message;
-      alert(errorMessage);
+      ErrorToast(errorMessage);
     }
   };
 
@@ -62,23 +65,23 @@ const ShareModal = ({ setIsShareOpen, id, isOwner }) => {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareURL);
-    alert("링크가 복사되었습니다!");
+    SuccessToast("링크가 복사되었습니다!");
   };
 
   const resignEditorAccess = async () => {
-    if (confirm("편집 권한을 포기하시겠습니까?")) {
+    if (await showConfirm("편집 권한을 포기하시겠습니까?")) {
       try {
         const response = await del(
           `${import.meta.env.VITE_API_URL}/api/plan/${id}/editor/me`
         );
         console.log(response);
-        alert("편집 권한을 포기했습니다.");
+        SuccessToast("편집 권한을 포기했습니다.");
         setIsShareOpen(false);
 
         window.location.reload();
       } catch (err) {
         console.error("편집 권한 포기에 실패했습니다:", err);
-        alert("편집 권한 포기에 실패했습니다.");
+        ErrorToast("편집 권한 포기에 실패했습니다.");
       }
     }
   };

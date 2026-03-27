@@ -11,6 +11,8 @@ import { useNavigate } from "react-router-dom";
 import { useApiClient } from "../../hooks/useApiClient";
 import { useState, useEffect, useRef } from "react";
 import ShareModal from "../common/ShareModal";
+import { ErrorToast, SuccessToast } from "../common/Toast";
+import useConfirmStore from "../../store/Confirm";
 
 export default function PlanListList({
   lst,
@@ -21,6 +23,7 @@ export default function PlanListList({
   isSelected = false,
   onPlanSelect,
 }) {
+  const { showConfirm } = useConfirmStore();
   const { del } = useApiClient();
   const navigate = useNavigate();
   const [isTitleOpen, setIsTitleOpen] = useState(false);
@@ -91,7 +94,7 @@ export default function PlanListList({
       if (res.message !== "일정을 삭제할 권한이 없습니다.") {
         onPlanDeleted(lst.planId);
       } else {
-        alert("일정을 삭제할 권한이 없습니다.");
+        ErrorToast("일정을 삭제할 권한이 없습니다.");
       }
     } catch (err) {
       console.log("오류발생", err);
@@ -104,13 +107,14 @@ export default function PlanListList({
   };
 
   const resignEditorAccess = async () => {
-    if (!confirm("편집 권한을 포기하시겠습니까?")) return;
+    const isConfirmed = await showConfirm("편집 권한을 포기하시겠습니까?");
+    if (!isConfirmed) return;
 
     try {
       const res = await del(`${BASE_URL}/api/plan/${lst.planId}/editor/me`);
       console.log("편집권한 포기 응답", res);
 
-      alert("편집 권한을 포기했습니다.");
+      SuccessToast("편집 권한을 포기했습니다.");
 
       // 부모에서 상태 제거
       onResignEditorSuccess?.(lst.planId);
@@ -118,16 +122,15 @@ export default function PlanListList({
       setToggleModal(false);
     } catch (err) {
       console.error("편집 권한 포기 실패:", err);
-      alert("편집 권한 포기에 실패했습니다.");
+      ErrorToast("편집 권한 포기에 실패했습니다.");
     }
   };
   return (
     <div
-      className={`relative bg-gray-50 hover:bg-blue-50 rounded-xl p-4 transition-all duration-200 cursor-pointer border ${
-        isSelected
-          ? "border-blue-400 bg-blue-50"
-          : "border-gray hover:border-blue-200"
-      }`}
+      className={`relative bg-gray-50 hover:bg-blue-50 rounded-xl p-4 transition-all duration-200 cursor-pointer border ${isSelected
+        ? "border-blue-400 bg-blue-50"
+        : "border-gray hover:border-blue-200"
+        }`}
       onClick={() =>
         !isMultiSelectMode && navigate(`/complete?id=${lst.planId}`)
       }
@@ -291,7 +294,7 @@ const TitleModal = ({ setIsTitleOpen, id, title, setTitle }) => {
           const errorMessage =
             response.message || "패치에 실패했습니다. 다시 시도해주세요.";
           console.log(`${response.message}`);
-          alert(errorMessage);
+          ErrorToast(errorMessage);
         }
       } catch (err) {
         console.error("패치에 실패했습니다:", err);

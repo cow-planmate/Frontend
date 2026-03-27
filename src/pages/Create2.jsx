@@ -25,6 +25,7 @@ import PlanInfo from "../components/Create2/PlanInfo/PlanInfo";
 import useNicknameStore from "../store/Nickname";
 import useItemsStore from "../store/Schedules";
 import { convertBlock, resetAllStores } from "../utils/createUtils";
+import { ErrorToast, SuccessToast } from '../components/common/Toast';
 
 function App() {
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -103,7 +104,7 @@ function App() {
           }
         }
       } else if (id) {
-        alert("로그인 후 이용해주세요.");
+        ErrorToast("로그인 후 이용해주세요.");
         navigate("/");
       } else { // 비로그인 걸러내기
         setSelectedDay(0);
@@ -309,7 +310,7 @@ function App() {
   const requestEdit = async () => {
     try {
       await post(`${BASE_URL}/api/plan/${id}/request-access`)
-      alert("편집 권한을 요청했습니다.");
+      SuccessToast("편집 권한을 요청했습니다.");
     } catch (err) {
       console.error("요청에 실패했습니다.", err);
     }

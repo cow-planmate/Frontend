@@ -28,6 +28,7 @@ import img1 from "../assets/imgs/img1.jpg";
 import img2 from "../assets/imgs/img2.jpg";
 import img3 from "../assets/imgs/img3.jpg";
 import useTimetableStore from "../store/Timetables";
+import { ErrorToast, WarningToast } from "../components/common/Toast";
 
 function App() {
   const navigate = useNavigate();
@@ -141,7 +142,7 @@ function App() {
         !dateRange[0].endDate ||
         personCount.adults + personCount.children === 0
       ) {
-        alert("입력되지 않은 값이 있습니다");
+        WarningToast("입력되지 않은 값이 있습니다.");
         return;
       }
 
@@ -193,7 +194,7 @@ function App() {
       }
     } catch (err) {
       console.error("에러, 다시시도해주세요", err);
-      alert("에러, 다시시도 해주세요");
+      ErrorToast("에러, 다시시도 해주세요.");
     } finally {
       setIsSubmitting(false);
     }

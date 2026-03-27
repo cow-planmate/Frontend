@@ -6,8 +6,10 @@ import DayGrid from './DayGrid';
 import usePlanStore from '../../../store/Plan';
 import useItemsStore from '../../../store/Schedules';
 import { checkOverlap, getTimeSlotIndex } from '../../../utils/createUtils';
+import { WarningToast } from '../../common/Toast';
+import useConfirmStore from "../../../store/Confirm.jsx";
 
-const DaySelectorModal = ({setIsModalOpen}) => {
+const DaySelectorModal = ({ setIsModalOpen }) => {
   const client = getClient();
   const { setTimetableAll, selectedDay, setSelectedDay } = useTimetableStore();
   const { planId, eventId } = usePlanStore();
@@ -18,6 +20,8 @@ const DaySelectorModal = ({setIsModalOpen}) => {
   const [create, setCreate] = useState([]);
   const [update, setUpdate] = useState([]);
   const [deleteTime, setDelete] = useState([]);
+
+  const { showConfirm } = useConfirmStore();
 
   useEffect(() => {
     console.log(create, update, deleteTime)
@@ -45,9 +49,9 @@ const DaySelectorModal = ({setIsModalOpen}) => {
       setCreate(updatedTimes2);
     }
   }
-  
+
   const addDay = () => {
-    let lastDateStr; 
+    let lastDateStr;
     if (create.length > 0) {
       lastDateStr = create[create.length - 1].date;
     } else {
@@ -128,11 +132,11 @@ const DaySelectorModal = ({setIsModalOpen}) => {
     })
   }
 
-  const handleComfirm = () => {
+  const handleComfirm = async () => {
     const isInvalid = timetables.some(item => item.timeTableStartTime >= item.timeTableEndTime) || create.some(item => item.timeTableStartTime >= item.timeTableEndTime);
-    
+
     if (isInvalid) {
-      alert("시작 시간이 종료 시간과 같거나 큰 항목이 있습니다. 수정 후 다시 시도해주세요.");
+      WarningToast("시작 시간이 종료 시간과 같거나 큰 항목이 있습니다. 수정 후 다시 시도해주세요.");
       return;
     }
 
@@ -140,7 +144,7 @@ const DaySelectorModal = ({setIsModalOpen}) => {
     let realDelete = true;
 
     if (isDeleteDay) {
-      realDelete = confirm("지우려는 일정에 블록이 존재합니다. 삭제하려는게 맞나요?");
+      realDelete = await showConfirm("지우려는 일정에 블록이 존재합니다. 삭제하려는게 맞나요?");
     }
 
     if (!realDelete) {
@@ -148,10 +152,10 @@ const DaySelectorModal = ({setIsModalOpen}) => {
     }
 
     if (isOverlap()) {
-      alert("변경하려는 시간 밖에 블록이 존재합니다. 변경하려는 시간 안으로 블록을 이동하거나 삭제한 후 다시 시도해주세요.");
+      WarningToast("변경하려는 시간 밖에 블록이 존재합니다. 변경하려는 시간 안으로 블록을 이동하거나 삭제한 후 다시 시도해주세요.");
       return;
     }
-    
+
     if (client && client.connected) {
       if (create && create.length > 0) {
         const uploadCreate = requestMsg("create", create);
@@ -162,7 +166,7 @@ const DaySelectorModal = ({setIsModalOpen}) => {
         });
         console.log("🚀 메시지 전송:", uploadCreate);
       }
-      
+
       if (update && update.length > 0) {
         const uploadUpdate = requestMsg("update", update);
         client.publish({
@@ -171,7 +175,7 @@ const DaySelectorModal = ({setIsModalOpen}) => {
         });
         console.log("🚀 메시지 전송:", uploadUpdate);
       }
-      
+
       if (deleteTime && deleteTime.length > 0) {
         const uploadDelete = requestMsg("delete", deleteTime);
         client.publish({
@@ -193,7 +197,7 @@ const DaySelectorModal = ({setIsModalOpen}) => {
 
         if (prev && prev.timeTableStartTime !== curr.timeTableStartTime) {
           acc[curr.timeTableId] = getTimeSlotIndex(curr.timeTableStartTime, prev.timeTableStartTime);
-        } 
+        }
 
         return acc;
       }, {});
@@ -206,10 +210,10 @@ const DaySelectorModal = ({setIsModalOpen}) => {
           const place = item.place;
           const start = item.start + value;
           const duration = item.duration;
-          moveItemFromWebsocket({timeTableId, place, start, duration, blockId});
+          moveItemFromWebsocket({ timeTableId, place, start, duration, blockId });
         })
       });
-      
+
       if (selectedDay >= merged.length) {
         setSelectedDay(merged.length - 1);
       } else {
@@ -237,17 +241,17 @@ const DaySelectorModal = ({setIsModalOpen}) => {
             <DayGrid key={timetable.timeTableId} setTimetables={setTimetables} timetable={timetable} index={index} updateDate={updateDate} setUpdate={setUpdate} />
           ))}
           {create.map((timetable, index) => (
-            <DayGrid key={timetable.timeTableId} setTimetables={setCreate} timetable={timetable} index={index+(timetables.length)} timetablesLength={timetables.length}/>
+            <DayGrid key={timetable.timeTableId} setTimetables={setCreate} timetable={timetable} index={index + (timetables.length)} timetablesLength={timetables.length} />
           ))}
         </div>
         <div className="py-3 space-x-2 text-end">
-          <button 
+          <button
             onClick={deleteDay}
             className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-xl"
           >
             -
           </button>
-          <button 
+          <button
             onClick={addDay}
             className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-xl"
           >

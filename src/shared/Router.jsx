@@ -15,10 +15,14 @@ import OAuthAdditionalInfo from "../pages/OAuthAdditionalInfo";
 
 import GlobalTempPlanModal from "../components/common/GlobalTempPlanModal";
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const Router = () => {
   return (
     <BrowserRouter>
       <GlobalTempPlanModal />
+      <ToastContainer />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="mypage" element={<Mypage />} />

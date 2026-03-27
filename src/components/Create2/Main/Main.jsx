@@ -12,6 +12,7 @@ import usePlanStore from '../../../store/Plan';
 
 import { faCalendar, faMapPin } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { WarningToast } from '../../common/Toast';
 
 export default function Main() {
   const client = getClient();
@@ -169,7 +170,7 @@ export default function Main() {
     const timeTableId = getTimeTableId(timetables, selectedDay);
     const emptySlot = findEmptySlot(4, items[timeTableId]);
     if (emptySlot === -1) {
-      alert('빈 시간이 없습니다!');
+      WarningToast('빈 시간이 없습니다!');
       return;
     }
     const blockId = getNextId(timeTableId, emptySlot);

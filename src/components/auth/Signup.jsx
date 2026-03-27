@@ -3,10 +3,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { Check, X } from "lucide-react";
 import { useApiClient } from "../../hooks/useApiClient";
+import { ErrorToast, SuccessToast, WarningToast } from "../common/Toast";
 
 export default function Signup({
   isOpen = true,
-  onClose = () => {},
+  onClose = () => { },
   onLoginSuccess,
   onThemeOpen,
 }) {
@@ -168,7 +169,7 @@ export default function Signup({
     // 이메일 형식 검증
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      alert("올바른 이메일 형식을 입력해주세요.");
+      WarningToast("올바른 이메일 형식을 입력해주세요.");
       return;
     }
     setIsEmailSending(true);
@@ -196,20 +197,20 @@ export default function Signup({
       console.log("verificationSent 값:", data.verificationSent);
 
       if (data.verificationSent === true) {
-        alert("인증번호가 이메일로 전송되었습니다!");
+        SuccessToast("인증번호가 이메일로 전송되었습니다!");
         setTimeLeft(300);
         setIsTimerRunning(true);
         setShowVerification(true);
       } else if (data.message === "Email already in use") {
-        alert("이미 사용중인 이메일입니다.");
+        ErrorToast("이미 사용중인 이메일입니다.");
       } else if (data.message === "Email not found") {
-        alert("이메일을 찾을 수 없습니다.");
+        ErrorToast("이메일을 찾을 수 없습니다.");
       } else {
-        alert(data.message || "발송 실패");
+        ErrorToast(data.message || "발송 실패");
       }
     } catch (error) {
       console.error("에러 발생:", error);
-      alert("이메일 전송에 실패했습니다. 다시 시도해주세요");
+      ErrorToast("이메일 전송에 실패했습니다. 다시 시도해주세요");
     } finally {
       setIsEmailSending(false);
     }
@@ -233,22 +234,22 @@ export default function Signup({
       console.log("서버 응답:", data);
 
       if (data.emailVerified) {
-        alert("인증 성공!");
+        SuccessToast("인증 성공!");
         setIsEmailVerified(true);
         setIsTimerRunning(false);
         setEmailVerificationToken(data.token);
       } else {
         if (data.message === "Verification request not found or expired") {
-          alert("만료된 인증번호 : 다시 인증번호를 발송해주세요");
+          ErrorToast("만료된 인증번호 : 다시 인증번호를 발송해주세요");
         } else if (data.message === "Invalid verification code") {
-          alert("인증번호가 일치하지 않습니다.");
+          ErrorToast("인증번호가 일치하지 않습니다.");
         } else {
-          alert(data.message || "인증 실패");
+          ErrorToast(data.message || "인증 실패");
         }
       }
     } catch (error) {
       console.error("에러 발생:", error);
-      alert("오류 발생 : 잘못된 인증번호 형식일 수 있습니다");
+      ErrorToast("오류 발생 : 잘못된 인증번호 형식일 수 있습니다");
     }
   };
 
@@ -267,16 +268,16 @@ export default function Signup({
       const data = await response.json();
       console.log("서버 응답:", data);
       if (formData.nickname === "") {
-        alert("입력된 값이 없습니다");
+        WarningToast("입력된 값이 없습니다.");
       } else if (data.nicknameAvailable) {
-        alert("사용 가능한 닉네임입니다");
+        SuccessToast("사용 가능한 닉네임입니다.");
         setIsNicknameVerified(true);
       } else {
-        alert("이미 존재하는 닉네임입니다");
+        ErrorToast("이미 존재하는 닉네임입니다.");
       }
     } catch (error) {
       console.error("에러 발생:", error);
-      alert("오류. 나중에 다시 시도해주세요.");
+      ErrorToast("오류. 나중에 다시 시도해주세요.");
     }
   };
 
@@ -312,7 +313,7 @@ export default function Signup({
         registerData.registered === true ||
         registerData.message === "User registered successfully"
       ) {
-        alert("회원가입이 완료되었습니다!");
+        SuccessToast("회원가입이 완료되었습니다!");
 
         // 2. 회원가입 성공 시 로그인 시도
         const loginResult = await login(formData.email, formData.password);
@@ -330,13 +331,13 @@ export default function Signup({
           onThemeOpen();
         }
       } else if (registerData.message === "Invalid token") {
-        alert("토큰 오류, 회원가입실패 다시시도 해주세요");
+        ErrorToast("토큰 오류, 회원가입 실패. 다시 시도해주세요");
       } else {
-        alert("회원가입 실패. 다시 시도해주세요.");
+        ErrorToast("회원가입 실패. 다시 시도해주세요.");
       }
     } catch (error) {
       console.error("회원가입 또는 로그인 중 오류:", error);
-      alert("오류 발생.  다시 시도해주세요.");
+      ErrorToast("오류 발생. 다시 시도해주세요.");
       // 폼 데이터 초기화
       setFormData({
         email: "",
@@ -451,18 +452,16 @@ export default function Signup({
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
-                className={`flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  isEmailVerified ? "bg-gray-100 cursor-not-allowed" : ""
-                }`}
+                className={`flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isEmailVerified ? "bg-gray-100 cursor-not-allowed" : ""
+                  }`}
                 disabled={isEmailVerified}
               />
               <button
                 type="button"
-                className={`w-24 py-2 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap ${
-                  isEmailVerified
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-main hover:bg-blue-700"
-                }`}
+                className={`w-24 py-2 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap ${isEmailVerified
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-main hover:bg-blue-700"
+                  }`}
                 onClick={sendEmail}
                 disabled={isEmailVerified}
               >
@@ -577,11 +576,10 @@ export default function Signup({
                 onChange={(e) =>
                   handleInputChange("confirmPassword", e.target.value)
                 }
-                className={`w-full px-3 py-2 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  isConfirmPasswordDisabled
-                    ? "bg-gray-100 cursor-not-allowed border-gray-300"
-                    : "border-gray-300"
-                }`}
+                className={`w-full px-3 py-2 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isConfirmPasswordDisabled
+                  ? "bg-gray-100 cursor-not-allowed border-gray-300"
+                  : "border-gray-300"
+                  }`}
                 disabled={isConfirmPasswordDisabled}
               />
               <button
@@ -617,11 +615,10 @@ export default function Signup({
               <button
                 type="button"
                 disabled={isNicknameVerified}
-                className={`w-24 py-2 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap ${
-                  isNicknameVerified
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-main"
-                }`}
+                className={`w-24 py-2 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap ${isNicknameVerified
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-main"
+                  }`}
                 onClick={verifyNickname}
               >
                 {isNicknameVerified ? "확인완료" : "중복확인"}
@@ -660,22 +657,20 @@ export default function Signup({
                 <button
                   type="button"
                   onClick={() => handleInputChange("gender", "male")}
-                  className={`flex-1 py-2 px-3 text-sm font-medium rounded-lg border transition-colors ${
-                    formData.gender === "male"
-                      ? "bg-main text-white border-main"
-                      : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                  }`}
+                  className={`flex-1 py-2 px-3 text-sm font-medium rounded-lg border transition-colors ${formData.gender === "male"
+                    ? "bg-main text-white border-main"
+                    : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                    }`}
                 >
                   남
                 </button>
                 <button
                   type="button"
                   onClick={() => handleInputChange("gender", "female")}
-                  className={`flex-1 py-2 px-3 text-sm font-medium rounded-lg border transition-colors ${
-                    formData.gender === "female"
-                      ? "bg-main text-white border-main"
-                      : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                  }`}
+                  className={`flex-1 py-2 px-3 text-sm font-medium rounded-lg border transition-colors ${formData.gender === "female"
+                    ? "bg-main text-white border-main"
+                    : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                    }`}
                 >
                   여
                 </button>
@@ -786,11 +781,10 @@ export default function Signup({
           {/* 회원가입 버튼 */}
           <button
             type="button"
-            className={`w-full py-3 font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mt-6 ${
-              isSignupDisabled
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-main text-white hover:bg-blue-700"
-            }`}
+            className={`w-full py-3 font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mt-6 ${isSignupDisabled
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-main text-white hover:bg-blue-700"
+              }`}
             disabled={isSignupDisabled}
             onClick={handleRegisterAndLogin}
           >
