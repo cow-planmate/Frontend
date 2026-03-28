@@ -6,7 +6,7 @@ export default function MapArea({ placeBlocks, timetables, selectedDay, showSide
 
   return (
     <div className={`
-      flex-1 w-full h-[calc(100vh-175px)] overflow-y-auto transition-transform duration-300 absolute inset-0 md:relative md:transform-none z-20 
+      flex-1 w-full h-full overflow-y-auto transition-transform duration-300 absolute inset-0 md:relative md:transform-none z-20 
       md:border md:border-gray-300 md:rounded-lg
       ${showSidebar ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}
     `}>

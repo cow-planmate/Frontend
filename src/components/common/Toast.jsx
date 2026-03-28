@@ -41,6 +41,7 @@ export function WarningToast(str) {
     progress: undefined,
     theme: "light",
     transition: Slide,
+    className: "font-pretendard text-gray-700 sm:w-[400px] break-keep",
   });
 }
 

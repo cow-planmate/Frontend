@@ -226,7 +226,7 @@ function App() {
           min-[1464px]:w-[1400px] min-[1464px]:px-0
           md:px-8 md:py-6 py-3
           mx-auto
-          md:h-[calc(100vh-140px)]
+          md:h-[calc(100vh-134px)]
           h-[calc(100vh-48px)]
         "
       >
