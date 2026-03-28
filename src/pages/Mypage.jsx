@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useApiClient } from "../hooks/useApiClient";
 import LoadingOverlay from "../components/common/LoadingOverlay";
+import { Helmet } from "react-helmet";
 
 function App() {
   const navigate = useNavigate();
@@ -63,6 +64,13 @@ function App() {
 
   return (
     <div className="font-pretendard min-h-screen">
+      <Helmet>
+        <title>planMate : 마이페이지</title>
+        <meta
+          name="description"
+          content="내 여행 일정과 프로필을 관리하는 페이지입니다."
+        />
+      </Helmet>
       {loading && <LoadingOverlay />}
 
       <Navbar onInvitationAccept={handlePlanListRefresh} />
