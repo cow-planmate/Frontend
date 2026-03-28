@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useApiClient } from "../hooks/useApiClient";
 import LoadingOverlay from "../components/common/LoadingOverlay";
+import { ErrorToast } from "../components/common/Toast";
 import { Helmet } from "react-helmet";
 
 function App() {
@@ -26,7 +27,7 @@ function App() {
 
   useEffect(() => {
     if (!isAuthenticated()) {
-      alert("로그인 시에만 접근 가능한 페이지입니다.");
+      ErrorToast("로그인 시에만 접근 가능한 페이지입니다.");
       navigate("/");
       return;
     }

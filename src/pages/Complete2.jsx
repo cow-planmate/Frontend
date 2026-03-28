@@ -13,6 +13,8 @@ import DaySelector from "../components/Complete/DaySelector";
 import TimetableGrid from "../components/Complete/TimetableGrid";
 import MapArea from "../components/Complete/MapArea";
 
+import { ErrorToast } from "../components/common/Toast";
+
 function App() {
   const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -170,7 +172,7 @@ function App() {
           );
         } catch (err) {
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
-          alert("잘못된 접근입니다.");
+          ErrorToast("잘못된 접근입니다.");
           navigate("/");
           return;
         }
@@ -179,12 +181,12 @@ function App() {
           planData = await get(`${BASE_URL}/api/plan/${id}/complete`);
         } catch (err) {
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
-          alert("잘못된 접근입니다.");
+          ErrorToast("잘못된 접근입니다.");
           navigate("/");
           return;
         }
       } else {
-        alert("잘못된 접근입니다.");
+        ErrorToast("잘못된 접근입니다.");
         navigate("/");
         return;
       }
@@ -238,7 +240,7 @@ function App() {
           min-[1464px]:w-[1400px] min-[1464px]:px-0
           md:px-8 md:py-6 py-3
           mx-auto
-          md:h-[calc(100vh-140px)]
+          md:h-[calc(100vh-134px)]
           h-[calc(100vh-48px)]
         "
       >

@@ -21,6 +21,7 @@ import { useApiClient } from "../../hooks/useApiClient";
 import { useNavigate } from "react-router-dom";
 import NicknameModal from "./NicknameChange";
 import gravatarUrl from "../../utils/gravatarUrl";
+import { SuccessToast } from "../common/Toast";
 
 export default function Profile({ userProfile, setUserProfile }) {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -147,7 +148,7 @@ const DeleteModal = ({ setIsDeleteOpen }) => {
         await logout();
         setIsDeleteOpen(false);
         navigate("/");
-        alert("탈퇴되었습니다.");
+        SuccessToast("탈퇴되었습니다.");
       } catch (err) {
         console.error("탈퇴 과정에서 오류가 발생했습니다:", err);
       }
@@ -172,11 +173,13 @@ const DeleteModal = ({ setIsDeleteOpen }) => {
         </ul>
         <div className="my-4">
           <div className="space-x-2">
-            <input
-              type="checkbox"
-              onClick={() => setRealDelete((prev) => !prev)}
-            />
-            <span className="font-semibold">위 내용을 확인했습니다.</span>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                onClick={() => setRealDelete((prev) => !prev)}
+              />
+              <span className="font-semibold">위 내용을 확인했습니다.</span>
+            </label>
           </div>
           {warnMsg ? (
             <p className="text-sm text-red-500">

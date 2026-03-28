@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useApiClient } from "../../hooks/useApiClient";
 import useNicknameStore from "../../store/Nickname";
+import { SuccessToast, ErrorToast } from "../common/Toast";
 
 export default function NicknameModal({
   setIsNicknameModalOpen,
@@ -22,12 +23,12 @@ export default function NicknameModal({
         setGlobalNickname(nickname);
         onNicknameUpdate(nickname);
         setIsNicknameModalOpen(false);
-        alert(response.message);
+        SuccessToast(response.message);
       } catch (err) {
         console.error("닉네임 변경에 실패했습니다:", err);
 
         if (err.message) {
-          alert(err.message);
+          ErrorToast(err.message);
         }
       }
     }

@@ -4,6 +4,7 @@ import { useApiClient } from "../../hooks/useApiClient";
 import google from "../../assets/imgs/googleicon.png";
 import naver from "../../assets/imgs/navericon.png";
 import { useLocation } from "react-router-dom";
+import { ErrorToast } from "../common/Toast";
 
 export default function Login({
   isOpen,
@@ -78,7 +79,7 @@ export default function Login({
     } catch (err) {
       // 에러는 useApiClient에서 자동으로 설정됨
       console.error("로그인 실패:", err);
-      alert(err);
+      ErrorToast(String(err).replace("Error: ", ""));
     }
   };
 
