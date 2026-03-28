@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useApiClient } from "../../hooks/useApiClient";
+import { useQuery } from "@tanstack/react-query";
 
 export default function LocationModal({
   isOpen,
@@ -9,53 +10,46 @@ export default function LocationModal({
 }) {
   const [selectedUpperRegion, setSelectedUpperRegion] = useState("");
   const [selectedLowerRegion, setSelectedLowerRegion] = useState(null); // 초기값을 null로 변경
-  const [regionData, setRegionData] = useState({ 상위지역: {}, 하위지역: {} });
-  const { get, isLoading, error } = useApiClient();
+  const { get } = useApiClient();
   const BASE_URL = import.meta.env.VITE_API_URL;
 
-  useEffect(() => {
-    const getTravel = async () => {
-      try {
-        const res = await get(`${BASE_URL}/api/travel`);
-        console.log("API 응답 : ", res);
+  const { data: regionData = { 상위지역: {}, 하위지역: {} } } = useQuery({
+    queryKey: ["travel"],
+    queryFn: async () => {
+      const res = await get(`${BASE_URL}/api/travel`);
 
-        const upperRegions = {};
-        if (res && res.travels) {
-          res.travels.forEach((item) => {
-            const categoryName = item.travelCategoryName;
-            const travelName = item.travelName;
-            const travelId = item.travelId;
+      const upperRegions = {};
+      if (res && res.travels) {
+        res.travels.forEach((item) => {
+          const categoryName = item.travelCategoryName;
+          const travelName = item.travelName;
+          const travelId = item.travelId;
 
-            if (!upperRegions[categoryName]) {
-              upperRegions[categoryName] = [];
-            }
+          if (!upperRegions[categoryName]) {
+            upperRegions[categoryName] = [];
+          }
 
-            if (
-              !upperRegions[categoryName].some(
-                (region) => region.name === travelName
-              )
-            ) {
-              upperRegions[categoryName].push({
-                name: travelName,
-                id: travelId,
-              });
-            }
-          });
-        }
-
-        setRegionData({
-          상위지역: upperRegions,
-          하위지역: {},
+          if (
+            !upperRegions[categoryName].some(
+              (region) => region.name === travelName
+            )
+          ) {
+            upperRegions[categoryName].push({
+              name: travelName,
+              id: travelId,
+            });
+          }
         });
-      } catch (error) {
-        console.error("API 호출 실패:", error);
       }
-    };
 
-    if (isOpen) {
-      getTravel();
-    }
-  }, [isOpen]);
+      return {
+        상위지역: upperRegions,
+        하위지역: {},
+      };
+    },
+    enabled: isOpen,
+    staleTime: 1000 * 60 * 5, // 캐싱 시간 설정 (5분)
+  });
 
   if (!isOpen) return null;
 
@@ -113,11 +107,10 @@ export default function LocationModal({
                 <button
                   key={regionName}
                   onClick={() => handleUpperRegionClick(regionName)}
-                  className={`px-4 py-2 rounded-lg text-sm font-pretendard transition-colors ${
-                    selectedUpperRegion === regionName
-                      ? "bg-main text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-pretendard transition-colors ${selectedUpperRegion === regionName
+                    ? "bg-main text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                 >
                   {regionName}
                 </button>
@@ -136,11 +129,10 @@ export default function LocationModal({
                     <button
                       key={subRegion.id}
                       onClick={() => handleLowerRegionClick(subRegion)}
-                      className={`px-4 py-2 rounded-lg text-sm font-pretendard transition-colors ${
-                        selectedLowerRegion?.id === subRegion.id
-                          ? "bg-main text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                      className={`px-4 py-2 rounded-lg text-sm font-pretendard transition-colors ${selectedLowerRegion?.id === subRegion.id
+                        ? "bg-main text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
                     >
                       {subRegion.name}
                     </button>
@@ -156,11 +148,10 @@ export default function LocationModal({
           <button
             onClick={handleConfirm}
             disabled={!selectedUpperRegion || !selectedLowerRegion}
-            className={`w-full py-3 rounded-lg font-pretendard transition-colors ${
-              selectedUpperRegion && selectedLowerRegion
-                ? "bg-main text-white hover:bg-blue-600"
-                : "bg-gray-200 text-gray-400 cursor-not-allowed"
-            }`}
+            className={`w-full py-3 rounded-lg font-pretendard transition-colors ${selectedUpperRegion && selectedLowerRegion
+              ? "bg-main text-white hover:bg-blue-600"
+              : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
           >
             완료
           </button>
