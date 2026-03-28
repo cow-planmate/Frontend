@@ -5,7 +5,7 @@ import { getTimeSlotIndex } from "../utils/createUtils";
 
 import { faCalendar, faMap } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
+import { Helmet } from "react-helmet";
 import Navbar from "../components/common/Navbar";
 import Loading from "../components/common/Loading";
 import PlanInfo from "../components/Complete/PlanInfo";
@@ -31,7 +31,7 @@ function App() {
   const [timetables, setTimetables] = useState([]);
   const [selectedDay, setSelectedDay] = useState(0);
 
-  const [activeTab, setActiveTab] = useState('timetable');
+  const [activeTab, setActiveTab] = useState("timetable");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const [touchStartPos, setTouchStartPos] = useState({ x: null, y: null });
@@ -39,12 +39,12 @@ function App() {
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const showTimetable = !isMobile || activeTab === 'timetable';
-  const showSidebar = !isMobile || activeTab === 'recommend';
+  const showTimetable = !isMobile || activeTab === "timetable";
+  const showSidebar = !isMobile || activeTab === "recommend";
 
   // --- Swipe Handlers ---
   const minSwipeDistance = 50;
@@ -76,34 +76,35 @@ function App() {
       const isRightSwipe = distanceX < -minSwipeDistance;
 
       if (isMobile) {
-        if (isLeftSwipe && activeTab === 'timetable') {
-          setActiveTab('recommend');
+        if (isLeftSwipe && activeTab === "timetable") {
+          setActiveTab("recommend");
         }
-        if (isRightSwipe && activeTab === 'recommend') {
-          setActiveTab('timetable');
+        if (isRightSwipe && activeTab === "recommend") {
+          setActiveTab("timetable");
         }
       }
     }
   };
 
   const sortByDate = (list) =>
-    [...list].sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    );
+    [...list].sort((a, b) => new Date(a.date) - new Date(b.date));
 
   function convertBlock(block) {
     const timeTableId = block?.timeTableId;
     const timeTableStartTime = timetables?.find(
-      (t) => t.timeTableId === timeTableId
+      (t) => t.timeTableId === timeTableId,
     )?.timeTableStartTime;
 
-    console.log(timetables)
-    console.log(timeTableStartTime)
+    console.log(timetables);
+    console.log(timeTableStartTime);
     const start = getTimeSlotIndex(timeTableStartTime, block?.blockStartTime);
-    const duration = getTimeSlotIndex(block?.blockStartTime, block?.blockEndTime);
+    const duration = getTimeSlotIndex(
+      block?.blockStartTime,
+      block?.blockEndTime,
+    );
     const blockId = block.blockId;
-    console.log(start)
-    console.log(duration)
+    console.log(start);
+    console.log(duration);
 
     const place = {
       placeId: block.placeId,
@@ -117,12 +118,19 @@ function App() {
       xlocation: block.xLocation || block.xlocation,
       ylocation: block.yLocation || block.ylocation,
       memo: block.memo,
-    }
+    };
 
     return { timeTableId, place, start, duration, blockId, memo: block.memo };
   }
 
-  const addPlaceBlock = ({ timeTableId, place, start, duration, blockId, memo }) => {
+  const addPlaceBlock = ({
+    timeTableId,
+    place,
+    start,
+    duration,
+    blockId,
+    memo,
+  }) => {
     setPlaceBlocks((prev) => ({
       ...prev,
       [timeTableId]: [
@@ -143,24 +151,25 @@ function App() {
   useEffect(() => {
     const addPlaceBlocks = () => {
       prevPlaces.map((item) => {
-        console.log(item)
+        console.log(item);
         const convert = convertBlock(item);
         addPlaceBlock(convert);
       });
-    }
-    console.log(timetables, prevPlaces)
+    };
+    console.log(timetables, prevPlaces);
     if (timetables && prevPlaces) {
       addPlaceBlocks();
     }
-  }, [timetables, prevPlaces])
-
+  }, [timetables, prevPlaces]);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       let planData = null;
       if (token) {
         try {
-          planData = await get(`${BASE_URL}/api/plan/${id}/complete?token=${token}`);
+          planData = await get(
+            `${BASE_URL}/api/plan/${id}/complete?token=${token}`,
+          );
         } catch (err) {
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
           ErrorToast("잘못된 접근입니다.");
@@ -200,9 +209,7 @@ function App() {
     fetchUserProfile();
   }, [id, get]);
 
-  useEffect(() => {
-
-  })
+  useEffect(() => {});
 
   if (!finishLoading) {
     return (
@@ -212,11 +219,18 @@ function App() {
         </div>
         <Loading />
       </div>
-    )
+    );
   }
 
   return (
     <div className="font-pretendard h-screen">
+      <Helmet>
+        <title>planMate : 여행 일정 결과</title>
+        <meta
+          name="description"
+          content="완성된 여행 일정을 한눈에 확인하고 공유해보세요."
+        />
+      </Helmet>
       <div className="md:block hidden">
         <Navbar />
       </div>
@@ -259,11 +273,23 @@ function App() {
             </div>
             {isMobile && (
               <nav className="fixed left-0 right-0 bottom-0 z-40 bg-white border-t h-16 flex">
-                <button onClick={() => setActiveTab('timetable')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'timetable' ? 'text-main' : 'text-gray-400'}`}>
-                  <span className="text-xl"><FontAwesomeIcon icon={faCalendar} /></span><span className="text-xs font-medium">시간표</span>
+                <button
+                  onClick={() => setActiveTab("timetable")}
+                  className={`flex-1 flex flex-col items-center justify-center ${activeTab === "timetable" ? "text-main" : "text-gray-400"}`}
+                >
+                  <span className="text-xl">
+                    <FontAwesomeIcon icon={faCalendar} />
+                  </span>
+                  <span className="text-xs font-medium">시간표</span>
                 </button>
-                <button onClick={() => setActiveTab('recommend')} className={`flex-1 flex flex-col items-center justify-center ${activeTab === 'recommend' ? 'text-main' : 'text-gray-400'}`}>
-                  <span className="text-xl"><FontAwesomeIcon icon={faMap} /></span><span className="text-xs font-medium">지도로 보기</span>
+                <button
+                  onClick={() => setActiveTab("recommend")}
+                  className={`flex-1 flex flex-col items-center justify-center ${activeTab === "recommend" ? "text-main" : "text-gray-400"}`}
+                >
+                  <span className="text-xl">
+                    <FontAwesomeIcon icon={faMap} />
+                  </span>
+                  <span className="text-xs font-medium">지도로 보기</span>
                 </button>
               </nav>
             )}
@@ -271,7 +297,7 @@ function App() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default App;

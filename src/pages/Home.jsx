@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import { Helmet } from "react-helmet";
 import { useApiClient } from "../hooks/useApiClient";
 import Navbar from "../components/common/Navbar";
 import DateRangeModal from "../components/Home/HomeCal";
@@ -202,32 +202,41 @@ function App() {
 
   return (
     <div className="relative w-full">
+      <Helmet>
+        <title>planMate : 동시협업 여행플래너</title>
+        <meta
+          name="description"
+          content="planMate는 친구들과 여행 일정을 함께 만드는 실시간 협업 플래너입니다. 복잡한 계획 없이도 누구나 쉽고 빠르게 나만의 여행 일정을 완성해보세요."
+        />
+      </Helmet>
+
       {/* Navbar */}
       <div className="text-center h-auto font-pretendard">
         <Navbar isLogin={false} />
       </div>
 
       <div className="relative flex flex-col items-center overflow-hidden">
+        <h1 className="sr-only">동시협업 여행 플래너 planMate</h1>
         <Slider {...settings} className={`w-full ${sliderHeightClass}`}>
           <div>
             <img
               src={img1}
               className={`w-full ${sliderHeightClass} object-cover`}
-              alt="slide1"
+              alt="여행 일정 협업 플래너 planMate 메인 비주얼"
             />
           </div>
           <div>
             <img
               src={img2}
               className={`w-full ${sliderHeightClass} object-cover`}
-              alt="slide2"
+              alt="동시에 함께 만드는 여행 스케줄"
             />
           </div>
           <div>
             <img
               src={img3}
               className={`w-full ${sliderHeightClass} object-cover`}
-              alt="slide3"
+              alt="여행지와 기간으로 일정 생성"
             />
           </div>
         </Slider>

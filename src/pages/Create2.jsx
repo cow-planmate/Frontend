@@ -5,13 +5,23 @@ import {
   TouchSensor,
   useSensor,
   useSensors,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useApiClient } from "../hooks/useApiClient";
-import { clearTempPlan, getTempPlan, saveTempPlan } from "../utils/tempPlanStorage"; // Import util
-import { disconnectStompClient, getClient, initStompClient, sendRedo, sendUndo } from "../websocket/client";
-
+import {
+  clearTempPlan,
+  getTempPlan,
+  saveTempPlan,
+} from "../utils/tempPlanStorage"; // Import util
+import {
+  disconnectStompClient,
+  getClient,
+  initStompClient,
+  sendRedo,
+  sendUndo,
+} from "../websocket/client";
+import { Helmet } from "react-helmet";
 import usePlacesStore from "../store/Places";
 import usePlanStore from "../store/Plan";
 import useSocketStore from "../store/Socket";
@@ -38,9 +48,17 @@ function App() {
   const { get, post, isAuthenticated } = useApiClient();
 
   const {
-    planId, setPlanAll, setEventId,
-    travelCategoryName, travelName, travelId,
-    planName, departure, transportationCategoryId, adultCount, childCount
+    planId,
+    setPlanAll,
+    setEventId,
+    travelCategoryName,
+    travelName,
+    travelId,
+    planName,
+    departure,
+    transportationCategoryId,
+    adultCount,
+    childCount,
   } = usePlanStore();
   const { setTimetableAll, setSelectedDay, timetables } = useTimetableStore(); // Add timetables
   const location = useLocation(); // Add useLocation
@@ -57,7 +75,7 @@ function App() {
     return () => {
       resetAllStores();
       resetItems();
-    }
+    };
   }, []);
 
   // useEffect(() => {
@@ -82,12 +100,19 @@ function App() {
         try {
           const planData = await get(`${BASE_URL}/api/plan/${id}`);
 
-          console.log(planData)
+          console.log(planData);
 
           setPlanAll(planData.planFrame);
-          setTimetableAll(planData.timetables.slice().sort((a, b) => new Date(a.date) - new Date(b.date)));
+          setTimetableAll(
+            planData.timetables
+              .slice()
+              .sort((a, b) => new Date(a.date) - new Date(b.date)),
+          );
 
-          if (lastSelectedDay[id] && planData.timetables.length >= lastSelectedDay[id]) {
+          if (
+            lastSelectedDay[id] &&
+            planData.timetables.length >= lastSelectedDay[id]
+          ) {
             setSelectedDay(lastSelectedDay[id]);
           } else {
             setSelectedDay(0);
@@ -99,17 +124,18 @@ function App() {
           });
         } catch (err) {
           console.error("일정 정보를 가져오는데 실패했습니다:", err);
-          if (err.message == '요청 권한이 없습니다') {
+          if (err.message == "요청 권한이 없습니다") {
             setNoACL(true);
           }
         }
       } else if (id) {
         ErrorToast("로그인 후 이용해주세요.");
         navigate("/");
-      } else { // 비로그인 걸러내기
+      } else {
+        // 비로그인 걸러내기
         setSelectedDay(0);
       }
-    }
+    };
     fetchPlanData();
   }, []);
 
@@ -132,7 +158,7 @@ function App() {
             lodging: lodgingData.places,
             lodgingNext: lodgingData.nextPageTokens,
             restaurant: restaurantData.places,
-            restaurantNext: restaurantData.nextPageTokens
+            restaurantNext: restaurantData.nextPageTokens,
           });
 
           setIsPlaceLoading(true);
@@ -142,9 +168,15 @@ function App() {
       } else {
         try {
           const [tourData, lodgingData, restaurantData] = await Promise.all([
-            get(`${BASE_URL}/api/plan/tour/${travelCategoryName}/${travelName}`),
-            get(`${BASE_URL}/api/plan/lodging/${travelCategoryName}/${travelName}`),
-            get(`${BASE_URL}/api/plan/restaurant/${travelCategoryName}/${travelName}`),
+            get(
+              `${BASE_URL}/api/plan/tour/${travelCategoryName}/${travelName}`,
+            ),
+            get(
+              `${BASE_URL}/api/plan/lodging/${travelCategoryName}/${travelName}`,
+            ),
+            get(
+              `${BASE_URL}/api/plan/restaurant/${travelCategoryName}/${travelName}`,
+            ),
           ]);
 
           setPlacesAll({
@@ -153,7 +185,7 @@ function App() {
             lodging: lodgingData.places,
             lodgingNext: lodgingData.nextPageTokens,
             restaurant: restaurantData.places,
-            restaurantNext: restaurantData.nextPageTokens
+            restaurantNext: restaurantData.nextPageTokens,
           });
 
           setIsPlaceLoading(true);
@@ -161,10 +193,10 @@ function App() {
           console.error("추천 장소를 가져오는데 실패했습니다:", err);
         }
       }
-    }
+    };
 
     if (travelCategoryName && travelName && travelId) updatePlace();
-  }, [travelCategoryName, travelName, travelId, isTempLoaded, isAuthenticated])
+  }, [travelCategoryName, travelName, travelId, isTempLoaded, isAuthenticated]);
 
   useEffect(() => {
     if (id && isAuthenticated() && planId && planId !== -1) {
@@ -172,18 +204,23 @@ function App() {
 
       return () => {
         disconnectStompClient();
-      }
+      };
     }
   }, [id, planId, isAuthenticated]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Input이나 Textarea에서는 동작하지 않도록 처리
-      if (!isAuthenticated() || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (
+        !isAuthenticated() ||
+        e.target.tagName === "INPUT" ||
+        e.target.tagName === "TEXTAREA"
+      )
+        return;
 
       if (e.ctrlKey || e.metaKey) {
         const key = e.key.toLowerCase();
-        if (key === 'z') {
+        if (key === "z") {
           e.preventDefault();
           if (e.shiftKey) {
             console.log("🚀 Redo 요청");
@@ -192,7 +229,7 @@ function App() {
             console.log("🚀 Undo 요청");
             sendUndo(id);
           }
-        } else if (key === 'y') {
+        } else if (key === "y") {
           e.preventDefault();
           console.log("🚀 Redo 요청");
           sendRedo(id);
@@ -200,8 +237,8 @@ function App() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [id, isAuthenticated]);
 
   // 임시 저장 - Load Prompt & Initial Check
@@ -231,7 +268,7 @@ function App() {
   useEffect(() => {
     if (!isTempLoaded) return; // Wait until loaded
 
-    if ((!isAuthenticated() || planId === -1)) {
+    if (!isAuthenticated() || planId === -1) {
       const planState = usePlanStore.getState();
       // 저장할 데이터 선별
       const planData = {
@@ -251,7 +288,7 @@ function App() {
         plan: planData,
         timetables: timetables,
         items: items,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       // 디바운스 대신 간단하게 1초 딜레이 (Timer 사용)
@@ -261,7 +298,18 @@ function App() {
 
       return () => clearTimeout(timer);
     }
-  }, [timetables, items, planId, isAuthenticated, planName, departure, transportationCategoryId, adultCount, childCount, isTempLoaded]); // 주시할 의존성
+  }, [
+    timetables,
+    items,
+    planId,
+    isAuthenticated,
+    planName,
+    departure,
+    transportationCategoryId,
+    adultCount,
+    childCount,
+    isTempLoaded,
+  ]); // 주시할 의존성
 
   const loadTempPlan = () => {
     const temp = getTempPlan();
@@ -270,7 +318,10 @@ function App() {
       setTimetableAll(temp.timetables);
       useItemsStore.setState({ items: temp.items }); // Store update directly to ensure sync
 
-      if (lastSelectedDay[planId] && temp.timetables.length >= lastSelectedDay[planId]) {
+      if (
+        lastSelectedDay[planId] &&
+        temp.timetables.length >= lastSelectedDay[planId]
+      ) {
         setSelectedDay(lastSelectedDay[planId]);
       } else {
         setSelectedDay(0);
@@ -283,13 +334,17 @@ function App() {
 
   const discardTempPlan = () => {
     clearTempPlan();
-    console.log(planId, timetables.length, planId !== 0 && timetables.length > 0);
+    console.log(
+      planId,
+      timetables.length,
+      planId !== 0 && timetables.length > 0,
+    );
     if (planId !== 0 && timetables.length > 0) {
       setShowTempPlanPrompt(false);
       setIsTempLoaded(true); // Enable auto-save (fresh start)
     } else {
       setShowTempPlanPrompt(false);
-      navigate('/');
+      navigate("/");
     }
   };
 
@@ -304,7 +359,9 @@ function App() {
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    }),
   );
 
   const requestEdit = async () => {
@@ -317,12 +374,23 @@ function App() {
   };
 
   useEffect(() => {
-    console.log("클라이언트 연결", isConnected)
-  }, [isConnected])
+    console.log("클라이언트 연결", isConnected);
+  }, [isConnected]);
 
-  if (!planId || !isPlaceLoading || (planId !== -1 && isAuthenticated() && !isConnected)) {
+  if (
+    !planId ||
+    !isPlaceLoading ||
+    (planId !== -1 && isAuthenticated() && !isConnected)
+  ) {
     return (
       <div className="font-pretendard h-screen">
+        <Helmet>
+          <title>planMate : 여행 일정 만들기</title>
+          <meta
+            name="description"
+            content="여행 일정을 직접 편집하고 친구들과 실시간으로 협업해보세요."
+          />
+        </Helmet>
         <div className="hidden md:block">
           <Navbar />
         </div>
@@ -331,7 +399,8 @@ function App() {
             <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
               <h3 className="text-lg font-bold mb-4">임시 저장된 일정</h3>
               <p className="text-gray-600 mb-6">
-                이전에 작성하던 일정이 있습니다.<br />
+                이전에 작성하던 일정이 있습니다.
+                <br />
                 불러오시겠습니까?
               </p>
               <div className="flex gap-3">
@@ -375,7 +444,7 @@ function App() {
           <AirplaneLoading />
         )}
       </div>
-    )
+    );
   }
 
   return (
@@ -395,7 +464,10 @@ function App() {
       >
         <div className="flex md:flex-row flex-col md:space-x-6 space-y-4 md:space-y-0 h-full">
           <DaySelector />
-          <DndContext sensors={sensors} autoScroll={{ layoutShiftCompensation: false }}>
+          <DndContext
+            sensors={sensors}
+            autoScroll={{ layoutShiftCompensation: false }}
+          >
             <Main />
           </DndContext>
         </div>
