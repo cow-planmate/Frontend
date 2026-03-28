@@ -212,21 +212,21 @@ function App() {
             <img
               src={img1}
               className={`w-full ${sliderHeightClass} object-cover`}
-              alt="slide1"
+              alt="여행 일정 협업 플래너 planMate 메인 비주얼"
             />
           </div>
           <div>
             <img
               src={img2}
               className={`w-full ${sliderHeightClass} object-cover`}
-              alt="slide2"
+              alt="동시에 함께 만드는 여행 스케줄"
             />
           </div>
           <div>
             <img
               src={img3}
               className={`w-full ${sliderHeightClass} object-cover`}
-              alt="slide3"
+              alt="여행지와 기간으로 일정 생성"
             />
           </div>
         </Slider>
