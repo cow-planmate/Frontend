@@ -87,8 +87,8 @@ export default function ProfileText({
     // 카테고리 아이콘 매핑
     const categoryIcons = {
       0: faMapMarkerAlt, // 관광지
-      1: faUtensils, // 식당
-      2: faBed, // 숙소
+      1: faBed, // 숙도
+      2: faUtensils, // 식당
     };
 
     // naeyong 사용 (content 대신)
@@ -262,21 +262,19 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setSelected("남자")}
-            className={`py-3 px-4 rounded-xl border-2 font-medium transition-all duration-200 ${
-              selected === "남자"
-                ? "bg-main text-white hover:bg-blue-800"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
+            className={`py-3 px-4 rounded-xl border-2 font-medium transition-all duration-200 ${selected === "남자"
+              ? "bg-main text-white hover:bg-blue-800"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
           >
             남자
           </button>
           <button
             onClick={() => setSelected("여자")}
-            className={`py-3 px-4 rounded-xl border-2 font-medium transition-all duration-200 ${
-              selected === "여자"
-                ? "bg-main text-white hover:bg-blue-800"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
+            className={`py-3 px-4 rounded-xl border-2 font-medium transition-all duration-200 ${selected === "여자"
+              ? "bg-main text-white hover:bg-blue-800"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
           >
             여자
           </button>
