@@ -63,7 +63,7 @@ function App() {
   const { setTimetableAll, setSelectedDay, timetables } = useTimetableStore(); // Add timetables
   const location = useLocation(); // Add useLocation
   const { addItemFromWebsocket, resetItems, items } = useItemsStore(); // Add items
-  const { setPlacesAll, tour, lodging, restaurant } = usePlacesStore();
+  const { setPlacesAll, setPlacesLoading } = usePlacesStore();
   const { lastSelectedDay } = useNicknameStore();
   const { isConnected } = useSocketStore();
   const [noACL, setNoACL] = useState(false);
@@ -141,8 +141,12 @@ function App() {
 
   useEffect(() => {
     const updatePlace = async () => {
+      setPlacesLoading(true);
       // 비로그인 유저의 경우 임시 저장 로드 여부 확인
-      if (!isAuthenticated() && !isTempLoaded) return;
+      if (!isAuthenticated() && !isTempLoaded) {
+        setPlacesLoading(false);
+        return;
+      }
 
       if (id && isAuthenticated()) {
         try {
@@ -193,6 +197,7 @@ function App() {
           console.error("추천 장소를 가져오는데 실패했습니다:", err);
         }
       }
+      setPlacesLoading(false);
     };
 
     if (travelCategoryName && travelName && travelId) updatePlace();

@@ -16,7 +16,7 @@ export default function Sidebar({
   const BASE_URL = import.meta.env.VITE_API_URL;
   const { get, post } = useApiClient();
   const store = usePlacesStore();
-  const { search, setAddSearch, setAddNext } = store;
+  const { search, setAddSearch, setAddNext, isLoading } = store;
   const { customPlaces, createCustomPlace, removeCustomPlace } = useNicknameStore();
 
   const [selectedTab, setSelectedTab] = useState("tour");
@@ -181,10 +181,8 @@ export default function Sidebar({
             </div>
           </div>
         )}
-        <div
-          className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden divide-y divide-gray-300`}
-        >
-          {currentPlaces?.map((place) => (
+        <div className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden divide-y divide-gray-300`}>
+          {!(isLoading && ["tour", "lodging", "restaurant"].includes(selectedTab)) && currentPlaces?.map((place) => (
             <SidebarItem
               key={place.placeId}
               place={place}
@@ -212,6 +210,23 @@ export default function Sidebar({
             </div>
           )}
           {["tour", "lodging", "restaurant"].includes(selectedTab) &&
+            isLoading && (
+              <div className="flex flex-col items-center justify-center py-16 px-6 text-center break-keep mt-4">
+                <div className={`
+                  mb-5 flex items-center justify-center
+                `}>
+                  <LoadingRing className="w-16 h-16" />
+                </div>
+                <p className="text-gray-600 text-[15px] font-medium">
+                  {koreanName[selectedTab]} 추천장소를 불러오고 있어요.
+                </p>
+                <p className="text-gray-400 text-xs mt-3">
+                  잠시만 기다려주세요!
+                </p>
+              </div>
+            )}
+          {["tour", "lodging", "restaurant"].includes(selectedTab) &&
+            !isLoading &&
             currentPlaces?.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 px-6 text-center break-keep mt-4">
                 <div className={`
@@ -252,7 +267,7 @@ export default function Sidebar({
                 </p>
               </div>
             )}
-          {selectedTab !== "custom" &&
+          {selectedTab !== "custom" && !isLoading &&
             ((selectedTab !== "search" || search.length !== 0) && store[`${selectedTab}Next`]?.length > 0) && (
               <div className="text-center py-3">
                 <button

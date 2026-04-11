@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 
 const usePlacesStore = create((set) => ({
+  isLoading: false,
+
   tour: [],
   lodging: [],
   restaurant: [],
@@ -11,6 +13,12 @@ const usePlacesStore = create((set) => ({
   lodgingNext: [],
   restaurantNext: [],
   searchNext: [],
+
+  setPlacesLoading: (isLoading) =>
+    set((state) => ({
+      ...state,
+      isLoading,
+    })),
 
   setPlacesAll: (payload) =>
     set((state) => ({

@@ -32,7 +32,6 @@ export const SidebarItem = ({
         <img
           src={imageUrl}
           alt={place.name}
-          loading="lazy"
           onError={(e) => {
             e.currentTarget.onerror = null;
             e.currentTarget.src = place.iconUrl;
