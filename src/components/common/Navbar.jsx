@@ -5,7 +5,7 @@ import PasswordFind from "../auth/PasswordFind";
 import Signup from "../auth/Signup";
 import Theme from "../auth/Theme";
 import Themestart from "../auth/Themestart"; // 추가된 import
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useApiClient } from "../../hooks/useApiClient";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -16,6 +16,7 @@ import {
 import { faBell as faBellRegular } from "@fortawesome/free-regular-svg-icons";
 import useNicknameStore from "../../store/Nickname";
 import FeedbackModal from "../common/Feedback";
+import { useInvitationSse } from "../../hooks/useInvitationSse";
 
 export default function Navbar({ onInvitationAccept }) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -130,7 +131,7 @@ export default function Navbar({ onInvitationAccept }) {
   const acceptRequest = async (requestId) => {
     try {
       await post(`${BASE_URL}/api/collaboration-requests/${requestId}/accept`);
-      fetchInvitations();
+      setInvitations((prev) => prev.filter((inv) => inv.requestId !== requestId));
       console.log("초대 수락 완료");
 
       if (onInvitationAccept) {
@@ -140,22 +141,24 @@ export default function Navbar({ onInvitationAccept }) {
       console.error("초대 수락 실패:", err);
     }
   };
+
   const rejectRequest = async (requestId) => {
     try {
       await post(`${BASE_URL}/api/collaboration-requests/${requestId}/reject`);
-      fetchInvitations();
+      setInvitations((prev) => prev.filter((inv) => inv.requestId !== requestId));
       console.log("초대 거절 완료");
     } catch (err) {
       console.error("초대 거절 실패:", err);
     }
   };
+
   const fetchInvitations = async () => {
     if (isAuthenticated()) {
       try {
         const response = await get(
           `${BASE_URL}/api/collaboration-requests/pending`
         );
-        console.log(response);
+        console.log("fetched Invitations:", response);
         setInvitations(response.pendingRequests || []);
       } catch (err) {
         console.error("초대 목록을 가져오는데 실패했습니다:", err);
@@ -167,7 +170,42 @@ export default function Navbar({ onInvitationAccept }) {
     fetchInvitations();
   }, [nickname]);
 
+  const handleInvitationEvent = useCallback((data, eventType) => {
+    console.log("SSE 업데이트 수신:", data, "이벤트 타입:", eventType);
 
+    if (!data || data === "connected") return;
+
+    if (Array.isArray(data)) {
+      setInvitations(data);
+      return;
+    }
+    if (data.pendingRequests && Array.isArray(data.pendingRequests)) {
+      setInvitations(data.pendingRequests);
+      return;
+    }
+
+    // 단일 객체 추가 (키 변환: collaborationRequestId -> requestId)
+    const reqId = data.collaborationRequestId || data.requestId;
+    if (!reqId) return; // 올바르지 않은 데이터
+
+    const newInvite = {
+      requestId: reqId,
+      planName: data.planName,
+      senderNickname: data.senderNickname,
+      type: data.type
+    };
+
+    setInvitations((prev) => {
+      const exists = prev.some((inv) => inv.requestId === reqId);
+      if (exists) return prev;
+      return [...prev, newInvite]; // 새 알림 추가
+    });
+  }, []);
+
+  useInvitationSse({
+    enabled: isAuthenticated() && !!nickname,
+    onInvitationEvent: handleInvitationEvent,
+  });
 
   return (
     <div className="border-b border-gray-200 ">
@@ -219,10 +257,10 @@ export default function Navbar({ onInvitationAccept }) {
                 <button
                   className="relative flex items-center"
                   onClick={() => {
-                    setisInvitationOpen((prev) => !prev);
                     if (!isInvitationOpen) {
                       fetchInvitations();
                     }
+                    setisInvitationOpen((prev) => !prev);
                   }}
                 >
                   <FontAwesomeIcon
