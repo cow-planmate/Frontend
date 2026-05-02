@@ -23,6 +23,7 @@ export default function Themestart({
   const changePreferredTheme = async () => {
     if (isSaving) return;
     setIsSaving(true);
+
     try {
       const selectedData = Object.values(selectedThemeKeywords)
         .flat()
@@ -37,17 +38,21 @@ export default function Themestart({
           return acc;
         }, {});
 
-      const finalData = Object.entries(selectedData).map(
+      const themeUpdates = Object.entries(selectedData).map(
         ([categoryId, themeIds]) => ({
           preferredThemeCategoryId: parseInt(categoryId),
           preferredThemeIds: themeIds,
         }),
       );
 
-      for (const data of finalData) {
-        await patch(`${BASE_URL}/api/user/preferredThemes`, data);
-      }
+      console.log("themeUpdates:", themeUpdates);
+
+      await patch(`${BASE_URL}/api/user/preferredThemes`, {
+        themeUpdates,
+      });
+
       onClose();
+
       if (onComplete) {
         const themesArray = Object.values(selectedThemeKeywords).flat();
         onComplete(themesArray);
@@ -58,7 +63,6 @@ export default function Themestart({
       setIsSaving(false);
     }
   };
-
   const getThemeSelectionText = () => {
     const totalSelected = Object.values(selectedThemeKeywords).reduce(
       (sum, arr) => sum + arr.length,
