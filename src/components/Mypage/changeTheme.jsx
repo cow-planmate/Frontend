@@ -1,8 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useApiClient } from "../../hooks/useApiClient";
 import { X, ChevronRight, ChevronLeft, Check, Compass, Utensils, Bed } from 'lucide-react';
 
-export default function Theme({ isOpen, onClose, onComplete, initialKeywords = {} }) {
+export default function Theme({
+  isOpen,
+  onClose,
+  onComplete,
+  initialSelected = {},
+}) {
   const [selectedKeywords, setSelectedKeywords] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [allSelectedKeywords, setAllSelectedKeywords] = useState({});
@@ -14,46 +19,16 @@ export default function Theme({ isOpen, onClose, onComplete, initialKeywords = {
   const getCategoryIcon = (catId) => {
     switch(catId) {
       case 0: return <Compass className="w-5 h-5" />;
-      case 2: return <Bed className="w-5 h-5" />;
-      case 1: return <Utensils className="w-5 h-5" />;
+      case 1: return <Bed className="w-5 h-5" />;
+      case 2: return <Utensils className="w-5 h-5" />;
       default: return <Compass className="w-5 h-5" />;
     }
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      setCurrentStep(0);
-      setSelectedKeywords([]);
-      // 초기 선택값 반영
-      setAllSelectedKeywords(initialKeywords || {});
-      getPreferredTheme();
-    }
-  }, [isOpen, initialKeywords]);
-
-  useEffect(() => {
-    if (categories.length > 0 && keywordsByStep[currentStep]) {
-      const currentCategoryId = categories[currentStep].id;
-      const previousSelections = allSelectedKeywords[currentCategoryId] || [];
-
-      const restoredIndexes = [];
-      previousSelections.forEach((selectedItem) => {
-        const index = keywordsByStep[currentStep].findIndex(
-          (item) => item.preferredThemeId === selectedItem.preferredThemeId
-        );
-        if (index !== -1) {
-          restoredIndexes.push(index);
-        }
-      });
-
-      setSelectedKeywords(restoredIndexes);
-    }
-  }, [currentStep, categories, keywordsByStep, allSelectedKeywords]);
-
-  if (!isOpen) return null;
-
-  const getPreferredTheme = async () => {
+  const getPreferredTheme = useCallback(async () => {
     try {
       const res = await get(`${BASE_URL}/api/user/preferredTheme`);
+
       const themeList = res.preferredThemes || [];
 
       if (Array.isArray(themeList) && themeList.length > 0) {
@@ -83,21 +58,61 @@ export default function Theme({ isOpen, onClose, onComplete, initialKeywords = {
         setCategories(categoryList);
         setKeywordsByStep(categorizedKeywords);
 
-        // 이미 initialKeywords로 설정된 값이 있다면 유지하고, 없다면 빈 배열로 초기화
-        setAllSelectedKeywords(prev => {
-          const updated = { ...prev };
+        setAllSelectedKeywords((prev) => {
+          const hasInitial =
+            prev && Object.values(prev).some((arr) => arr && arr.length > 0);
+
+          if (hasInitial) return prev;
+
+          const emptySelections = {};
           categoryList.forEach((cat) => {
-            if (!updated[cat.id]) {
-              updated[cat.id] = [];
-            }
+            emptySelections[cat.id] = [];
           });
-          return updated;
+          return emptySelections;
         });
+      } else {
+        console.error("API 응답 형식이 올바르지 않습니다:", res);
       }
     } catch (err) {
       console.error("선호 테마 가져오기 실패:", err.message);
     }
-  };
+  }, [BASE_URL, get]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentStep(0);
+      setSelectedKeywords([]);
+
+      if (initialSelected && Object.keys(initialSelected).length > 0) {
+        setAllSelectedKeywords(initialSelected);
+      } else {
+        setAllSelectedKeywords({});
+      }
+
+      getPreferredTheme();
+    }
+  }, [isOpen, initialSelected, getPreferredTheme]);
+
+  useEffect(() => {
+    if (categories.length > 0 && keywordsByStep[currentStep]) {
+      const currentCategoryId = categories[currentStep].id;
+      const previousSelections = allSelectedKeywords[currentCategoryId] || [];
+
+      const restoredIndexes = [];
+      previousSelections.forEach((selectedItem) => {
+        const index = keywordsByStep[currentStep].findIndex(
+          (item) => item.preferredThemeId === selectedItem.preferredThemeId
+        );
+        if (index !== -1) {
+          restoredIndexes.push(index);
+        }
+      });
+
+      setSelectedKeywords(restoredIndexes);
+    }
+  }, [currentStep, categories, keywordsByStep, allSelectedKeywords]);
+
+  if (!isOpen) return null;
 
   const toggleKeyword = (index) => {
     setSelectedKeywords((prev) =>
@@ -200,7 +215,7 @@ export default function Theme({ isOpen, onClose, onComplete, initialKeywords = {
           </div>
           {/* Progress Bar */}
           <div className="absolute bottom-0 left-0 h-1 bg-gray-100 w-full">
-            <div 
+            <div
               className="h-full bg-[#1344FF] transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
@@ -257,7 +272,7 @@ export default function Theme({ isOpen, onClose, onComplete, initialKeywords = {
             <ChevronLeft className="w-4 h-4" />
             {currentStep === 0 ? "취소" : "이전"}
           </button>
-          
+
           <div className="flex gap-2">
             <button
               onClick={skipStep}

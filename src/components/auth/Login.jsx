@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { useApiClient } from "../../hooks/useApiClient";
 import google from "../../assets/imgs/googleicon.png";
+import naver from "../../assets/imgs/navericon.png";
+import { useLocation } from "react-router-dom";
+import { ErrorToast } from "../common/Toast";
 
 export default function Login({
   isOpen,
@@ -10,6 +13,8 @@ export default function Login({
   onSignupOpen,
   onLoginSuccess,
 }) {
+  const location = useLocation();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -74,7 +79,7 @@ export default function Login({
     } catch (err) {
       // 에러는 useApiClient에서 자동으로 설정됨
       console.error("로그인 실패:", err);
-      alert("이메일 또는 비밀번호가 일치하지 않습니다 ");
+      ErrorToast(String(err).replace("Error: ", ""));
     }
   };
 
@@ -86,6 +91,8 @@ export default function Login({
   };
 
   const handleSNSLogin = (provider) => {
+    sessionStorage.setItem("redirectAfterLogin", location.pathname);
+
     window.location.href = `${API_BASE_URL}/api/oauth/${provider}`;
   };
 
@@ -148,13 +155,25 @@ export default function Login({
               className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
-          <div className="flex justify-center py-2">
+          <div className="flex justify-center py-2 gap-4">
             <button
               onClick={() => handleSNSLogin("google")}
               disabled={isLoading}
               title="구글 로그인"
             >
-              <img src={google} alt="Google Logo" className=" w-7 h-7" />
+              <img src={google} alt="Google Logo" className="w-7 h-7" />
+            </button>
+
+            <button
+              onClick={() => handleSNSLogin("naver")}
+              disabled={isLoading}
+              title="네이버 로그인"
+            >
+              <img
+                src={naver}
+                alt="Naver Logo"
+                className="w-7 h-7 rounded-full"
+              />
             </button>
           </div>
           <div className="flex justify-center -mt-2 mb-2">
@@ -233,8 +252,7 @@ export default function Login({
                 <div>
                   <p className="font-bold mb-1">2. 수집하는 개인정보 항목</p>
                   <ul className="list-disc pl-4 space-y-0.5">
-                    <li>필수 항목: 이름, 비밀번호, 이메일</li>
-                    <li>선택 항목: 나이, 성별</li>
+                    <li>필수 항목: 이메일, 비밀번호, 닉네임, 나이, 성별</li>
                     <li>
                       SNS 계정 로그인 시: 이메일 주소, 프로필 정보(닉네임,
                       프로필 이미지 등) 및 서비스 제공에 필요한 최소한의 계정

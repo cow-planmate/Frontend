@@ -1,6 +1,6 @@
 // pages/OAuthAdditionalInfo.jsx
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useApiClient } from "../hooks/useApiClient";
 import useNicknameStore from "../store/Nickname";
 
@@ -9,18 +9,15 @@ const OAuthAdditionalInfo = () => {
   const navigate = useNavigate();
   const { setTokens } = useApiClient();
   const { setNickname, setGravatar } = useNicknameStore();
+  const [searchParams] = useSearchParams();
 
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-  const {
-    provider,
-    providerId,
-    email: initialEmail,
-    nickname: initialNickname,
-  } = location.state || {};
+  const signupId = searchParams.get("signupId");
+  const needEmail = searchParams.get("needEmail") === "true";
 
   const [formData, setFormData] = useState({
-    email: initialEmail || "",
+    email: "",
     age: "",
     gender: "",
   });
@@ -28,9 +25,8 @@ const OAuthAdditionalInfo = () => {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // state가 없으면 로그인 페이지로 리다이렉트
-  if (!provider || !providerId) {
-    navigate("/logintest", { replace: true });
+  if (!signupId) {
+    navigate("/", { replace: true });
     return null;
   }
 
@@ -44,15 +40,21 @@ const OAuthAdditionalInfo = () => {
   };
 
   const validateForm = () => {
-    if (!formData.email || !formData.age || formData.gender === "") {
+    if (
+      (needEmail && !formData.email) ||
+      !formData.age ||
+      formData.gender === ""
+    ) {
       setError("모든 필드를 입력해주세요.");
       return false;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError("올바른 이메일 형식을 입력해주세요.");
-      return false;
+    if (needEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        setError("올바른 이메일 형식을 입력해주세요.");
+        return false;
+      }
     }
 
     const age = parseInt(formData.age);
@@ -87,9 +89,8 @@ const OAuthAdditionalInfo = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          provider,
-          providerId,
-          email: formData.email,
+          signupId,
+          email: needEmail ? formData.email : null,
           age: parseInt(formData.age),
           gender: parseInt(formData.gender),
         }),
@@ -109,8 +110,11 @@ const OAuthAdditionalInfo = () => {
       setNickname(nickname);
       setGravatar(email);
 
-      // 메인 페이지로 이동
-      navigate("/", { replace: true });
+      const redirectPath = sessionStorage.getItem("redirectAfterLogin") || "/";
+
+      sessionStorage.removeItem("redirectAfterLogin");
+
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       console.error("추가 정보 등록 실패:", err);
       setError(err.message || "추가 정보 등록에 실패했습니다.");
@@ -131,35 +135,30 @@ const OAuthAdditionalInfo = () => {
 
         {/* 닉네임 표시 */}
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-gray-700 mb-1">
-            <strong>닉네임:</strong> {initialNickname}
-          </p>
           <p className="text-xs text-gray-500">
             닉네임은 마이페이지에서 변경할 수 있습니다.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* 이메일 입력 */}
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              이메일 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="example@email.com"
-              required
-              disabled={initialEmail !== ""}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-            />
-          </div>
+          {needEmail && (
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                이메일 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          )}
 
           {/* 나이 입력 */}
           <div>

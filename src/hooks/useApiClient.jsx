@@ -1,5 +1,6 @@
 // hooks/useApiClient.js
 import { useState, useCallback } from "react";
+import useServerStatusStore from "../store/ServerStatus";
 import useNicknameStore from "../store/Nickname";
 
 /**
@@ -8,6 +9,7 @@ import useNicknameStore from "../store/Nickname";
  */
 export const useApiClient = () => {
   const { setNickname, setGravatar } = useNicknameStore();
+  const { setServerDown } = useServerStatusStore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -22,7 +24,6 @@ export const useApiClient = () => {
   const getRefreshToken = useCallback(() => {
     return localStorage.getItem("refreshToken");
   }, []);
-
 
   const setTokens = useCallback((accessToken, refreshToken) => {
     if (accessToken && refreshToken) {
@@ -89,73 +90,88 @@ export const useApiClient = () => {
 
   // 4. API 요청 함수 (토큰 자동 포함)
   const apiRequest = useCallback(
-    async (url, options = {}) => {
-      setIsLoading(true);
-      setError(null);
+  async (url, options = {}) => {
+    setIsLoading(true);
+    setError(null);
 
+    try {
+      const config = {
+        ...options,
+        headers: {
+          ...getAuthHeaders(),
+          ...options.headers,
+        },
+      };
+
+      let response;
       try {
-        const config = {
-          ...options,
-          headers: {
-            ...getAuthHeaders(),
-            ...options.headers,
-          },
-        };
-
-        const response = await fetch(url, config);
-
-        // 인증 에러 처리
-        if (response.status === 401) {
-          try {
-            // 토큰 갱신 시도
-            await refreshTokens();
-
-            // 갱신된 토큰으로 원래 요청 재시도
-            const retryConfig = {
-              ...options,
-              headers: {
-                ...getAuthHeaders(),
-                ...options.headers,
-              },
-            };
-
-            const retryResponse = await fetch(url, retryConfig);
-            if (retryResponse.ok) {
-              return await retryResponse.json();
-            } else {
-              throw new Error("토큰 갱신 후에도 요청이 실패했습니다.");
-            }
-          } catch (refreshError) {
-            clearAuth();
-            throw new Error("인증이 만료되었습니다. 다시 로그인해주세요.");
-          }
-        }
-
-        if (response.status === 403) {
-          throw new Error("접근 권한이 없습니다.");
-        }
-
-        // fetch는 4xx, 5xx 에러에서 예외를 발생시키지 않으므로, 직접 처리
-        if (!response.ok) {
-          // 서버에서 보낸 에러 메시지를 우선적으로 사용하도록 시도
-          const errorData = await response.json().catch(() => null);
-          const errorMessage =
-            errorData?.message || `API 요청 실패: ${response.status}`;
-          throw new Error(errorMessage);
-        }
-
-        const data = await response.json();
-        return data;
-      } catch (err) {
-        console.error("API 요청 에러:", err);
-        setError(err.message);
-        throw err;
-      } finally {
-        setIsLoading(false);
+        response = await fetch(url, config);
+      } catch (networkError) {
+        // 🔥 서버 다운 / 네트워크 단절
+        setServerDown();
+        throw networkError;
       }
-    },
-    [getAuthHeaders, refreshTokens, clearAuth]
-  );
+
+      // 🔥 서버 5xx 에러
+      if (response.status >= 500) {
+        setServerDown();
+        throw new Error("서버 오류가 발생했습니다.");
+      }
+
+      // 인증 에러 처리
+      if (response.status === 401) {
+        try {
+          await refreshTokens();
+
+          const retryConfig = {
+            ...options,
+            headers: {
+              ...getAuthHeaders(),
+              ...options.headers,
+            },
+          };
+
+          const retryResponse = await fetch(url, retryConfig);
+
+          // 🔥 재시도 중 서버 다운
+          if (retryResponse.status >= 500) {
+            setServerDown();
+            throw new Error("서버 오류가 발생했습니다.");
+          }
+
+          if (retryResponse.ok) {
+            return await retryResponse.json();
+          } else {
+            throw new Error("토큰 갱신 후에도 요청이 실패했습니다.");
+          }
+        } catch (refreshError) {
+          clearAuth();
+          throw new Error("인증이 만료되었습니다. 다시 로그인해주세요.");
+        }
+      }
+
+      if (response.status === 403) {
+        throw new Error("접근 권한이 없습니다.");
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        const errorMessage =
+          errorData?.message || `API 요청 실패: ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } catch (err) {
+      console.error("API 요청 에러:", err);
+      setError(err.message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  },
+  [getAuthHeaders, refreshTokens, clearAuth, setServerDown]
+);
 
   // 5. 편의 메서드들
   const get = useCallback(
@@ -244,11 +260,20 @@ export const useApiClient = () => {
     [post, setTokens, BASE_URL]
   );
 
-  const logout = useCallback(() => {
-    clearAuth();
-    // 필요하다면, 로그아웃 후 로그인 페이지로 이동하는 로직을 추가할 수 있습니다.
-    // window.location.href = '/login';
-  }, [clearAuth]);
+  const logout = useCallback(async () => {
+    const refreshToken = getRefreshToken();
+    try {
+      if (refreshToken) {
+        await post(`${BASE_URL}/api/auth/logout`, {
+          refreshToken,
+        });
+      }
+    } catch (err) {
+      console.error("로그아웃 API 호출 실패:", err.message);
+    } finally {
+      clearAuth();
+    }
+  }, [post, getRefreshToken, clearAuth, BASE_URL]);
 
   const isAuthenticated = useCallback(() => {
     return !!getAccessToken();

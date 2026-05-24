@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { useApiClient } from "../../hooks/useApiClient";
 import { X, Heart, Check, ChevronRight } from 'lucide-react';
 
@@ -11,14 +13,18 @@ export default function Themestart({
   const { patch } = useApiClient();
   const categoryMap = {
     0: "관광지",
-    1: "식당",
-    2: "숙소",
+    1: "숙소",
+    2: "식당",
   };
   const BASE_URL = import.meta.env.VITE_API_URL;
+  const [isSaving, setIsSaving] = useState(false);
 
   if (!isOpen) return null;
 
   const changePreferredTheme = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+
     try {
       const selectedData = Object.values(selectedThemeKeywords || {})
         .flat()
@@ -34,29 +40,39 @@ export default function Themestart({
           return acc;
         }, {});
 
-      const finalData = Object.entries(selectedData).map(
+      const themeUpdates = Object.entries(selectedData).map(
         ([categoryId, themeIds]) => ({
           preferredThemeCategoryId: parseInt(categoryId),
           preferredThemeIds: themeIds,
-        })
+        }),
       );
 
-      for (const data of finalData) {
-        await patch(`${BASE_URL}/api/user/preferredThemes`, data);
-      }
+      console.log("themeUpdates:", themeUpdates);
+
+      await patch(`${BASE_URL}/api/user/preferredThemes`, {
+        themeUpdates,
+      });
+
       onClose();
+
       if (onComplete) {
         const themesArray = Object.values(selectedThemeKeywords || {}).flat();
         onComplete(themesArray);
       }
     } catch (err) {
       console.error("선호 테마 저장 실패:", err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const hasSelected = Object.values(selectedThemeKeywords || {}).some(
-    (arr) => Array.isArray(arr) && arr.length > 0
-  );
+  const getThemeSelectionText = () => {
+    const totalSelected = Object.values(selectedThemeKeywords).reduce(
+      (sum, arr) => sum + arr.length,
+      0,
+    );
+    return totalSelected === 0 ? "선호테마 선택하기" : "선호테마 재선택하기";
+  };
 
   return (
     <div
@@ -81,32 +97,35 @@ export default function Themestart({
         </div>
 
         <div className="p-8 space-y-8">
-          {hasSelected ? (
+          {Object.values(selectedThemeKeywords).some(
+            (arr) => Array.isArray(arr) && arr.length > 0,
+          ) ? (
             <div className="space-y-6">
-              <div className="text-center">
-                <p className="text-gray-500 text-sm">현재 선택된 항목입니다.</p>
-                <p className="text-[#1344FF] font-bold text-lg">마음에 드시나요?</p>
-              </div>
-              
-              <div className="space-y-4">
-                {Object.entries(selectedThemeKeywords).map(
-                  ([categoryId, keywords]) =>
-                    keywords.length > 0 ? (
-                      <div key={categoryId} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                        <div className="text-xs font-bold text-gray-400 mb-2 flex items-center gap-1">
-                           <Check className="w-3 h-3" />
-                           {categoryMap[categoryId]}
+              <div className="p-3 border bg-gray-100 border-blue-200 rounded-xl text-sm font-medium text-gray-600 shadow-sm">
+                <div className="text-sm font-bold mb-2 text-gray-800">
+                  선택된 테마
+                </div>
+
+                <div className="space-y-4">
+                  {Object.entries(selectedThemeKeywords).map(
+                    ([categoryId, keywords]) =>
+                      keywords.length > 0 ? (
+                        <div key={categoryId} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                          <div className="text-xs font-bold text-gray-400 mb-2 flex items-center gap-1">
+                             <Check className="w-3 h-3" />
+                             {categoryMap[categoryId]}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {keywords.map((k) => (
+                              <span key={k.preferredThemeId} className="px-3 py-1 bg-white text-[#1344FF] text-xs font-bold rounded-lg border border-blue-50 shadow-sm">
+                                #{k.preferredThemeName}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          {keywords.map((k) => (
-                            <span key={k.preferredThemeId} className="px-3 py-1 bg-white text-[#1344FF] text-xs font-bold rounded-lg border border-blue-50 shadow-sm">
-                              #{k.preferredThemeName}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null
-                )}
+                      ) : null,
+                  )}
+                </div>
               </div>
             </div>
           ) : (
@@ -126,21 +145,23 @@ export default function Themestart({
               onClick={onThemeOpen}
               className="flex-1 py-4 px-4 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
             >
-              {hasSelected ? "다시 선택하기" : "테마 선택하기"}
+              {getThemeSelectionText()}
               <ChevronRight className="w-4 h-4" />
             </button>
-            {hasSelected && (
-              <button
-                onClick={changePreferredTheme}
-                className="flex-1 py-4 px-4 bg-[#1344FF] text-white font-bold rounded-xl hover:bg-[#0d34cc] transition-all shadow-lg"
-              >
-                변경 완료
-              </button>
-            )}
+            <button
+              onClick={changePreferredTheme}
+              disabled={isSaving}
+              className={`flex-1 py-4 px-4 font-bold rounded-xl transition-all shadow-lg ${
+                isSaving
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-[#1344FF] text-white hover:bg-[#0d34cc]"
+              }`}
+            >
+              {isSaving ? "저장 중..." : "변경 완료"}
+            </button>
           </div>
         </div>
       </div>
     </div>
   );
 }
-

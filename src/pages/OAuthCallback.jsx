@@ -1,10 +1,11 @@
 // pages/OAuthCallback.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApiClient } from "../hooks/useApiClient";
 import useNicknameStore from "../store/Nickname";
 
 const OAuthCallback = () => {
+  const hasRun = useRef(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { setTokens } = useApiClient();
@@ -15,22 +16,13 @@ const OAuthCallback = () => {
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
+    if (hasRun.current) return;
+    hasRun.current = true;
+
     const handleCallback = async () => {
+      console.log("OAuth callback params:", Object.fromEntries(searchParams));
       try {
         const status = searchParams.get("status");
-        const success = searchParams.get("success");
-        const message = searchParams.get("message");
-
-        // 기존 사용자 로그인 (loginCode 방식)
-        if (success === "false") {
-          setError(
-            message
-              ? decodeURIComponent(message)
-              : "OAuth 로그인에 실패했습니다.",
-          );
-          setIsProcessing(false);
-          return;
-        }
 
         if (status === "SUCCESS") {
           const code = searchParams.get("code");
@@ -46,9 +38,6 @@ const OAuthCallback = () => {
             `${API_BASE_URL}/api/oauth/exchange?code=${code}`,
             {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
             },
           );
 
@@ -83,31 +72,40 @@ const OAuthCallback = () => {
             console.error("사용자 정보 조회 실패:", err);
           }
 
-          // 메인 페이지로 이동
-          navigate("/", { replace: true });
+          const redirectPath =
+            sessionStorage.getItem("redirectAfterLogin") || "/";
+
+          sessionStorage.removeItem("redirectAfterLogin");
+
+          navigate(redirectPath, { replace: true });
         }
         // 신규 사용자 - 추가 정보 입력 필요
         else if (status === "NEED_ADDITIONAL_INFO") {
-          const provider = searchParams.get("provider");
-          const providerId = searchParams.get("providerId");
-          const email = searchParams.get("email");
-          const nickname = searchParams.get("nickname");
+          const signupId = searchParams.get("signupId");
+          const needEmail = searchParams.get("needEmail") === "true";
 
-          if (!provider || !providerId) {
-            setError("필수 정보가 누락되었습니다.");
+          if (!signupId) {
+            setError("가입 세션이 올바르지 않습니다.");
             setIsProcessing(false);
             return;
           }
 
-          navigate("/oauth/additional-info", {
-            replace: true,
-            state: {
-              provider,
-              providerId,
-              email: email || "",
-              nickname,
-            },
-          });
+          navigate(
+            `/oauth/additional-info?signupId=${signupId}&needEmail=${needEmail}`,
+            { replace: true },
+          );
+        } else if (status === "FAIL") {
+          const reason = searchParams.get("reason");
+
+          if (reason === "EMAIL_CONFLICT") {
+            setError(
+              "이미 해당 이메일로 가입된 계정이 있습니다. planMate 계정으로 로그인해주세요.",
+            );
+          } else {
+            setError("OAuth 로그인에 실패했습니다.");
+          }
+
+          setIsProcessing(false);
         }
         // 알 수 없는 상태
         else {
@@ -122,7 +120,7 @@ const OAuthCallback = () => {
     };
 
     handleCallback();
-  }, [searchParams, navigate, setTokens, setNickname, API_BASE_URL]);
+  }, []);
 
   if (error) {
     return (
@@ -146,10 +144,17 @@ const OAuthCallback = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">로그인 실패</h2>
           <p className="text-red-600 mb-6">{error}</p>
           <button
-            onClick={() => navigate("/logintest")}
+            onClick={() => {
+              const redirectPath =
+                sessionStorage.getItem("redirectAfterLogin") || "/";
+
+              sessionStorage.removeItem("redirectAfterLogin");
+
+              navigate(redirectPath, { replace: true });
+            }}
             className="w-full py-3 bg-main text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
           >
-            로그인 페이지로 돌아가기
+            돌아가기
           </button>
         </div>
       </div>

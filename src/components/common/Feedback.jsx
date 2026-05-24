@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SuccessToast } from "./Toast";
 
 export default function FeedbackModal({ isOpen, onClose }) {
   const [content, setContent] = useState("");
@@ -25,7 +26,7 @@ export default function FeedbackModal({ isOpen, onClose }) {
         throw new Error("서버 응답 실패");
       }
 
-      alert("피드백이 성공적으로 전송되었습니다. 감사합니다!");
+      SuccessToast("피드백이 성공적으로 전송되었습니다. 감사합니다!");
     } catch (error) {
       console.error("에러 발생:", error);
     }

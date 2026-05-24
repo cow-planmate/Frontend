@@ -1,15 +1,16 @@
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import usePlanStore from "../store/Plan";
-import useUserStore from "../store/Users";
+import useItemsStore from "../store/Schedules";
 import useTimetableStore from "../store/Timetables";
-import useNicknameStore from "../store/Nickname";
+import useUserStore from "../store/Users";
+import useSocketStore from "../store/Socket";
+import { convertBlock } from "../utils/createUtils";
 
 let client;
 
 function isDifferentEventId(eventId) {
   const prevEventId = usePlanStore.getState().eventId;
-
   if (eventId != "" && prevEventId != "" && eventId !== prevEventId) {
     return true;
   }
@@ -18,36 +19,104 @@ function isDifferentEventId(eventId) {
 
 const plan = (body) => {
   const eventId = body.eventId;
-  console.log("📩 수신된 메시지:", body);
-  if (isDifferentEventId(eventId)) {
-    usePlanStore.getState().setPlanAll(body.planDtos[0]);
+  const data = body.planDtos || body.plans;
+  if (!data) return;
+
+  if (isDifferentEventId(eventId) || body.isUndoRedo) {
+    usePlanStore.getState().setPlanAll(data[0]);
   }
 }
 
 const timetable = (body) => {
   const action = body.action;
-  switch(action) {
+  const data = body.timeTableDtos || body.timetables;
+  if (!data) return;
+
+  switch (action) {
     case "create":
-      body.timeTableDtos.map((item) => {
+      data.map((item) => {
         console.log(item)
         useTimetableStore.getState().setTimetableCreate(item);
       });
       break;
     case "update":
-      body.timeTableDtos.map((item) => {
+      data.map((item) => {
         useTimetableStore.getState().setTimetableUpdate(item);
       });
       break;
     case "delete":
-      body.timeTableDtos.map((item) => {
+      data.map((item) => {
         useTimetableStore.getState().setTimetableDelete(item.timeTableId);
       });
       break;
   }
 }
 
+const timetableplaceblock = (body) => {
+  const eventId = body.eventId;
+  const action = body.action;
+  const data = body.timeTablePlaceBlockDtos || body.timetableplaceblocks;
+  const isUndoRedo = body.isUndoRedo;
+
+  // "create" 액션은 내가 보낸 것이라도 서버가 할당한 실제 ID를 받아와야 하므로 eventId 체크를 제외함
+  if ((isDifferentEventId(eventId) || isUndoRedo || action === "create") && data) {
+    switch (action) {
+      case "create":
+        data.map((item) => {
+          const convert = convertBlock(item);
+          if (convert) useItemsStore.getState().addItemFromWebsocket(convert);
+        })
+        break;
+      case "update":
+        data.map((item) => {
+          const convert = convertBlock(item);
+          if (convert) useItemsStore.getState().moveItemFromWebsocket(convert);
+        })
+        break;
+      case "delete":
+        data.map((item) => {
+          const deleteId = item.blockId;
+          useItemsStore.getState().deleteItem(deleteId, item.timeTableId);
+        })
+        break;
+    }
+  }
+}
+
 export const getClient = () => client;
+
+export const sendUndo = (roomId) => {
+  if (client && client.connected) {
+    client.publish({
+      destination: `/app/${roomId}`,
+      body: JSON.stringify({ action: "undo" }),
+    });
+  }
+};
+
+export const sendRedo = (roomId) => {
+  if (client && client.connected) {
+    client.publish({
+      destination: `/app/${roomId}`,
+      body: JSON.stringify({ action: "redo" }),
+    });
+  }
+};
+
+export const disconnectStompClient = () => {
+  if (client) {
+    console.log("🔌 WebSocket 연결 종료 중...");
+    client.deactivate();
+    useSocketStore.getState().setDisconnected();
+  }
+};
+
 export const initStompClient = (id) => {
+  if (client && client.active) {
+    console.log("⚠️ 이미 활성화된 WebSocket 클라이언트가 있습니다. 기존 연결을 종료합니다.");
+    client.deactivate();
+  }
+
   const token = localStorage.getItem('accessToken');
   const BASE_URL = import.meta.env.VITE_API_URL;
   const SERVER_URL = `${BASE_URL}/ws?token=${encodeURIComponent(token)}`;
@@ -60,110 +129,37 @@ export const initStompClient = (id) => {
     reconnectDelay: 3000,
     onConnect: (frame) => {
       console.log("✅ WebSocket 연결 완료:", frame);
+      useSocketStore.getState().setConnected();
 
       client.subscribe(`/topic/${id}`, (message) => {
         const body = JSON.parse(message.body);
+        console.log("📩 [WebSocket] 수신 데이터 (Topic):", body);
         const entity = body.entity;
-        
-        switch(entity) {
+
+        switch (entity) {
           case "plan":
             plan(body);
             break;
           case "timetable":
             timetable(body);
             break;
+          case "timetableplaceblock":
+            timetableplaceblock(body);
+            break;
         }
       });
 
       client.subscribe(`/topic/plan-presence/${id}`, (message) => {
         const body = JSON.parse(message.body);
-        console.log("(접속자) 수신된 메시지:", body);
+        console.log("👥 [WebSocket] 접속자 수신 데이터:", body);
         useUserStore.getState().setUserAll(body.users);
       });
-
-      // client.subscribe(`/topic/plan/${id}/update/plan`, (message) => {
-      //   const body = JSON.parse(message.body);
-      //   const planEventId = usePlanStore.getState().eventId;
-      //   if (planEventId !== body.eventId) {
-      //     console.log("📩 수신된 메시지:", message.body);
-      //     usePlanStore.getState().setPlanAll({...body, eventId: planEventId});
-      //   }
-      // });
-
-      // client.subscribe(`/topic/plan/${id}/create/timetable`, (message) => {
-      //   const body = JSON.parse(message.body);
-      //   console.log("📩 수신된 메시지:", message.body);
-      //   body.timetableVOs.map((item) => {
-      //     useTimetableStore.getState().setTimetableCreate(item);
-      //   })
-      // });
-
-      // client.subscribe(`/topic/plan/${id}/update/timetable`, (message) => {
-      //   const body = JSON.parse(message.body);
-      //   console.log("📩 수신된 메시지:", message.body);
-      //   body.timetableVOs.map((item) => {
-      //     useTimetableStore.getState().setTimetableUpdate(item);
-      //   })
-      // });
-
-      // client.subscribe(`/topic/plan/${id}/delete/timetable`, (message) => {
-      //   const body = JSON.parse(message.body);
-      //   console.log("📩 수신된 메시지:", message.body);
-      //   body.timetableVOs.map((item) => {
-      //     useTimetableStore.getState().setTimetableDelete(item);
-      //   })
-      // });
-
-      // client.subscribe(
-      //   `/topic/plan/${id}/create/timetableplaceblock`,
-      //   (message) => {
-      //   }
-      // );
-
-      // client.subscribe(
-      //   `/topic/plan/${id}/update/timetableplaceblock`,
-      //   (message) => {
-          
-      //   }
-      // );
-
-      // client.subscribe(
-      //   `/topic/plan/${id}/delete/timetableplaceblock`,
-      //   (message) => {
-          
-      //   }
-      // );
-
-      // client.subscribe(
-      //   `/topic/plan/${id}/delete/presence`, (message) => {
-      //     const body = JSON.parse(message.body);
-      //     console.log("📩 수신된 메시지:", message.body);
-      //     useUserStore.getState().setUserDelete(body);
-      //   }
-      // );
-
-      // client.subscribe(
-      //   `/topic/plan/${id}/update/presence`,
-      //   (message) => {
-      //     const body = JSON.parse(message.body);
-      //     console.log("📩 수신된 메시지:", message.body);
-      //     useUserStore.getState().setUserUpdate(body);
-      //   }
-      // );
-
-      // client.subscribe(
-      //   `/topic/plan/${id}/create/presence`,
-      //   (message) => {
-      //     const body = JSON.parse(message.body);
-      //     console.log("📩 수신된 메시지:", message.body);
-      //     useUserStore.getState().setUserCreate(body);
-      //   }
-      // );
     },
 
     onStompError: (frame) => {
       console.error("❌ STOMP 에러:", frame.headers["message"]);
       client.deactivate();
+      useSocketStore.getState().setDisconnected();
     },
 
     // onWebSocketClose: () => {
@@ -178,7 +174,7 @@ export const initStompClient = (id) => {
     if (JSON.stringify(state) !== JSON.stringify(prevState)) {
       const { eventId, setEventId, setPlanAll, setPlanField, ...payload } = state;
       console.log(payload)
-      if (client.connected) {
+      if (client.connected && eventId) {
         const requestMsg = {
           "eventId": eventId,
           "action": "update",

@@ -11,6 +11,8 @@ import { useNavigate } from "react-router-dom";
 import { useApiClient } from "../../hooks/useApiClient";
 import { useState, useEffect, useRef } from "react";
 import ShareModal from "../common/ShareModal";
+import { ErrorToast, SuccessToast } from "../common/Toast";
+import useConfirmStore from "../../store/Confirm";
 
 export default function PlanListList({
   lst,
@@ -21,6 +23,7 @@ export default function PlanListList({
   isSelected = false,
   onPlanSelect,
 }) {
+  const { showConfirm } = useConfirmStore();
   const { del } = useApiClient();
   const navigate = useNavigate();
   const [isTitleOpen, setIsTitleOpen] = useState(false);
@@ -64,9 +67,21 @@ export default function PlanListList({
     if (toggleModal && buttonRef.current) {
       const buttonRect = buttonRef.current.getBoundingClientRect();
       const modalWidth = 176;
+      const modalHeight = 200;
+
+      const spaceBelow = window.innerHeight - buttonRect.bottom;
+      const spaceAbove = buttonRect.top;
+
+      let top;
+
+      if (spaceBelow < modalHeight && spaceAbove > modalHeight) {
+        top = buttonRect.top - modalHeight - 8;
+      } else {
+        top = buttonRect.bottom + 8;
+      }
 
       setModalPosition({
-        top: buttonRect.bottom + 8,
+        top: top,
         left: buttonRect.right - modalWidth,
       });
     }
@@ -79,7 +94,7 @@ export default function PlanListList({
       if (res.message !== "일정을 삭제할 권한이 없습니다.") {
         onPlanDeleted(lst.planId);
       } else {
-        alert("일정을 삭제할 권한이 없습니다.");
+        ErrorToast("일정을 삭제할 권한이 없습니다.");
       }
     } catch (err) {
       console.log("오류발생", err);
@@ -91,13 +106,31 @@ export default function PlanListList({
     onPlanSelect?.(lst.planId, e.target.checked);
   };
 
+  const resignEditorAccess = async () => {
+    const isConfirmed = await showConfirm("편집 권한을 포기하시겠습니까?");
+    if (!isConfirmed) return;
+
+    try {
+      const res = await del(`${BASE_URL}/api/plan/${lst.planId}/editor/me`);
+      console.log("편집권한 포기 응답", res);
+
+      SuccessToast("편집 권한을 포기했습니다.");
+
+      // 부모에서 상태 제거
+      onResignEditorSuccess?.(lst.planId);
+
+      setToggleModal(false);
+    } catch (err) {
+      console.error("편집 권한 포기 실패:", err);
+      ErrorToast("편집 권한 포기에 실패했습니다.");
+    }
+  };
   return (
     <div
-      className={`relative bg-gray-50 hover:bg-blue-50 rounded-xl p-4 transition-all duration-200 cursor-pointer border ${
-        isSelected
-          ? "border-blue-400 bg-blue-50"
-          : "border-gray hover:border-blue-200"
-      }`}
+      className={`relative bg-gray-50 hover:bg-blue-50 rounded-xl p-4 transition-all duration-200 cursor-pointer border ${isSelected
+        ? "border-blue-400 bg-blue-50"
+        : "border-gray hover:border-blue-200"
+        }`}
       onClick={() =>
         !isMultiSelectMode && navigate(`/complete?id=${lst.planId}`)
       }
@@ -202,6 +235,23 @@ export default function PlanListList({
                 공유 및 초대
               </span>
             </button>
+            {!isOwner && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  resignEditorAccess();
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left border-t border-gray-100"
+              >
+                <FontAwesomeIcon
+                  icon={faTrash}
+                  className="w-4 h-4 text-red-500"
+                />
+                <span className="text-sm font-medium text-red-600">
+                  편집 권한 포기하기
+                </span>
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -244,7 +294,7 @@ const TitleModal = ({ setIsTitleOpen, id, title, setTitle }) => {
           const errorMessage =
             response.message || "패치에 실패했습니다. 다시 시도해주세요.";
           console.log(`${response.message}`);
-          alert(errorMessage);
+          ErrorToast(errorMessage);
         }
       } catch (err) {
         console.error("패치에 실패했습니다:", err);

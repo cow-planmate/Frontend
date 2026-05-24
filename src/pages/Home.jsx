@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import { Helmet } from "react-helmet";
 import DepartureModal from "../components/common/DepartureModal";
 import DestinationModal from "../components/common/LocationModal";
 import Navbar from "../components/common/Navbar";
@@ -27,6 +27,8 @@ import "slick-carousel/slick/slick.css";
 import img1 from "../assets/imgs/img1.jpg";
 import img2 from "../assets/imgs/img2.jpg";
 import img3 from "../assets/imgs/img3.jpg";
+import useTimetableStore from "../store/Timetables";
+import { ErrorToast, WarningToast } from "../components/common/Toast";
 
 function App({ hideNavbar = false }) {
   const navigate = useNavigate();
@@ -37,11 +39,11 @@ function App({ hideNavbar = false }) {
   const [isDepartureOpen, setIsDepartureOpen] = useState(false);
   const [isDestinationOpen, setIsDestinationOpen] = useState(false);
 
-  const [personCount, setPersonCount] = useState({ adults: 0, children: 0 });
+  const [personCount, setPersonCount] = useState({ adults: 1, children: 0 });
   const [selectedTransport, setSelectedTransport] = useState("bus");
   const [departureLocation, setDepartureLocation] = useState(null);
   const [destinationLocation, setDestinationLocation] = useState(null);
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [dateRange, setDateRange] = useState([
     {
       startDate: new Date(),
@@ -51,6 +53,7 @@ function App({ hideNavbar = false }) {
   ]);
 
   const { setPlanField, setPlanAll } = usePlanStore();
+  const { setTimetableAll } = useTimetableStore();
   const { post, isAuthenticated } = useApiClient();
 
   const sliderHeightClass = "h-[14rem] sm:h-[20rem] lg:h-[36rem]";
@@ -86,9 +89,6 @@ function App({ hideNavbar = false }) {
 
   const handleDestinationLocationSelect = (location) => {
     setDestinationLocation(location);
-    setPlanField("travelName", location?.name ?? "");
-    setPlanField("travelId", location?.id ?? null);
-    setPlanField("travelCategoryName", location?.name ?? "");
   };
 
   const handlePersonCountChange = (count) => {
@@ -133,14 +133,18 @@ function App({ hideNavbar = false }) {
   };
 
   const makePlan = async () => {
+    if (isSubmitting) return; // 이미 요청 중이면 무시
+
     try {
+      setIsSubmitting(true);
+
       if (
         !destinationLocation ||
         !dateRange[0].startDate ||
         !dateRange[0].endDate ||
         personCount.adults + personCount.children === 0
       ) {
-        alert("입력되지 않은 값이 있습니다");
+        WarningToast("입력되지 않은 값이 있습니다.");
         return;
       }
 
@@ -149,22 +153,6 @@ function App({ hideNavbar = false }) {
         dateRange[0].endDate,
       );
       const formattedDates = allDates.map((date) => formatDateForApi(date));
-
-      const apiStartDate = formatDateForApi(dateRange[0].startDate);
-      const apiPeriod = allDates.length;
-
-      setPlanAll({
-        planName: "",
-        travelCategoryName: destinationLocation?.name || "",
-        travelName: destinationLocation?.name || "",
-        travelId: destinationLocation?.id || null,
-        departure: "null",
-        transportationCategoryId: selectedTransport === "car" ? 1 : 0,
-        adultCount: Number(personCount.adults),
-        childCount: Number(personCount.children),
-        startDate: apiStartDate,
-        period: apiPeriod,
-      });
 
       if (isAuthenticated()) {
         const requestData = {
@@ -184,16 +172,46 @@ function App({ hideNavbar = false }) {
           navigate(`/create?id=${data.planId}`);
         }
       } else {
-        navigate(`/create2`);
+        setPlanAll({
+          planName:
+            destinationLocation?.name.split(" ")[1] || "제목을 입력하세요",
+          planId: -1,
+          travelCategoryName: destinationLocation?.name.split(" ")[0] || "",
+          travelName: destinationLocation?.name.split(" ")[1] || "",
+          travelId: destinationLocation?.id || null,
+          departure: departureLocation?.name || "",
+          transportationCategoryId: selectedTransport === "car" ? 1 : 0,
+          adultCount: Number(personCount.adults),
+          childCount: Number(personCount.children),
+        });
+
+        const putTimetables = formattedDates.map((date, index) => ({
+          timeTableId: index,
+          date,
+          timeTableStartTime: "09:00:00",
+          timeTableEndTime: "20:00:00",
+        }));
+        setTimetableAll(putTimetables);
+        navigate(`/create`);
       }
     } catch (err) {
       console.error("에러, 다시시도해주세요", err);
-      alert("에러, 다시시도 해주세요");
+      ErrorToast("에러, 다시시도 해주세요.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="relative w-full">
+      <Helmet>
+        <title>planMate : 동시협업 여행플래너</title>
+        <meta
+          name="description"
+          content="planMate는 친구들과 여행 일정을 함께 만드는 실시간 협업 플래너입니다. 복잡한 계획 없이도 누구나 쉽고 빠르게 나만의 여행 일정을 완성해보세요."
+        />
+      </Helmet>
+
       {/* Navbar */}
       {!hideNavbar && (
         <div className="text-center h-auto font-pretendard">
@@ -202,26 +220,27 @@ function App({ hideNavbar = false }) {
       )}
 
       <div className="relative flex flex-col items-center overflow-hidden">
+        <h1 className="sr-only">동시협업 여행 플래너 planMate</h1>
         <Slider {...settings} className={`w-full ${sliderHeightClass}`}>
           <div>
             <img
               src={img1}
               className={`w-full ${sliderHeightClass} object-cover`}
-              alt="slide1"
+              alt="여행 일정 협업 플래너 planMate 메인 비주얼"
             />
           </div>
           <div>
             <img
               src={img2}
               className={`w-full ${sliderHeightClass} object-cover`}
-              alt="slide2"
+              alt="동시에 함께 만드는 여행 스케줄"
             />
           </div>
           <div>
             <img
               src={img3}
               className={`w-full ${sliderHeightClass} object-cover`}
-              alt="slide3"
+              alt="여행지와 기간으로 일정 생성"
             />
           </div>
         </Slider>
@@ -341,12 +360,14 @@ function App({ hideNavbar = false }) {
             {/* 버튼 */}
             <div className="block">
               <button
-                className="cursor-pointer transition-all bg-[#1344FF] text-white px-4 py-3 rounded-lg
-                border-[#1344FF] active:translate-y-[2px] hover:bg-blue-600 shadow-lg w-full font-pretendard whitespace-nowrap"
+                disabled={isSubmitting}
+                className={`cursor-pointer transition-all 
+    ${isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-[#1344FF] hover:bg-blue-600"} 
+    text-white px-4 py-3 rounded-lg shadow-lg w-full font-pretendard`}
                 onClick={makePlan}
                 type="button"
               >
-                일정생성
+                {isSubmitting ? "생성중..." : "일정생성"}
               </button>
             </div>
           </div>

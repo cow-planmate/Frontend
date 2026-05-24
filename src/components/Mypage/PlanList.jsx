@@ -5,6 +5,8 @@ import { useState, useRef, useEffect } from "react";
 import { useApiClient } from "../../hooks/useApiClient";
 import PlanListList from "./PlanListList";
 import { useNavigate } from "react-router-dom";
+import { ErrorToast, SuccessToast } from "../common/Toast";
+import useConfirmStore from "../../store/Confirm";
 
 export default function PlanList({
   myPlans,
@@ -13,6 +15,7 @@ export default function PlanList({
   setEditablePlans,
 }) {
   const navigate = useNavigate();
+  const { showConfirm } = useConfirmStore();
   const [selectedPlans, setSelectedPlans] = useState([]);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
 
@@ -20,7 +23,7 @@ export default function PlanList({
   const removePlanFromState = (planId) => {
     setMyPlans((prevPlans) => prevPlans.filter((p) => p.planId !== planId));
     setEditablePlans((prevPlans) =>
-      prevPlans.filter((p) => p.planId !== planId)
+      prevPlans.filter((p) => p.planId !== planId),
     );
   };
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -50,7 +53,7 @@ export default function PlanList({
     if (selectedPlans.length === 0) return;
 
     if (
-      confirm(`선택한 ${selectedPlans.length}개의 일정을 삭제하시겠습니까?`)
+      await showConfirm(`선택한 ${selectedPlans.length}개의 일정을 삭제하시겠습니까?`)
     ) {
       try {
         const response = await apiRequest(`${BASE_URL}/api/plan`, {
@@ -65,10 +68,10 @@ export default function PlanList({
         });
         setSelectedPlans([]);
         setIsMultiSelectMode(false);
-        alert("선택한 일정들이 삭제되었습니다.");
+        SuccessToast("선택한 일정들이 삭제되었습니다.");
       } catch (err) {
         console.error("일괄삭제 실패:", err);
-        alert("삭제 중 오류가 발생했습니다.");
+        ErrorToast("삭제 중 오류가 발생했습니다.");
       }
     }
   };
@@ -93,11 +96,10 @@ export default function PlanList({
                   setIsMultiSelectMode(!isMultiSelectMode);
                   setSelectedPlans([]);
                 }}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  isMultiSelectMode
-                    ? "bg-gray-200 text-gray-700"
-                    : "bg-blue-100 text-blue-600 hover:bg-blue-200"
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isMultiSelectMode
+                  ? "bg-gray-200 text-gray-700"
+                  : "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                  }`}
               >
                 {isMultiSelectMode ? "취소" : "다중삭제"}
               </button>
@@ -137,7 +139,7 @@ export default function PlanList({
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto px-6 pb-6">
+          <div className="flex-1 overflow-y-auto px-6 py-4">
             {myPlans.length > 0 ? (
               <div className="space-y-4">
                 {myPlans.map((lst) => (
@@ -190,7 +192,7 @@ export default function PlanList({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div className="flex-1 overflow-y-auto px-6 py-4">
           {editablePlans.length > 0 ? (
             <div className="space-y-4">
               {editablePlans.map((lst) => (
@@ -199,6 +201,7 @@ export default function PlanList({
                   lst={lst}
                   onPlanDeleted={removePlanFromState}
                   isOwner={false}
+                  onResignEditorSuccess={removeEditablePlanFromState}
                 />
               ))}
             </div>

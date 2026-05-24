@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useApiClient } from "../../hooks/useApiClient";
+import { ErrorToast, SuccessToast } from "./Toast";
+import useConfirmStore from "../../store/Confirm";
 
 const ShareModal = ({ setIsShareOpen, id, isOwner }) => {
   const { post, get, del } = useApiClient();
@@ -7,6 +9,7 @@ const ShareModal = ({ setIsShareOpen, id, isOwner }) => {
   const [receiverNickname, setreceiverNickname] = useState("");
   const [shareURL, setShareURL] = useState("");
   const BASE_URL = import.meta.env.VITE_API_URL;
+  const { showConfirm } = useConfirmStore();
 
   useEffect(() => {
     getShareLink();
@@ -42,14 +45,12 @@ const ShareModal = ({ setIsShareOpen, id, isOwner }) => {
       });
       console.log(response);
       setreceiverNickname("");
-      alert("초대를 보냈습니다!");
+      SuccessToast(response.message);
     } catch (err) {
       console.error("초대에 실패했습니다:", err);
 
-      const errorMessage =
-        err.response?.data?.message ||
-        "초대에 실패했습니다. 다시 시도해주세요.";
-      alert(errorMessage);
+      const errorMessage = err.message;
+      ErrorToast(errorMessage);
     }
   };
 
@@ -64,23 +65,23 @@ const ShareModal = ({ setIsShareOpen, id, isOwner }) => {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareURL);
-    alert("링크가 복사되었습니다!");
+    SuccessToast("링크가 복사되었습니다!");
   };
 
   const resignEditorAccess = async () => {
-    if (confirm("편집 권한을 포기하시겠습니까?")) {
+    if (await showConfirm("편집 권한을 포기하시겠습니까?")) {
       try {
         const response = await del(
           `${import.meta.env.VITE_API_URL}/api/plan/${id}/editor/me`
         );
         console.log(response);
-        alert("편집 권한을 포기했습니다.");
+        SuccessToast("편집 권한을 포기했습니다.");
         setIsShareOpen(false);
 
         window.location.reload();
       } catch (err) {
         console.error("편집 권한 포기에 실패했습니다:", err);
-        alert("편집 권한 포기에 실패했습니다.");
+        ErrorToast("편집 권한 포기에 실패했습니다.");
       }
     }
   };
@@ -90,7 +91,7 @@ const ShareModal = ({ setIsShareOpen, id, isOwner }) => {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm cursor-default"
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="relative bg-white p-6 rounded-2xl shadow-2xl w-96 border border-gray-100 max-h-[80vh] overflow-y-auto">
+      <div className="relative bg-white p-6 rounded-2xl shadow-2xl sm:w-96 w-[90vw] border border-gray-100 max-h-[80vh] overflow-y-auto">
         <h2 className="text-xl font-bold text-gray-800 mb-6">공유 및 초대</h2>
         <button
           onClick={() => setIsShareOpen(false)}
@@ -104,7 +105,7 @@ const ShareModal = ({ setIsShareOpen, id, isOwner }) => {
           </label>
           <div className="flex gap-2">
             <input
-              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"
+              className="flex-1 min-w-0 px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"
               value={shareURL}
               readOnly
             />
@@ -117,34 +118,34 @@ const ShareModal = ({ setIsShareOpen, id, isOwner }) => {
           </div>
         </div>
 
-        { isOwner && 
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            편집 권한이 있는 사용자
-          </label>
-          <div className="space-y-2">
-            {editors.length > 0 ? (
-              editors.map((editor) => (
-                <div
-                  key={editor.userId}
-                  className="flex items-center justify-between bg-gray-50 p-3 rounded-xl"
-                >
-                  <span className="text-gray-700">{editor.nickName}</span>
-                  <button
-                    onClick={() => removeEditorAccessByOwner(editor.userId)}
-                    className="w-6 h-6 bg-red-100 hover:bg-red-200 rounded-full flex items-center justify-center transition-colors"
+        {isOwner &&
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              편집 권한이 있는 사용자
+            </label>
+            <div className="space-y-2">
+              {editors.length > 0 ? (
+                editors.map((editor) => (
+                  <div
+                    key={editor.userId}
+                    className="flex items-center justify-between bg-gray-50 p-3 rounded-xl"
                   >
-                    <span className="text-red-500 text-sm">×</span>
-                  </button>
+                    <span className="text-gray-700">{editor.nickName}</span>
+                    <button
+                      onClick={() => removeEditorAccessByOwner(editor.userId)}
+                      className="w-6 h-6 bg-red-100 hover:bg-red-200 rounded-full flex items-center justify-center transition-colors"
+                    >
+                      <span className="text-red-500 text-sm">×</span>
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="text-gray-500 text-sm text-center py-2">
+                  편집 권한을 가진 사용자가 없습니다
                 </div>
-              ))
-            ) : (
-              <div className="text-gray-500 text-sm text-center py-2">
-                편집 권한을 가진 사용자가 없습니다
-              </div>
-            )}
-          </div>
-        </div> }
+              )}
+            </div>
+          </div>}
 
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -152,7 +153,7 @@ const ShareModal = ({ setIsShareOpen, id, isOwner }) => {
           </label>
           <div className="flex gap-2">
             <input
-              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
+              className="flex-1 min-w-0 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
               value={receiverNickname}
               onChange={(e) => setreceiverNickname(e.target.value)}
               placeholder="닉네임"
@@ -166,16 +167,16 @@ const ShareModal = ({ setIsShareOpen, id, isOwner }) => {
             </button>
           </div>
         </div>
-        
-        { !isOwner && 
-        <div className="mt-6">
-          <button
-            onClick={resignEditorAccess}
-            className="w-full px-4 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-medium transition-all duration-200 border border-red-200"
-          >
-            편집 권한 포기하기
-          </button>
-        </div>
+
+        {!isOwner &&
+          <div className="mt-6">
+            <button
+              onClick={resignEditorAccess}
+              className="w-full px-4 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-medium transition-all duration-200 border border-red-200"
+            >
+              편집 권한 포기하기
+            </button>
+          </div>
         }
       </div>
     </div>
