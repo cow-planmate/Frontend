@@ -9,11 +9,11 @@ import DateRangeModal from "../components/Home/HomeCal";
 import { useApiClient } from "../hooks/useApiClient";
 
 import {
-    faBus,
-    faCalendar,
-    faCar,
-    faLocationDot,
-    faUser,
+  faBus,
+  faCalendar,
+  faCar,
+  faLocationDot,
+  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -56,7 +56,7 @@ function App({ hideNavbar = false }) {
   const { setTimetableAll } = useTimetableStore();
   const { post, isAuthenticated } = useApiClient();
 
-  const sliderHeightClass = "h-[14rem] sm:h-[20rem] lg:h-[36rem]";
+  const sliderHeightClass = "h-[16rem] sm:h-[24rem] lg:h-[32rem]";
 
   const settings = {
     dots: true,
@@ -203,7 +203,7 @@ function App({ hideNavbar = false }) {
   };
 
   return (
-    <div className="relative w-full">
+    <div className="w-full min-h-screen bg-[#F8F9FA] font-pretendard flex flex-col">
       <Helmet>
         <title>planMate : 동시협업 여행플래너</title>
         <meta
@@ -214,13 +214,13 @@ function App({ hideNavbar = false }) {
 
       {/* Navbar */}
       {!hideNavbar && (
-        <div className="text-center h-auto font-pretendard">
+        <div className="w-full bg-white relative z-50">
           <Navbar isLogin={false} />
         </div>
       )}
 
-      <div className="relative flex flex-col items-center overflow-hidden">
-        <h1 className="sr-only">동시협업 여행 플래너 planMate</h1>
+      {/* 메인 히어로 섹션 (슬라이더) */}
+      <div className="w-full relative">
         <Slider {...settings} className={`w-full ${sliderHeightClass}`}>
           <div>
             <img
@@ -245,136 +245,134 @@ function App({ hideNavbar = false }) {
           </div>
         </Slider>
 
-        {/* overlay */}
+        {/* 텍스트 및 오버레이 */}
         <div
-          className={`absolute top-0 left-0 right-0 ${sliderHeightClass} bg-gradient-to-b from-transparent to-black/60 pointer-events-none`}
-        />
-
-        <div className="absolute bottom-6 sm:bottom-12 lg:bottom-20 left-0 right-0 px-4 sm:px-6 lg:px-8 pointer-events-none">
-          <div className="w-full max-w-7xl mx-auto">
-            <div className="font-pretendard text-white font-bold text-left text-3xl sm:text-4xl lg:text-5xl leading-tight drop-shadow-md">
-              <div className="mb-2 sm:mb-4">나다운, 우리다운</div>
-              <div>여행의 시작</div>
-            </div>
+          className={`absolute top-0 left-0 right-0 ${sliderHeightClass} bg-gradient-to-b from-black/30 via-transparent to-black/60 flex flex-col justify-center px-6 sm:px-12 lg:px-24 pointer-events-none`}
+        >
+          <div className="w-full max-w-7xl mx-auto -mt-12 lg:-mt-20 text-white drop-shadow-lg">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-medium mb-2 opacity-90 tracking-wide">
+              나다운, 우리다운
+            </h2>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
+              여행의 시작
+            </h1>
           </div>
         </div>
       </div>
 
-      <div className="relative px-4 sm:px-6 lg:absolute lg:-bottom-1 lg:left-0 lg:right-0 lg:px-8">
-        <div className="w-full max-w-7xl mx-auto bg-white rounded-xl shadow-2xl p-4 sm:p-6 mt-6 lg:mt-0 mb-8">
-          <div className="grid gap-4 items-end grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-            {/* 여행지 */}
-            <div className="block relative">
-              <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
-                여행지
-              </label>
+      {/* 검색 바 폼 (카드 형태, 슬라이더 아래에 살짝 걸치도록 -mt-16 적용) */}
+      <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10 -mt-16 sm:-mt-20 lg:-mt-24 mb-20 flex justify-center">
+        <div className="w-full max-w-[1200px] bg-white rounded-3xl sm:rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 p-2 sm:p-3 flex flex-col lg:flex-row lg:items-center divide-y lg:divide-y-0 lg:divide-x divide-gray-100">
+          {/* 여행지 */}
+          <div
+            className="flex-1 px-4 sm:px-6 py-4 hover:bg-gray-50 rounded-2xl cursor-pointer transition-colors group"
+            onClick={() => setIsDestinationOpen(true)}
+          >
+            <label className="block text-[13px] font-bold text-gray-400 mb-1 cursor-pointer group-hover:text-[#1344FF] transition-colors">
+              여행지
+            </label>
+            <div className="flex items-center justify-between">
               <input
                 type="text"
-                className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8 cursor-pointer"
-                placeholder="여행지 입력"
+                className="bg-transparent focus:outline-none w-full text-gray-900 font-semibold text-[15px] sm:text-base placeholder-gray-300 truncate cursor-pointer"
+                placeholder="어디로 떠나시나요?"
                 value={destinationLocation ? destinationLocation.name : ""}
-                onClick={() => setIsDestinationOpen(true)}
                 readOnly
               />
-              <button
-                className="absolute right-0 bottom-2"
-                onClick={() => setIsDestinationOpen(true)}
-                type="button"
-              >
-                <FontAwesomeIcon
-                  icon={faLocationDot}
-                  className="text-gray-400"
-                />
-              </button>
+              <FontAwesomeIcon
+                icon={faLocationDot}
+                className="text-gray-300 group-hover:text-[#1344FF] transition-colors ml-2"
+              />
             </div>
+          </div>
 
-            {/* 기간 */}
-            <div className="block relative">
-              <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
-                기간
-              </label>
+          {/* 기간 */}
+          <div
+            className="flex-1 px-4 sm:px-6 py-4 hover:bg-gray-50 rounded-2xl cursor-pointer transition-colors group"
+            onClick={() => setIsCalendarOpen(true)}
+          >
+            <label className="block text-[13px] font-bold text-gray-400 mb-1 cursor-pointer group-hover:text-[#1344FF] transition-colors">
+              기간
+            </label>
+            <div className="flex items-center justify-between">
               <input
                 type="text"
-                className="border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8 cursor-pointer font-pretendard"
+                className="bg-transparent focus:outline-none w-full text-gray-900 font-semibold text-[15px] sm:text-base placeholder-gray-300 truncate cursor-pointer"
                 placeholder="날짜 선택"
                 value={formatDateRange()}
-                onClick={() => setIsCalendarOpen(true)}
                 readOnly
               />
-              <button
-                className="absolute right-0 bottom-2"
-                onClick={() => setIsCalendarOpen(true)}
-                type="button"
-              >
-                <FontAwesomeIcon icon={faCalendar} className="text-gray-400" />
-              </button>
+              <FontAwesomeIcon
+                icon={faCalendar}
+                className="text-gray-300 group-hover:text-[#1344FF] transition-colors ml-2"
+              />
             </div>
+          </div>
 
-            {/* 인원수 */}
-            <div className="block relative">
-              <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
-                인원수
-              </label>
+          {/* 인원수 */}
+          <div
+            className="flex-1 px-4 sm:px-6 py-4 hover:bg-gray-50 rounded-2xl cursor-pointer transition-colors group"
+            onClick={() => setIsPersonCountOpen(true)}
+          >
+            <label className="block text-[13px] font-bold text-gray-400 mb-1 cursor-pointer group-hover:text-[#1344FF] transition-colors">
+              인원수
+            </label>
+            <div className="flex items-center justify-between">
               <input
                 type="text"
-                className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8 cursor-pointer"
+                className="bg-transparent focus:outline-none w-full text-gray-900 font-semibold text-[15px] sm:text-base placeholder-gray-300 truncate cursor-pointer"
                 placeholder="인원수 선택"
                 value={formatPersonCount()}
-                onClick={() => setIsPersonCountOpen(true)}
                 readOnly
               />
-              <button
-                className="absolute right-0 bottom-2"
-                onClick={() => setIsPersonCountOpen(true)}
-                type="button"
-              >
-                <FontAwesomeIcon icon={faUser} className="text-gray-400" />
-              </button>
+              <FontAwesomeIcon
+                icon={faUser}
+                className="text-gray-300 group-hover:text-[#1344FF] transition-colors ml-2"
+              />
             </div>
+          </div>
 
-            {/* 이동수단 */}
-            <div className="block relative">
-              <label className="text-gray-600 text-sm mb-1 font-pretendard whitespace-nowrap block">
-                이동수단
-              </label>
+          {/* 이동수단 */}
+          <div
+            className="flex-1 px-4 sm:px-6 py-4 hover:bg-gray-50 rounded-2xl cursor-pointer transition-colors group"
+            onClick={() => setIsTransportOpen(true)}
+          >
+            <label className="block text-[13px] font-bold text-gray-400 mb-1 cursor-pointer group-hover:text-[#1344FF] transition-colors">
+              이동수단
+            </label>
+            <div className="flex items-center justify-between">
               <input
                 type="text"
-                className="font-pretendard border-b-2 border-gray-300 pb-2 focus:border-blue-500 focus:outline-none w-full pr-8 cursor-pointer"
+                className="bg-transparent focus:outline-none w-full text-gray-900 font-semibold text-[15px] sm:text-base placeholder-gray-300 truncate cursor-pointer"
                 placeholder="이동수단 선택"
                 value={getTransportText()}
-                onClick={() => setIsTransportOpen(true)}
                 readOnly
               />
-              <button
-                className="absolute right-0 bottom-2"
-                onClick={() => setIsTransportOpen(true)}
-                type="button"
-              >
-                <FontAwesomeIcon
-                  icon={getTransportIcon()}
-                  className="text-gray-400"
-                />
-              </button>
+              <FontAwesomeIcon
+                icon={getTransportIcon()}
+                className="text-gray-300 group-hover:text-[#1344FF] transition-colors ml-2"
+              />
             </div>
+          </div>
 
-            {/* 버튼 */}
-            <div className="block">
-              <button
-                disabled={isSubmitting}
-                className={`cursor-pointer transition-all 
-    ${isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-[#1344FF] hover:bg-blue-600"} 
-    text-white px-4 py-3 rounded-lg shadow-lg w-full font-pretendard`}
-                onClick={makePlan}
-                type="button"
-              >
-                {isSubmitting ? "생성중..." : "일정생성"}
-              </button>
-            </div>
+          {/* 생성 버튼 */}
+          <div className="p-2 lg:p-0 lg:pl-3 lg:pr-1 flex-shrink-0 flex items-center h-full">
+            <button
+              disabled={isSubmitting}
+              className={`w-full lg:w-[140px] h-14 lg:h-[72px] flex items-center justify-center text-[16px] font-bold rounded-2xl transition-all duration-200
+                ${
+                  isSubmitting
+                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    : "bg-[#1344FF] text-white hover:bg-blue-700 active:scale-[0.98] shadow-md hover:shadow-lg hover:shadow-blue-500/20"
+                }`}
+              onClick={makePlan}
+              type="button"
+            >
+              {isSubmitting ? "생성중..." : "일정생성"}
+            </button>
           </div>
         </div>
       </div>
-
-      <div className="hidden lg:block h-24" />
 
       {/* Modals */}
       <DateRangeModal
