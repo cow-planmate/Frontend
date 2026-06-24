@@ -56,7 +56,7 @@ function App({ hideNavbar = false }) {
   const { setTimetableAll } = useTimetableStore();
   const { post, isAuthenticated } = useApiClient();
 
-  const sliderHeightClass = "h-[16rem] sm:h-[24rem] lg:h-[32rem]";
+  const sliderHeightClass = "h-[16rem] sm:h-[24rem] lg:h-[35rem]";
 
   const settings = {
     dots: true,
