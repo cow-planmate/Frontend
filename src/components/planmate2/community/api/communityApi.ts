@@ -11,10 +11,26 @@ const COMMUNITY_BASE_URL: string =
 const MAIN_BASE_URL: string = import.meta.env.VITE_API_URL;
 
 // ── 응답 타입 (백엔드 DTO와 1:1) ─────────────────────────────────────────
+export interface ItineraryItem {
+  time: string;
+  place: string;
+  description?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  category?: string | null;
+  photoUrl?: string | null;
+}
+
+export interface ItineraryDay {
+  day: number;
+  date?: string | null;
+  items: ItineraryItem[];
+}
+
 export interface CommunityPostSummary {
   id: number;
   userId: string;
-  category: 'free' | 'qna' | 'mate' | 'recommend';
+  category: 'free' | 'qna' | 'mate' | 'recommend' | 'feed';
   title: string;
   author: string;
   level: number;
@@ -33,6 +49,11 @@ export interface CommunityPostSummary {
   location?: string;
   rating?: string;
   coords?: { lat: number; lng: number };
+  // FEED 전용 (비-FEED는 응답에서 생략)
+  durationDays?: number;
+  forks?: number;
+  tags?: string[];
+  description?: string;
 }
 
 export interface CommunityPostDetail extends CommunityPostSummary {
@@ -40,17 +61,32 @@ export interface CommunityPostDetail extends CommunityPostSummary {
   contentText: string;
   updatedAt?: string;
   myReaction?: 'like' | 'dislike' | null;
+  // FEED 전용
+  itinerary?: { days: ItineraryDay[] } | null;
+  sourcePlanId?: string;
+  myFork?: boolean;
 }
 
 export interface CommunityComment {
   id: number;
   postId: number;
+  parentId?: number | null; // 대댓글이면 부모 댓글 ID
   userId: string;
   author: string;
   level: number;
   content: string;
   createdAt: string;
   createdAtIso: string;
+}
+
+export interface RegionCount {
+  region: string;
+  count: number;
+}
+
+export interface ForkResult {
+  forks: number;
+  myFork: boolean;
 }
 
 export interface PageData<T> {
@@ -140,6 +176,56 @@ export const fetchPosts = async (
   return mapPage(await request<PageData<CommunityPostSummary>>(`/api/community/posts?${params}`));
 };
 
+// ── 피드 ─────────────────────────────────────────────────────────────────
+export interface FeedFilterParams {
+  region?: string;
+  minDays?: number;
+  maxDays?: number;
+  tag?: string;
+  sort?: string; // latest | likes | views | forks
+  q?: string;
+}
+
+export const fetchFeedPosts = async (
+  page: number, size: number, filters: FeedFilterParams = {},
+): Promise<PageData<CommunityPostSummary>> => {
+  const params = new URLSearchParams({ category: 'feed', page: String(page), size: String(size), sort: filters.sort ?? 'latest' });
+  if (filters.region) params.set('region', filters.region);
+  if (filters.minDays !== undefined) params.set('minDays', String(filters.minDays));
+  if (filters.maxDays !== undefined) params.set('maxDays', String(filters.maxDays));
+  if (filters.tag) params.set('tag', filters.tag);
+  if (filters.q && filters.q.trim()) params.set('q', filters.q.trim());
+  return mapPage(await request<PageData<CommunityPostSummary>>(`/api/community/posts?${params}`));
+};
+
+export const fetchFeedRegionCounts = async (): Promise<RegionCount[]> =>
+  request<RegionCount[]>('/api/community/posts/regions?category=feed');
+
+export const forkPost = async (postId: number | string): Promise<ForkResult> =>
+  request<ForkResult>(`/api/community/posts/${postId}/fork`, { method: 'POST' });
+
+/** durationDays → "N박 M일" 표기 (1일 여행은 "1일") */
+export const formatDuration = (durationDays?: number): string => {
+  if (!durationDays || durationDays < 1) return '';
+  return durationDays === 1 ? '1일' : `${durationDays - 1}박 ${durationDays}일`;
+};
+
+const FEED_FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=800';
+
+/** 피드 카드 컴포넌트가 기대하는 형태로 변환 (목데이터 시절 필드명 호환) */
+export const mapFeedPost = (post: CommunityPostSummary & { createdAtIso: string }) => ({
+  ...post,
+  destination: post.location ?? post.region ?? '',
+  duration: formatDuration(post.durationDays),
+  tags: post.tags ?? [],
+  forks: post.forks ?? 0,
+  image: post.image ?? FEED_FALLBACK_IMAGE,
+  description: post.description ?? '',
+  authorImage: undefined as string | undefined, // 레거시 User에 프로필 이미지 없음 → 카드에서 이니셜 폴백
+});
+
+export type FeedCardPost = ReturnType<typeof mapFeedPost>;
+
 export const fetchHotPosts = async (category: string): Promise<CommunityPostSummary[]> => {
   const posts = await request<CommunityPostSummary[]>(`/api/community/posts/hot?category=${category}`);
   return posts.map(mapPost);
@@ -160,6 +246,11 @@ export interface CreatePostPayload {
   lng?: number;
   region?: string;
   maxParticipants?: number | null;
+  // FEED 전용
+  durationDays?: number;
+  itinerary?: { days: ItineraryDay[] };
+  tags?: string[];
+  sourcePlanId?: string;
 }
 
 export const createPost = async (payload: CreatePostPayload): Promise<CommunityPostDetail> =>
@@ -188,10 +279,10 @@ export const reactToPost = async (postId: number, type: 'like' | 'dislike'): Pro
 export const fetchComments = async (postId: number | string, page = 0, size = 50): Promise<PageData<CommunityComment>> =>
   mapPage(await request<PageData<CommunityComment>>(`/api/community/posts/${postId}/comments?page=${page}&size=${size}`));
 
-export const createComment = async (postId: number, content: string): Promise<CommunityComment> =>
+export const createComment = async (postId: number, content: string, parentId?: number): Promise<CommunityComment> =>
   mapPost(await request<CommunityComment>(`/api/community/posts/${postId}/comments`, {
     method: 'POST',
-    body: JSON.stringify({ content }),
+    body: JSON.stringify(parentId != null ? { content, parentId } : { content }),
   }));
 
 export const deleteComment = async (commentId: number): Promise<void> =>

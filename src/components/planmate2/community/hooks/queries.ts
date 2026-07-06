@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   changeMateStatus,
   createComment,
@@ -6,6 +6,8 @@ import {
   deleteComment,
   deletePost,
   fetchComments,
+  fetchFeedPosts,
+  fetchFeedRegionCounts,
   fetchHotPosts,
   fetchLikedPosts,
   fetchMyComments,
@@ -13,12 +15,14 @@ import {
   fetchMyStats,
   fetchPost,
   fetchPosts,
+  forkPost,
   joinMate,
   leaveMate,
   reactToPost,
   updateAnswered,
   updatePost,
   type CreatePostPayload,
+  type FeedFilterParams,
 } from '../api/communityApi';
 
 const KEYS = {
@@ -35,6 +39,24 @@ export const usePosts = (category: string, page: number, sort = 'latest', q = ''
     queryKey: KEYS.posts(category, page, sort, q),
     queryFn: () => fetchPosts(category, page, 20, sort, q),
     staleTime: 30_000,
+  });
+
+// 피드 목록 — 서버사이드 필터 + 무한 스크롤("더 보기")
+export const useFeedPosts = (filters: FeedFilterParams, size = 12) =>
+  useInfiniteQuery({
+    queryKey: ['community', 'posts', 'feed', filters, size] as const,
+    queryFn: ({ pageParam }) => fetchFeedPosts(pageParam, size, filters),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.page + 1 < lastPage.totalPages ? lastPage.page + 1 : undefined,
+    staleTime: 30_000,
+  });
+
+export const useFeedRegionCounts = () =>
+  useQuery({
+    queryKey: ['community', 'feed-regions'],
+    queryFn: fetchFeedRegionCounts,
+    staleTime: 60_000,
   });
 
 export const useHotPosts = (category: string) =>
@@ -85,9 +107,22 @@ const useInvalidate = () => {
 
 export const useCreatePost = () => {
   const invalidate = useInvalidate();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreatePostPayload) => createPost(payload),
-    onSuccess: () => { invalidate.lists(); invalidate.me(); },
+    onSuccess: () => {
+      invalidate.lists();
+      invalidate.me();
+      queryClient.invalidateQueries({ queryKey: ['community', 'feed-regions'] });
+    },
+  });
+};
+
+export const useForkPost = (postId: number | string) => {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: () => forkPost(postId),
+    onSuccess: () => { invalidate.post(postId); invalidate.lists(); },
   });
 };
 
@@ -118,7 +153,8 @@ export const useReactToPost = (postId: number | string) => {
 export const useCreateComment = (postId: number | string) => {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: (content: string) => createComment(Number(postId), content),
+    mutationFn: ({ content, parentId }: { content: string; parentId?: number }) =>
+      createComment(Number(postId), content, parentId),
     onSuccess: () => { invalidate.comments(postId); invalidate.post(postId); invalidate.lists(); },
   });
 };

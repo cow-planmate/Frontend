@@ -2,20 +2,8 @@ import { ko } from "@blocknote/core/locales";
 import { useCreateBlockNote } from "@blocknote/react";
 import { useMemo, useState } from 'react';
 import { uploadImage } from '../api/communityApi';
+import { blocksToText } from '../utils/blocksToText';
 import { useCreatePost } from './queries';
-
-/** BlockNote 블록에서 검색/미리보기용 평문 텍스트 추출 */
-const blocksToText = (blocks: any[]): string =>
-  blocks
-    .map((block) => {
-      const inline = Array.isArray(block.content)
-        ? block.content.map((c: any) => c?.text ?? '').join('')
-        : '';
-      const children = Array.isArray(block.children) ? blocksToText(block.children) : '';
-      return [inline, children].filter(Boolean).join('\n');
-    })
-    .filter(Boolean)
-    .join('\n');
 
 /** 첫 번째 이미지 블록의 URL → 썸네일 */
 const firstImageUrl = (blocks: any[]): string | null => {
