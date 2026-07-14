@@ -1,8 +1,8 @@
-import Navbar from "../components/common/Navbar";
-import Profile from "../components/Mypage/Profile";
-import PlanList from "../components/Mypage/PlanList";
-import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "../components/common/Navbar";
+import PlanList from "../components/Mypage/PlanList";
+import Profile from "../components/Mypage/Profile";
 import { useApiClient } from "../hooks/useApiClient";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import { ErrorToast } from "../components/common/Toast";
@@ -12,7 +12,6 @@ function App() {
   const navigate = useNavigate();
   const [refreshTrigger, setRefreshTrigger] = useState(false);
   const { get, isAuthenticated, logout } = useApiClient();
-
   const BASE_URL = import.meta.env.VITE_API_URL;
 
   const [userProfile, setUserProfile] = useState(null);
