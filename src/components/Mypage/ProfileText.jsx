@@ -225,7 +225,7 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
   const BASE_URL = import.meta.env.VITE_API_URL;
 
   const apiUrl = {
-    나이: `${BASE_URL}/api/user/age`,
+    나이: `${BASE_URL}/api/user/birthdate`,
     성별: `${BASE_URL}/api/user/gender`,
   };
 
@@ -262,19 +262,21 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setSelected("남자")}
-            className={`py-3 px-4 rounded-xl border-2 font-medium transition-all duration-200 ${selected === "남자"
-              ? "bg-main text-white hover:bg-blue-800"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+            className={`py-3 px-4 rounded-xl border-2 font-medium transition-all duration-200 ${
+              selected === "남자"
+                ? "bg-main text-white hover:bg-blue-800"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
           >
             남자
           </button>
           <button
             onClick={() => setSelected("여자")}
-            className={`py-3 px-4 rounded-xl border-2 font-medium transition-all duration-200 ${selected === "여자"
-              ? "bg-main text-white hover:bg-blue-800"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+            className={`py-3 px-4 rounded-xl border-2 font-medium transition-all duration-200 ${
+              selected === "여자"
+                ? "bg-main text-white hover:bg-blue-800"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
           >
             여자
           </button>
@@ -286,11 +288,12 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
   const patchApi = async (title, data) => {
     if (isAuthenticated()) {
       try {
-        if (title == "나이") {
+        if (title === "나이") {
+          // 📌 v2 Request 명세 반영: 필드명 age -> birthdate
           await patch(apiUrl[title], {
-            age: data,
+            birthdate: data,
           });
-        } else if (title == "성별") {
+        } else if (title === "성별") {
           await patch(apiUrl[title], {
             gender: genderGubun[data],
           });
@@ -298,7 +301,7 @@ const Modal = ({ title, setIsModalOpen, content, setNaeyong }) => {
         setNaeyong(data);
         setIsModalOpen(false);
       } catch (err) {
-        console.error("패치에 실패해버렸습니다:", err);
+        console.error("패치에 실패했습니다:", err);
       }
     }
   };

@@ -53,7 +53,9 @@ export default function PlanList({
     if (selectedPlans.length === 0) return;
 
     if (
-      await showConfirm(`선택한 ${selectedPlans.length}개의 일정을 삭제하시겠습니까?`)
+      await showConfirm(
+        `선택한 ${selectedPlans.length}개의 일정을 삭제하시겠습니까?`,
+      )
     ) {
       try {
         const response = await apiRequest(`${BASE_URL}/api/plan`, {
@@ -96,10 +98,11 @@ export default function PlanList({
                   setIsMultiSelectMode(!isMultiSelectMode);
                   setSelectedPlans([]);
                 }}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isMultiSelectMode
-                  ? "bg-gray-200 text-gray-700"
-                  : "bg-blue-100 text-blue-600 hover:bg-blue-200"
-                  }`}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  isMultiSelectMode
+                    ? "bg-gray-200 text-gray-700"
+                    : "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                }`}
               >
                 {isMultiSelectMode ? "취소" : "다중삭제"}
               </button>

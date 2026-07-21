@@ -31,7 +31,6 @@ export const useApiClient = () => {
       localStorage.setItem("refreshToken", refreshToken);
     }
   }, []);
-  
 
   const clearAuth = useCallback(() => {
     localStorage.removeItem("accessToken");
@@ -40,6 +39,7 @@ export const useApiClient = () => {
     localStorage.removeItem("nickname");
   }, []);
 
+  // 🔄 2. 토큰 갱신 함수 (v2 명세 반영: GET -> POST 변경)
   const refreshTokens = useCallback(async () => {
     const refreshToken = getRefreshToken();
     if (!refreshToken) {
@@ -47,15 +47,14 @@ export const useApiClient = () => {
     }
 
     try {
-      const response = await fetch(
-        `${BASE_URL}/api/auth/token?refreshToken=${refreshToken}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // 📌 v2 연계 API: [Access Token 재발급] POST /api/auth/token
+      const response = await fetch(`${BASE_URL}/api/auth/token`, {
+        method: "POST", // 💡 기존 GET에서 POST로 변경
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+        },
+        body: JSON.stringify({ refreshToken }), // 💡 Query Parameter가 아닌 Request Body로 전달
+      });
 
       if (!response.ok) {
         throw new Error("토큰 갱신 실패");
@@ -90,120 +89,120 @@ export const useApiClient = () => {
 
   // 4. API 요청 함수 (토큰 자동 포함)
   const apiRequest = useCallback(
-  async (url, options = {}) => {
-    setIsLoading(true);
-    setError(null);
+    async (url, options = {}) => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const config = {
-        ...options,
-        headers: {
-          ...getAuthHeaders(),
-          ...options.headers,
-        },
-      };
-
-      let response;
       try {
-        response = await fetch(url, config);
-      } catch (networkError) {
-        // 🔥 서버 다운 / 네트워크 단절
-        setServerDown();
-        throw networkError;
-      }
+        const config = {
+          ...options,
+          headers: {
+            ...getAuthHeaders(),
+            ...options.headers,
+          },
+        };
 
-      // 🔥 서버 5xx 에러
-      if (response.status >= 500) {
-        setServerDown();
-        throw new Error("서버 오류가 발생했습니다.");
-      }
-
-      // 인증 에러 처리
-      if (response.status === 401) {
+        let response;
         try {
-          await refreshTokens();
-
-          const retryConfig = {
-            ...options,
-            headers: {
-              ...getAuthHeaders(),
-              ...options.headers,
-            },
-          };
-
-          const retryResponse = await fetch(url, retryConfig);
-
-          // 🔥 재시도 중 서버 다운
-          if (retryResponse.status >= 500) {
-            setServerDown();
-            throw new Error("서버 오류가 발생했습니다.");
-          }
-
-          if (retryResponse.ok) {
-            return await retryResponse.json();
-          } else {
-            throw new Error("토큰 갱신 후에도 요청이 실패했습니다.");
-          }
-        } catch (refreshError) {
-          clearAuth();
-          throw new Error("인증이 만료되었습니다. 다시 로그인해주세요.");
+          response = await fetch(url, config);
+        } catch (networkError) {
+          setServerDown();
+          throw networkError;
         }
-      }
 
-      if (response.status === 403) {
-        throw new Error("접근 권한이 없습니다.");
-      }
+        if (response.status >= 500) {
+          setServerDown();
+          throw new Error("서버 오류가 발생했습니다.");
+        }
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const errorMessage =
-          errorData?.message || `API 요청 실패: ${response.status}`;
-        throw new Error(errorMessage);
-      }
+        // 인증 에러 처리 (401 Unauthorized)
+        if (response.status === 401) {
+          try {
+            await refreshTokens();
 
-      return await response.json();
-    } catch (err) {
-      console.error("API 요청 에러:", err);
-      setError(err.message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  },
-  [getAuthHeaders, refreshTokens, clearAuth, setServerDown]
-);
+            const retryConfig = {
+              ...options,
+              headers: {
+                ...getAuthHeaders(),
+                ...options.headers,
+              },
+            };
+
+            const retryResponse = await fetch(url, retryConfig);
+
+            if (retryResponse.status >= 500) {
+              setServerDown();
+              throw new Error("서버 오류가 발생했습니다.");
+            }
+
+            if (retryResponse.ok) {
+              // 💡 204 No Content 대응: 응답 본문이 비어있으면 json 파싱 건너뜀
+              if (retryResponse.status === 204) return null;
+              return await retryResponse.json();
+            } else {
+              throw new Error("토큰 갱신 후에도 요청이 실패했습니다.");
+            }
+          } catch (refreshError) {
+            clearAuth();
+            throw new Error("인증이 만료되었습니다. 다시 로그인해주세요.");
+          }
+        }
+
+        if (response.status === 403) {
+          throw new Error("접근 권한이 없습니다.");
+        }
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null);
+          const errorMessage =
+            errorData?.message || `API 요청 실패: ${response.status}`;
+          throw new Error(errorMessage);
+        }
+
+        // 💡 204 No Content 대응: v2 스펙상의 수많은 204 성공 응답 처리 보완
+        if (response.status === 204) {
+          return null;
+        }
+
+        return await response.json();
+      } catch (err) {
+        console.error("API 요청 에러:", err);
+        setError(err.message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [getAuthHeaders, refreshTokens, clearAuth, setServerDown],
+  );
 
   // 5. 편의 메서드들
   const get = useCallback(
     (url) => apiRequest(url, { method: "GET" }),
-    [apiRequest]
+    [apiRequest],
   );
 
   const post = useCallback(
     (url, data) =>
       apiRequest(url, { method: "POST", body: JSON.stringify(data) }),
-    [apiRequest]
+    [apiRequest],
   );
 
   const patch = useCallback(
     (url, data) =>
       apiRequest(url, { method: "PATCH", body: JSON.stringify(data) }),
-    [apiRequest]
+    [apiRequest],
   );
 
   const put = useCallback(
     (url, data) =>
       apiRequest(url, { method: "PUT", body: JSON.stringify(data) }),
-    [apiRequest]
+    [apiRequest],
   );
 
   const del = useCallback(
-    (url, data) =>
-      apiRequest(url, {
-        method: "DELETE",
-        body: data ? JSON.stringify(data) : undefined,
-      }),
-    [apiRequest]
+    (url) => apiRequest(url, { method: "DELETE" }),
+    [apiRequest],
   );
 
   // 6. FormData 전송을 위한 별도 메서드 (파일 업로드용)
@@ -222,11 +221,14 @@ export const useApiClient = () => {
         body: formData,
       });
     },
-    [apiRequest, getAccessToken]
+    [apiRequest, getAccessToken],
   );
+
+  // 🔐 7. 로그인 프로세스
   const login = useCallback(
     async (email, password) => {
       try {
+        // 📌 v2 연계 API: [로그인] POST /api/auth/login
         const response = await post(`${BASE_URL}/api/auth/login`, {
           email,
           password,
@@ -235,7 +237,7 @@ export const useApiClient = () => {
         if (!response.accessToken || !response.refreshToken) {
           throw new Error(
             response.message ||
-              "로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요."
+              "로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요.",
           );
         }
 
@@ -257,13 +259,16 @@ export const useApiClient = () => {
         throw err;
       }
     },
-    [post, setTokens, BASE_URL]
+    [post, setTokens, BASE_URL, setNickname, setGravatar],
   );
 
+  // 🚪 8. 로그아웃 프로세스 (v2 명세 반영)
   const logout = useCallback(async () => {
     const refreshToken = getRefreshToken();
     try {
       if (refreshToken) {
+        // 📌 v2 연계 API: [로그아웃] POST /api/auth/logout
+        // 💡 v2 요구 명세 구조체 `{ refreshToken: string }` 포맷 엄격화 및 204 처리 대응
         await post(`${BASE_URL}/api/auth/logout`, {
           refreshToken,
         });
@@ -280,27 +285,20 @@ export const useApiClient = () => {
   }, [getAccessToken]);
 
   return {
-    // 상태
     isLoading,
     error,
-
-    // API 메서드
     get,
     post,
     patch,
     put,
     del,
     postFormData,
-    apiRequest, // 커스텀 요청용
-
-    // 토큰 관리
+    apiRequest,
     getAccessToken,
     getRefreshToken,
     setTokens,
     refreshTokens,
     clearAuth,
-
-    // 인증 관련
     login,
     logout,
     isAuthenticated,

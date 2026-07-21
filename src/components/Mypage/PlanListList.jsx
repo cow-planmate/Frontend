@@ -41,7 +41,7 @@ export default function PlanListList({
         toggleModal &&
         modalRef.current &&
         !modalRef.current.contains(e.target) &&
-        !buttonRef.current.contains(e.target)
+        !buttonRef.current?.contains(e.target)
       ) {
         setToggleModal(false);
       }
@@ -87,17 +87,17 @@ export default function PlanListList({
     }
   }, [toggleModal]);
 
+  // v2 단일 플랜 삭제: DELETE /api/plan/{planId}
   const deletePlan = async () => {
     try {
-      const res = await del(`${BASE_URL}/api/plan/${lst.planId}`);
-      console.log("API응답", res);
-      if (res.message !== "일정을 삭제할 권한이 없습니다.") {
-        onPlanDeleted(lst.planId);
-      } else {
-        ErrorToast("일정을 삭제할 권한이 없습니다.");
-      }
+      await del(`${BASE_URL}/api/plan/${lst.planId}`);
+      onPlanDeleted(lst.planId);
+      SuccessToast("일정이 삭제되었습니다.");
     } catch (err) {
-      console.log("오류발생", err);
+      console.error("일정 삭제 실패:", err);
+      ErrorToast(
+        err.message || "일정을 삭제할 권한이 없거나 오류가 발생했습니다.",
+      );
     }
   };
 
@@ -106,31 +106,31 @@ export default function PlanListList({
     onPlanSelect?.(lst.planId, e.target.checked);
   };
 
+  // v2 편집 권한 포기: DELETE /api/plan/{planId}/editor/me
   const resignEditorAccess = async () => {
     const isConfirmed = await showConfirm("편집 권한을 포기하시겠습니까?");
     if (!isConfirmed) return;
 
     try {
-      const res = await del(`${BASE_URL}/api/plan/${lst.planId}/editor/me`);
-      console.log("편집권한 포기 응답", res);
-
+      await del(`${BASE_URL}/api/plan/${lst.planId}/editor/me`);
       SuccessToast("편집 권한을 포기했습니다.");
 
       // 부모에서 상태 제거
       onResignEditorSuccess?.(lst.planId);
-
       setToggleModal(false);
     } catch (err) {
       console.error("편집 권한 포기 실패:", err);
-      ErrorToast("편집 권한 포기에 실패했습니다.");
+      ErrorToast(err.message || "편집 권한 포기에 실패했습니다.");
     }
   };
+
   return (
     <div
-      className={`relative bg-gray-50 hover:bg-blue-50 rounded-xl p-4 transition-all duration-200 cursor-pointer border ${isSelected
-        ? "border-blue-400 bg-blue-50"
-        : "border-gray hover:border-blue-200"
-        }`}
+      className={`relative bg-gray-50 hover:bg-blue-50 rounded-xl p-4 transition-all duration-200 cursor-pointer border ${
+        isSelected
+          ? "border-blue-400 bg-blue-50"
+          : "border-gray-200 hover:border-blue-200"
+      }`}
       onClick={() =>
         !isMultiSelectMode && navigate(`/complete?id=${lst.planId}`)
       }
@@ -279,25 +279,22 @@ const TitleModal = ({ setIsTitleOpen, id, title, setTitle }) => {
   const [newTitle, setNewTitle] = useState(title);
   const BASE_URL = import.meta.env.VITE_API_URL;
 
+  // v2 플랜 제목 변경 API 연동: PATCH /api/plan/{planId}/name
+  // Request Body: { planName: string }
   const patchApi = async () => {
     if (isAuthenticated()) {
       try {
         const response = await patch(`${BASE_URL}/api/plan/${id}/name`, {
           planName: newTitle,
         });
-        console.log(response);
 
-        if (response.edited === true) {
-          setTitle(newTitle);
-          setIsTitleOpen(false);
-        } else {
-          const errorMessage =
-            response.message || "패치에 실패했습니다. 다시 시도해주세요.";
-          console.log(`${response.message}`);
-          ErrorToast(errorMessage);
-        }
+        // v2 응답 규격이 200 OK일 때 바로 적용
+        setTitle(newTitle);
+        setIsTitleOpen(false);
+        SuccessToast(response?.message || "제목이 변경되었습니다.");
       } catch (err) {
-        console.error("패치에 실패했습니다:", err);
+        console.error("제목 변경 실패:", err);
+        ErrorToast(err.message || "패치에 실패했습니다. 다시 시도해주세요.");
       }
     }
   };
