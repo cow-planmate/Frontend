@@ -201,7 +201,11 @@ export const useApiClient = () => {
   );
 
   const del = useCallback(
-    (url) => apiRequest(url, { method: "DELETE" }),
+    (url, data) =>
+      apiRequest(url, {
+        method: "DELETE",
+        ...(data === undefined ? {} : { body: JSON.stringify(data) }),
+      }),
     [apiRequest],
   );
 

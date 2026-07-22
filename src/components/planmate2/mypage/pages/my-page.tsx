@@ -238,8 +238,7 @@ export default function MyPage({ onNavigate, userId }: MyPageProps) {
         }
         alert("프로필 정보가 성공적으로 업데이트되었습니다.");
 
-        // 📌 v2 프로필 갱신 경로 반영: /api/mypage/profile
-        const profileData = await get(`${BASE_URL}/api/mypage/profile`);
+        const profileData = await get(`${BASE_URL}/api/user/profile`);
         setUserProfile(profileData);
       }
 
@@ -416,10 +415,10 @@ export default function MyPage({ onNavigate, userId }: MyPageProps) {
       if (isAuthenticated() || isOtherUser) {
         try {
           setLoading(true);
-          // 📌 v2 API 명세 반영: 본인 조회는 /api/mypage/profile, 타인 조회용 세그먼트 백업
+          // v2 명세에는 본인 프로필 조회만 제공한다.
           const endpoint = isOtherUser
             ? `${BASE_URL}/api/user/profile/${userId}`
-            : `${BASE_URL}/api/mypage/profile`;
+            : `${BASE_URL}/api/user/profile`;
 
           let profileData;
           try {
@@ -766,7 +765,7 @@ export default function MyPage({ onNavigate, userId }: MyPageProps) {
           onClose={async () => {
             setIsThemeStartOpen(false);
             try {
-              const profileData = await get(`${BASE_URL}/api/mypage/profile`);
+              const profileData = await get(`${BASE_URL}/api/user/profile`);
               setUserProfile(profileData);
             } catch (err) {
               console.error("테마 변경 후 프로필 갱신 실패:", err);

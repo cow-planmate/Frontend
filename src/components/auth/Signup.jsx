@@ -12,8 +12,8 @@ export default function Signup({
   onThemeOpen,
 }) {
   const BASE_URL = import.meta.env.VITE_API_URL;
-
   const { login } = useApiClient();
+
   const [formData, setFormData] = useState({
     email: "",
     verificationCode: "",
@@ -23,9 +23,9 @@ export default function Signup({
     age: "",
     gender: "male",
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const [timeLeft, setTimeLeft] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
@@ -34,6 +34,7 @@ export default function Signup({
   const [emailVerificationToken, setEmailVerificationToken] = useState("");
   const [isAgreed, setIsAgreed] = useState(false);
 
+  // 비밀번호 검증 상태
   const [passwordValidation, setPasswordValidation] = useState({
     hasMinLength: false,
     hasMaxLength: true,
@@ -42,10 +43,15 @@ export default function Signup({
     hasSpecialChar: false,
     hasAllRequired: false,
   });
+
   const [isEmailSending, setIsEmailSending] = useState(false);
+  const [isEmailVerifying, setIsEmailVerifying] = useState(false);
+
+  // 비밀번호 일치 검증
   const [passwordMatch, setPasswordMatch] = useState(true);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
+  // 킬때마다 초기화
   useEffect(() => {
     if (isOpen) {
       setFormData({
@@ -57,7 +63,6 @@ export default function Signup({
         age: "",
         gender: "male",
       });
-
       setShowPassword(false);
       setShowConfirmPassword(false);
       setTimeLeft(0);
@@ -76,6 +81,7 @@ export default function Signup({
       setPasswordMatch(true);
       setEmailVerificationToken("");
       setIsAgreed(false);
+      setIsEmailVerifying(false);
     }
   }, [isOpen]);
 
@@ -86,12 +92,15 @@ export default function Signup({
         setTimeLeft((prevTime) => prevTime - 1);
       }, 1000);
     }
+
     if (timeLeft === 0 && isTimerRunning) {
       setIsTimerRunning(false);
     }
+
     return () => clearInterval(timer);
   }, [timeLeft, isTimerRunning]);
 
+  // 비밀번호 검증 함수
   const validatePassword = (password) => {
     const hasMinLength = password.length >= 8;
     const hasMaxLength = password.length <= 20;
@@ -144,142 +153,214 @@ export default function Signup({
     }
   };
 
+  // 1. 이메일 인증번호 발송
   const sendEmail = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       WarningToast("올바른 이메일 형식을 입력해주세요.");
       return;
     }
+
     setIsEmailSending(true);
+
+    const requestUrl = `${BASE_URL}/api/auth/email/verification`;
+    const requestPayload = {
+      email: formData.email,
+      purpose: "SIGN_UP",
+    };
+
+    console.group("📧 [sendEmail] 이메일 인증번호 발송 API 호출");
+    console.log("요청 URL:", requestUrl);
+    console.log("요청 Payload:", requestPayload);
+
     try {
-      const response = await fetch(`${BASE_URL}/api/auth/email/verification`, {
+      const response = await fetch(requestUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email: formData.email,
-          purpose: "SIGN_UP",
-        }),
+        body: JSON.stringify(requestPayload),
       });
 
-      // v2 명세서: 성공 시 204 No Content 반환
-      if (response.status === 204) {
+      console.log("응답 HTTP 상태 코드:", response.status, response.statusText);
+
+      if (response.status === 204 || response.ok) {
+        console.log("✅ 인증번호 발송 성공");
         SuccessToast("인증번호가 이메일로 전송되었습니다!");
         setTimeLeft(300);
         setIsTimerRunning(true);
         setShowVerification(true);
       } else {
         const data = await response.json().catch(() => ({}));
-        if (data.message === "Email already in use") {
+        console.warn("⚠️ 인증번호 발송 실패 응답 데이터:", data);
+        if (response.status === 409) {
           ErrorToast("이미 사용중인 이메일입니다.");
         } else {
           ErrorToast(data.message || "발송 실패");
         }
       }
     } catch (error) {
-      console.error("에러 발생:", error);
+      console.error("❌ 이메일 전송 중 네트워크/서버 에러 발생:", error);
       ErrorToast("이메일 전송에 실패했습니다. 다시 시도해주세요");
     } finally {
+      console.groupEnd();
       setIsEmailSending(false);
     }
   };
 
+  // 2. 이메일 인증코드 확인
   const verifyEmail = async () => {
+    const verificationCode = formData.verificationCode.trim();
+
+    if (!verificationCode) {
+      WarningToast("인증번호를 입력해주세요.");
+      return;
+    }
+
+    setIsEmailVerifying(true);
+
+    const requestUrl = `${BASE_URL}/api/auth/email/verification/confirm`;
+    const requestPayload = {
+      email: formData.email,
+      verificationCode,
+      purpose: "SIGN_UP",
+    };
+
+    console.group("🔑 [verifyEmail] 이메일 인증코드 확인 API 호출");
+    console.log("요청 URL:", requestUrl);
+    console.log("요청 Payload:", requestPayload);
+
     try {
-      const response = await fetch(
-        `${BASE_URL}/api/auth/email/verification/confirm`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: formData.email,
-            verificationCode: formData.verificationCode,
-            purpose: "SIGN_UP",
-          }),
-        },
-      );
+      const response = await fetch(requestUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestPayload),
+      });
+
+      console.log("응답 HTTP 상태 코드:", response.status, response.statusText);
 
       const data = await response.json().catch(() => ({}));
+      console.log("응답 데이터:", data);
 
-      if (response.ok) {
+      const verificationToken =
+        data.verificationToken ?? data.data?.verificationToken;
+
+      if (response.ok && verificationToken) {
+        console.log(
+          "✅ 이메일 인증 성공, 발급된 verificationToken:",
+          verificationToken,
+        );
         SuccessToast("인증 성공!");
         setIsEmailVerified(true);
         setIsTimerRunning(false);
-        // v2 명세서: 반환 필드명 verificationToken 적용
-        setEmailVerificationToken(data.verificationToken);
+        setEmailVerificationToken(verificationToken);
       } else {
-        if (data.message === "Verification request not found or expired") {
+        console.warn(
+          "⚠️ 이메일 인증 실패 - 코드/메시지:",
+          data.code,
+          data.message,
+        );
+        if (data.code === "AUTH_006") {
           ErrorToast("만료된 인증번호 : 다시 인증번호를 발송해주세요");
-        } else if (data.message === "Invalid verification code") {
+        } else if (data.code === "AUTH_007") {
           ErrorToast("인증번호가 일치하지 않습니다.");
         } else {
           ErrorToast(data.message || "인증 실패");
         }
       }
     } catch (error) {
-      console.error("에러 발생:", error);
+      console.error("❌ 이메일 인증 확인 중 에러 발생:", error);
       ErrorToast("오류 발생 : 잘못된 인증번호 형식일 수 있습니다");
+    } finally {
+      console.groupEnd();
+      setIsEmailVerifying(false);
     }
   };
 
+  // 3. 닉네임 중복확인
   const verifyNickname = async () => {
-    if (formData.nickname === "") {
+    if (!formData.nickname) {
       WarningToast("입력된 값이 없습니다.");
       return;
     }
 
+    const requestUrl = `${BASE_URL}/api/auth/register/nickname/verify`;
+    const requestPayload = { nickname: formData.nickname };
+
+    console.group("🏷️ [verifyNickname] 닉네임 중복확인 API 호출");
+    console.log("요청 URL:", requestUrl);
+    console.log("요청 Payload:", requestPayload);
+
     try {
-      const response = await fetch(
-        `${BASE_URL}/api/auth/register/nickname/verify`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            nickname: formData.nickname,
-          }),
-        },
-      );
-      const data = await response.json().catch(() => ({}));
+      const response = await fetch(requestUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestPayload),
+      });
+
+      console.log("응답 HTTP 상태 코드:", response.status, response.statusText);
+
+      const data = await response.json();
+      console.log("응답 데이터:", data);
 
       if (response.ok && data.nicknameAvailable) {
+        console.log("✅ 사용 가능한 닉네임입니다.");
         SuccessToast("사용 가능한 닉네임입니다.");
         setIsNicknameVerified(true);
       } else {
-        ErrorToast(data.message || "이미 존재하는 닉네임입니다.");
+        console.warn("⚠️ 이미 존재하는 닉네임입니다.");
+        ErrorToast("이미 존재하는 닉네임입니다.");
       }
     } catch (error) {
-      console.error("에러 발생:", error);
+      console.error("❌ 닉네임 중복확인 중 에러 발생:", error);
       ErrorToast("오류. 나중에 다시 시도해주세요.");
+    } finally {
+      console.groupEnd();
     }
   };
 
+  // 4. 회원가입 및 자동 로그인
   const handleRegisterAndLogin = async () => {
-    try {
-      // 프론트엔드의 age 입력을 백엔드 요구 규격(LocalDate)으로 변환 처리 (연도-01-01 포맷)
-      const birthYear = new Date().getFullYear() - Number(formData.age) + 1;
-      const birthdate = `${birthYear}-01-01`;
+    const currentYear = new Date().getFullYear();
+    const birthYear = currentYear - Number(formData.age) + 1;
+    const formattedBirthdate = `${birthYear}-01-01`;
 
-      const registerResponse = await fetch(`${BASE_URL}/api/auth/register`, {
+    const requestUrl = `${BASE_URL}/api/auth/register`;
+    const requestPayload = {
+      signupToken: emailVerificationToken,
+      nickname: formData.nickname,
+      password: formData.password,
+      gender: formData.gender === "male" ? "MALE" : "FEMALE",
+      birthdate: formattedBirthdate,
+    };
+
+    console.group("📝 [handleRegisterAndLogin] 회원가입 API 호출");
+    console.log("요청 URL:", requestUrl);
+    console.log("요청 Payload:", requestPayload);
+
+    try {
+      const registerResponse = await fetch(requestUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        // v2 명세서: 이메일을 제외하고 signupToken, nickname, password, gender, birthdate 구조로 송신 [cite: 601]
-        body: JSON.stringify({
-          signupToken: emailVerificationToken,
-          nickname: formData.nickname,
-          password: formData.password,
-          gender: formData.gender === "male" ? "MALE" : "FEMALE",
-          birthdate: birthdate,
-        }),
+        body: JSON.stringify(requestPayload),
       });
 
-      // v2 명세서: 회원가입 성공 시 201 Created 반환 [cite: 601]
-      if (registerResponse.status === 201) {
+      console.log(
+        "회원가입 응답 HTTP 상태 코드:",
+        registerResponse.status,
+        registerResponse.statusText,
+      );
+
+      if (registerResponse.status === 201 || registerResponse.ok) {
+        console.log("✅ 회원가입 성공! 자동 로그인을 진행합니다.");
         SuccessToast("회원가입이 완료되었습니다!");
 
+        // 회원가입 성공 시 로그인 시도
+        console.log("🔑 [login] 자동 로그인 시도 - email:", formData.email);
         const loginResult = await login(formData.email, formData.password);
+        console.log("자동 로그인 결과:", loginResult);
 
         if (onLoginSuccess) {
           onLoginSuccess(loginResult);
@@ -292,7 +373,8 @@ export default function Signup({
         }
       } else {
         const registerData = await registerResponse.json().catch(() => ({}));
-        if (registerData.message === "Invalid token") {
+        console.warn("⚠️ 회원가입 실패 응답 데이터:", registerData);
+        if (registerData.code === "AUTH_001") {
           ErrorToast("토큰 오류, 회원가입 실패. 다시 시도해주세요");
         } else {
           ErrorToast(
@@ -301,10 +383,10 @@ export default function Signup({
         }
       }
     } catch (error) {
-      console.error("회원가입 또는 로그인 중 오류:", error);
+      console.error("❌ 회원가입 또는 로그인 중 에러 발생:", error);
       ErrorToast("오류 발생. 다시 시도해주세요.");
 
-      // 오류 시 폼 데이터 초기화
+      // 초기화 로직
       setFormData({
         email: "",
         verificationCode: "",
@@ -331,6 +413,8 @@ export default function Signup({
       });
       setPasswordMatch(true);
       setEmailVerificationToken("");
+    } finally {
+      console.groupEnd();
     }
   };
 
@@ -434,6 +518,7 @@ export default function Signup({
               </button>
             </div>
           </div>
+
           {/* 인증번호 입력 */}
           {showVerification && !isEmailVerified && (
             <div>
@@ -449,10 +534,11 @@ export default function Signup({
                 />
                 <button
                   type="button"
-                  className="w-24 py-2 bg-main hover:bg-blue-700 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-24 py-2 bg-main hover:bg-blue-700 disabled:bg-gray-300 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   onClick={verifyEmail}
+                  disabled={isEmailVerifying}
                 >
-                  입력
+                  {isEmailVerifying ? "확인 중" : "입력"}
                 </button>
               </div>
               <p className="text-sm text-start text-gray-500 mt-1">
@@ -460,6 +546,7 @@ export default function Signup({
               </p>
             </div>
           )}
+
           {/* 비밀번호 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 text-left pl-2">
@@ -474,6 +561,7 @@ export default function Signup({
                 className="w-full px-3 py-2 pr-12 border-2 border-blue-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
+                type="button"
                 className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-600 cursor-pointer select-none"
                 onClick={() => setShowPassword(!showPassword)}
               >
@@ -497,7 +585,6 @@ export default function Signup({
                   text="영문, 숫자, 특수문자 3가지 조합"
                 />
 
-                {/* 에러 메시지 */}
                 {!passwordValidation.hasMinLength && (
                   <div className="text-red-600 text-sm mt-2">
                     최소 8글자 이상 작성해야합니다
@@ -508,7 +595,6 @@ export default function Signup({
                     최대 20글자까지 작성할 수 있습니다
                   </div>
                 )}
-
                 {!passwordValidation.hasAllRequired &&
                   passwordValidation.hasMinLength && (
                     <div className="text-red-600 text-sm mt-2">
@@ -518,6 +604,7 @@ export default function Signup({
               </div>
             )}
           </div>
+
           {/* 비밀번호 재입력 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 text-left pl-2">
@@ -539,6 +626,7 @@ export default function Signup({
                 disabled={isConfirmPasswordDisabled}
               />
               <button
+                type="button"
                 className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-600 cursor-pointer select-none"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 disabled={isConfirmPasswordDisabled}
@@ -549,13 +637,13 @@ export default function Signup({
               </button>
             </div>
 
-            {/* 비밀번호 불일치 메시지 */}
             {formData.confirmPassword && !passwordMatch && (
               <div className="text-red-600 text-sm mt-2">
                 비밀번호가 일치하지 않습니다
               </div>
             )}
           </div>
+
           {/* 닉네임 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 text-left pl-2">
@@ -582,6 +670,7 @@ export default function Signup({
               </button>
             </div>
           </div>
+
           {/* 나이와 성별 */}
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -593,12 +682,10 @@ export default function Signup({
                 value={formData.age}
                 onChange={(e) => {
                   const value = e.target.value;
-
                   if (value === "" || value === "0") {
                     handleInputChange("age", "");
                     return;
                   }
-
                   if (/^\d+$/.test(value)) {
                     handleInputChange("age", value);
                   }
@@ -606,6 +693,7 @@ export default function Signup({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 text-left pl-2">
                 성별
@@ -636,6 +724,7 @@ export default function Signup({
               </div>
             </div>
           </div>
+
           {/* 개인정보 수집·이용 동의 */}
           <div className="flex items-center pl-2">
             <input
@@ -673,16 +762,15 @@ export default function Signup({
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
+                  type="button"
                   onClick={() => setShowPrivacyModal(false)}
                   className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
                 >
                   ×
                 </button>
-
                 <h2 className="text-xl font-bold text-gray-900 mb-4">
                   개인정보 수집·이용 동의
                 </h2>
-
                 <div className="text-sm text-gray-600 leading-relaxed text-left space-y-3">
                   <div>
                     <p className="font-bold mb-1">1. 수집·이용 목적</p>
@@ -692,14 +780,12 @@ export default function Signup({
                       <li>맞춤형 서비스 제공 및 이벤트 안내</li>
                     </ul>
                   </div>
-
                   <div>
                     <p className="font-bold mb-1">2. 수집하는 개인정보 항목</p>
                     <ul className="list-disc pl-4 space-y-0.5">
                       <li>필수 항목: 이메일, 비밀번호, 닉네임, 나이, 성별</li>
                     </ul>
                   </div>
-
                   <div>
                     <p className="font-bold mb-1">3. 개인정보 보유·이용 기간</p>
                     <ul className="list-disc pl-4 space-y-0.5">
@@ -710,7 +796,6 @@ export default function Signup({
                       </li>
                     </ul>
                   </div>
-
                   <div>
                     <p className="font-bold mb-1">
                       4. 동의 거부 권리 및 불이익 안내
@@ -727,8 +812,8 @@ export default function Signup({
                     </ul>
                   </div>
                 </div>
-
                 <button
+                  type="button"
                   onClick={() => setShowPrivacyModal(false)}
                   className="w-full mt-6 py-2 bg-main hover:bg-blue-700 text-white font-medium rounded-lg"
                 >
@@ -737,6 +822,7 @@ export default function Signup({
               </div>
             </div>
           )}
+
           {/* 회원가입 버튼 */}
           <button
             type="button"
